@@ -16,10 +16,10 @@
 
 from datetime import datetime
 
+from hsfs import util
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_config_engine
-from hsfs.core.monitoring_window_config import WindowConfigType
-from hsfs.util import convert_event_time_to_timestamp
+from hsfs.core import monitoring_window_config as mwc
 
 
 DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."
@@ -77,7 +77,7 @@ class TestFeatureMonitoringConfigEngine:
         assert (
             config.detection_window_config.window_config_type
             == default_config.detection_window_config.window_config_type
-            == WindowConfigType.ALL_TIME
+            == mwc.WindowConfigType.ALL_TIME
         )
         assert (
             config.detection_window_config.time_offset
@@ -101,7 +101,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         assert (
-            convert_event_time_to_timestamp(time_before)
-            <= convert_event_time_to_timestamp(config.job_schedule.start_date_time)
-            <= convert_event_time_to_timestamp(time_after)
+            util.convert_event_time_to_timestamp(time_before)
+            <= util.convert_event_time_to_timestamp(config.job_schedule.start_date_time)
+            <= util.convert_event_time_to_timestamp(time_after)
         )

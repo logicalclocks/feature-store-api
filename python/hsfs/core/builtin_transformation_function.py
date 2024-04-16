@@ -13,11 +13,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from typing import List
 
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core import feature_descriptive_statistics as fds
 
 
 class BuiltInTransformationFunction:
@@ -26,7 +27,8 @@ class BuiltInTransformationFunction:
 
     @staticmethod
     def min_max_scaler_stats(
-        feature_descriptive_stats: List[FeatureDescriptiveStatistics], feature_name: str
+        feature_descriptive_stats: List[fds.FeatureDescriptiveStatistics],
+        feature_name: str,
     ):
         min_value = None
         max_value = None
@@ -46,7 +48,8 @@ class BuiltInTransformationFunction:
 
     @staticmethod
     def standard_scaler_stats(
-        feature_descriptive_stats: List[FeatureDescriptiveStatistics], feature_name: str
+        feature_descriptive_stats: List[fds.FeatureDescriptiveStatistics],
+        feature_name: str,
     ):
         mean = None
         std_dev = None
@@ -66,7 +69,8 @@ class BuiltInTransformationFunction:
 
     @staticmethod
     def robust_scaler_stats(
-        feature_descriptive_stats: List[FeatureDescriptiveStatistics], feature_name: str
+        feature_descriptive_stats: List[fds.FeatureDescriptiveStatistics],
+        feature_name: str,
     ):
         percentiles = None
         for stats in feature_descriptive_stats:
@@ -85,7 +89,8 @@ class BuiltInTransformationFunction:
 
     @staticmethod
     def encoder_stats(
-        feature_descriptive_stats: List[FeatureDescriptiveStatistics], feature_name: str
+        feature_descriptive_stats: List[fds.FeatureDescriptiveStatistics],
+        feature_name: str,
     ):
         for stats in feature_descriptive_stats:
             if (

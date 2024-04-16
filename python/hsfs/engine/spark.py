@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import copy
 import importlib.util
@@ -21,7 +22,7 @@ import os
 import re
 import shutil
 import warnings
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional, TypeVar
 
 import avro
@@ -81,6 +82,7 @@ from great_expectations.data_context.types.base import (
     InMemoryStoreBackendDefaults,
 )
 from hsfs import client, feature, training_dataset_feature, util
+from hsfs import feature_group as fg_mod
 from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query
@@ -91,7 +93,6 @@ from hsfs.core import (
     storage_connector_api,
     transformation_function_engine,
 )
-from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
@@ -154,7 +155,7 @@ class Engine:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
     def register_external_temporary_table(self, external_fg, alias):
-        if not isinstance(external_fg, SpineGroup):
+        if not isinstance(external_fg, fg_mod.SpineGroup):
             external_dataset = external_fg.storage_connector.read(
                 external_fg.query,
                 external_fg.data_format,
@@ -310,7 +311,7 @@ class Engine:
     ):
         try:
             if (
-                isinstance(feature_group, ExternalFeatureGroup)
+                isinstance(feature_group, fg_mod.ExternalFeatureGroup)
                 and feature_group.online_enabled
             ) or feature_group.stream:
                 self._save_online_dataframe(
@@ -644,9 +645,97 @@ class Engine:
     def _time_series_split(
         self, training_dataset, dataset, event_time, drop_event_time=False
     ):
+        # duplicate the code from util module to avoid udf errors on windows
+        def check_timestamp_format_from_date_string(input_date):
+            date_format_patterns = {
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})$": "%Y%m%d",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M%S",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$": "%Y%m%d%H%M%S%f",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{6})Z$": "ISO",
+            }
+            normalized_date = (
+                input_date.replace("/", "")
+                .replace("-", "")
+                .replace(" ", "")
+                .replace(":", "")
+                .replace(".", "")
+            )
+
+            date_format = None
+            for pattern in date_format_patterns:
+                date_format_pattern = re.match(pattern, normalized_date)
+                if date_format_pattern:
+                    date_format = date_format_patterns[pattern]
+                    break
+
+            if date_format is None:
+                raise ValueError(
+                    "Unable to identify format of the provided date value : "
+                    + input_date
+                )
+
+            return normalized_date, date_format
+
+        def get_timestamp_from_date_string(input_date):
+            norm_input_date, date_format = check_timestamp_format_from_date_string(
+                input_date
+            )
+            try:
+                if date_format != "ISO":
+                    date_time = datetime.strptime(norm_input_date, date_format)
+                else:
+                    date_time = datetime.fromisoformat(input_date[:-1])
+            except ValueError as err:
+                raise ValueError(
+                    "Unable to parse the normalized input date value : "
+                    + norm_input_date
+                    + " with format "
+                    + date_format
+                ) from err
+            if date_time.tzinfo is None:
+                date_time = date_time.replace(tzinfo=timezone.utc)
+            return int(float(date_time.timestamp()) * 1000)
+
+        def convert_event_time_to_timestamp(event_time):
+            if not event_time:
+                return None
+            if isinstance(event_time, str):
+                return get_timestamp_from_date_string(event_time)
+            elif isinstance(event_time, pd._libs.tslibs.timestamps.Timestamp):
+                # convert to unix epoch time in milliseconds.
+                event_time = event_time.to_pydatetime()
+                # convert to unix epoch time in milliseconds.
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, datetime):
+                # convert to unix epoch time in milliseconds.
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, date):
+                # convert to unix epoch time in milliseconds.
+                event_time = datetime(*event_time.timetuple()[:7])
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, int):
+                if event_time == 0:
+                    raise ValueError("Event time should be greater than 0.")
+                # jdbc supports timestamp precision up to second only.
+                if len(str(event_time)) <= 10:
+                    event_time = event_time * 1000
+                return event_time
+            else:
+                raise ValueError(
+                    "Given event time should be in `datetime`, `date`, `str` or `int` type"
+                )
+
         # registering the UDF
         _convert_event_time_to_timestamp = udf(
-            util.convert_event_time_to_timestamp, LongType()
+            convert_event_time_to_timestamp, LongType()
         )
 
         result_dfs = {}

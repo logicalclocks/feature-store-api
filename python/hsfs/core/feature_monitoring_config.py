@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 from datetime import date, datetime
@@ -20,6 +21,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 import humps
+from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
     feature_monitoring_config_engine,
@@ -30,7 +32,6 @@ from hsfs.core import (
 from hsfs.core import monitoring_window_config as mwc
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.job_schedule import JobSchedule
-from hsfs.util import FeatureStoreEncoder
 
 
 MAX_LENGTH_NAME = 63
@@ -206,7 +207,7 @@ class FeatureMonitoringConfig:
         return the_dict
 
     def json(self) -> str:
-        return json.dumps(self, cls=FeatureStoreEncoder)
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def __str__(self):
         return self.json()
