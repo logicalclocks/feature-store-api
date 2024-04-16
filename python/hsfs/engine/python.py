@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import ast
 import decimal
@@ -28,11 +29,12 @@ import uuid
 import warnings
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Any, Dict, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import avro
 import boto3
 import great_expectations as ge
+import hsfs
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -40,7 +42,15 @@ import pyarrow as pa
 import pytz
 from botocore.response import StreamingBody
 from confluent_kafka import Consumer, KafkaError, Producer, TopicPartition
-from hsfs import client, feature, util
+from hsfs import (
+    client,
+    feature,
+    feature_store,
+    feature_view,
+    transformation_function_attached,
+    util,
+)
+from hsfs import storage_connector as sc
 from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query
@@ -50,6 +60,7 @@ from hsfs.core import (
     feature_group_api,
     feature_view_api,
     ingestion_job_conf,
+    job,
     job_api,
     statistics_api,
     storage_connector_api,
@@ -59,7 +70,7 @@ from hsfs.core import (
     variable_api,
 )
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
-from hsfs.storage_connector import StorageConnector
+from hsfs.training_dataset import TrainingDataset
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from pyhive import hive
 from pyhive.exc import OperationalError
@@ -129,24 +140,28 @@ PYARROW_HOPSWORKS_DTYPE_MAPPING = {
 
 
 class Engine:
-    def __init__(self):
-        self._dataset_api = dataset_api.DatasetApi()
-        self._job_api = job_api.JobApi()
-        self._feature_group_api = feature_group_api.FeatureGroupApi()
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
+    def __init__(self) -> None:
+        self._dataset_api: dataset_api.DatasetApi = dataset_api.DatasetApi()
+        self._job_api: job_api.JobApi = job_api.JobApi()
+        self._feature_group_api: feature_group_api.FeatureGroupApi = (
+            feature_group_api.FeatureGroupApi()
+        )
+        self._storage_connector_api: storage_connector_api.StorageConnectorApi = (
+            storage_connector_api.StorageConnectorApi()
+        )
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
 
     def sql(
         self,
-        sql_query,
-        feature_store,
-        online_conn,
-        dataframe_type,
-        read_options,
-        schema=None,
-    ):
+        sql_query: str,
+        feature_store: feature_store.FeatureStore,
+        online_conn: Optional["sc.OnlineStorageConnector"],
+        dataframe_type: str,
+        read_options: Optional[Dict[str, Any]],
+        schema: Optional[List["feature.Feature"]] = None,
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
         if not online_conn:
             return self._sql_offline(
                 sql_query,
@@ -163,20 +178,22 @@ class Engine:
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def is_flyingduck_query_supported(self, query, read_options=None):
+    def is_flyingduck_query_supported(
+        self, query: "query.Query", read_options: Optional[Dict[str, Any]] = None
+    ) -> bool:
         return arrow_flight_client.get_instance().is_query_supported(
             query, read_options or {}
         )
 
     def _sql_offline(
         self,
-        sql_query,
-        feature_store,
-        dataframe_type,
-        schema=None,
-        hive_config=None,
-        arrow_flight_config=None,
-    ):
+        sql_query: str,
+        feature_store: feature_store.FeatureStore,
+        dataframe_type: str,
+        schema: Optional[List["feature.Feature"]] = None,
+        hive_config: Optional[Dict[str, Any]] = None,
+        arrow_flight_config: Optional[Dict[str, Any]] = None,
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
         if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
             "pandas",
             "polars",
@@ -221,7 +238,14 @@ class Engine:
             result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def _jdbc(self, sql_query, connector, dataframe_type, read_options, schema=None):
+    def _jdbc(
+        self,
+        sql_query: str,
+        connector: "sc.OnlineStorageConnector",
+        dataframe_type: str,
+        read_options: Optional[Dict[str, Any]],
+        schema: Optional[List["feature.Feature"]] = None,
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
         if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
             "pandas",
             "polars",
@@ -254,8 +278,13 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def read(
-        self, storage_connector, data_format, read_options, location, dataframe_type
-    ):
+        self,
+        storage_connector: "sc.StorageConnector",
+        data_format: str,
+        read_options: Optional[Dict[str, Any]],
+        location: Optional[str],
+        dataframe_type: str,
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
 
@@ -289,7 +318,7 @@ class Engine:
                 pd.concat(df_list, ignore_index=True), dataframe_type=dataframe_type
             )
 
-    def _read_pandas(self, data_format, obj):
+    def _read_pandas(self, data_format: str, obj: Any) -> pd.DataFrame:
         if data_format.lower() == "csv":
             return pd.read_csv(obj)
         elif data_format.lower() == "tsv":
@@ -305,7 +334,7 @@ class Engine:
                 )
             )
 
-    def _read_polars(self, data_format, obj):
+    def _read_polars(self, data_format: str, obj: Any) -> pl.DataFrame:
         if data_format.lower() == "csv":
             return pl.read_csv(obj)
         elif data_format.lower() == "tsv":
@@ -322,8 +351,12 @@ class Engine:
             )
 
     def _read_hopsfs(
-        self, location, data_format, read_options=None, dataframe_type="default"
-    ):
+        self,
+        location: str,
+        data_format: str,
+        read_options: Optional[Dict[str, Any]] = None,
+        dataframe_type: str = "default",
+    ) -> List[Union[pd.DataFrame, pl.DataFrame]]:
         # providing more informative error
         try:
             from pydoop import hdfs
@@ -351,8 +384,12 @@ class Engine:
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
     def _read_hopsfs_remote(
-        self, location, data_format, read_options=None, dataframe_type="default"
-    ):
+        self,
+        location: str,
+        data_format: str,
+        read_options: Optional[Dict[str, Any]] = None,
+        dataframe_type: str = "default",
+    ) -> List[Union[pd.DataFrame, pl.DataFrame]]:
         total_count = 10000
         offset = 0
         df_list = []
@@ -392,8 +429,12 @@ class Engine:
         return df_list
 
     def _read_s3(
-        self, storage_connector, location, data_format, dataframe_type="default"
-    ):
+        self,
+        storage_connector: "sc.S3Connector",
+        location: str,
+        data_format: str,
+        dataframe_type: str = "default",
+    ) -> List[Union[pd.DataFrame, pl.DataFrame]]:
         # get key prefix
         path_parts = location.replace("s3://", "").split("/")
         _ = path_parts.pop(0)  # pop first element -> bucket
@@ -443,33 +484,48 @@ class Engine:
                         df_list.append(self._read_pandas(data_format, obj["Body"]))
         return df_list
 
-    def read_options(self, data_format, provided_options):
+    def read_options(
+        self, data_format: Optional[str], provided_options: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         return provided_options or {}
 
     def read_stream(
         self,
-        storage_connector,
-        message_format,
-        schema,
-        options,
-        include_metadata,
-    ):
+        storage_connector: "sc.StorageConnector",
+        message_format: Any,
+        schema: Any,
+        options: Optional[Dict[str, Any]],
+        include_metadata: bool,
+    ) -> Any:
         raise NotImplementedError(
             "Streaming Sources are not supported for pure Python Environments."
         )
 
-    def show(self, sql_query, feature_store, n, online_conn, read_options=None):
+    def show(
+        self,
+        sql_query: str,
+        feature_store: feature_store.FeatureStore,
+        n: int,
+        online_conn: "sc.OnlineStorageConnector",
+        read_options: Optional[Dict[str, Any]] = None,
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
         return self.sql(
             sql_query, feature_store, online_conn, "default", read_options or {}
         ).head(n)
 
-    def register_external_temporary_table(self, external_fg, alias):
+    def register_external_temporary_table(
+        self, external_fg: "ExternalFeatureGroup", alias: str
+    ) -> None:
         # No op to avoid query failure
         pass
 
     def register_hudi_temporary_table(
-        self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
-    ):
+        self,
+        hudi_fg_alias: "hsfs.constructor.hudi_feature_group_alias.HudiFeatureGroupAlias",
+        feature_store_id: int,
+        feature_store_name: str,
+        read_options: Optional[Dict[str, Any]],
+    ) -> None:
         if hudi_fg_alias and (
             hudi_fg_alias.left_feature_group_end_timestamp is not None
             or hudi_fg_alias.left_feature_group_start_timestamp is not None
@@ -480,7 +536,15 @@ class Engine:
                 + "environment with Spark Engine."
             )
 
-    def profile_by_spark(self, metadata_instance):
+    def profile_by_spark(
+        self,
+        metadata_instance: Union[
+            FeatureGroup,
+            ExternalFeatureGroup,
+            feature_view.FeatureView,
+            TrainingDataset,
+        ],
+    ) -> job.Job:
         stat_api = statistics_api.StatisticsApi(
             metadata_instance.feature_store_id, metadata_instance.ENTITY_TYPE
         )
@@ -496,12 +560,12 @@ class Engine:
 
     def profile(
         self,
-        df,
-        relevant_columns,
-        correlations,
-        histograms,
-        exact_uniqueness=True,
-    ):
+        df: Union[pd.DataFrame, pl.DataFrame],
+        relevant_columns: List[str],
+        correlations: Any,
+        histograms: Any,
+        exact_uniqueness: bool = True,
+    ) -> str:
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if isinstance(df, pl.DataFrame) or isinstance(df, pl.dataframe.frame.DataFrame):
             arrow_schema = df.to_arrow().schema
@@ -578,7 +642,9 @@ class Engine:
             {"columns": final_stats},
         )
 
-    def _convert_pandas_statistics(self, stat, dataType):
+    def _convert_pandas_statistics(
+        self, stat: Dict[str, Any], dataType: str
+    ) -> Dict[str, Any]:
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
         content_dict = {"dataType": dataType}
@@ -605,7 +671,9 @@ class Engine:
 
         return content_dict
 
-    def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
+    def validate(
+        self, dataframe: pd.DataFrame, expectations: Any, log_activity: bool = True
+    ) -> None:
         raise NotImplementedError(
             "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
         )
@@ -613,9 +681,9 @@ class Engine:
     def validate_with_great_expectations(
         self,
         dataframe: Union[pl.DataFrame, pd.DataFrame],
-        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
+        expectation_suite: ge.core.ExpectationSuite,
         ge_validate_kwargs: Optional[Dict[Any, Any]] = None,
-    ):
+    ) -> ge.core.ExpectationSuiteValidationResult:
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
         if isinstance(dataframe, pl.DataFrame) or isinstance(
@@ -634,12 +702,12 @@ class Engine:
         ).validate(**ge_validate_kwargs)
         return report
 
-    def set_job_group(self, group_id, description):
+    def set_job_group(self, group_id: str, description: Optional[str]) -> None:
         pass
 
     def convert_to_default_dataframe(
-        self, dataframe: Union[pd.DataFrame, pl.DataFrame, str]
-    ):
+        self, dataframe: Union[pd.DataFrame, pl.DataFrame, pl.dataframe.frame.DataFrame]
+    ) -> Optional[pd.DataFrame]:
         if (
             isinstance(dataframe, pd.DataFrame)
             or isinstance(dataframe, pl.DataFrame)
@@ -688,8 +756,10 @@ class Engine:
         )
 
     def parse_schema_feature_group(
-        self, dataframe: Union[pd.DataFrame, pl.DataFrame], time_travel_format=None
-    ):
+        self,
+        dataframe: Union[pd.DataFrame, pl.DataFrame],
+        time_travel_format: Optional[str] = None,
+    ) -> List[feature.Feature]:
         if isinstance(dataframe, pd.DataFrame):
             arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
         elif isinstance(dataframe, pl.DataFrame) or isinstance(
@@ -708,7 +778,9 @@ class Engine:
             features.append(feature.Feature(name, converted_type))
         return features
 
-    def parse_schema_training_dataset(self, dataframe):
+    def parse_schema_training_dataset(
+        self, dataframe: Union[pd.DataFrame, pl.DataFrame]
+    ) -> List[feature.Feature]:
         raise NotImplementedError(
             "Training dataset creation from Dataframes is not "
             + "supported in Python environment. Use HSFS Query object instead."
@@ -721,10 +793,10 @@ class Engine:
         operation: str,
         online_enabled: bool,
         storage: str,
-        offline_write_options: dict,
-        online_write_options: dict,
-        validation_id: int = None,
-    ):
+        offline_write_options: Dict[str, Any],
+        online_write_options: Dict[str, Any],
+        validation_id: Optional[int] = None,
+    ) -> Optional[job.Job]:
         if (
             isinstance(feature_group, ExternalFeatureGroup)
             and feature_group.online_enabled
@@ -747,15 +819,15 @@ class Engine:
 
     def legacy_save_dataframe(
         self,
-        feature_group,
-        dataframe,
-        operation,
-        online_enabled,
-        storage,
-        offline_write_options,
-        online_write_options,
-        validation_id=None,
-    ):
+        feature_group: FeatureGroup,
+        dataframe: Union[pd.DataFrame, pl.DataFrame],
+        operation: str,
+        online_enabled: bool,
+        storage: str,
+        offline_write_options: Dict[str, Any],
+        online_write_options: Dict[str, Any],
+        validation_id: Optional[int] = None,
+    ) -> Optional[job.Job]:
         # App configuration
         app_options = self._get_app_options(offline_write_options)
 
@@ -778,12 +850,12 @@ class Engine:
 
     def get_training_data(
         self,
-        training_dataset_obj,
-        feature_view_obj,
-        query_obj,
-        read_options,
-        dataframe_type,
-    ):
+        training_dataset_obj: TrainingDataset,
+        feature_view_obj: feature_view.FeatureView,
+        query_obj: query.Query,
+        read_options: Dict[str, Any],
+        dataframe_type: str,
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
         # dataframe_type of list and numpy are prevented here because statistics needs to be computed from the returned dataframe.
         # The daframe is converted into required types in the function split_labels
         if dataframe_type.lower() not in ["default", "polars", "pandas"]:
@@ -808,7 +880,14 @@ class Engine:
                 training_dataset_obj.transformation_functions, df
             )
 
-    def split_labels(self, df, labels, dataframe_type):
+    def split_labels(
+        self,
+        df: Union[pd.DataFrame, pl.DataFrame],
+        labels: List[str],
+        dataframe_type: str,
+    ) -> Tuple[
+        Union[pd.DataFrame, pl.DataFrame], Optional[Union[pd.DataFrame, pl.DataFrame]]
+    ]:
         if labels:
             labels_df = df[labels]
             df_new = df.drop(columns=labels)
@@ -819,17 +898,19 @@ class Engine:
         else:
             return self._return_dataframe_type(df, dataframe_type), None
 
-    def drop_columns(self, df, drop_cols):
+    def drop_columns(
+        self, df: Union[pd.DataFrame, pl.DataFrame], drop_cols: List[str]
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
         return df.drop(columns=drop_cols)
 
     def _prepare_transform_split_df(
         self,
-        query_obj,
-        training_dataset_obj,
-        feature_view_obj,
-        read_option,
-        dataframe_type,
-    ):
+        query_obj: query.Query,
+        training_dataset_obj: TrainingDataset,
+        feature_view_obj: feature_view.FeatureView,
+        read_option: Dict[str, Any],
+        dataframe_type: str,
+    ) -> Dict[str, Union[pd.DataFrame, pl.DataFrame]]:
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
         and values are split ratios.
@@ -879,7 +960,11 @@ class Engine:
 
         return result_dfs
 
-    def _random_split(self, df, training_dataset_obj):
+    def _random_split(
+        self,
+        df: Union[pd.DataFrame, pl.DataFrame],
+        training_dataset_obj: TrainingDataset,
+    ) -> Dict[str, Union[pd.DataFrame, pl.DataFrame]]:
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         splits = training_dataset_obj.splits
@@ -915,8 +1000,12 @@ class Engine:
         return result_dfs
 
     def _time_series_split(
-        self, df, training_dataset_obj, event_time, drop_event_time=False
-    ):
+        self,
+        df: Union[pd.DataFrame, pl.DataFrame],
+        training_dataset_obj: TrainingDataset,
+        event_time: str,
+        drop_event_time: bool = False,
+    ) -> Dict[str, Union[pd.DataFrame, pl.DataFrame]]:
         result_dfs = {}
         for split in training_dataset_obj.splits:
             if len(df[event_time]) > 0:
@@ -938,13 +1027,13 @@ class Engine:
 
     def write_training_dataset(
         self,
-        training_dataset,
-        dataset,
-        user_write_options,
-        save_mode,
-        feature_view_obj=None,
-        to_df=False,
-    ):
+        training_dataset: TrainingDataset,
+        dataset: Union[query.Query, pd.DataFrame, pl.DataFrame],
+        user_write_options: Dict[str, Any],
+        save_mode: str,
+        feature_view_obj: Optional[feature_view.FeatureView] = None,
+        to_df: bool = False,
+    ) -> Union["job.Job", Any]:
         if not feature_view_obj and not isinstance(dataset, query.Query):
             raise Exception(
                 "Currently only query based training datasets are supported by the Python engine"
@@ -1004,7 +1093,11 @@ class Engine:
         )
         return td_job
 
-    def _create_hive_connection(self, feature_store, hive_config=None):
+    def _create_hive_connection(
+        self,
+        feature_store: feature_store.FeatureStore,
+        hive_config: Optional[Dict[str, Any]] = None,
+    ) -> hive.Connection:
         host = variable_api.VariableApi().get_loadbalancer_external_domain()
         if host == "":
             # If the load balancer is not configured, then fall back to use
@@ -1035,7 +1128,9 @@ class Engine:
                     f" It is possible to request access from data owners of '{feature_store}'."
                 ) from err
 
-    def _return_dataframe_type(self, dataframe, dataframe_type):
+    def _return_dataframe_type(
+        self, dataframe: Union[pd.DataFrame, pl.DataFrame], dataframe_type: str
+    ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
         if dataframe_type.lower() in ["default", "pandas", "polars"]:
             return dataframe
         if dataframe_type.lower() == "numpy":
@@ -1047,28 +1142,34 @@ class Engine:
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
         )
 
-    def is_spark_dataframe(self, dataframe):
+    def is_spark_dataframe(
+        self, dataframe: Union[pd.DataFrame, pl.DataFrame]
+    ) -> Literal[False]:
         return False
 
     def save_stream_dataframe(
         self,
-        feature_group,
-        dataframe,
-        query_name,
-        output_mode,
-        await_termination,
-        timeout,
-        write_options,
-    ):
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
+        dataframe: Union[pd.DataFrame, pl.DataFrame],
+        query_name: Optional[str],
+        output_mode: Optional[str],
+        await_termination: bool,
+        timeout: Optional[int],
+        write_options: Optional[Dict[str, Any]],
+    ) -> None:
         raise NotImplementedError(
             "Stream ingestion is not available on Python environments, because it requires Spark as engine."
         )
 
-    def save_empty_dataframe(self, feature_group):
+    def save_empty_dataframe(
+        self, feature_group: Union[FeatureGroup, ExternalFeatureGroup]
+    ) -> None:
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
 
-    def _get_app_options(self, user_write_options=None):
+    def _get_app_options(
+        self, user_write_options: Optional[Dict[str, Any]] = None
+    ) -> ingestion_job_conf.IngestionJobConf:
         """
         Generate the options that should be passed to the application doing the ingestion.
         Options should be data format, data options to read the input dataframe and
@@ -1088,7 +1189,7 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
-    def add_file(self, file):
+    def add_file(self, file: Optional[str]) -> Optional[str]:
         if not file:
             return file
 
@@ -1107,7 +1208,13 @@ class Engine:
                 f.write(bytesio_object.getbuffer())
         return local_file
 
-    def _apply_transformation_function(self, transformation_functions, dataset):
+    def _apply_transformation_function(
+        self,
+        transformation_functions: Dict[
+            str, transformation_function_attached.TransformationFunctionAttached
+        ],
+        dataset: Union[pd.DataFrame, pl.DataFrame],
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
         for (
             feature_name,
             transformation_fn,
@@ -1139,10 +1246,16 @@ class Engine:
         return dataset
 
     @staticmethod
-    def get_unique_values(feature_dataframe, feature_name):
+    def get_unique_values(
+        feature_dataframe: Union[pd.DataFrame, pl.DataFrame], feature_name: str
+    ) -> np.ndarray:
         return feature_dataframe[feature_name].unique()
 
-    def _init_kafka_producer(self, feature_group, offline_write_options):
+    def _init_kafka_producer(
+        self,
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
+        offline_write_options: Dict[str, Any],
+    ) -> Producer:
         # setup kafka producer
         return Producer(
             self._get_kafka_config(
@@ -1150,7 +1263,11 @@ class Engine:
             )
         )
 
-    def _init_kafka_consumer(self, feature_group, offline_write_options):
+    def _init_kafka_consumer(
+        self,
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
+        offline_write_options: Dict[str, Any],
+    ) -> Consumer:
         # setup kafka consumer
         consumer_config = self._get_kafka_config(
             feature_group.feature_store_id, offline_write_options
@@ -1160,7 +1277,11 @@ class Engine:
 
         return Consumer(consumer_config)
 
-    def _init_kafka_resources(self, feature_group, offline_write_options):
+    def _init_kafka_resources(
+        self,
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
+        offline_write_options: Dict[str, Any],
+    ) -> Tuple[Producer, Dict[str, Callable], Callable]:
         # setup kafka producer
         producer = self._init_kafka_producer(feature_group, offline_write_options)
 
@@ -1178,10 +1299,10 @@ class Engine:
 
     def _write_dataframe_kafka(
         self,
-        feature_group: FeatureGroup,
+        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
         dataframe: Union[pd.DataFrame, pl.DataFrame],
-        offline_write_options: dict,
-    ):
+        offline_write_options: Dict[str, Any],
+    ) -> Optional["job.Job"]:
         initial_check_point = ""
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
@@ -1214,7 +1335,7 @@ class Engine:
                 feature_group, offline_write_options, True
             )
 
-        def acked(err, msg):
+        def acked(err: Exception, msg: Any) -> None:
             if err is not None:
                 if offline_write_options.get("debug_kafka", False):
                     print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
@@ -1315,10 +1436,10 @@ class Engine:
 
     def _kafka_get_offsets(
         self,
-        feature_group: FeatureGroup,
-        offline_write_options: dict,
+        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
+        offline_write_options: Dict[str, Any],
         high: bool,
-    ):
+    ) -> str:
         topic_name = feature_group._online_topic_name
         consumer = self._init_kafka_consumer(feature_group, offline_write_options)
         topics = consumer.list_topics(
@@ -1339,8 +1460,14 @@ class Engine:
         return ""
 
     def _kafka_produce(
-        self, producer, feature_group, key, encoded_row, acked, offline_write_options
-    ):
+        self,
+        producer: "Producer",
+        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
+        key: str,
+        encoded_row: bytes,
+        acked: callable,
+        offline_write_options: Dict[str, Any],
+    ) -> None:
         while True:
             # if BufferError is thrown, we can be sure, message hasn't been send so we retry
             try:
@@ -1371,8 +1498,8 @@ class Engine:
                 producer.poll(1)
 
     def _encode_complex_features(
-        self, feature_writers: Dict[str, callable], row: dict
-    ) -> dict:
+        self, feature_writers: Dict[str, callable], row: Dict[str, Any]
+    ) -> Dict[str, Any]:
         for feature_name, writer in feature_writers.items():
             with BytesIO() as outf:
                 writer(row[feature_name], outf)
@@ -1390,8 +1517,8 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(
-        self, feature_store_id: int, write_options: dict = None
-    ) -> dict:
+        self, feature_store_id: int, write_options: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         if write_options is None:
             write_options = {}
         external = not (
@@ -1408,7 +1535,7 @@ class Engine:
         return config
 
     @staticmethod
-    def _convert_pandas_dtype_to_offline_type(arrow_type):
+    def _convert_pandas_dtype_to_offline_type(arrow_type: str) -> str:
         # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
         # using pyarrow types obatined from pandas dataframe to convert pandas typed fields,
         # A recurisive function  "_convert_pandas_object_type_to_offline_type" is used to convert complex types like lists and structures
@@ -1425,7 +1552,7 @@ class Engine:
         return Engine._convert_simple_pandas_dtype_to_offline_type(arrow_type)
 
     @staticmethod
-    def convert_spark_type_to_offline_type(spark_type_string):
+    def convert_spark_type_to_offline_type(spark_type_string: str) -> str:
         if spark_type_string.endswith("Type()"):
             spark_type_string = util.translate_legacy_spark_type(spark_type_string)
         if spark_type_string == "STRING":
@@ -1456,14 +1583,14 @@ class Engine:
             )
 
     @staticmethod
-    def _convert_simple_pandas_dtype_to_offline_type(arrow_type):
+    def _convert_simple_pandas_dtype_to_offline_type(arrow_type: str) -> str:
         try:
             return PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
         except KeyError as err:
             raise ValueError(f"dtype '{arrow_type}' not supported") from err
 
     @staticmethod
-    def _convert_pandas_object_type_to_offline_type(arrow_type):
+    def _convert_pandas_object_type_to_offline_type(arrow_type: str) -> str:
         if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
@@ -1486,7 +1613,9 @@ class Engine:
         raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
     @staticmethod
-    def _cast_column_to_offline_type(feature_column, offline_type):
+    def _cast_column_to_offline_type(
+        feature_column: pd.Series, offline_type: str
+    ) -> pd.Series:
         offline_type = offline_type.lower()
         if offline_type == "timestamp":
             # convert (if tz!=UTC) to utc, then make timezone unaware
@@ -1565,7 +1694,9 @@ class Engine:
                 return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
-    def _cast_column_to_online_type(feature_column, online_type):
+    def _cast_column_to_online_type(
+        feature_column: pd.Series, online_type: str
+    ) -> pd.Series:
         online_type = online_type.lower()
         if online_type == "timestamp":
             # convert (if tz!=UTC) to utc, then make timezone unaware
@@ -1602,7 +1733,9 @@ class Engine:
                 return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
-    def cast_columns(df, schema, online=False):
+    def cast_columns(
+        df: pd.DataFrame, schema: List["feature.Feature"], online: bool = False
+    ) -> pd.DataFrame:
         for _feat in schema:
             if not online:
                 df[_feat.name] = Engine._cast_column_to_offline_type(
@@ -1615,15 +1748,15 @@ class Engine:
         return df
 
     @staticmethod
-    def is_connector_type_supported(connector_type):
+    def is_connector_type_supported(connector_type: str) -> bool:
         return connector_type in [
-            StorageConnector.HOPSFS,
-            StorageConnector.S3,
-            StorageConnector.KAFKA,
+            sc.StorageConnector.HOPSFS,
+            sc.StorageConnector.S3,
+            sc.StorageConnector.KAFKA,
         ]
 
     @staticmethod
-    def _start_offline_materialization(offline_write_options):
+    def _start_offline_materialization(offline_write_options: Dict[str, Any]) -> bool:
         if offline_write_options is not None:
             if "start_offline_materialization" in offline_write_options:
                 return offline_write_options.get("start_offline_materialization")

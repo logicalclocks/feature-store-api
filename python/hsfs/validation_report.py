@@ -13,9 +13,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
-from typing import Optional
+from typing import Any, Dict, List, Optional, Union
 
 import great_expectations as ge
 import humps
@@ -28,24 +29,30 @@ class ValidationReport:
 
     def __init__(
         self,
-        success,
-        results,
-        meta,
-        statistics,
-        evaluation_parameters=None,
-        id=None,
-        full_report_path=None,
-        featurestore_id=None,
-        featuregroup_id=None,
-        href=None,
-        expand=None,
-        items=None,
-        count=None,
-        type=None,
-        validation_time=None,
-        ingestion_result="UNKNOWN",
+        success: bool,
+        results: List[
+            Union[
+                "ValidationResult",
+                Dict[str, Any],
+                ge.core.expectation_validation_result.ExpectationValidationResult,
+            ]
+        ],
+        meta: Optional[Union[Dict[str, Any], str]],
+        statistics: Optional[Union[Dict[str, Any], str]],
+        evaluation_parameters: Optional[Union[Dict[str, Any], str]] = None,
+        id: Optional[int] = None,
+        full_report_path: Optional[str] = None,
+        featurestore_id: Optional[int] = None,
+        featuregroup_id: Optional[int] = None,
+        href: Optional[str] = None,
+        expand: bool = None,
+        items: Optional[Dict[str, Any]] = None,
+        count: Optional[int] = None,
+        type: Optional[str] = None,
+        validation_time: Optional[str] = None,
+        ingestion_result: str = "UNKNOWN",
         **kwargs,
-    ):
+    ) -> None:
         self._id = id
         self._success = success
         self._full_report_path = full_report_path
@@ -60,7 +67,9 @@ class ValidationReport:
         self.evaluation_parameters = evaluation_parameters
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(
+        cls, json_dict: Dict[str, Any]
+    ) -> Union[List["ValidationReport"], "ValidationReport"]:
         json_decamelized = humps.decamelize(json_dict)
         if (
             "count" in json_decamelized
@@ -74,10 +83,10 @@ class ValidationReport:
         else:
             return cls(**json_decamelized)
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Union[int, str, bool]]:
         return {
             "id": self._id,
             "success": self.success,
@@ -88,7 +97,7 @@ class ValidationReport:
             "ingestionResult": self._ingestion_result,
         }
 
-    def to_json_dict(self):
+    def to_json_dict(self) -> Dict[str, Any]:
         return {
             "id": self._id,
             "success": self.success,
@@ -98,7 +107,7 @@ class ValidationReport:
             "meta": self._meta,
         }
 
-    def to_ge_type(self):
+    def to_ge_type(self) -> ge.core.ExpectationSuiteValidationResult:
         return ge.core.ExpectationSuiteValidationResult(
             success=self.success,
             statistics=self.statistics,
@@ -108,30 +117,39 @@ class ValidationReport:
         )
 
     @property
-    def id(self):
+    def id(self) -> Optional[int]:
         """Id of the validation report, set by backend."""
         return self._id
 
     @id.setter
-    def id(self, id):
+    def id(self, id: Optional[int]) -> None:
         self._id = id
 
     @property
-    def success(self):
+    def success(self) -> bool:
         """Overall success of the validation step"""
         return self._success
 
     @success.setter
-    def success(self, success):
+    def success(self, success: bool) -> None:
         self._success = success
 
     @property
-    def results(self):
+    def results(self) -> List["ValidationResult"]:
         """List of expectation results obtained after validation."""
         return self._results
 
     @results.setter
-    def results(self, results):
+    def results(
+        self,
+        results: List[
+            Union[
+                "ValidationResult",
+                Dict[str, Any],
+                ge.core.expectation_validation_result.ExpectationValidationResult,
+            ]
+        ],
+    ) -> None:
         if len(results) == 0:
             self._results = []
         elif isinstance(results[0], ValidationResult):
@@ -147,12 +165,12 @@ class ValidationReport:
             ]
 
     @property
-    def meta(self):
+    def meta(self) -> Optional[Dict[str, Any]]:
         """Meta field of the validation report to store additional informations."""
         return self._meta
 
     @meta.setter
-    def meta(self, meta):
+    def meta(self, meta: Optional[Union[Dict[str, Any], str]]) -> None:
         if meta is None:
             self._meta = None
         elif isinstance(meta, dict):
@@ -163,13 +181,13 @@ class ValidationReport:
             raise ValueError("Meta field must be stringified json or dict.")
 
     @property
-    def statistics(self):
+    def statistics(self) -> Optional[Dict[str, Any]]:
         """Statistics field of the validation report which store overall statistics
         about the validation result, e.g number of failing/successful expectations."""
         return self._statistics
 
     @statistics.setter
-    def statistics(self, statistics):
+    def statistics(self, statistics: Optional[Union[str, Dict[str, Any]]]) -> None:
         if statistics is None:
             self._statistics = None
         elif isinstance(statistics, dict):
@@ -180,12 +198,14 @@ class ValidationReport:
             raise ValueError("Statistics field must be stringified json or dict")
 
     @property
-    def evaluation_parameters(self):
+    def evaluation_parameters(self) -> Optional[Dict[str, Any]]:
         """Evaluation parameters field of the validation report which store kwargs of the validation."""
         return self._evaluation_parameters
 
     @evaluation_parameters.setter
-    def evaluation_parameters(self, evaluation_parameters):
+    def evaluation_parameters(
+        self, evaluation_parameters: Optional[Union[Dict[str, Any], str]]
+    ) -> None:
         if evaluation_parameters is None:
             self._evaluation_parameters = None
         elif isinstance(evaluation_parameters, dict):
@@ -198,13 +218,13 @@ class ValidationReport:
             )
 
     @property
-    def ingestion_result(self):
+    def ingestion_result(self) -> str:
         """Overall success of the validation run together with the ingestion
         validation policy. Indicating if dataframe was ingested or rejected."""
         return self._ingestion_result
 
     @ingestion_result.setter
-    def ingestion_result(self, ingestion_result: Optional[str]):
+    def ingestion_result(self, ingestion_result: Optional[str]) -> None:
         allowed_values = ["INGESTED", "REJECTED", "UNKNOWN", "EXPERIMENT", "FG_DATA"]
         if ingestion_result is None:
             ingestion_result = "UNKNOWN"
@@ -216,10 +236,10 @@ class ValidationReport:
                 + f"Allowed values are {', '.join(allowed_values)}."
             )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.json()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"ValidationReport(success: {self._success}, "
             + f"{self._statistics}, {len(self._results)} results"

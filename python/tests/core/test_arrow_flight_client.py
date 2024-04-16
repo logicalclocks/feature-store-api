@@ -543,7 +543,7 @@ class TestArrowFlightClient:
         # Arrange
         connector = storage_connector.BigQueryConnector(0, "BigQueryConnector", 99)
         external_feature_group = feature_group.ExternalFeatureGroup(
-            storage_connector=connector, primary_key=""
+            storage_connector=connector, primary_key=[""]
         )
 
         # Act
@@ -564,7 +564,7 @@ class TestArrowFlightClient:
     def test_supports_unsupported(self, mocker, backend_fixtures):
         # Arrange
         external_feature_group = feature_group.ExternalFeatureGroup(
-            storage_connector=self.FakeConnector(), primary_key=""
+            storage_connector=self.FakeConnector(), primary_key=[""]
         )
 
         # Act
@@ -579,7 +579,7 @@ class TestArrowFlightClient:
         # Arrange
         connector = storage_connector.BigQueryConnector(0, "BigQueryConnector", 99)
         external_feature_group = feature_group.ExternalFeatureGroup(
-            storage_connector=connector, primary_key=""
+            storage_connector=connector, primary_key=[""]
         )
         mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
 
@@ -594,7 +594,7 @@ class TestArrowFlightClient:
     def test_supports_mixed_featuregroups_unsupported(self, mocker, backend_fixtures):
         # Arrange
         external_feature_group = feature_group.ExternalFeatureGroup(
-            storage_connector=self.FakeConnector(), primary_key=""
+            storage_connector=self.FakeConnector(), primary_key=[""]
         )
         mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
 
