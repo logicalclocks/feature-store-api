@@ -22,9 +22,6 @@ from hsfs.feature_store import FeatureStore
 
 
 class FeatureStoreApi:
-    def __init__(self) -> None:
-        pass
-
     def get(self, identifier: Union[int, str]) -> FeatureStore:
         """Get feature store with specific id or name.
 

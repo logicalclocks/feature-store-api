@@ -60,9 +60,9 @@
           "onlineEnabled": true,
           "timeTravelFormat": "HUDI"
         },
-        "left_features": "test_left_features",
+        "left_features": ["intt"],
         "feature_store_name": "test_feature_store_name",
-        "feature_store_id": "test_feature_store_id",
+        "feature_store_id": 67,
         "left_feature_group_start_time": "test_start_time",
         "left_feature_group_end_time": "test_end_time",
         "joins": [
@@ -125,18 +125,18 @@
                 "onlineEnabled": true,
                 "timeTravelFormat": "HUDI"
               },
-              "left_features": "test_left_features",
+              "left_features": ["intt"],
               "feature_store_name": "test_feature_store_name",
-              "feature_store_id": "test_feature_store_id",
+              "feature_store_id": 67,
               "left_feature_group_start_time": "test_left_feature_group_start_time",
               "left_feature_group_end_time": "test_left_feature_group_end_time",
               "joins": [],
               "filter": null
             },
-            "on": "test_on",
-            "left_on": "test_left_on",
-            "right_on": "test_right_on",
-            "type": "test_join_type",
+            "on": ["test_on"],
+            "left_on": ["test_left_on"],
+            "right_on": ["test_right_on"],
+            "join_type": "inner",
             "prefix": "test_prefix"
           }
         ],
@@ -167,40 +167,40 @@
           "name": "intt",
           "label": "t",
           "featuregroup": {
-              "type": "featuregroupDTO",
-              "featurestoreId": 67,
-              "version": 1,
-              "name": "fg_test",
-              "id": 15,
-              "statisticsConfig": {
-                  "enabled": true,
-                  "histograms": false,
-                  "correlations": false,
-                  "exactUniqueness": false,
-                  "columns": []
-              },
-              "onlineEnabled": false,
-              "deprecated": false
+            "type": "featuregroupDTO",
+            "featurestoreId": 67,
+            "version": 1,
+            "name": "fg_test",
+            "id": 15,
+            "statisticsConfig": {
+              "enabled": true,
+              "histograms": false,
+              "correlations": false,
+              "exactUniqueness": false,
+              "columns": []
+            },
+            "onlineEnabled": false,
+            "deprecated": false
           }
         },
         {
           "name": "stringt",
-          "featurestoreId":	67,
+          "featurestoreId": 67,
           "featuregroup": {
-              "type": "featuregroupDTO",
-              "featurestoreId": 67,
-              "version": 1,
-              "name": "fg_test",
-              "id": 15,
-              "statisticsConfig": {
-                  "enabled": true,
-                  "histograms": false,
-                  "correlations": false,
-                  "exactUniqueness": false,
-                  "columns": []
-              },
-              "onlineEnabled": false,
-              "deprecated": false
+            "type": "featuregroupDTO",
+            "featurestoreId": 67,
+            "version": 1,
+            "name": "fg_test",
+            "id": 15,
+            "statisticsConfig": {
+              "enabled": true,
+              "histograms": false,
+              "correlations": false,
+              "exactUniqueness": false,
+              "columns": []
+            },
+            "onlineEnabled": false,
+            "deprecated": false
           }
         }
       ]
@@ -268,9 +268,9 @@
           "timeTravelFormat": "HUDI",
           "deprecated": false
         },
-        "left_features": "test_left_features",
+        "left_features": ["test_left_features"],
         "feature_store_name": "test_feature_store_name",
-        "feature_store_id": "test_feature_store_id",
+        "feature_store_id": 67,
         "left_feature_group_start_time": "test_start_time",
         "left_feature_group_end_time": "test_end_time",
         "joins": [
@@ -333,18 +333,18 @@
                 "onlineEnabled": true,
                 "timeTravelFormat": "HUDI"
               },
-              "left_features": "test_left_features",
+              "left_features": ["test_left_features"],
               "feature_store_name": "test_feature_store_name",
-              "feature_store_id": "test_feature_store_id",
+              "feature_store_id": 67,
               "left_feature_group_start_time": "test_left_feature_group_start_time",
               "left_feature_group_end_time": "test_left_feature_group_end_time",
               "joins": [],
               "filter": null
             },
-            "on": "test_on",
-            "left_on": "test_left_on",
-            "right_on": "test_right_on",
-            "type": "test_join_type",
+            "on": ["test_on"],
+            "left_on": ["test_left_on"],
+            "right_on": ["test_right_on"],
+            "join_type": "left",
             "prefix": "test_prefix"
           }
         ],
@@ -501,10 +501,10 @@
               "joins": [],
               "filter": null
             },
-            "on": "test_on",
-            "left_on": "test_left_on",
-            "right_on": "test_right_on",
-            "type": "test_join_type",
+            "on": ["test_on"],
+            "left_on": ["test_left_on"],
+            "right_on": ["test_right_on"],
+            "join_type": "left",
             "prefix": "test_prefix"
           }
         ],

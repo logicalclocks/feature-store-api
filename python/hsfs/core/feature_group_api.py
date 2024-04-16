@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from hsfs import client, feature_group, feature_group_commit
 from hsfs.core import explicit_provenance, ingestion_job
