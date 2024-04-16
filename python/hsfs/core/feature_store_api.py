@@ -15,15 +15,14 @@
 #
 from __future__ import annotations
 
+from typing import Union
+
 from hsfs import client
 from hsfs.feature_store import FeatureStore
 
 
 class FeatureStoreApi:
-    def __init__(self):
-        pass
-
-    def get(self, identifier):
+    def get(self, identifier: Union[int, str]) -> FeatureStore:
         """Get feature store with specific id or name.
 
         :param identifier: id or name of the feature store

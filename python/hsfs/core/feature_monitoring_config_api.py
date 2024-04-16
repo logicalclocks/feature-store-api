@@ -15,7 +15,7 @@
 #
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from hsfs import client
 from hsfs.core import feature_monitoring_config as fmc
@@ -41,7 +41,7 @@ class FeatureMonitoringConfigApi:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> None:
         if feature_group_id is None:
             assert feature_view_name is not None
             assert feature_view_version is not None
@@ -53,8 +53,8 @@ class FeatureMonitoringConfigApi:
 
     def create(
         self,
-        fm_config: "fmc.FeatureMonitoringConfig",
-    ) -> "fmc.FeatureMonitoringConfig":
+        fm_config: fmc.FeatureMonitoringConfig,
+    ) -> fmc.FeatureMonitoringConfig:
         """Create an feature monitoring configuration attached to the Feature of a Feature Group.
         :param fm_config: feature monitoring config object to be attached to a Feature
         :type fm_config: `FeatureMonitoringConfiguration`
@@ -74,8 +74,8 @@ class FeatureMonitoringConfigApi:
 
     def update(
         self,
-        fm_config: "fmc.FeatureMonitoringConfig",
-    ) -> "fmc.FeatureMonitoringConfig":
+        fm_config: fmc.FeatureMonitoringConfig,
+    ) -> fmc.FeatureMonitoringConfig:
         """Update a feature monitoring configuration attached to a Feature.
         :param fm_config: feature monitoring configuration to be attached to a Feature
         :type fm_config: `FeatureMonitoringConfig`
@@ -116,7 +116,7 @@ class FeatureMonitoringConfigApi:
     def get_by_id(
         self,
         config_id: int,
-    ) -> Optional["fmc.FeatureMonitoringConfig"]:
+    ) -> Optional[fmc.FeatureMonitoringConfig]:
         """Get the Feature Monitoring Configuration attached to a Feature.
         :param config_id: Id of the feature monitoring configuration to fetch
         :type config_id: int
@@ -136,7 +136,7 @@ class FeatureMonitoringConfigApi:
     def get_by_feature_name(
         self,
         feature_name: str,
-    ) -> Optional["fmc.FeatureMonitoringConfig"]:
+    ) -> Optional[fmc.FeatureMonitoringConfig]:
         """Get all Feature Monitoring Configurations attached to a Feature Name.
         :param feature_name: Name of the feature for which to fetch monitoring configuration
         :type feature_name: str
@@ -156,7 +156,7 @@ class FeatureMonitoringConfigApi:
     def get_by_name(
         self,
         name: str,
-    ) -> Optional["fmc.FeatureMonitoringConfig"]:
+    ) -> Optional[fmc.FeatureMonitoringConfig]:
         """Get all Feature Monitoring Configurations attached to a Feature Name.
         :param name: Name of the feature monitoring configuration to fetch
         :type name: str
@@ -173,7 +173,7 @@ class FeatureMonitoringConfigApi:
             _client._send_request("GET", path_params)
         )
 
-    def get_by_entity(self) -> List["fmc.FeatureMonitoringConfig"]:
+    def get_by_entity(self) -> List[fmc.FeatureMonitoringConfig]:
         """Get all Feature Monitoring Configurations attached to a Feature Name.
         :param name: Name of the feature monitoring configuration to fetch
         :type name: str
@@ -233,8 +233,8 @@ class FeatureMonitoringConfigApi:
         feature_name: Optional[str] = None,
         config_id: Optional[int] = None,
         name: Optional[str] = None,
-        entity: Optional[bool] = False,
-    ) -> List[str]:
+        entity: bool = False,
+    ) -> List[Union[str, int]]:
         """Builds the path parameters for the Feature Monitoring Config API.
         :param project_id: Id of the project
         :type project_id: int

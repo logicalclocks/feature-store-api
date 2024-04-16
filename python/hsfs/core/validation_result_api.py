@@ -21,7 +21,7 @@ from hsfs import client, ge_validation_result
 
 
 class ValidationResultApi:
-    def __init__(self, feature_store_id: int, feature_group_id: int):
+    def __init__(self, feature_store_id: int, feature_group_id: int) -> None:
         """Validation Result endpoints for the featuregroup resource.
 
         :param feature_store_id: id of the respective featurestore

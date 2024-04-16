@@ -15,14 +15,24 @@
 #
 from __future__ import annotations
 
-from hsfs import client, transformation_function, transformation_function_attached
+from typing import List, Optional, Union
+
+from hsfs import (
+    client,
+    training_dataset,
+    transformation_function,
+    transformation_function_attached,
+)
 
 
 class TransformationFunctionApi:
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id: int) -> None:
         self._feature_store_id = feature_store_id
 
-    def register_transformation_fn(self, transformation_function_instance):
+    def register_transformation_fn(
+        self,
+        transformation_function_instance: transformation_function.TransformationFunction,
+    ) -> transformation_function.TransformationFunction:
         """
         Register transformation function in backend
         Args:
@@ -47,13 +57,18 @@ class TransformationFunctionApi:
             )
         )
 
-    def get_transformation_fn(self, name, version):
+    def get_transformation_fn(
+        self, name: Optional[str], version: Optional[int]
+    ) -> Union[
+        transformation_function.TransformationFunction,
+        List[transformation_function.TransformationFunction],
+    ]:
         """
         Retrieve transformation function from backend
         Args:
-        name: TransformationFunction name, required
+        name: TransformationFunction name, optional
             name of transformation function.
-        version: TransformationFunction version, required
+        version: TransformationFunction version, optional
             version of transformation function.
         """
         _client = client.get_instance()
@@ -77,7 +92,10 @@ class TransformationFunctionApi:
                 _client._send_request("GET", path_params)
             )
 
-    def delete(self, transformation_function_instance):
+    def delete(
+        self,
+        transformation_function_instance: transformation_function.TransformationFunction,
+    ) -> None:
         """Delete a transformation function.
         Args:
         transformation_function_instance: TransformationFunction, required
@@ -95,7 +113,9 @@ class TransformationFunctionApi:
         headers = {"content-type": "application/json"}
         _client._send_request("DELETE", path_params, headers=headers)
 
-    def get_td_transformation_fn(self, training_dataset_instance):
+    def get_td_transformation_fn(
+        self, training_dataset_instance: training_dataset.TrainingDataset
+    ) -> transformation_function_attached.TransformationFunctionAttached:
         """
         Retrieve TransformationFunctionAttached instance
         Args:

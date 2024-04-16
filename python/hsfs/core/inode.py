@@ -14,20 +14,29 @@
 #
 from __future__ import annotations
 
+from typing import Any, Dict, List, Optional
+
 import humps
 
 
 class Inode:
-    def __init__(self, href=None, attributes=None, zip_state=None, tags=None, **kwargs):
+    def __init__(
+        self,
+        attributes: Dict[str, Any],
+        href: Optional[str] = None,
+        zip_state: Optional[str] = None,
+        tags: Optional[Dict[str, Any]] = None,
+        **kwargs,
+    ) -> None:
         self._path = attributes["path"]
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> List[Inode]:
         json_decamelized = humps.decamelize(json_dict)["items"]
         for inode in json_decamelized:
             _ = inode.pop("type", None)
         return [cls(**inode) for inode in json_decamelized]
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self._path

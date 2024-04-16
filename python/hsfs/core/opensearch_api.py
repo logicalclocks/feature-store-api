@@ -15,6 +15,8 @@
 #
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from furl import furl
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException
@@ -44,14 +46,14 @@ class OPENSEARCH_CONFIG:
 class OpenSearchApi:
     def __init__(
         self,
-        project_id,
-        project_name,
-    ):
-        self._project_id = project_id
-        self._project_name = project_name
-        self._variable_api = VariableApi()
+        project_id: int,
+        project_name: str,
+    ) -> None:
+        self._project_id: int = project_id
+        self._project_name: str = project_name
+        self._variable_api: VariableApi = VariableApi()
 
-    def _get_opensearch_url(self):
+    def _get_opensearch_url(self) -> str:
         if isinstance(client.get_instance(), client.external.Client):
             external_domain = self._variable_api.get_loadbalancer_external_domain()
             if external_domain == "":
@@ -67,7 +69,7 @@ class OpenSearchApi:
                 )
             return f"https://rest.elastic.service.{service_discovery_domain}:9200"
 
-    def get_project_index(self, index):
+    def get_project_index(self, index: str) -> str:
         """
         This helper method prefixes the supplied index name with the project name to avoid index name clashes.
 
@@ -79,7 +81,7 @@ class OpenSearchApi:
         """
         return (self._project_name + "_" + index).lower()
 
-    def get_default_py_config(self):
+    def get_default_py_config(self) -> Dict[str, Any]:
         """
         Get the required opensearch configuration to setup a connection using the *opensearch-py* library.
 
@@ -111,7 +113,7 @@ class OpenSearchApi:
             OPENSEARCH_CONFIG.CA_CERTS: client.get_instance()._get_ca_chain_path(),
         }
 
-    def _get_authorization_token(self):
+    def _get_authorization_token(self) -> str:
         """Get opensearch jwt token.
 
         # Returns

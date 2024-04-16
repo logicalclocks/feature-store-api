@@ -15,11 +15,13 @@
 #
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from hsfs import client
 
 
 class ServicesApi:
-    def get_service(self, service):
+    def get_service(self, service: str) -> Dict[str, Any]:
         _client = client.get_instance()
         path_params = [
             "services",
