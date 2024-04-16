@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import importlib.util
 import os
+from typing import Any, Optional
 
-from hsfs import client, engine, usage, util
+from hsfs import client, engine, feature_store, usage, util
 from hsfs.core import (
     feature_store_api,
     hosts_api,
@@ -127,18 +128,18 @@ class Connection:
 
     def __init__(
         self,
-        host: str = None,
+        host: Optional[str] = None,
         port: int = HOPSWORKS_PORT_DEFAULT,
-        project: str = None,
-        engine: str = None,
+        project: Optional[str] = None,
+        engine: Optional[str] = None,
         region_name: str = AWS_DEFAULT_REGION,
         secrets_store: str = SECRETS_STORE_DEFAULT,
         hostname_verification: bool = HOSTNAME_VERIFICATION_DEFAULT,
-        trust_store_path: str = None,
+        trust_store_path: Optional[str] = None,
         cert_folder: str = CERT_FOLDER_DEFAULT,
-        api_key_file: str = None,
-        api_key_value: str = None,
-    ):
+        api_key_file: Optional[str] = None,
+        api_key_value: Optional[str] = None,
+    ) -> None:
         self._host = host
         self._port = port
         self._project = project
@@ -156,7 +157,9 @@ class Connection:
 
     @usage.method_logger
     @connected
-    def get_feature_store(self, name: str = None):
+    def get_feature_store(
+        self, name: Optional[str] = None
+    ) -> feature_store.FeatureStore:
         """Get a reference to a feature store to perform operations on.
 
         Defaulting to the project name of default feature store. To get a
@@ -187,7 +190,7 @@ class Connection:
         return self._feature_store_api.get(util.append_feature_store_suffix(name))
 
     @not_connected
-    def connect(self):
+    def connect(self) -> None:
         """Instantiate the connection.
 
         Creating a `Connection` object implicitly calls this method for you to
@@ -263,7 +266,7 @@ class Connection:
             raise
         print("Connected. Call `.close()` to terminate connection gracefully.")
 
-    def close(self):
+    def close(self) -> None:
         """Close a connection gracefully.
 
         This will clean up any materialized certificates on the local file system of
@@ -288,18 +291,18 @@ class Connection:
     @classmethod
     def connection(
         cls,
-        host: str = None,
+        host: Optional[str] = None,
         port: int = HOPSWORKS_PORT_DEFAULT,
-        project: str = None,
-        engine: str = None,
+        project: Optional[str] = None,
+        engine: Optional[str] = None,
         region_name: str = AWS_DEFAULT_REGION,
         secrets_store: str = SECRETS_STORE_DEFAULT,
         hostname_verification: bool = HOSTNAME_VERIFICATION_DEFAULT,
-        trust_store_path: str = None,
+        trust_store_path: Optional[str] = None,
         cert_folder: str = CERT_FOLDER_DEFAULT,
-        api_key_file: str = None,
-        api_key_value: str = None,
-    ):
+        api_key_file: Optional[str] = None,
+        api_key_value: Optional[str] = None,
+    ) -> Connection:
         """Connection factory method, accessible through `hsfs.connection()`."""
         return cls(
             host,
@@ -316,43 +319,43 @@ class Connection:
         )
 
     @property
-    def host(self):
+    def host(self) -> Optional[str]:
         return self._host
 
     @host.setter
     @not_connected
-    def host(self, host):
+    def host(self, host: Optional[str]) -> None:
         self._host = host
 
     @property
-    def port(self):
+    def port(self) -> int:
         return self._port
 
     @port.setter
     @not_connected
-    def port(self, port):
+    def port(self, port) -> int:
         self._port = port
 
     @property
-    def project(self):
+    def project(self) -> Optional[str]:
         return self._project
 
     @project.setter
     @not_connected
-    def project(self, project):
+    def project(self, project: Optional[str]) -> str:
         self._project = project
 
     @property
-    def region_name(self):
+    def region_name(self) -> str:
         return self._region_name
 
     @region_name.setter
     @not_connected
-    def region_name(self, region_name):
+    def region_name(self, region_name: str) -> None:
         self._region_name = region_name
 
     @property
-    def secrets_store(self):
+    def secrets_store(self) -> str:
         return self._secrets_store
 
     @secrets_store.setter
@@ -370,44 +373,44 @@ class Connection:
         self._hostname_verification = hostname_verification
 
     @property
-    def trust_store_path(self):
+    def trust_store_path(self) -> Optional[str]:
         return self._trust_store_path
 
     @trust_store_path.setter
     @not_connected
-    def trust_store_path(self, trust_store_path):
+    def trust_store_path(self, trust_store_path: Optional[str]) -> None:
         self._trust_store_path = trust_store_path
 
     @property
-    def cert_folder(self):
+    def cert_folder(self) -> str:
         return self._cert_folder
 
     @cert_folder.setter
     @not_connected
-    def cert_folder(self, cert_folder):
+    def cert_folder(self, cert_folder: str) -> None:
         self._cert_folder = cert_folder
 
     @property
-    def api_key_file(self):
+    def api_key_file(self) -> Optional[str]:
         return self._api_key_file
 
     @property
-    def api_key_value(self):
+    def api_key_value(self) -> Optional[str]:
         return self._api_key_value
 
     @api_key_file.setter
     @not_connected
-    def api_key_file(self, api_key_file):
+    def api_key_file(self, api_key_file: Optional[str]) -> None:
         self._api_key_file = api_key_file
 
     @api_key_value.setter
     @not_connected
-    def api_key_value(self, api_key_value):
+    def api_key_value(self, api_key_value: Optional[str]) -> Optional[str]:
         self._api_key_value = api_key_value
 
-    def __enter__(self):
+    def __enter__(self) -> Connection:
         self.connect()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type: Any, value: Any, traceback: Any):
         self.close()
