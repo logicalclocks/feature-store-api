@@ -15,6 +15,7 @@
 #
 from __future__ import annotations
 
+from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_api, kafka_api, storage_connector_api, tags_api
 
@@ -104,21 +105,29 @@ class FeatureGroupBaseEngine:
         new_features = []
         for feature in feature_group.features:
             if not any(
-                updated.name.lower() == feature.name for updated in updated_features
+                util.autofix_feature_name(updated.name) == feature.name
+                for updated in updated_features
             ):
                 new_features.append(feature)
         return new_features + updated_features
 
     def _verify_schema_compatibility(self, feature_group_features, dataframe_features):
         err = []
-        feature_df_dict = {feat.name: feat.type for feat in dataframe_features}
+        feature_df_dict = {
+            util.autofix_feature_name(feat.name): feat.type
+            for feat in dataframe_features
+        }
         for feature_fg in feature_group_features:
             fg_type = feature_fg.type.lower().replace(" ", "")
             # check if feature exists dataframe
-            if feature_fg.name in feature_df_dict:
-                df_type = feature_df_dict[feature_fg.name].lower().replace(" ", "")
+            if util.autofix_feature_name(feature_fg.name) in feature_df_dict:
+                df_type = (
+                    feature_df_dict[util.autofix_feature_name(feature_fg.name)]
+                    .lower()
+                    .replace(" ", "")
+                )
                 # remove match from lookup table
-                del feature_df_dict[feature_fg.name]
+                del feature_df_dict[util.autofix_feature_name(feature_fg.name)]
 
                 # check if types match
                 if fg_type != df_type:
@@ -127,14 +136,14 @@ class FeatureGroupBaseEngine:
                         continue
 
                     err += [
-                        f"{feature_fg.name} ("
+                        f"{util.autofix_feature_name(feature_fg.name)} ("
                         f"expected type: '{fg_type}', "
                         f"derived from input: '{df_type}') has the wrong type."
                     ]
 
             else:
                 err += [
-                    f"{feature_fg.name} (type: '{feature_fg.type}') is missing from "
+                    f"{util.autofix_feature_name(feature_fg.name)} (type: '{feature_fg.type}') is missing from "
                     f"input dataframe."
                 ]
 

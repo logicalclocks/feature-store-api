@@ -67,9 +67,8 @@ class FeatureDescriptiveStatistics:
         **kwargs,
     ):
         self._id = id
-        self._feature_name = feature_name
         self._feature_type = feature_type
-        self._feature_name = feature_name
+        self._feature_name = util.autofix_feature_name(feature_name)
         self._count = count
         self._completeness = completeness
         self._num_non_null_values = num_non_null_values

@@ -3426,7 +3426,7 @@ class FeatureView:
 
     @labels.setter
     def labels(self, labels: List[str]) -> None:
-        self._labels = [lb.lower() for lb in labels]
+        self._labels = [util.autofix_feature_name(lb) for lb in labels]
 
     @property
     def inference_helper_columns(self) -> List[str]:
@@ -3439,7 +3439,7 @@ class FeatureView:
     @inference_helper_columns.setter
     def inference_helper_columns(self, inference_helper_columns: List[str]) -> None:
         self._inference_helper_columns = [
-            exf.lower() for exf in inference_helper_columns
+            util.autofix_feature_name(exf) for exf in inference_helper_columns
         ]
 
     @property
@@ -3452,7 +3452,9 @@ class FeatureView:
 
     @training_helper_columns.setter
     def training_helper_columns(self, training_helper_columns: List[str]) -> None:
-        self._training_helper_columns = [exf.lower() for exf in training_helper_columns]
+        self._training_helper_columns = [
+            util.autofix_feature_name(exf) for exf in training_helper_columns
+        ]
 
     @property
     def description(self) -> Optional[str]:
