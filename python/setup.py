@@ -11,7 +11,7 @@ __version__ = (
 )
 
 
-def read(fname):
+def read(fname: str) -> str:
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
@@ -36,7 +36,7 @@ setup(
         "fsspec",
         "retrying",
         "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql",
-        "polars==0.20.17",
+        "polars>=0.20.18,<=0.21.0",
         "opensearch-py>=1.1.0,<=2.4.2",
     ],
     extras_require={
@@ -46,6 +46,7 @@ setup(
             "ruff==0.3.2",
             "pyspark==3.1.1",
             "moto[s3]==5.0.0",
+            "typeguard==4.2.1",
         ],
         "dev-pandas1": [
             "pytest==7.4.4",

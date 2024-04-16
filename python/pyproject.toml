@@ -34,8 +34,8 @@ exclude = [
 line-length = 88
 indent-width = 4
 
-# Assume Python 3.11
-target-version = "py311"
+# Assume Python 3.8+ syntax.
+target-version = "py38"
 
 [tool.ruff.lint]
 # 1. Enable flake8-bugbear (`B`) rules, in addition to the defaults.
@@ -44,8 +44,9 @@ ignore = [
     "B905",   # zip has no strict kwarg until Python 3.10
     "ANN101", # Missing type annotation for self in method
     "ANN102", # Missing type annotation for cls in classmethod
-    "ANN002", # Missing type annotation for *args
-    "ANN003", # Missing type annotation for **kwargs
+    "ANN003", # Missing type annotation for **kwarg in function
+    "ANN002", # Missing type annotation for *args in function
+    "ANN401", # Allow Any in type annotations
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

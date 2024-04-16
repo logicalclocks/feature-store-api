@@ -381,15 +381,15 @@ class VectorServer:
     @property
     def online_store_sql_client(
         self,
-    ) -> Optional["online_store_sql_client.OnlineStoreSqlClient"]:
+    ) -> Optional[online_store_sql_client.OnlineStoreSqlClient]:
         return self._online_store_sql_client
 
     @property
-    def serving_keys(self) -> List["hsfs.serving_key.ServingKey"]:
+    def serving_keys(self) -> List[hsfs.serving_key.ServingKey]:
         return self._serving_keys
 
     @serving_keys.setter
-    def serving_keys(self, serving_vector_keys: List["hsfs.serving_key.ServingKey"]):
+    def serving_keys(self, serving_vector_keys: List[hsfs.serving_key.ServingKey]):
         self._serving_keys = serving_vector_keys
 
     @property
@@ -404,12 +404,12 @@ class VectorServer:
     def transformation_functions(
         self,
     ) -> Optional[
-        Dict[str, "transformation_function_attached.TransformationFunctionAttached"]
+        Dict[str, transformation_function_attached.TransformationFunctionAttached]
     ]:
         return self._transformation_functions
 
     @property
     def transformation_function_engine(
         self,
-    ) -> "transformation_function_engine.TransformationFunctionEngine":
+    ) -> transformation_function_engine.TransformationFunctionEngine:
         return self._transformation_function_engine
