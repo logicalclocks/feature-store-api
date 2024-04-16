@@ -97,18 +97,12 @@ class VectorServer:
         self.init_transformation(entity)
         self._complex_features = self.get_complex_feature_schemas()
 
-        if self._init_online_store_rest_client is True:
-            self.setup_online_store_rest_client_and_engine(
-                entity=entity, options=options
-            )
-
-        if self._init_online_store_sql_client is True:
-            self.setup_online_store_sql_client(
-                entity=entity,
-                external=external,
-                inference_helper_columns=inference_helper_columns,
-                options=options,
-            )
+        self.setup_online_store_sql_client(
+            entity=entity,
+            external=external,
+            inference_helper_columns=inference_helper_columns,
+            options=options,
+        )
 
     def init_batch_scoring(
         self,
