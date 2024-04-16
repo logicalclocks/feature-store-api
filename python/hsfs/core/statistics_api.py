@@ -13,15 +13,16 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
-from hsfs import client, feature_view, statistics
+from hsfs import client, feature_group, feature_view, statistics, training_dataset
 from hsfs.core import job
 
 
 class StatisticsApi:
-    def __init__(self, feature_store_id, entity_type):
+    def __init__(self, feature_store_id: int, entity_type: str) -> None:
         """Statistics endpoint for `trainingdatasets` and `featuregroups` resource.
 
         :param feature_store_id: id of the respective featurestore
@@ -33,7 +34,14 @@ class StatisticsApi:
         self._entity_type = entity_type  # TODO: Support FV
 
     def post(
-        self, metadata_instance, stats, training_dataset_version
+        self,
+        metadata_instance: Union[
+            feature_view.FeatureView,
+            training_dataset.TrainingDataset,
+            feature_group.FeatureGroup,
+        ],
+        stats: statistics.Statistics,
+        training_dataset_version: Optional[int],
     ) -> Optional[statistics.Statistics]:
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance, training_dataset_version)
@@ -48,14 +56,18 @@ class StatisticsApi:
 
     def get(
         self,
-        metadata_instance,
-        computation_time=None,
-        start_commit_time=None,
-        end_commit_time=None,
-        feature_names=None,
-        row_percentage=None,
-        before_transformation=None,
-        training_dataset_version=None,
+        metadata_instance: Union[
+            feature_view.FeatureView,
+            training_dataset.TrainingDataset,
+            feature_group.FeatureGroup,
+        ],
+        computation_time: Optional[int] = None,
+        start_commit_time: Optional[int] = None,
+        end_commit_time: Optional[int] = None,
+        feature_names: List[str] = None,
+        row_percentage: Optional[float] = None,
+        before_transformation: bool = False,
+        training_dataset_version: Optional[int] = None,
     ) -> Optional[statistics.Statistics]:
         """Get single statistics of an entity.
 
@@ -107,14 +119,18 @@ class StatisticsApi:
 
     def get_all(
         self,
-        metadata_instance,
-        computation_time=None,
-        start_commit_time=None,
-        end_commit_time=None,
-        feature_names=None,
-        row_percentage=None,
-        before_transformation=None,
-        training_dataset_version=None,
+        metadata_instance: Union[
+            feature_view.FeatureView,
+            training_dataset.TrainingDataset,
+            feature_group.FeatureGroup,
+        ],
+        computation_time: Optional[int] = None,
+        start_commit_time: Optional[int] = None,
+        end_commit_time: Optional[int] = None,
+        feature_names: Optional[List[str]] = None,
+        row_percentage: Optional[float] = None,
+        before_transformation: bool = False,
+        training_dataset_version: Optional[int] = None,
     ) -> Optional[List[statistics.Statistics]]:
         """Get all statistics of an entity.
 
@@ -162,7 +178,15 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def compute(self, metadata_instance, training_dataset_version=None) -> job.Job:
+    def compute(
+        self,
+        metadata_instance: Union[
+            training_dataset.TrainingDataset,
+            feature_view.FeatureView,
+            feature_group.FeatureGroup,
+        ],
+        training_dataset_version: Optional[int] = None,
+    ) -> job.Job:
         """Compute statistics for an entity.
 
         :param metadata_instance: metadata object of the instance to compute statistics for
@@ -176,7 +200,15 @@ class StatisticsApi:
         ]
         return job.Job.from_response_json(_client._send_request("POST", path_params))
 
-    def get_path(self, metadata_instance, training_dataset_version=None) -> list:
+    def get_path(
+        self,
+        metadata_instance: Union[
+            training_dataset.TrainingDataset,
+            feature_group.FeatureGroup,
+            feature_view.FeatureView,
+        ],
+        training_dataset_version: Optional[int] = None,
+    ) -> List[Union[str, int]]:
         """Get statistics path.
 
         :param metadata_instance: metadata object of the instance to compute statistics for
@@ -214,23 +246,25 @@ class StatisticsApi:
                 "statistics",
             ]
 
-    def _extract_single_stats(self, stats) -> Optional[statistics.Statistics]:
+    def _extract_single_stats(
+        self, stats: Union[statistics.Statistics, List[statistics.Statistics]]
+    ) -> Optional[statistics.Statistics]:
         return stats[0] if isinstance(stats, list) else stats
 
     def _build_get_query_params(
         self,
-        computation_time=None,
-        start_commit_time=None,
-        end_commit_time=None,
-        filter_eq_times=None,
-        feature_names=None,
-        row_percentage=None,
-        before_transformation=None,
-        training_dataset_version=None,
-        offset=0,
-        limit=None,
-        with_content=False,
-    ) -> dict:
+        computation_time: Optional[int] = None,
+        start_commit_time: Optional[int] = None,
+        end_commit_time: Optional[int] = None,
+        filter_eq_times: bool = False,
+        feature_names: Optional[List[str]] = None,
+        row_percentage: Optional[float] = None,
+        before_transformation: bool = False,
+        training_dataset_version: Optional[int] = None,
+        offset: int = 0,
+        limit: Optional[int] = None,
+        with_content: bool = False,
+    ) -> Dict[str, Any]:
         """Build query parameters for statistics requests.
 
         :param computation_time: Time at which statistics where computed
