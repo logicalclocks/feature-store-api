@@ -50,7 +50,9 @@ def _handle_opensearch_exception(func):
     return error_handler_wrapper
 
 class OpensearchRequestOption:
-    TIMEOUT = "timeout"
+    DEFAULT_OPTION_MAP = {
+       "timeout": 30,
+    }
 
     @classmethod
     def get_options(cls, options: dict):
@@ -66,16 +68,19 @@ class OpensearchRequestOption:
             attribute values of the OpensearchRequestOption class, and values are obtained
             either from the provided options or default values if not available.
         """
-        option_map = {
-            cls.TIMEOUT: 30,
-        }
+        # make lower case to avoid issues with cases
+        options = {k.lower(): v for k, v in options.items()}
+
         if options:
-            # Iterate over attributes of the OpensearchRequestOption class
-            for _, attr_value in vars(cls).items():
-                # Check if the attribute value exists in the options dictionary
-                if attr_value in options:
-                    option_map[attr_value] = options[attr_value]
-        return option_map
+            new_options = {}
+            for option, value in cls.DEFAULT_OPTION_MAP.items():
+                if option in options:
+                    new_options[option] = options[option]
+                else:
+                    new_options[option] = value
+            return new_options
+        else:
+            return cls.DEFAULT_OPTION_MAP
 
 
 class OpenSearchClientSingleton:
