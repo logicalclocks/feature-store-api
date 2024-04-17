@@ -33,10 +33,12 @@ from hsfs import (
     engine,
     feature,
     feature_group_writer,
-    feature_store,
     tag,
     user,
     util,
+)
+from hsfs import (
+    feature_store as feature_store_mod,
 )
 from hsfs import (
     storage_connector as sc,
@@ -150,13 +152,13 @@ class FeatureGroupBase:
             )
 
         self._feature_store_id = featurestore_id
-        self._variable_api: "VariableApi" = VariableApi()
+        self._variable_api: VariableApi = VariableApi()
         self._feature_group_engine: Optional[
-            "feature_group_engine.FeatureGroupEngine"
+            feature_group_engine.FeatureGroupEngine
         ] = None
         self._multi_part_insert: bool = False
         self._embedding_index = embedding_index
-        self._feature_store: Optional["feature_store.FeatureStore"] = None
+        self._feature_store = None
 
         self.check_deprecated()
 
@@ -1557,11 +1559,11 @@ class FeatureGroupBase:
         return self._feature_store_id
 
     @property
-    def feature_store(self) -> feature_store.FeatureStore:
+    def feature_store(self) -> feature_store_mod.FeatureStore:
         return self._feature_store
 
     @feature_store.setter
-    def feature_store(self, feature_store: feature_store.FeatureStore) -> None:
+    def feature_store(self, feature_store: feature_store_mod.FeatureStore) -> None:
         self._feature_store = feature_store
 
     @property
