@@ -716,7 +716,7 @@ class Engine:
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
             ]
-            space_features = [col for col in dataframe.columns if col.count(" ") > 0]
+            space_features = [col for col in dataframe.columns if " " in col]
 
             # make shallow copy so the original df does not get changed
             # this is always needed to keep the user df unchanged
