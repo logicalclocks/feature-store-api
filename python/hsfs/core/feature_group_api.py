@@ -81,6 +81,8 @@ class FeatureGroupApi:
         query_params = None if version is None else {"version": version}
 
         fg_objs = []
+        # In principle unique names are enforced across fg type and this should therefore
+        # return only list of the same type. But it cost nothing to check in case this gets forgotten.
         for fg_json in _client._send_request("GET", path_params, query_params):
             if (
                 fg_json["type"] == self.BACKEND_FG_STREAM
@@ -95,7 +97,11 @@ class FeatureGroupApi:
                         feature_group.ExternalFeatureGroup.from_response_json(fg_json)
                     )
             else:
-                raise ValueError("Unknown feature group type: " + fg_json["type"])
+                raise ValueError(
+                    "Unknown feature group type: "
+                    + fg_json["type"]
+                    + ". Use get_external_feature_group or get_spine_feature_group instead."
+                )
 
         if version is not None:
             return fg_objs[0]
