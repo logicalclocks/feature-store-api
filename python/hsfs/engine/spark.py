@@ -277,7 +277,7 @@ class Engine:
                 )
             if len(space_features) > 0:
                 warnings.warn(
-                    "The ingested dataframe contains feature names with with spaces: `{}`. "
+                    "The ingested dataframe contains feature names with spaces: `{}`. "
                     "Feature names are sanitized to use underscore '_' in the feature store.".format(
                         space_features
                     ),
