@@ -118,16 +118,13 @@ class FeatureGroupBaseEngine:
             for feat in dataframe_features
         }
         for feature_fg in feature_group_features:
+            name = util.autofix_feature_name(feature_fg.name)
             fg_type = feature_fg.type.lower().replace(" ", "")
             # check if feature exists dataframe
-            if util.autofix_feature_name(feature_fg.name) in feature_df_dict:
-                df_type = (
-                    feature_df_dict[util.autofix_feature_name(feature_fg.name)]
-                    .lower()
-                    .replace(" ", "")
-                )
+            if name in feature_df_dict:
+                df_type = feature_df_dict[name].lower().replace(" ", "")
                 # remove match from lookup table
-                del feature_df_dict[util.autofix_feature_name(feature_fg.name)]
+                del feature_df_dict[name]
 
                 # check if types match
                 if fg_type != df_type:
@@ -136,21 +133,20 @@ class FeatureGroupBaseEngine:
                         continue
 
                     err += [
-                        f"{util.autofix_feature_name(feature_fg.name)} ("
-                        f"expected type: '{fg_type}', "
+                        f"{name} (expected type: '{fg_type}', "
                         f"derived from input: '{df_type}') has the wrong type."
                     ]
 
             else:
                 err += [
-                    f"{util.autofix_feature_name(feature_fg.name)} (type: '{feature_fg.type}') is missing from "
+                    f"{name} (type: '{feature_fg.type}') is missing from "
                     f"input dataframe."
                 ]
 
         # any features that are left in lookup table are superfluous
         for feature_df_name, feature_df_type in feature_df_dict.items():
             err += [
-                f"{feature_df_name} (type: '{feature_df_type}') does not exist "
+                f"{util.autofix_feature_name(feature_df_name)} (type: '{feature_df_type}') does not exist "
                 f"in feature group."
             ]
 
@@ -159,6 +155,8 @@ class FeatureGroupBaseEngine:
             raise FeatureStoreException(
                 "Features are not compatible with Feature Group schema: "
                 + "".join(["\n - " + e for e in err])
+                + "Note that feature (or column) names are case insensitive and "
+                "spaces are automatically replaced with underscores."
             )
 
     def get_subject(self, feature_group):
