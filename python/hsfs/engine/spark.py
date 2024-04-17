@@ -265,7 +265,7 @@ class Engine:
             upper_case_features = [
                 c for c in dataframe.columns if any(re.finditer("[A-Z]", c))
             ]
-            space_features = [c for c in dataframe.columns if c.count(" ") > 0]
+            space_features = [c for c in dataframe.columns if " " in c]
             if len(upper_case_features) > 0:
                 warnings.warn(
                     "The ingested dataframe contains upper case letters in feature names: `{}`. "
