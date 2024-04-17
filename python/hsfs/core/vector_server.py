@@ -22,6 +22,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 import avro.io
 import avro.schema
 import hsfs
+import hsfs.client
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -86,10 +87,12 @@ class VectorServer:
     def init_serving(
         self,
         entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
-        external: Optional[bool] = False,
+        external: Optional[bool] = None,
         inference_helper_columns: bool = False,
         options: Optional[Dict[str, Any]] = None,
     ):
+        if external is None:
+            external = isinstance(client.get_instance(), client.external.Client)
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
