@@ -241,7 +241,7 @@ class FeatureView:
     def init_serving(
         self,
         training_dataset_version: Optional[int] = None,
-        external: bool = False,
+        external: Optional[bool] = None,
         options: Optional[dict] = None,
     ) -> None:
         """Initialise feature view to retrieve feature vector from online and offline feature store.
