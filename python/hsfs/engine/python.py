@@ -514,7 +514,7 @@ class Engine:
         ).head(n)
 
     def register_external_temporary_table(
-        self, external_fg: "ExternalFeatureGroup", alias: str
+        self, external_fg: ExternalFeatureGroup, alias: str
     ) -> None:
         # No op to avoid query failure
         pass
@@ -1311,10 +1311,10 @@ class Engine:
 
     def _write_dataframe_kafka(
         self,
-        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
         dataframe: Union[pd.DataFrame, pl.DataFrame],
         offline_write_options: Dict[str, Any],
-    ) -> Optional["job.Job"]:
+    ) -> Optional[job.Job]:
         initial_check_point = ""
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
@@ -1448,7 +1448,7 @@ class Engine:
 
     def _kafka_get_offsets(
         self,
-        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
         offline_write_options: Dict[str, Any],
         high: bool,
     ) -> str:
@@ -1473,8 +1473,8 @@ class Engine:
 
     def _kafka_produce(
         self,
-        producer: "Producer",
-        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
+        producer: Producer,
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
         key: str,
         encoded_row: bytes,
         acked: callable,

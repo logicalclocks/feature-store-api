@@ -33,10 +33,12 @@ from hsfs import (
     engine,
     feature,
     feature_group_writer,
-    feature_store,
     tag,
     user,
     util,
+)
+from hsfs import (
+    feature_store as feature_store_mod,
 )
 from hsfs import (
     storage_connector as sc,
@@ -53,6 +55,7 @@ from hsfs.core import (
     feature_group_engine,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
+    feature_store_api,
     great_expectation_engine,
     job_api,
     spine_group_engine,
@@ -107,8 +110,16 @@ class FeatureGroupBase:
         self._notification_topic_name = notification_topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
+        self._variable_api: VariableApi = VariableApi()
+
+        self._multi_part_insert: bool = False
+        self._embedding_index = embedding_index
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
+
+        self._feature_group_engine: Optional[
+            feature_group_engine.FeatureGroupEngine
+        ] = None
         self._statistics_engine: "statistics_engine.StatisticsEngine" = (
             statistics_engine.StatisticsEngine(featurestore_id, self.ENTITY_TYPE)
         )
@@ -148,15 +159,6 @@ class FeatureGroupBase:
                 feature_store_id=self._feature_store_id,
                 feature_group_id=self._id,
             )
-
-        self._feature_store_id = featurestore_id
-        self._variable_api: "VariableApi" = VariableApi()
-        self._feature_group_engine: Optional[
-            "feature_group_engine.FeatureGroupEngine"
-        ] = None
-        self._multi_part_insert: bool = False
-        self._embedding_index = embedding_index
-        self._feature_store: Optional["feature_store.FeatureStore"] = None
 
         self.check_deprecated()
 
@@ -1557,11 +1559,15 @@ class FeatureGroupBase:
         return self._feature_store_id
 
     @property
-    def feature_store(self) -> feature_store.FeatureStore:
+    def feature_store(self) -> feature_store_mod.FeatureStore:
+        if self._feature_store is None:
+            self._feature_store = feature_store_api.FeatureStoreApi().get(
+                self._feature_store_id
+            )
         return self._feature_store
 
     @feature_store.setter
-    def feature_store(self, feature_store: feature_store.FeatureStore) -> None:
+    def feature_store(self, feature_store: feature_store_mod.FeatureStore) -> None:
         self._feature_store = feature_store
 
     @property

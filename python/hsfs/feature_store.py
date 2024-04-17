@@ -120,9 +120,9 @@ class FeatureStore:
     def get_feature_group(
         self, name: str, version: int = None
     ) -> Union[
-        "feature_group.FeatureGroup",
-        "feature_group.ExternalFeatureGroup",
-        "feature_group.SpineGroup",
+        feature_group.FeatureGroup,
+        feature_group.ExternalFeatureGroup,
+        feature_group.SpineGroup,
     ]:
         """Get a feature group entity from the feature store.
 
@@ -171,9 +171,9 @@ class FeatureStore:
         self, name: str
     ) -> List[
         Union[
-            "feature_group.FeatureGroup",
-            "feature_group.ExternalFeatureGroup",
-            "feature_group.SpineGroup",
+            feature_group.FeatureGroup,
+            feature_group.ExternalFeatureGroup,
+            feature_group.SpineGroup,
         ]
     ]:
         """Get a list of all versions of a feature group entity from the feature store.
