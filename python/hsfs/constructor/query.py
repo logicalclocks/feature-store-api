@@ -58,7 +58,7 @@ class Query:
             "feature_group.ExternalFeatureGroup",
             "feature_group.SpineGroup",
         ],
-        left_features: List[Union[str, "Feature"]],
+        left_features: List[Union[str, "Feature", Dict]],
         feature_store_name: Optional[str] = None,
         feature_store_id: Optional[int] = None,
         left_feature_group_start_time: Optional[Union[str, int, date, datetime]] = None,
