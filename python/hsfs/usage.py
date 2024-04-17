@@ -13,7 +13,7 @@ import sys
 import time
 import traceback
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from os.path import expanduser, join
 
 
@@ -225,9 +225,9 @@ def _send_log(execution_time, func, exception):
     log_data = {
         # env
         "user_id": _env_attr.get_user_id(),
-        "datetime": datetime.now(_env_attr.get_timezone()).strftime(
-            "%Y-%m-%d %H:%M:%S %Z"
-        ),
+        "datetime": datetime.now(_env_attr.get_timezone())
+        .astimezone(timezone.utc)
+        .strftime("%Y-%m-%d %H:%M:%S %Z"),
         "backend_hostname": _hash_string(_env_attr.get_backend_host_name()),
         "backend_version": _env_attr.get_backend_version(),
         "platform": _env_attr.get_platform(),
