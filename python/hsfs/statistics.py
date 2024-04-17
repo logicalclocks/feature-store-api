@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 import humps
@@ -20,7 +21,7 @@ from typing import Optional, List, Union
 
 from hsfs import util
 from hsfs.split_statistics import SplitStatistics
-from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core import feature_descriptive_statistics as fds_mod
 
 
 class Statistics:
@@ -66,25 +67,27 @@ class Statistics:
 
     def _parse_descriptive_statistics(
         self,
-        desc_statistics: Union[dict, FeatureDescriptiveStatistics],
-    ) -> Optional[List[FeatureDescriptiveStatistics]]:
+        desc_statistics: Union[dict, fds_mod.FeatureDescriptiveStatistics],
+    ) -> Optional[List[fds_mod.FeatureDescriptiveStatistics]]:
         if desc_statistics is None:
             return None
-        elif isinstance(desc_statistics, FeatureDescriptiveStatistics):
+        elif isinstance(desc_statistics, fds_mod.FeatureDescriptiveStatistics):
             return [desc_statistics]
         elif isinstance(desc_statistics, dict) and "items" not in desc_statistics:
-            return [FeatureDescriptiveStatistics.from_response_json(desc_statistics)]
+            return [
+                fds_mod.FeatureDescriptiveStatistics.from_response_json(desc_statistics)
+            ]
         elif isinstance(desc_statistics, dict) and "items" in desc_statistics:
             return [
-                FeatureDescriptiveStatistics.from_response_json(fds)
+                fds_mod.FeatureDescriptiveStatistics.from_response_json(fds)
                 for fds in desc_statistics["items"]
             ]
         elif isinstance(desc_statistics, list):
             return [
                 (
                     fds
-                    if isinstance(fds, FeatureDescriptiveStatistics)
-                    else FeatureDescriptiveStatistics.from_response_json(fds)
+                    if isinstance(fds, fds_mod.FeatureDescriptiveStatistics)
+                    else fds_mod.FeatureDescriptiveStatistics.from_response_json(fds)
                 )
                 for fds in desc_statistics
             ]
@@ -174,7 +177,7 @@ class Statistics:
     @property
     def feature_descriptive_statistics(
         self,
-    ) -> Optional[List[FeatureDescriptiveStatistics]]:
+    ) -> Optional[List[fds_mod.FeatureDescriptiveStatistics]]:
         """List of feature descriptive statistics."""
         return self._feature_descriptive_statistics
 

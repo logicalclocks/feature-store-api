@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import humps
 import json
@@ -43,8 +44,8 @@ class Feature:
         feature_group_id=None,
         feature_group=None,
         **kwargs,
-    ):
-        self._name = name.lower()
+    ) -> None:
+        self._name = util.autofix_feature_name(name)
         self._type = type
         self._description = description
         self._primary = primary or False

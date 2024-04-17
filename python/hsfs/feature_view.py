@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 import warnings
@@ -44,7 +45,7 @@ from hsfs.core import (
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
 )
-from hsfs.transformation_function import TransformationFunction
+from hsfs import transformation_function as tf_mod
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.statistics import Statistics
 from hsfs.core.feature_view_api import FeatureViewApi
@@ -68,7 +69,9 @@ class FeatureView:
         labels: Optional[List[str]] = [],
         inference_helper_columns: Optional[List[str]] = [],
         training_helper_columns: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+        transformation_functions: Optional[
+            Dict[str, tf_mod.TransformationFunction]
+        ] = {},
         featurestore_name=None,
         serving_keys: Optional[List[ServingKey]] = None,
         **kwargs,
@@ -3488,8 +3491,8 @@ class FeatureView:
         return self._labels
 
     @labels.setter
-    def labels(self, labels):
-        self._labels = [lb.lower() for lb in labels]
+    def labels(self, labels: List[str]) -> None:
+        self._labels = [util.autofix_feature_name(lb) for lb in labels]
 
     @property
     def inference_helper_columns(self):
@@ -3502,7 +3505,7 @@ class FeatureView:
     @inference_helper_columns.setter
     def inference_helper_columns(self, inference_helper_columns):
         self._inference_helper_columns = [
-            exf.lower() for exf in inference_helper_columns
+            util.autofix_feature_name(exf) for exf in inference_helper_columns
         ]
 
     @property
@@ -3514,8 +3517,10 @@ class FeatureView:
         return self._training_helper_columns
 
     @training_helper_columns.setter
-    def training_helper_columns(self, training_helper_columns):
-        self._training_helper_columns = [exf.lower() for exf in training_helper_columns]
+    def training_helper_columns(self, training_helper_columns: List[str]) -> None:
+        self._training_helper_columns = [
+            util.autofix_feature_name(exf) for exf in training_helper_columns
+        ]
 
     @property
     def description(self):

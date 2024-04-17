@@ -45,6 +45,7 @@ from hsfs import (
     expectation_suite,
     training_dataset_feature,
     engine,
+    util,
 )
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
@@ -478,7 +479,9 @@ class TestSpark:
         result_df = result.toPandas()
         assert list(result_df) != list(expected)
         for column in list(result_df):
-            assert result_df[column.lower()].equals(result_df[column])
+            assert result_df[util.autofix_feature_name(column)].equals(
+                result_df[column]
+            )
 
     def test_convert_to_default_dataframe_wrong_type(self):
         # Arrange
@@ -534,18 +537,18 @@ class TestSpark:
         assert original_schema == original_df.schema
         assert result_schema == result_df.schema
 
-    def test_convert_to_default_dataframe_nullable_uppercase(self):
+    def test_convert_to_default_dataframe_nullable_uppercase_and_spaced(self):
         # Arrange
         spark_engine = spark.Engine()
 
-        d = {"COL_0": [1, 2], "COL_1": ["test_1", "test_2"], "COL_2": [None, "test_2"]}
+        d = {"COL_0": [1, 2], "COL_1": ["test_1", "test_2"], "COL 2": [None, "test_2"]}
         data = pd.DataFrame(data=d)
 
         schema = StructType(
             [
                 StructField("COL_0", IntegerType(), nullable=False),
                 StructField("COL_1", StringType(), nullable=False),
-                StructField("COL_2", StringType(), nullable=True),
+                StructField("COL 2", StringType(), nullable=True),
             ]
         )
         original_df = spark_engine._spark_session.createDataFrame(data, schema=schema)
@@ -558,7 +561,7 @@ class TestSpark:
             [
                 StructField("COL_0", IntegerType(), nullable=False),
                 StructField("COL_1", StringType(), nullable=False),
-                StructField("COL_2", StringType(), nullable=True),
+                StructField("COL 2", StringType(), nullable=True),
             ]
         )
         result_schema = StructType(

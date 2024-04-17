@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import copy
 import time
@@ -59,7 +60,8 @@ from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
-from hsfs.constructor import query, filter
+from hsfs.constructor import query as query_mod
+from hsfs.constructor import filter as filter_mod
 from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
@@ -244,7 +246,7 @@ class FeatureGroupBase:
             `Query`. A query object with all features of the feature group.
         """
         if include_event_time and include_primary_key:
-            return query.Query(
+            return query_mod.Query(
                 left_feature_group=self,
                 left_features=self._features,
                 feature_store_name=self._feature_store_name,
@@ -294,7 +296,7 @@ class FeatureGroupBase:
         # Returns
             `Query`: A query object with the selected features of the feature group.
         """
-        return query.Query(
+        return query_mod.Query(
             left_feature_group=self,
             left_features=features,
             feature_store_name=self._feature_store_name,
@@ -344,7 +346,7 @@ class FeatureGroupBase:
             except_features = [
                 f.name if isinstance(f, feature.Feature) else f for f in features
             ]
-            return query.Query(
+            return query_mod.Query(
                 left_feature_group=self,
                 left_features=[
                     f for f in self._features if f.name not in except_features
@@ -355,7 +357,7 @@ class FeatureGroupBase:
         else:
             return self.select_all()
 
-    def filter(self, f: Union[filter.Filter, filter.Logic]):
+    def filter(self, f: Union[filter_mod.Filter, filter_mod.Logic]):
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
@@ -1536,8 +1538,8 @@ class FeatureGroupBase:
         return self._primary_key
 
     @primary_key.setter
-    def primary_key(self, new_primary_key):
-        self._primary_key = [pk.lower() for pk in new_primary_key]
+    def primary_key(self, new_primary_key: List[str]) -> None:
+        self._primary_key = [util.autofix_feature_name(pk) for pk in new_primary_key]
 
     def get_statistics(
         self,
@@ -1989,7 +1991,7 @@ class FeatureGroup(FeatureGroupBase):
             self.primary_key = primary_key
             self.partition_key = partition_key
             self._hudi_precombine_key = (
-                hudi_precombine_key.lower()
+                util.autofix_feature_name(hudi_precombine_key)
                 if hudi_precombine_key is not None
                 and self._time_travel_format is not None
                 and self._time_travel_format == "HUDI"
@@ -3240,12 +3242,14 @@ class FeatureGroup(FeatureGroupBase):
         self._time_travel_format = new_time_travel_format
 
     @partition_key.setter
-    def partition_key(self, new_partition_key):
-        self._partition_key = [pk.lower() for pk in new_partition_key]
+    def partition_key(self, new_partition_key: List[str]) -> None:
+        self._partition_key = [
+            util.autofix_feature_name(pk) for pk in new_partition_key
+        ]
 
     @hudi_precombine_key.setter
-    def hudi_precombine_key(self, hudi_precombine_key):
-        self._hudi_precombine_key = hudi_precombine_key.lower()
+    def hudi_precombine_key(self, hudi_precombine_key: str) -> None:
+        self._hudi_precombine_key = util.autofix_feature_name(hudi_precombine_key)
 
     @stream.setter
     def stream(self, stream):

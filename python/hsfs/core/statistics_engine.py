@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 import warnings
@@ -23,7 +24,7 @@ from datetime import datetime, date
 from hsfs import engine, statistics, util, split_statistics
 from hsfs.client import exceptions
 from hsfs.core import statistics_api, job
-from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core import feature_descriptive_statistics as fds_mod
 
 
 class StatisticsEngine:
@@ -432,7 +433,9 @@ class StatisticsEngine:
             )
         return stats
 
-    def _parse_deequ_statistics(self, stats) -> List[FeatureDescriptiveStatistics]:
+    def _parse_deequ_statistics(
+        self, stats
+    ) -> List[fds_mod.FeatureDescriptiveStatistics]:
         if stats is None:
             warnings.warn(
                 "There is no Deequ statistics to deserialize. A possible cause might be that Deequ did not succeed in the statistics computation.",
@@ -442,6 +445,6 @@ class StatisticsEngine:
         if isinstance(stats, str):
             stats = json.loads(stats)
         return [
-            FeatureDescriptiveStatistics.from_deequ_json(col_stats)
+            fds_mod.FeatureDescriptiveStatistics.from_deequ_json(col_stats)
             for col_stats in stats["columns"]
         ]
