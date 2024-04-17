@@ -589,7 +589,6 @@ class Engine:
         feature_view_obj=None,
         to_df=False,
     ):
-        print("[SPARK] write_training_dataset")
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
         )
@@ -814,7 +813,6 @@ class Engine:
         path,
         to_df=False,
     ):
-        print("[SPARK] _write_training_dataset_single")
         # apply transformation functions (they are applied separately to each split)
         feature_dataframe = self._apply_transformation_function(
             transformation_functions, dataset=feature_dataframe
@@ -1171,7 +1169,6 @@ class Engine:
         self, transformation_functions: List[TransformationFunction], dataset
     ):
         # generate transformation function expressions
-        print("[SPARK] _apply_transformation_function")
         transformed_features = set()
         transformations = []
         transformation_features = []
