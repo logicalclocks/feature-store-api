@@ -91,6 +91,11 @@ def parse_features(
         return []
 
 
+def autofix_feature_name(name: str) -> str:
+    # replace spaces with underscores and enforce lower case
+    return name.lower().replace(" ", "_")
+
+
 def feature_group_name(
     feature_group: Union[
         feature_group.FeatureGroup,

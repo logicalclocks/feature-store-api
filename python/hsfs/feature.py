@@ -55,7 +55,7 @@ class Feature:
         ] = None,
         **kwargs,
     ) -> None:
-        self._name = name.lower()
+        self._name = util.autofix_feature_name(name)
         self._type = type
         self._description = description
         self._primary = primary

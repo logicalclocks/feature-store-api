@@ -716,6 +716,7 @@ class Engine:
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
             ]
+            space_features = [col for col in dataframe.columns if " " in col]
 
             # make shallow copy so the original df does not get changed
             # this is always needed to keep the user df unchanged
@@ -734,7 +735,18 @@ class Engine:
                     util.FeatureGroupWarning,
                     stacklevel=1,
                 )
-                dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
+            if len(space_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains feature names with spaces: `{}`. "
+                    "Feature names are sanitized to use underscore '_' in the feature store.".format(
+                        space_features
+                    ),
+                    util.FeatureGroupWarning,
+                    stacklevel=1,
+                )
+            dataframe_copy.columns = [
+                util.autofix_feature_name(x) for x in dataframe_copy.columns
+            ]
 
             # convert timestamps with timezone to UTC
             for col in dataframe_copy.columns:
@@ -768,7 +780,7 @@ class Engine:
             arrow_schema = dataframe.to_arrow().schema
         features = []
         for feat_name in arrow_schema.names:
-            name = feat_name.lower()
+            name = util.autofix_feature_name(feat_name)
             try:
                 converted_type = self._convert_pandas_dtype_to_offline_type(
                     arrow_schema.field(feat_name).type
