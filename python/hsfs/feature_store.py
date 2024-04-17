@@ -161,9 +161,7 @@ class FeatureStore:
                 stacklevel=1,
             )
             version = self.DEFAULT_VERSION
-        feature_group_object = self._feature_group_api.get(
-            self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
-        )
+        feature_group_object = self._feature_group_api.get(self.id, name, version, None)
         feature_group_object.feature_store = self
         return feature_group_object
 
@@ -201,9 +199,7 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        feature_group_object = self._feature_group_api.get(
-            self.id, name, None, feature_group_api.FeatureGroupApi.CACHED
-        )
+        feature_group_object = self._feature_group_api.get(self.id, name, None, None)
         for fg_object in feature_group_object:
             fg_object.feature_store = self
         return feature_group_object
@@ -733,7 +729,7 @@ class FeatureStore:
         """
         try:
             feature_group_object = self._feature_group_api.get(
-                self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
+                self.id, name, version, None
             )
             feature_group_object.feature_store = self
             return feature_group_object

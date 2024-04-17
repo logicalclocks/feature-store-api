@@ -23,6 +23,10 @@ class FeatureGroupApi:
     CACHED = "cached"
     ONDEMAND = "ondemand"
     SPINE = "spine"
+    BACKEND_FG_STREAM = "streamFeatureGroupDTO"
+    BACKEND_FG_BATCH = "cachedFeatureGroupDTO"
+    BACKEND_FG_EXTERNAL = "onDemandFeatureGroupDTO"
+    BACKEND_FG_SPINE = "onDemandFeatureGroupDTO"
 
     def save(self, feature_group_instance):
         """Save feature group metadata to the feature store.
@@ -79,8 +83,18 @@ class FeatureGroupApi:
         json_list = _client._send_request("GET", path_params, query_params)
 
         if fg_type is None and len(json_list) > 0:
-            if hasattr(json_list[0], "type"):
-                fg_type = json_list[0]["type"]
+            if hasattr(json_list[0], "type") and (
+                json_list[0]["type"] in [self.BACKEND_FG_STREAM, self.BACKEND_FG_BATCH]
+            ):
+                fg_type = self.CACHED
+            elif (
+                hasattr(json_list[0], "type")
+                and json_list[0]["type"] == self.BACKEND_FG_EXTERNAL
+            ):
+                if hasattr(json_list[0], "spine") and json_list[0]["spine"] is True:
+                    fg_type = self.SPINE
+                else:
+                    fg_type = self.ONDEMAND
 
         if fg_type == self.CACHED:
             fg_list = feature_group.FeatureGroup.from_response_json(json_list)
