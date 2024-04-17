@@ -120,9 +120,9 @@ class FeatureViewEngine:
                     )
                 )
 
-        self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
+        # TODO : Remove this code portion attaches a transfromation function to a feature. This is not possible with the current implementation
+        # self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
-        self.attach_transformation_function(updated_fv)
         print(
             "Feature view created successfully, explore it at \n"
             + self._get_feature_view_url(updated_fv)
@@ -136,24 +136,9 @@ class FeatureViewEngine:
     def get(self, name, version=None):
         if version:
             fv = self._feature_view_api.get_by_name_version(name, version)
-            self.attach_transformation_function(fv)
         else:
             fv = self._feature_view_api.get_by_name(name)
-            for _fv in fv:
-                self.attach_transformation_function(_fv)
         return fv
-
-    def attach_transformation_function(self, fv: "feature_view.FeatureView"):
-        fv.transformation_functions = (
-            self._transformation_function_engine.get_fv_attached_transformation_fn(
-                fv.name, fv.version
-            )
-        )
-        if fv.transformation_functions:
-            for feature in fv.schema:
-                feature.transformation_function = fv.transformation_functions.get(
-                    feature.name, None
-                )
 
     def delete(self, name, version=None):
         if version:
