@@ -1285,7 +1285,7 @@ class TestPython:
         assert result.columns.values.tolist() == ["col_1", "co_2_co"]
         assert (
             mock_warnings.call_args[0][0]
-            == "The ingested dataframe contains feature names with with spaces: `['col 1', 'co 2 co']`. "
+            == "The ingested dataframe contains feature names with spaces: `['col 1', 'co 2 co']`. "
             "Feature names are sanitized to use underscore '_' in the feature store."
         )
 

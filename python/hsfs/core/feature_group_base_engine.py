@@ -155,7 +155,7 @@ class FeatureGroupBaseEngine:
             raise FeatureStoreException(
                 "Features are not compatible with Feature Group schema: "
                 + "".join(["\n - " + e for e in err])
-                + "Note that feature (or column) names are case insensitive and "
+                + "\nNote that feature (or column) names are case insensitive and "
                 "spaces are automatically replaced with underscores."
             )
 
