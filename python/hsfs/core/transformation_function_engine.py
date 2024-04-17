@@ -111,6 +111,7 @@ class TransformationFunctionEngine:
 
     @staticmethod
     def attach_transformation_fn(training_dataset_obj=None, feature_view_obj=None):
+        # TODO : Remove transformation function attached to training dataset object and features
         if training_dataset_obj:
             target_obj = training_dataset_obj  # todo why provide td and fv just to convert to target_obj?
         else:
@@ -150,6 +151,7 @@ class TransformationFunctionEngine:
     def populate_builtin_fn_arguments(
         feature_name, transformation_function_instance, feature_descriptive_stats
     ):
+        # TODO : Make this statistics
         if transformation_function_instance.name == "min_max_scaler":
             min_value, max_value = BuiltInTransformationFunction.min_max_scaler_stats(
                 feature_descriptive_stats, feature_name
@@ -194,6 +196,7 @@ class TransformationFunctionEngine:
     def populate_builtin_attached_fns(
         self, attached_transformation_fns, feature_descriptive_stats
     ):
+        # TODO : Remove
         for ft_name in attached_transformation_fns:
             if self.is_builtin(attached_transformation_fns[ft_name]):
                 # check if its built-in transformation function and populated with statistics arguments
@@ -207,6 +210,7 @@ class TransformationFunctionEngine:
 
     @staticmethod
     def infer_spark_type(output_type):
+        # TODO : Move to hopsworks_udf
         if not output_type:
             return "STRING"  # STRING is default type for spark udfs
 
@@ -265,6 +269,8 @@ class TransformationFunctionEngine:
     def populate_builtin_transformation_functions(
         training_dataset, feature_view_obj, dataset
     ):
+        return
+        # TODO : Remove
         # check if there any transformation functions that require statistics attached to td features
         builtin_tffn_label_encoder_features = [
             ft_name

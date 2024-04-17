@@ -18,9 +18,7 @@ from __future__ import annotations
 import humps
 from hsfs import feature as feature_mod
 from hsfs import feature_group as feature_group_mod
-from hsfs import transformation_function as tf_mod
 from hsfs import util
-
 
 class TrainingDatasetFeature:
     def __init__(
@@ -33,7 +31,6 @@ class TrainingDatasetFeature:
         label=False,
         inference_helper_column=False,
         training_helper_column=False,
-        transformation_function=None,
         **kwargs,
     ):
         self._name = util.autofix_feature_name(name)
@@ -48,11 +45,6 @@ class TrainingDatasetFeature:
         self._label = label
         self._inference_helper_column = inference_helper_column
         self._training_helper_column = training_helper_column
-        self._transformation_function = (
-            tf_mod.TransformationFunction.from_response_json(transformation_function)
-            if isinstance(transformation_function, dict)
-            else transformation_function
-        )
 
     def to_dict(self):
         return {
@@ -62,7 +54,6 @@ class TrainingDatasetFeature:
             "label": self._label,
             "inferenceHelperColumn": self._inference_helper_column,
             "trainingHelperColumn": self._training_helper_column,
-            "transformationFunction": self._transformation_function,
             "featureGroupFeatureName": self._feature_group_feature_name,
             "featuregroup": self._feature_group,
         }
@@ -128,15 +119,6 @@ class TrainingDatasetFeature:
         self._training_helper_column = training_helper_column
 
     @property
-    def transformation_function(self):
-        """Set transformation functions."""
-        return self._transformation_function
-
-    @transformation_function.setter
-    def transformation_function(self, transformation_function):
-        self._transformation_function = transformation_function
-
-    @property
     def feature_group(self):
         return self._feature_group
 
@@ -145,4 +127,4 @@ class TrainingDatasetFeature:
         return self._feature_group_feature_name
 
     def __repr__(self):
-        return f"Training Dataset Feature({self._name!r}, {self._type!r}, {self._index!r}, {self._label}, {self._transformation_function}, {self._feature_group_feature_name}, {self._feature_group.id!r})"
+        return f"Training Dataset Feature({self._name!r}, {self._type!r}, {self._index!r}, {self._label}, {self._feature_group_feature_name}, {self._feature_group.id!r})"

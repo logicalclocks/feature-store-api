@@ -23,12 +23,15 @@ import re
 import shutil
 import warnings
 from datetime import date, datetime, timezone
-from typing import Any, List, Optional, TypeVar, Union
+from typing import Any, List, Optional, TypeVar, Union, TYPE_CHECKING
 
 import avro
 import numpy as np
 import pandas as pd
 import tzlocal
+
+if TYPE_CHECKING:
+    from hsfs.transformation_function import TransformationFunction
 
 # in case importing in %%local
 from hsfs.core.vector_db_client import VectorDbClient
@@ -586,6 +589,7 @@ class Engine:
         feature_view_obj=None,
         to_df=False,
     ):
+        print("[SPARK] write_training_dataset")
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
         )
@@ -810,6 +814,7 @@ class Engine:
         path,
         to_df=False,
     ):
+        print("[SPARK] _write_training_dataset_single")
         # apply transformation functions (they are applied separately to each split)
         feature_dataframe = self._apply_transformation_function(
             transformation_functions, dataset=feature_dataframe
@@ -1162,23 +1167,42 @@ class Engine:
             "spark.databricks.delta.schema.autoMerge.enabled", "true"
         ).save(feature_group.location)
 
-    def _apply_transformation_function(self, transformation_functions, dataset):
+    def _apply_transformation_function(
+        self, transformation_functions: List[TransformationFunction], dataset
+    ):
         # generate transformation function expressions
-        transformed_feature_names = []
-        transformation_fn_expressions = []
-        for (
-            feature_name,
-            transformation_fn,
-        ) in transformation_functions.items():
-            fn_registration_name = (
-                transformation_fn.name
-                + "_"
-                + str(transformation_fn.version)
-                + "_"
-                + feature_name
+        print("[SPARK] _apply_transformation_function")
+        transformed_features = set()
+        transformations = []
+        transformation_features = []
+        explode_name = []
+        for transformation_function in transformation_functions:
+            hopsworks_udf = transformation_function.hopsworks_udf
+            missing_features = set(hopsworks_udf.transformation_features) - set(
+                dataset.columns
             )
 
-            def timezone_decorator(func, trans_fn=transformation_fn):
+            # TODO : Add documentation link in exception
+            if missing_features:
+                raise FeatureStoreException(
+                    f"Features {missing_features} specified in the transformation function '{hopsworks_udf.function_name}' are not present in the feature view. Please specify the feature required correctly. Refer .."
+                )
+
+            transformed_features.update(
+                transformation_function.hopsworks_udf.transformation_features
+            )
+
+            # TODO : Add statistics
+            pandas_udf = hopsworks_udf.get_udf(None)
+            transformations.append(pandas_udf)
+            transformation_features.append(hopsworks_udf.transformation_features)
+
+            if isinstance(hopsworks_udf.return_type, List):
+                explode_name.append(
+                    f'{pandas_udf.__name__}({", ".join(hopsworks_udf.transformation_features)}).*'
+                )
+
+            def timezone_decorator(func, trans_fn=hopsworks_udf):
                 if trans_fn.output_type != "TIMESTAMP":
                     return func
 
@@ -1200,29 +1224,27 @@ class Engine:
 
                 return decorated_func
 
-            self._spark_session.udf.register(
-                fn_registration_name,
-                timezone_decorator(transformation_fn.transformation_fn),
-                transformation_fn.output_type,
-            )
-            transformation_fn_expressions.append(
-                "{fn_name:}({name:}) AS {name:}".format(
-                    fn_name=fn_registration_name, name=feature_name
-                )
-            )
-            transformed_feature_names.append(feature_name)
+            # TODO : Timezone aware check see if I need to do also.
+            # self._spark_session.udf.register(
+            #    fn_registration_name,
+            #    timezone_decorator(transformation_fn.transformation_fn),
+            #    transformation_fn.output_type,
+            # )
 
         # generate non transformation expressions
-        no_transformation_expr = [
-            "{name:} AS {name:}".format(name=col_name)
-            for col_name in dataset.columns
-            if col_name not in transformed_feature_names
-        ]
 
         # generate entire expression and execute it
-        transformation_fn_expressions.extend(no_transformation_expr)
-        transformed_dataset = dataset.selectExpr(*transformation_fn_expressions)
-        return transformed_dataset.select(*dataset.columns)
+
+        untransformed_columns = set(dataset.columns) - transformed_features
+        transformed_dataset = dataset.select(
+            *untransformed_columns,
+            *[
+                fun(*feature)
+                for fun, feature in zip(transformations, transformation_features)
+            ],
+        ).select(*untransformed_columns, *explode_name)
+
+        return transformed_dataset
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
         PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key"
