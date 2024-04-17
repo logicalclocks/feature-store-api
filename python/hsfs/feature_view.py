@@ -15,7 +15,6 @@
 #
 from __future__ import annotations
 
-import copy
 import json
 import logging
 import warnings
@@ -36,7 +35,6 @@ from hsfs import (
     util,
 )
 from hsfs import serving_key as skm
-from hsfs import transformation_function as tfm
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
@@ -59,6 +57,11 @@ from hsfs.feature import Feature
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.transformation_function import TransformationFunction
+
+
+if TYPE_CHECKING:
+    from hsfs.hopsworks_udf import HopsworksUdf
 
 
 _logger = logging.getLogger(__name__)
@@ -98,7 +101,7 @@ class FeatureView:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[
-            Dict[str, tfm.TransformationFunction]
+            List[Union[TransformationFunction, HopsworksUdf]]
         ] = None,
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[skm.ServingKey]] = None,
@@ -120,14 +123,21 @@ class FeatureView:
         self._training_helper_columns = (
             training_helper_columns if training_helper_columns else []
         )
-        self._transformation_functions = (
-            {
-                ft_name: copy.deepcopy(transformation_functions[ft_name])
-                for ft_name in transformation_functions
-            }
-            if transformation_functions
-            else {}
+
+        # TODO : Clean this up
+        if transformation_functions:
+            for i, transformation_function in enumerate(transformation_functions):
+                if not isinstance(transformation_function, TransformationFunction):
+                    transformation_functions[i] = TransformationFunction(
+                        self.featurestore_id,
+                        hopsworks_udf=transformation_function,
+                        version=1,
+                    )
+
+        self._transformation_functions: List[TransformationFunction] = (
+            transformation_functions
         )
+
         self._features = []
         self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
             feature_view_engine.FeatureViewEngine(featurestore_id)
@@ -3780,14 +3790,14 @@ class FeatureView:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, tfm.TransformationFunction]:
+    ) -> List[TransformationFunction]:
         """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
     def transformation_functions(
         self,
-        transformation_functions: Dict[str, tfm.TransformationFunction],
+        transformation_functions: List[TransformationFunction],
     ) -> None:
         self._transformation_functions = transformation_functions
 

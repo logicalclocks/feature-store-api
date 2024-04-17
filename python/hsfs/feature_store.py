@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
 
 import humps
 import numpy
@@ -50,6 +50,10 @@ from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
+
+
+if TYPE_CHECKING:
+    from hsfs.hopsworks_udf import HopsworksUdf
 
 
 @typechecked
@@ -1473,7 +1477,9 @@ class FeatureStore:
         labels: Optional[List[str]] = None,
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
+        transformation_functions: Optional[
+            List[Union[TransformationFunction, HopsworksUdf]]
+        ] = None,
         logging_enabled: Optional[bool] = False,
     ) -> feature_view.FeatureView:
         """Create a feature view metadata object and saved it to hopsworks.

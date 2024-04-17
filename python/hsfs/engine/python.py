@@ -57,7 +57,6 @@ from hsfs import (
     feature,
     feature_store,
     feature_view,
-    transformation_function_attached,
     util,
 )
 from hsfs import storage_connector as sc
@@ -882,6 +881,7 @@ class Engine:
             df = query_obj.read(
                 read_options=read_options, dataframe_type=dataframe_type
             )
+            # TODO : Add statistics
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, df
             )
@@ -1182,41 +1182,71 @@ class Engine:
 
     def _apply_transformation_function(
         self,
-        transformation_functions: Dict[
-            str, transformation_function_attached.TransformationFunctionAttached
-        ],
+        transformation_functions: List[TransformationFunction],
         dataset: Union[pd.DataFrame, pl.DataFrame],
         inplace=True,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
-        for (
-            feature_name,
-            transformation_fn,
-        ) in transformation_functions.items():
+        transformed_features = set()
+        for transformation_function in transformation_functions:
+            hopsworks_udf = transformation_function.hopsworks_udf
+            missing_features = set(hopsworks_udf.transformation_features) - set(
+                dataset.columns
+            )
+
+            # TODO : Add documentation link in exception
+            if missing_features:
+                raise FeatureStoreException(
+                    f"Features {missing_features} specified in the transformation function '{hopsworks_udf.function_name}' are not present in the feature view. Please specify the feature required correctly. Refer .."
+                )
+
+            transformed_features.update(
+                transformation_function.hopsworks_udf.transformation_features
+            )
+
             if isinstance(dataset, pl.DataFrame) or isinstance(
                 dataset, pl.dataframe.frame.DataFrame
             ):
-                dataset = dataset.with_columns(
-                    pl.col(feature_name).map_elements(
-                        transformation_fn.transformation_fn
-                    )
-                )
+                pass
             else:
-                dataset = pd.DataFrame.copy(dataset)
-                dataset[feature_name] = dataset[feature_name].map(
-                    transformation_fn.transformation_fn
+                dataset = pd.concat(
+                    [
+                        dataset,
+                        transformation_function.hopsworks_udf.get_udf(statistics=None)(
+                            *(
+                                [
+                                    dataset[feature]
+                                    for feature in transformation_function.hopsworks_udf.transformation_features
+                                ]
+                            )
+                        ),
+                    ],
+                    axis=1,
                 )
-            # The below functions is not required for Polars since polars does have object types like pandas
-            if not (
-                isinstance(dataset, pl.DataFrame)
-                or isinstance(dataset, pl.dataframe.frame.DataFrame)
-            ):
-                offline_type = Engine.convert_spark_type_to_offline_type(
-                    transformation_fn.output_type
-                )
-                dataset[feature_name] = Engine._cast_column_to_offline_type(
-                    dataset[feature_name], offline_type
-                )
+            # TODO : Think about what to do in cases where the output is a polars dataframe.....
+            # if isinstance(dataset, pl.DataFrame) or isinstance(
+            #    dataset, pl.dataframe.frame.DataFrame
+            # ):
+            #    dataset = dataset.with_columns(
+            #        pl.col(feature_name).map_elements(
+            #            transformation_fn.transformation_fn
+            #        )
+            #    )
+            # else:
 
+            # TODO : Think if below code is actually required
+
+            # The below functions is not required for Polars since polars does have object types like pandas
+            # if not (
+            #    isinstance(dataset, pl.DataFrame)
+            #    or isinstance(dataset, pl.dataframe.frame.DataFrame)
+            # ):
+            #    offline_type = Engine.convert_spark_type_to_offline_type(
+            #        transformation_fn.output_type
+            #    )
+            #    dataset[feature_name] = Engine._cast_column_to_offline_type(
+            #        dataset[feature_name], offline_type
+            #    )
+        dataset = dataset.drop(transformed_features, axis=1)
         return dataset
 
     @staticmethod

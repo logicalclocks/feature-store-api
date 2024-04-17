@@ -213,7 +213,7 @@ class HopsworksUdf:
     def create_pandas_udf_return_schema_from_list(self, return_types: List[type]):
         return ", ".join(
             [
-                f'`{self.function_name}({",".join(self.transformation_features)})_{i}` {HopsworksUdf.PYTHON_SPARK_TYPE_MAPPING[return_types[i]]}'
+                f'`{self.function_name}<{"-".join(self.transformation_features)}>{i}` {HopsworksUdf.PYTHON_SPARK_TYPE_MAPPING[return_types[i]]}'
                 for i in range(len(return_types))
             ]
         )
@@ -226,8 +226,7 @@ class HopsworksUdf:
     import pandas as pd
     {self.function_source}
     df = {self.function_name}(*args)
-    #raise Exception({{f'{{df.columns[i]}}':f'{self.function_name}{",".join(self.transformation_features)}_{{i}}' for i in range(len(df.columns))}})
-    df = df.rename(columns = {{f'{{df.columns[i]}}':f'{self.function_name}({",".join(self.transformation_features)})_{{i}}' for i in range(len(df.columns))}})
+    df = df.rename(columns = {{f'{{df.columns[i]}}':f'{self.function_name}<{"-".join(self.transformation_features)}>{{i}}' for i in range(len(df.columns))}})
     return df"""
         else:
             self.code = self.function_source
@@ -240,6 +239,7 @@ class HopsworksUdf:
             return eval(self.function_name, scope)
 
     def __call__(self, *args: List[str]):
+        # TODO : Raise an execption if the number of features are incorrect.
         for arg in args:
             if not isinstance(arg, str):
                 raise FeatureStoreException(
