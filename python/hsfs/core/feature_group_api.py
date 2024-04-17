@@ -168,6 +168,7 @@ class FeatureGroupApi:
         ]
         headers = {"content-type": "application/json"}
         query_params = {query_parameter: query_parameter_value}
+        feature_store = feature_group_instance.feature_store.copy()
         feature_group_object = feature_group_instance.update_from_response_json(
             _client._send_request(
                 "PUT",
@@ -177,7 +178,7 @@ class FeatureGroupApi:
                 data=feature_group_copy.json(),
             ),
         )
-        feature_group_object.feature_store = feature_group_instance.feature_store
+        feature_group_object.feature_store = feature_store
         return feature_group_object
 
     def commit(self, feature_group_instance, feature_group_commit_instance):

@@ -55,6 +55,7 @@ from hsfs.core import (
     feature_group_engine,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
+    feature_store_api,
     great_expectation_engine,
     job_api,
     spine_group_engine,
@@ -113,7 +114,6 @@ class FeatureGroupBase:
 
         self._multi_part_insert: bool = False
         self._embedding_index = embedding_index
-        self._feature_store = None
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
 
@@ -1560,6 +1560,10 @@ class FeatureGroupBase:
 
     @property
     def feature_store(self) -> feature_store_mod.FeatureStore:
+        if self._feature_store is None:
+            self._feature_store = feature_store_api.FeatureStoreApi().get(
+                self._feature_store_id
+            )
         return self._feature_store
 
     @feature_store.setter
