@@ -735,6 +735,7 @@ class FeatureStore:
             feature_group_object = self._feature_group_api.get(
                 self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
             )
+            print("Feature group already exists, setting feature store")
             feature_group_object.feature_store = self
             return feature_group_object
         except exceptions.RestAPIError as e:
@@ -763,7 +764,9 @@ class FeatureStore:
                     topic_name=topic_name,
                     notification_topic_name=notification_topic_name,
                 )
+                print("Feature group created, setting feature store")
                 feature_group_object.feature_store = self
+                print("Feature store set" + str(feature_group_object.feature_store))
                 return feature_group_object
             else:
                 raise e
