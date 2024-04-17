@@ -153,7 +153,11 @@ class TrainingDatasetBase:
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
-            self._label = [feat.name.lower() for feat in self._features if feat.label]
+            self._label = [
+                util.autofix_feature_name(feat.name)
+                for feat in self._features
+                if feat.label
+            ]
             self._extra_filter = filter.Logic.from_response_json(extra_filter)
 
     def _set_time_splits(
@@ -1060,7 +1064,7 @@ class TrainingDataset(TrainingDatasetBase):
         return self._vector_server.get_feature_vectors(entry)
 
     @property
-    def label(self):
+    def label(self) -> Union[str, List[str]]:
         """The label/prediction feature of the training dataset.
 
         Can be a composite of multiple features.
@@ -1068,15 +1072,15 @@ class TrainingDataset(TrainingDatasetBase):
         return self._label
 
     @label.setter
-    def label(self, label):
-        self._label = [lb.lower() for lb in label]
+    def label(self, label: str) -> None:
+        self._label = [util.autofix_feature_name(lb) for lb in label]
 
     @property
-    def feature_store_id(self):
+    def feature_store_id(self) -> int:
         return self._feature_store_id
 
     @property
-    def feature_store_name(self):
+    def feature_store_name(self) -> str:
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 

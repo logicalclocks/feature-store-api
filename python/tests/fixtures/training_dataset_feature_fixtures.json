@@ -84,6 +84,383 @@
       }
     }
   },
+  "get_fraud_online_training_dataset_features": {
+    "response": [
+      {
+        "id": 1,
+        "featureGroupFeatureName": "datetime",
+        "index": 0,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "datetime",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "timestamp"
+      },
+      {
+        "id": 2,
+        "featureGroupFeatureName": "cc_num",
+        "index": 1,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "cc_num",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "bigint"
+      },
+      {
+        "id": 3,
+        "featureGroupFeatureName": "amount",
+        "index": 2,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "amount",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "double"
+      },
+      {
+        "id": 4,
+        "featureGroupFeatureName": "country",
+        "index": 3,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "country",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "string"
+      },
+      {
+        "id": 5,
+        "featureGroupFeatureName": "fraud_label",
+        "index": 4,
+        "inferenceHelperColumn": false,
+        "label": true,
+        "name": "fraud_label",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "bigint"
+      },
+      {
+        "id": 6,
+        "featureGroupFeatureName": "loc_delta_t_plus_1",
+        "index": 5,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "loc_delta_t_plus_1",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "double"
+      },
+      {
+        "id": 7,
+        "featureGroupFeatureName": "loc_delta_t_minus_1",
+        "index": 6,
+        "inferenceHelperColumn": true,
+        "label": false,
+        "name": "loc_delta_t_minus_1",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "double"
+      },
+      {
+        "id": 8,
+        "featureGroupFeatureName": "time_delta_t_minus_1",
+        "index": 7,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "time_delta_t_minus_1",
+        "trainingHelperColumn": true,
+        "transformationFunction": null,
+        "type": "double"
+      },
+      {
+        "id": 9,
+        "featureGroupFeatureName": "gender",
+        "index": 8,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "gender",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "string"
+      }
+    ]
+  },
+  "get_ticker_training_dataset_features": {
+    "response": [
+      {
+        "id": 13,
+        "featureGroupFeatureName": "ticker",
+        "index": 0,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "ticker",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "string"
+      },
+      {
+        "id": 14,
+        "featureGroupFeatureName": "when",
+        "index": 1,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "when",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "timestamp"
+      },
+      {
+        "id": 15,
+        "featureGroupFeatureName": "price",
+        "index": 2,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "price",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "double"
+      },
+      {
+        "id": 16,
+        "featureGroupFeatureName": "volume",
+        "index": 3,
+        "inferenceHelperColumn": false,
+        "label": false,
+        "name": "volume",
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "type": "bigint"
+      }
+    ]
+  },
+  "get_composite_key_ticker_training_dataset_features": {
+    "response": [
+      {
+        "id": 17,
+        "name": "ticker",
+        "type": "string",
+        "index": 0,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "ticker"
+      },
+      {
+        "id": 18,
+        "name": "ticker_number",
+        "type": "bigint",
+        "index": 1,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "ticker_number"
+      },
+      {
+        "id": 19,
+        "name": "when",
+        "type": "timestamp",
+        "index": 2,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "when"
+      },
+      {
+        "id": 20,
+        "name": "price",
+        "type": "bigint",
+        "index": 3,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "price"
+      }
+    ]
+  },
+  "get_complex_features_training_dataset_features": {
+    "response": [
+      {
+        "id": 21,
+        "name": "id",
+        "type": "bigint",
+        "index": 0,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "id"
+      },
+      {
+        "id": 22,
+        "name": "cc_num",
+        "type": "bigint",
+        "index": 1,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "cc_num"
+      },
+      {
+        "id": 23,
+        "name": "when",
+        "type": "timestamp",
+        "index": 2,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "when"
+      },
+      {
+        "id": 24,
+        "name": "array_ft",
+        "type": "array <double>",
+        "index": 3,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "array_ft"
+      }
+    ]
+  },
+  "get_mix_rondb_and_opensearch_training_dataset_features": {
+    "response": [
+      {
+        "id": 25,
+        "name": "id1",
+        "type": "bigint",
+        "index": 0,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "id1",
+        "featuregroup": {
+          "name": "the_fraud_embedded_fg"
+        }
+      },
+      {
+        "id": 26,
+        "name": "ts",
+        "type": "bigint",
+        "index": 1,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "ts",
+        "featuregroup": {
+          "name": "the_fraud_embedded_fg"
+        }
+      },
+      {
+        "id": 27,
+        "name": "embedding",
+        "type": "array<bigint>",
+        "index": 2,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "embedding",
+        "featuregroup": {
+          "name": "the_fraud_embedded_fg"
+        }
+      },
+      {
+        "id": 28,
+        "name": "cc_num",
+        "type": "bigint",
+        "index": 3,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "cc_num",
+        "featuregroup": {
+          "name": "the_fraud_embedded_fg"
+        }
+      },
+      {
+        "id": 29,
+        "name": "city",
+        "type": "string",
+        "index": 4,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": {
+          "id": 7220,
+          "name": "label_encoder",
+          "version": 1,
+          "sourceCodeContent": "{\"module_imports\": \"\", \"transformer_code\": \"# label encoder\\ndef label_encoder(value, value_to_index):\\n    # define a mapping of values to integers\\n    return value_to_index[value]\"}",
+          "outputType": "INT",
+          "featurestoreId": 7247
+        },
+        "featureGroupFeatureName": "city",
+        "featuregroup": {
+          "name": "the_fraud_embedded_fg"
+        }
+      },
+      {
+        "id": 30,
+        "name": "amount",
+        "type": "double",
+        "index": 5,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": {
+          "id": 7217,
+          "name": "min_max_scaler",
+          "version": 1,
+          "sourceCodeContent": "{\n  \"module_imports\": \"\",\n  \"transformer_code\": \"def min_max_scaler(value, min_value, max_value):\\n    if value is None:\\n        return None\\n    elif float(max_value - min_value) == float(0):\\n        return float(0)\\n    else:\\n        return float((value - min_value) / (max_value - min_value))\\n\"\n}",
+          "outputType": "DOUBLE",
+          "featurestoreId": 7247
+        },
+        "featureGroupFeatureName": "amount",
+        "featuregroup": {
+          "name": "the_fraud_embedded_fg"
+        }
+      },
+      {
+        "id": 31,
+        "name": "id2",
+        "type": "string",
+        "index": 6,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "id2",
+        "featuregroup": {
+          "name": "the_fraud_embedded_fg"
+        }
+      },
+      {
+        "id": 32,
+        "name": "gender",
+        "type": "string",
+        "index": 7,
+        "label": false,
+        "inferenceHelperColumn": false,
+        "trainingHelperColumn": false,
+        "transformationFunction": null,
+        "featureGroupFeatureName": "gender",
+        "featuregroup": {
+          "name": "profile_fraud_tid_case"
+        }
+      }
+    ]
+  },
   "get_basic_info": {
     "response": {
       "name": "test_name"

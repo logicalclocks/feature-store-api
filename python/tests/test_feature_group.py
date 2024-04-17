@@ -490,7 +490,7 @@ class TestFeatureGroup:
         mock_writer.insert.assert_called_once()
         assert fg._multi_part_insert is True
 
-    def test_save_feature_list(self, mocker, dataframe_fixture_basic):
+    def test_save_feature_list(self, mocker):
         mock_save_metadata = mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata",
             return_value=None,
@@ -513,7 +513,7 @@ class TestFeatureGroup:
         fg.save(features)
         mock_save_metadata.assert_called_once_with(fg, None, {})
 
-    def test_save_feature_in_create(self, mocker, dataframe_fixture_basic):
+    def test_save_feature_in_create(self, mocker):
         mock_save_metadata = mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata",
             return_value=None,
@@ -537,7 +537,7 @@ class TestFeatureGroup:
         fg.save()
         mock_save_metadata.assert_called_once_with(fg, None, {})
 
-    def test_save_exception_empty_input(self, mocker, dataframe_fixture_basic):
+    def test_save_exception_empty_input(self):
         fg = feature_group.FeatureGroup(
             name="test_fg",
             version=2,
@@ -551,7 +551,7 @@ class TestFeatureGroup:
 
         assert "Feature list not provided" in str(e.value)
 
-    def test_save_with_non_feature_list(self, mocker, dataframe_fixture_basic):
+    def test_save_with_non_feature_list(self, mocker):
         engine = python.Engine()
         mocker.patch("hsfs.engine.get_instance", return_value=engine)
         mocker.patch("hsfs.engine.get_type", return_value="python")

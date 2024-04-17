@@ -1520,3 +1520,62 @@ class TestTransformationFunctionEngine:
         assert mock_tf_engine_compute_transformation_fn_statistics.call_count == 1
         assert mock_tf_engine_populate_builtin_attached_fns.call_count == 1
         assert dataset.get.call_count == 1
+
+    # Previously in test_feature_view_engine
+    def test_get_fv_attached_transformation_fn(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        td_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id=feature_store_id
+        )
+
+        def testFunction():
+            print("Test")
+
+        tf = transformation_function_attached.TransformationFunctionAttached(
+            name="tf_name", transformation_function=testFunction
+        )
+
+        mock_fv_api.return_value.get_attached_transformation_fn.return_value = tf
+
+        # Act
+        result = td_engine.get_fv_attached_transformation_fn(
+            fv_name="fv_name", fv_version=1
+        )
+
+        # Assert
+        assert "tf_name" in result
+        assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
+
+    def test_get_fv_attached_transformation_fn_multiple(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+
+        td_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id=feature_store_id
+        )
+
+        def testFunction():
+            print("Test")
+
+        tf = transformation_function_attached.TransformationFunctionAttached(
+            name="tf_name", transformation_function=testFunction
+        )
+        tf1 = transformation_function_attached.TransformationFunctionAttached(
+            name="tf1_name", transformation_function=testFunction
+        )
+
+        mock_fv_api.return_value.get_attached_transformation_fn.return_value = [tf, tf1]
+
+        # Act
+        result = td_engine.get_fv_attached_transformation_fn(
+            fv_name="fv_name", fv_version=1
+        )
+
+        # Assert
+        assert "tf_name" in result
+        assert "tf1_name" in result
+        assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
