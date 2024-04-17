@@ -8,15 +8,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - name: install deps
-        run: pip install ruff==0.3.2 pre-commit-hooks==2.4.0
+      - uses: actions/checkout@v4
 
-      - name: ruff
-        run: ruff check python --config=python/pyproject.toml --output-format=github
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Get all changed files
+        id: get-changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files_yaml: |
+            src:
+              - 'python/**/*.py'
+              - '!python/tests/**/*.py'
+            test:
+              - 'python/tests/**/*.py'
+
+      - name: install deps
+        run: pip install ruff==0.3.5
+
+      - name: ruff on python files
+        if: steps.get-changed-files.outputs.src_any_changed == 'true'
+        env:
+          SRC_ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.src_all_changed_files }}
+        run: ruff check --output-format=github $SRC_ALL_CHANGED_FILES
+
+      - name: ruff on test files
+        if: steps.get-changed-files.outputs.test_any_changed == 'true'
+        env:
+          TEST_ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.test_all_changed_files }}
+        run: ruff check --output-format=github $TEST_ALL_CHANGED_FILES
+
+      - name: ruff format --check $ALL_CHANGED_FILES
+        env:
+          ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
+        run: ruff format $ALL_CHANGED_FILES
 
   unit_tests_ubuntu_utc:
     name: Unit Testing (Ubuntu)
@@ -107,6 +134,31 @@ jobs:
         env:
           ENABLE_HOPSWORKS_USAGE: "false"
         run: pytest python/tests
+
+  unit_tests_ubuntu_typechecked:
+    name: Typechecked Unit Testing (Ubuntu)
+    needs: lint_stylecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Copy README
+        run: cp README.md python/
+
+      - uses: actions/setup-python@v4
+        name: Setup Python
+        with:
+          python-version: "3.10"
+          cache: "pip"
+          cache-dependency-path: "python/setup.py"
+      - run: pip install -e python[python,dev,docs]
+
+      - name: Run Pytest suite
+        env:
+          ENABLE_HOPSWORKS_USAGE: "false"
+          HOPSWORKS_RUN_WITH_TYPECHECK: "true"
+        run: pytest python/tests
+        continue-on-error: true
 
   unit_tests_windows_utc:
     name: Unit Testing (Windows)

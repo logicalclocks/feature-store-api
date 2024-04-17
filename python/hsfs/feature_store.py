@@ -14,16 +14,18 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import great_expectations as ge
 import humps
 import numpy
 import numpy as np
 import pandas as pd
+import polars as pl
 from hsfs import (
     expectation_suite,
     feature,
@@ -44,33 +46,33 @@ from hsfs.core import (
     training_dataset_api,
     transformation_function_engine,
 )
+from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
 
 
+@typechecked
 class FeatureStore:
     DEFAULT_VERSION = 1
 
     def __init__(
         self,
-        featurestore_id,
-        featurestore_name,
-        created,
-        project_name,
-        project_id,
-        offline_featurestore_name,
-        hive_endpoint,
-        online_enabled,
-        num_feature_groups=None,
-        num_training_datasets=None,
-        num_storage_connectors=None,
-        num_feature_views=None,
-        online_featurestore_name=None,
-        mysql_server_endpoint=None,
-        online_featurestore_size=None,
+        featurestore_id: int,
+        featurestore_name: str,
+        created: Union[str, datetime.datetime],
+        project_name: str,
+        project_id: int,
+        offline_featurestore_name: str,
+        online_enabled: bool,
+        num_feature_groups: Optional[int] = None,
+        num_training_datasets: Optional[int] = None,
+        num_storage_connectors: Optional[int] = None,
+        num_feature_views: Optional[int] = None,
+        online_featurestore_name: Optional[str] = None,
+        online_featurestore_size: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._id = featurestore_id
         self._name = featurestore_name
         self._created = created
@@ -79,27 +81,35 @@ class FeatureStore:
         self._online_feature_store_name = online_featurestore_name
         self._online_feature_store_size = online_featurestore_size
         self._offline_feature_store_name = offline_featurestore_name
-        self._hive_endpoint = hive_endpoint
-        self._mysql_server_endpoint = mysql_server_endpoint
         self._online_enabled = online_enabled
         self._num_feature_groups = num_feature_groups
         self._num_training_datasets = num_training_datasets
         self._num_storage_connectors = num_storage_connectors
         self._num_feature_views = num_feature_views
 
-        self._feature_group_api = feature_group_api.FeatureGroupApi()
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
-        self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
-
-        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
-
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(self._id)
+        self._feature_group_api: "feature_group_api.FeatureGroupApi" = (
+            feature_group_api.FeatureGroupApi()
         )
-        self._feature_view_engine = feature_view_engine.FeatureViewEngine(self._id)
+        self._storage_connector_api: "storage_connector_api.StorageConnectorApi" = (
+            storage_connector_api.StorageConnectorApi()
+        )
+        self._training_dataset_api: "training_dataset_api.TrainingDatasetApi" = (
+            training_dataset_api.TrainingDatasetApi(self._id)
+        )
+
+        self._feature_group_engine: "feature_group_engine.FeatureGroupEngine" = (
+            feature_group_engine.FeatureGroupEngine(self._id)
+        )
+
+        self._transformation_function_engine: "transformation_function_engine.TransformationFunctionEngine" = transformation_function_engine.TransformationFunctionEngine(
+            self._id
+        )
+        self._feature_view_engine: "feature_view_engine.FeatureViewEngine" = (
+            feature_view_engine.FeatureViewEngine(self._id)
+        )
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> "FeatureStore":
         json_decamelized = humps.decamelize(json_dict)
         # fields below are removed from 3.4. remove them for backward compatibility.
         json_decamelized.pop("hdfs_store_path", None)
@@ -107,7 +117,13 @@ class FeatureStore:
         json_decamelized.pop("inode_id", None)
         return cls(**json_decamelized)
 
-    def get_feature_group(self, name: str, version: int = None):
+    def get_feature_group(
+        self, name: str, version: int = None
+    ) -> Union[
+        feature_group.FeatureGroup,
+        feature_group.ExternalFeatureGroup,
+        feature_group.SpineGroup,
+    ]:
         """Get a feature group entity from the feature store.
 
         Getting a feature group from the Feature Store means getting its metadata handle
@@ -151,7 +167,15 @@ class FeatureStore:
         feature_group_object.feature_store = self
         return feature_group_object
 
-    def get_feature_groups(self, name: str):
+    def get_feature_groups(
+        self, name: str
+    ) -> List[
+        Union[
+            feature_group.FeatureGroup,
+            feature_group.ExternalFeatureGroup,
+            feature_group.SpineGroup,
+        ]
+    ]:
         """Get a list of all versions of a feature group entity from the feature store.
 
         Getting a feature group from the Feature Store means getting its metadata handle
@@ -185,7 +209,9 @@ class FeatureStore:
         return feature_group_object
 
     @usage.method_logger
-    def get_on_demand_feature_group(self, name: str, version: int = None):
+    def get_on_demand_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.ExternalFeatureGroup":
         """Get a external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -209,7 +235,9 @@ class FeatureStore:
         return self.get_external_feature_group(name, version)
 
     @usage.method_logger
-    def get_external_feature_group(self, name: str, version: int = None):
+    def get_external_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.ExternalFeatureGroup":
         """Get a external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -251,7 +279,9 @@ class FeatureStore:
         return feature_group_object
 
     @usage.method_logger
-    def get_on_demand_feature_groups(self, name: str):
+    def get_on_demand_feature_groups(
+        self, name: str
+    ) -> List["feature_group.ExternalFeatureGroup"]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -273,7 +303,9 @@ class FeatureStore:
         return self.get_external_feature_groups(name)
 
     @usage.method_logger
-    def get_external_feature_groups(self, name: str):
+    def get_external_feature_groups(
+        self, name: str
+    ) -> List["feature_group.ExternalFeatureGroup"]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -304,7 +336,9 @@ class FeatureStore:
             fg_object.feature_store = self
         return feature_group_object
 
-    def get_training_dataset(self, name: str, version: int = None):
+    def get_training_dataset(
+        self, name: str, version: int = None
+    ) -> "training_dataset.TrainingDataset":
         """Get a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -327,7 +361,7 @@ class FeatureStore:
             `TrainingDataset`: The training dataset metadata object.
 
         # Raises
-            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve training dataset from the feature store.
         """
 
         if version is None:
@@ -341,7 +375,9 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
-    def get_training_datasets(self, name: str):
+    def get_training_datasets(
+        self, name: str
+    ) -> List["training_dataset.TrainingDataset"]:
         """Get a list of all versions of a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -362,7 +398,7 @@ class FeatureStore:
         return self._training_dataset_api.get(name, None)
 
     @usage.method_logger
-    def get_storage_connector(self, name: str):
+    def get_storage_connector(self, name: str) -> "storage_connector.StorageConnector":
         """Get a previously created storage connector from the feature store.
 
         Storage connectors encapsulate all information needed for the execution engine
@@ -395,7 +431,7 @@ class FeatureStore:
         dataframe_type: Optional[str] = "default",
         online: Optional[bool] = False,
         read_options: Optional[dict] = None,
-    ):
+    ) -> Union[pd.DataFrame, pd.Series, np.ndarray, pl.DataFrame]:
         """Execute SQL command on the offline or online feature store database
 
         !!! example
@@ -434,7 +470,7 @@ class FeatureStore:
         )
 
     @usage.method_logger
-    def get_online_storage_connector(self):
+    def get_online_storage_connector(self) -> "storage_connector.StorageConnector":
         """Get the storage connector for the Online Feature Store of the respective
         project's feature store.
 
@@ -475,7 +511,7 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> "feature_group.FeatureGroup":
         """Create a feature group metadata object.
 
         !!! example
@@ -607,7 +643,11 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> Union[
+        "feature_group.FeatureGroup",
+        "feature_group.ExternalFeatureGroup",
+        "feature_group.SpineGroup",
+    ]:
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
         !!! example
@@ -748,7 +788,7 @@ class FeatureStore:
         ] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> "feature_group.ExternalFeatureGroup":
         """Create a external feature group metadata object.
 
         !!! warning "Deprecated"
@@ -858,7 +898,7 @@ class FeatureStore:
         online_enabled: Optional[bool] = False,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> "feature_group.ExternalFeatureGroup":
         """Create a external feature group metadata object.
 
         !!! example
@@ -1002,7 +1042,7 @@ class FeatureStore:
             np.ndarray,
             List[list],
         ] = None,
-    ):
+    ) -> "feature_group.SpineGroup":
         """Create a spine group metadata object.
 
         Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels.
@@ -1147,7 +1187,7 @@ class FeatureStore:
         label: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
         train_split: str = None,
-    ):
+    ) -> "training_dataset.TrainingDataset":
         """Create a training dataset metadata object.
 
         !!! warning "Deprecated"
@@ -1260,7 +1300,7 @@ class FeatureStore:
             bool,
         ],
         version: Optional[int] = None,
-    ):
+    ) -> "TransformationFunction":
         """Create a transformation function metadata object.
 
         !!! example
@@ -1304,7 +1344,7 @@ class FeatureStore:
         self,
         name: str,
         version: Optional[int] = None,
-    ):
+    ) -> "TransformationFunction":
         """Get  transformation function metadata object.
 
         !!! example "Get transformation function by name. This will default to version 1"
@@ -1402,7 +1442,7 @@ class FeatureStore:
         return self._transformation_function_engine.get_transformation_fn(name, version)
 
     @usage.method_logger
-    def get_transformation_functions(self):
+    def get_transformation_functions(self) -> List["TransformationFunction"]:
         """Get  all transformation functions metadata objects.
 
         !!! example "Get all transformation functions"
@@ -1430,7 +1470,7 @@ class FeatureStore:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
-    ):
+    ) -> "feature_view.FeatureView":
         """Create a feature view metadata object and saved it to hopsworks.
 
         !!! example
@@ -1545,7 +1585,7 @@ class FeatureStore:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
-    ):
+    ) -> "feature_view.FeatureView":
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
         existing feature view metadata object.
 
@@ -1619,7 +1659,9 @@ class FeatureStore:
                 raise e
 
     @usage.method_logger
-    def get_feature_view(self, name: str, version: int = None):
+    def get_feature_view(
+        self, name: str, version: int = None
+    ) -> "feature_view.FeatureView":
         """Get a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1659,7 +1701,7 @@ class FeatureStore:
         return self._feature_view_engine.get(name, version)
 
     @usage.method_logger
-    def get_feature_views(self, name):
+    def get_feature_views(self, name: str) -> List["feature_view.FeatureView"]:
         """Get a list of all versions of a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1687,46 +1729,36 @@ class FeatureStore:
         return self._feature_view_engine.get(name)
 
     @property
-    def id(self):
+    def id(self) -> int:
         """Id of the feature store."""
         return self._id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the feature store."""
         return self._name
 
     @property
-    def project_name(self):
+    def project_name(self) -> str:
         """Name of the project in which the feature store is located."""
         return self._project_name
 
     @property
-    def project_id(self):
+    def project_id(self) -> int:
         """Id of the project in which the feature store is located."""
         return self._project_id
 
     @property
-    def online_featurestore_name(self):
+    def online_featurestore_name(self) -> Optional[str]:
         """Name of the online feature store database."""
         return self._online_feature_store_name
 
     @property
-    def mysql_server_endpoint(self):
-        """MySQL server endpoint for the online feature store."""
-        return self._mysql_server_endpoint
-
-    @property
-    def online_enabled(self):
+    def online_enabled(self) -> bool:
         """Indicator whether online feature store is enabled."""
         return self._online_enabled
 
     @property
-    def hive_endpoint(self):
-        """Hive endpoint for the offline feature store."""
-        return self._hive_endpoint
-
-    @property
-    def offline_featurestore_name(self):
+    def offline_featurestore_name(self) -> str:
         """Name of the offline feature store database."""
         return self._offline_feature_store_name

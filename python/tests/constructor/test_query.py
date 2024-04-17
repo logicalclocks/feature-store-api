@@ -77,7 +77,7 @@ class TestQuery:
 
         # Assert
         assert q._feature_store_name == "test_feature_store_name"
-        assert q._feature_store_id == "test_feature_store_id"
+        assert q._feature_store_id == 67
         assert isinstance(q._left_feature_group, feature_group.FeatureGroup)
         assert len(q._left_features) == 1
         assert isinstance(q._left_features[0], feature.Feature)
@@ -98,7 +98,7 @@ class TestQuery:
 
         # Assert
         assert q._feature_store_name == "test_feature_store_name"
-        assert q._feature_store_id == "test_feature_store_id"
+        assert q._feature_store_id == 67
         assert isinstance(q._left_feature_group, feature_group.ExternalFeatureGroup)
         assert len(q._left_features) == 1
         assert isinstance(q._left_features[0], feature.Feature)
@@ -119,7 +119,7 @@ class TestQuery:
 
         # Assert
         assert q._feature_store_name == "test_feature_store_name"
-        assert q._feature_store_id == "test_feature_store_id"
+        assert q._feature_store_id == 67
         assert isinstance(q._left_feature_group, feature_group.FeatureGroup)
         assert len(q._left_features) == 1
         assert isinstance(q._left_features[0], feature.Feature)
@@ -140,7 +140,7 @@ class TestQuery:
 
         # Assert
         assert q._feature_store_name == "test_feature_store_name"
-        assert q._feature_store_id == "test_feature_store_id"
+        assert q._feature_store_id == 67
         assert isinstance(q._left_feature_group, feature_group.ExternalFeatureGroup)
         assert len(q._left_features) == 1
         assert isinstance(q._left_features[0], feature.Feature)

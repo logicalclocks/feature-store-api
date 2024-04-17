@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Union
 
@@ -23,7 +24,7 @@ from hsfs.ge_expectation import GeExpectation
 
 
 class ExpectationSuiteEngine:
-    def __init__(self, feature_store_id: int, feature_group_id: int):
+    def __init__(self, feature_store_id: int, feature_group_id: int) -> None:
         """Expectation Suite engine.
 
         :param feature_store_id: id of the respective featurestore
@@ -37,7 +38,7 @@ class ExpectationSuiteEngine:
             feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
-    def save(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
+    def save(self, expectation_suite: "es.ExpectationSuite") -> "es.ExpectationSuite":
         if expectation_suite.id:
             return self.update(expectation_suite)
         else:
@@ -75,7 +76,7 @@ class ExpectationSuiteEngine:
         meta: Union[str, Dict[str, Any]],
         expectations: List[GeExpectation],
         **kwargs,
-    ):
+    ) -> None:
         self._expectation_suite_api.update_metadata(
             es.ExpectationSuite(
                 id=id,

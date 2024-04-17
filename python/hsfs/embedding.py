@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 from dataclasses import dataclass
@@ -364,7 +365,7 @@ class EmbeddingIndex:
         """
         return {
             "indexName": self._index_name,
-            "features": list(self._features.values()),
+            "features": [feature.to_dict() for feature in self._features.values()],
             "colPrefix": self._col_prefix,
         }
 
