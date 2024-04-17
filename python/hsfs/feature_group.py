@@ -109,8 +109,17 @@ class FeatureGroupBase:
         self._notification_topic_name = notification_topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
+        self._variable_api: VariableApi = VariableApi()
+
+        self._multi_part_insert: bool = False
+        self._embedding_index = embedding_index
+        self._feature_store = None
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
+
+        self._feature_group_engine: Optional[
+            feature_group_engine.FeatureGroupEngine
+        ] = None
         self._statistics_engine: "statistics_engine.StatisticsEngine" = (
             statistics_engine.StatisticsEngine(featurestore_id, self.ENTITY_TYPE)
         )
@@ -150,15 +159,6 @@ class FeatureGroupBase:
                 feature_store_id=self._feature_store_id,
                 feature_group_id=self._id,
             )
-
-        self._feature_store_id = featurestore_id
-        self._variable_api: VariableApi = VariableApi()
-        self._feature_group_engine: Optional[
-            feature_group_engine.FeatureGroupEngine
-        ] = None
-        self._multi_part_insert: bool = False
-        self._embedding_index = embedding_index
-        self._feature_store = None
 
         self.check_deprecated()
 
