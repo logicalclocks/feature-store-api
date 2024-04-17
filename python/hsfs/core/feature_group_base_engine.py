@@ -62,7 +62,7 @@ class FeatureGroupBaseEngine:
         """
         return self._feature_group_api.get_parent_feature_groups(feature_group)
     
-    def get_parent_storage_connector(self, feature_group):
+    def get_storage_connector(self, feature_group):
         """Get the parents of this feature group, based on explicit provenance.
         Parents are storage connectors. These storage connector can be accessible,
         deleted or inaccessible.
@@ -76,7 +76,7 @@ class FeatureGroupBaseEngine:
             `ExplicitProvenance.Links`: the storage connector used to generated this
             feature group
         """
-        return self._feature_group_api.get_parent_storage_connector(feature_group)
+        return self._feature_group_api.get_storage_connector(feature_group)
 
     def get_generated_feature_views(self, feature_group):
         """Get the generated feature view using this feature group, based on explicit

@@ -303,7 +303,7 @@ class FeatureGroupApi:
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
     
-    def get_parent_storage_connector(self, feature_group_instance):
+    def get_storage_connector(self, feature_group_instance):
         """Get the parents of this feature group, based on explicit provenance.
         Parents are storage connectors. These storage connector can be accessible,
         deleted or inaccessible.
