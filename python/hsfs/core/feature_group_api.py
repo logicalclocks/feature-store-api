@@ -28,7 +28,7 @@ class FeatureGroupApi:
     BACKEND_FG_EXTERNAL = "onDemandFeatureGroupDTO"
     BACKEND_FG_SPINE = "onDemandFeatureGroupDTO"
 
-    def save(self, feature_group_instance):
+    def save(self, feature_group_instance: feature_group.FeatureGroup):
         """Save feature group metadata to the feature store.
 
         :param feature_group_instance: metadata object of feature group to be
@@ -56,6 +56,52 @@ class FeatureGroupApi:
         )
         return feature_group_object
 
+    def get_smart(self, feature_store_id, name, version):
+        """Get the metadata of a feature group with a certain name and version.
+
+        :param feature_store_id: feature store id
+        :type feature_store_id: int
+        :param name: name of the feature group
+        :type name: str
+        :param version: version of the feature group
+        :type version: int
+
+        :return: feature group metadata object
+        :rtype: FeatureGroup, SpineGroup, ExternalFeatureGroup
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_store_id,
+            "featuregroups",
+            name,
+        ]
+        query_params = None if version is None else {"version": version}
+
+        fg_objs = []
+        for fg_json in _client._send_request("GET", path_params, query_params):
+            if (
+                fg_json["type"] == self.BACKEND_FG_STREAM
+                or fg_json["type"] == self.BACKEND_FG_BATCH
+            ):
+                fg_objs.append(feature_group.FeatureGroup.from_response_json(fg_json))
+            elif fg_json["type"] == self.BACKEND_FG_EXTERNAL:
+                if fg_json["spine"]:
+                    fg_objs.append(feature_group.SpineGroup.from_response_json(fg_json))
+                else:
+                    fg_objs.append(
+                        feature_group.ExternalFeatureGroup.from_response_json(fg_json)
+                    )
+            else:
+                raise ValueError("Unknown feature group type: " + fg_json["type"])
+
+        if version is not None:
+            return fg_objs[0]
+        else:
+            return fg_objs
+
     def get(self, feature_store_id, name, version, fg_type):
         """Get the metadata of a feature group with a certain name and version.
 
@@ -81,20 +127,6 @@ class FeatureGroupApi:
         ]
         query_params = None if version is None else {"version": version}
         json_list = _client._send_request("GET", path_params, query_params)
-
-        if fg_type is None and len(json_list) > 0:
-            if hasattr(json_list[0], "type") and (
-                json_list[0]["type"] in [self.BACKEND_FG_STREAM, self.BACKEND_FG_BATCH]
-            ):
-                fg_type = self.CACHED
-            elif (
-                hasattr(json_list[0], "type")
-                and json_list[0]["type"] == self.BACKEND_FG_EXTERNAL
-            ):
-                if hasattr(json_list[0], "spine") and json_list[0]["spine"] is True:
-                    fg_type = self.SPINE
-                else:
-                    fg_type = self.ONDEMAND
 
         if fg_type == self.CACHED:
             fg_list = feature_group.FeatureGroup.from_response_json(json_list)
