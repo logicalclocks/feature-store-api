@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import humps
 from hsfs import util
@@ -28,7 +28,7 @@ class ServingPreparedStatement:
         feature_group_id: Optional[int] = None,
         prepared_statement_index: Optional[int] = None,
         prepared_statement_parameters: Optional[
-            List["prepared_statement_parameter.PreparedStatementParameter"]
+            List[prepared_statement_parameter.PreparedStatementParameter]
         ] = None,
         query_online: Optional[str] = None,
         prefix: Optional[str] = None,
@@ -40,12 +40,8 @@ class ServingPreparedStatement:
     ) -> None:
         self._feature_group_id = feature_group_id
         self._prepared_statement_index = prepared_statement_index
-        self._prepared_statement_parameters = [
-            prepared_statement_parameter.PreparedStatementParameter.from_response_json(
-                psp
-            )
-            for psp in prepared_statement_parameters
-        ]
+        # use setter to ensure that the parameters are sorted by index
+        self.prepared_statement_parameters = prepared_statement_parameters
         self._query_online = query_online
         self._prefix = prefix
 
@@ -87,7 +83,7 @@ class ServingPreparedStatement:
     @property
     def prepared_statement_parameters(
         self,
-    ) -> Optional[List["prepared_statement_parameter.PreparedStatementParameter"]]:
+    ) -> Optional[List[prepared_statement_parameter.PreparedStatementParameter]]:
         return self._prepared_statement_parameters
 
     @property
@@ -109,11 +105,22 @@ class ServingPreparedStatement:
     @prepared_statement_parameters.setter
     def prepared_statement_parameters(
         self,
-        prepared_statement_parameters: Optional[
-            List["prepared_statement_parameter.PreparedStatementParameter"]
+        prepared_statement_parameters: Union[
+            List[prepared_statement_parameter.PreparedStatementParameter],
+            List[Dict[str, Any]],
         ],
     ) -> None:
-        self._prepared_statement_parameters = prepared_statement_parameters
+        if isinstance(prepared_statement_parameters[0], dict):
+            prepared_statement_parameters = [
+                prepared_statement_parameter.PreparedStatementParameter.from_response_json(
+                    pstm_param
+                )
+                for pstm_param in prepared_statement_parameters
+            ]
+
+        self._prepared_statement_parameters = sorted(
+            prepared_statement_parameters, key=lambda x: x.index
+        )
 
     @query_online.setter
     def query_online(self, query_online: Optional[str]) -> None:
