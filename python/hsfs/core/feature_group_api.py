@@ -78,6 +78,10 @@ class FeatureGroupApi:
         query_params = None if version is None else {"version": version}
         json_list = _client._send_request("GET", path_params, query_params)
 
+        if fg_type is None and len(json_list) > 0:
+            if hasattr(json_list[0], "type"):
+                fg_type = json_list[0]["type"]
+
         if fg_type == self.CACHED:
             fg_list = feature_group.FeatureGroup.from_response_json(json_list)
         elif fg_type == self.SPINE:
