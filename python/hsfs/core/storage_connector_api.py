@@ -13,12 +13,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
+from typing import Any, Dict
 
 from hsfs import client, storage_connector
 
 
 class StorageConnectorApi:
-    def _get(self, feature_store_id: int, name: str):
+    def _get(self, feature_store_id: int, name: str) -> Dict[str, Any]:
         """Returning response dict instead of initialized object."""
         _client = client.get_instance()
         path_params = [
@@ -32,7 +35,9 @@ class StorageConnectorApi:
         query_params = {"temporaryCredentials": True}
         return _client._send_request("GET", path_params, query_params=query_params)
 
-    def get(self, feature_store_id: int, name: str):
+    def get(
+        self, feature_store_id: int, name: str
+    ) -> storage_connector.StorageConnector:
         """Get storage connector with name.
 
         :param feature_store_id: feature store id
@@ -46,7 +51,9 @@ class StorageConnectorApi:
             self._get(feature_store_id, name)
         )
 
-    def refetch(self, storage_connector_instance):
+    def refetch(
+        self, storage_connector_instance: storage_connector.StorageConnector
+    ) -> storage_connector.StorageConnector:
         """
         Refetches the storage connector from Hopsworks, in order to update temporary
         credentials.
@@ -58,7 +65,9 @@ class StorageConnectorApi:
             )
         )
 
-    def get_online_connector(self, feature_store_id: int):
+    def get_online_connector(
+        self, feature_store_id: int
+    ) -> storage_connector.OnlineStorageConnector:
         _client = client.get_instance()
         path_params = [
             "project",
@@ -73,7 +82,9 @@ class StorageConnectorApi:
             _client._send_request("GET", path_params)
         )
 
-    def get_kafka_connector(self, feature_store_id: int, external: bool = False):
+    def get_kafka_connector(
+        self, feature_store_id: int, external: bool = False
+    ) -> storage_connector.KafkaConnector:
         _client = client.get_instance()
         path_params = [
             "project",

@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 import re
@@ -39,20 +40,20 @@ class ExpectationSuite:
         ],
         meta: Dict[str, Any],
         id: Optional[int] = None,
-        data_asset_type=None,
-        ge_cloud_id=None,
+        data_asset_type: Optional[str] = None,
+        ge_cloud_id: Optional[int] = None,
         run_validation: bool = True,
         validation_ingestion_policy: str = "ALWAYS",
         feature_store_id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
         href: Optional[str] = None,
-        expand=None,
-        items=None,
-        count=None,
-        type=None,
-        created=None,
+        expand: Optional[str] = None,
+        items: Optional[List[Dict[str, Any]]] = None,
+        count: Optional[int] = None,
+        type: Optional[str] = None,
+        created: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._id = id
         self._expectation_suite_name = expectation_suite_name
         self._ge_cloud_id = ge_cloud_id
@@ -71,11 +72,16 @@ class ExpectationSuite:
             self._feature_group_id = None
             self._feature_store_id = None
 
-        self._variable_api = VariableApi()
+        self._variable_api: "VariableApi" = VariableApi()
 
         # use setters because these need to be transformed from stringified json
         self.expectations = expectations
         self.meta = meta
+
+        self._expectation_engine: Optional["ExpectationEngine"] = None
+        self._expectation_suite_engine: Optional[
+            "expectation_suite_engine.ExpectationSuiteEngine"
+        ] = None
 
         if self.id:
             assert (
@@ -95,12 +101,11 @@ class ExpectationSuite:
                     feature_group_id=self._feature_group_id,
                 )
             )
-        else:
-            self._expectation_engine = None
-            self._expectation_suite_engine = None
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(
+        cls, json_dict: Dict[str, Any]
+    ) -> Union["ExpectationSuite", List["ExpectationSuite"]]:
         json_decamelized = humps.decamelize(json_dict)
         if (
             "count" in json_decamelized
@@ -123,7 +128,7 @@ class ExpectationSuite:
         id: Optional[int] = None,
         feature_store_id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
-    ):
+    ) -> "ExpectationSuite":
         """Used to create a Hopsworks Expectation Suite instance from a great_expectations instance.
 
         # Arguments
@@ -156,7 +161,7 @@ class ExpectationSuite:
             feature_store_id=feature_store_id,
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self._id,
             "featureStoreId": self._feature_store_id,
@@ -170,7 +175,7 @@ class ExpectationSuite:
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
-    def to_json_dict(self, decamelize=False) -> Dict[str, Any]:
+    def to_json_dict(self, decamelize: bool = False) -> Dict[str, Any]:
         the_dict = {
             "id": self._id,
             "featureStoreId": self._feature_store_id,
@@ -478,7 +483,7 @@ class ExpectationSuite:
     def __str__(self) -> str:
         return self.json()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         es = "ExpectationSuite("
 
         if hasattr(self, "id"):
@@ -505,7 +510,7 @@ class ExpectationSuite:
         return self._id
 
     @id.setter
-    def id(self, id: int):
+    def id(self, id: int) -> None:
         self._id = id
 
     @property
@@ -514,7 +519,7 @@ class ExpectationSuite:
         return self._expectation_suite_name
 
     @expectation_suite_name.setter
-    def expectation_suite_name(self, expectation_suite_name: str):
+    def expectation_suite_name(self, expectation_suite_name: str) -> None:
         self._expectation_suite_name = expectation_suite_name
         if self.id:
             self._expectation_suite_engine.update_metadata_from_fields(
@@ -527,16 +532,16 @@ class ExpectationSuite:
         return self._data_asset_type
 
     @data_asset_type.setter
-    def data_asset_type(self, data_asset_type: str):
+    def data_asset_type(self, data_asset_type: Optional[str]) -> None:
         self._data_asset_type = data_asset_type
 
     @property
-    def ge_cloud_id(self):
+    def ge_cloud_id(self) -> Optional[int]:
         """ge_cloud_id of the expectation suite, not used by backend."""
         return self._ge_cloud_id
 
     @ge_cloud_id.setter
-    def ge_coud_id(self, ge_cloud_id):
+    def ge_coud_id(self, ge_cloud_id: Optional[int]) -> None:
         self._ge_cloud_id = ge_cloud_id
 
     @property
@@ -545,7 +550,7 @@ class ExpectationSuite:
         return self._run_validation
 
     @run_validation.setter
-    def run_validation(self, run_validation: bool):
+    def run_validation(self, run_validation: bool) -> None:
         self._run_validation = run_validation
         if self.id:
             self._expectation_suite_engine.update_metadata_from_fields(
@@ -562,7 +567,7 @@ class ExpectationSuite:
         return self._validation_ingestion_policy
 
     @validation_ingestion_policy.setter
-    def validation_ingestion_policy(self, validation_ingestion_policy: str):
+    def validation_ingestion_policy(self, validation_ingestion_policy: str) -> None:
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         if self.id:
             self._expectation_suite_engine.update_metadata_from_fields(
@@ -583,7 +588,7 @@ class ExpectationSuite:
             List[dict],
             None,
         ],
-    ):
+    ) -> None:
         if expectations is None:
             self._expectations = []
         elif isinstance(expectations, list):
@@ -596,12 +601,12 @@ class ExpectationSuite:
             )
 
     @property
-    def meta(self) -> dict:
+    def meta(self) -> Dict[str, Any]:
         """Meta field of the expectation suite to store additional informations."""
         return self._meta
 
     @meta.setter
-    def meta(self, meta: Union[str, dict]):
+    def meta(self, meta: Union[str, dict]) -> None:
         if isinstance(meta, dict):
             self._meta = meta
         elif isinstance(meta, str):

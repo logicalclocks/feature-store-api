@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_api, kafka_api, storage_connector_api, tags_api

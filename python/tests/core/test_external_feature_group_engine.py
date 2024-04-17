@@ -209,7 +209,9 @@ class TestExternalFeatureGroupEngine:
         f2 = feature.Feature(name="f2", type="str")
 
         external_fg = feature_group.ExternalFeatureGroup(
-            storage_connector=None, primary_key=[], features=[f, f1]
+            storage_connector=mocker.patch("hsfs.storage_connector.JdbcConnector"),
+            primary_key=[],
+            features=[f, f1],
         )
 
         # Act

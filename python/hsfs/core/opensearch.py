@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import logging
 import re
@@ -138,7 +139,7 @@ class OpenSearchClientSingleton:
                 VectorDatabaseException.OTHERS,
                 f"Error in Opensearch request: {e}",
                 e.info,
-            )  from e
+            ) from e
 
     @retry(
         wait_exponential_multiplier=1000,

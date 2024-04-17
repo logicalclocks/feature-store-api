@@ -13,12 +13,13 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 from typing import Mapping, Optional, Union
 
 import humps
-from hsfs.util import FeatureStoreEncoder
+from hsfs import util
 
 
 class FeatureDescriptiveStatistics:
@@ -201,7 +202,7 @@ class FeatureDescriptiveStatistics:
         return _dict
 
     def json(self) -> str:
-        return json.dumps(self, cls=FeatureStoreEncoder)
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def __str__(self):
         return self.json()
