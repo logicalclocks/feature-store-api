@@ -66,7 +66,7 @@ class StatisticsApi:
         end_commit_time: Optional[int] = None,
         feature_names: List[str] = None,
         row_percentage: Optional[float] = None,
-        before_transformation: bool = False,
+        before_transformation: Optional[bool] = None,
         training_dataset_version: Optional[int] = None,
     ) -> Optional[statistics.Statistics]:
         """Get single statistics of an entity.
