@@ -15,16 +15,13 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 import humps
 from hsfs import util
 from hsfs.core import transformation_function_engine
 from hsfs.decorators import typechecked
-
-
-if TYPE_CHECKING:
-    from hsfs.hopsworks_udf import HopsworksUdf
+from hsfs.hopsworks_udf import HopsworksUdf
 
 
 @typechecked
@@ -108,6 +105,12 @@ class TransformationFunction:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+
+        if json_decamelized.get("hopsworks_udf", False):
+            json_decamelized["hopsworks_udf"] = HopsworksUdf.from_response_json(
+                json_decamelized["hopsworks_udf"]
+            )
+
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
                 return []
@@ -128,9 +131,8 @@ class TransformationFunction:
             "id": self._id,
             "name": self._name,
             "version": self._version,
-            "sourceCodeContent": self._source_code_content,
-            "outputType": self._output_type,
             "featurestoreId": self._featurestore_id,
+            "hopsworks_udf": self._hopsworks_udf,
         }
 
     @property

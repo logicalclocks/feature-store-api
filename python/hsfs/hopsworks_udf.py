@@ -16,11 +16,15 @@
 
 import ast
 import inspect
+import json
 import warnings
-from typing import Callable, List, Union
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from hsfs import engine
+import humps
+from hsfs import engine, util
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 
 def hopsworks_udf(return_type: Union[List[type], type]):
@@ -31,11 +35,24 @@ def hopsworks_udf(return_type: Union[List[type], type]):
     return wrapper
 
 
+@dataclass
+class TransformationFeature:
+    feature_name: str
+    statistic_argument_name: Optional[str]
+
+    def to_dict(self):
+        return {
+            "feature_name": self.feature_name,
+            "statistic_argument_name": self.statistic_argument_name,
+        }
+
+
 class HopsworksUdf:
     """
     Metadata class to store information about UDF
     """
 
+    # TODO : Complete this
     PYTHON_SPARK_TYPE_MAPPING = {
         str: "string",
         int: "int",
@@ -46,21 +63,40 @@ class HopsworksUdf:
         # "binary": BinaryType(),
     }
 
+    STRING_PYTHON_TYPES_MAPPING = {"str": str, "int": int, "float": float, "bool": bool}
+
     def __init__(
-        self, func: Callable, return_type: Union[List[type], type], name: str = None
+        self,
+        func: Union[Callable, str],
+        return_type: Union[List[type], type],
+        name: str = None,
+        transformation_features: List[TransformationFeature] = None,
     ):
-        self.udf_function: Callable = func
         if name is None:
-            self.function_name: str = func.__name__
+            self._function_name: str = func.__name__
         else:
-            self.function_name: str = name
-        self.return_type: Union[List[type], type] = return_type
-        self.function_source: str = self._remove_argument(
-            HopsworksUdf._extract_source_code(self.udf_function), "statistics"
-        )
-        # TODO : Add a getter functions
-        self.transformation_features: List[str] = (
-            HopsworksUdf._extract_function_arguments(self.function_source)
+            self._function_name: str = name
+
+        self._statistics: Optional[Dict[str, FeatureDescriptiveStatistics]] = dict()
+
+        self._return_type: Union[List[type], type] = return_type
+
+        if isinstance(func, Callable):
+            self._function_source: str = HopsworksUdf._extract_source_code(func)
+        else:
+            self._function_source: str = func
+
+        if transformation_features:
+            self._transformation_features: List[TransformationFeature] = (
+                transformation_features
+            )
+        else:
+            self._transformation_features: List[TransformationFeature] = (
+                HopsworksUdf._extract_function_arguments(self.function_source)
+            )
+
+        self._function_source = self._remove_argument(
+            self.function_source, "statistics"
         )
         HopsworksUdf.validate_arguments(self.return_type)
 
@@ -118,10 +154,6 @@ class HopsworksUdf:
 
     @staticmethod
     def _extract_source_code(udf_function):
-        if not callable(udf_function):
-            # TODO : Think about a better text for the raised error
-            raise ValueError("transformation function must be callable")
-
         try:
             module_imports = HopsworksUdf._get_module_imports(
                 HopsworksUdf._get_module_path(udf_function.__module__)
@@ -153,8 +185,16 @@ class HopsworksUdf:
         # Parse the function signature to remove the specified argument
         signature = source_code[signature_line]
         arg_list = signature.split("(")[1].split(")")[0].split(",")
-        arg_list = [arg.strip() for arg in arg_list]
-        return arg_list
+
+        arg_list = [arg.split(":")[0].strip() for arg in arg_list]
+
+        return [
+            TransformationFeature(
+                arg, f"statistics_{arg}" if f"statistics_{arg}" in arg_list else None
+            )
+            for arg in arg_list
+            if not arg.startswith("statistics")
+        ]
 
     def _remove_argument(self, source_code: str, arg_to_remove: str):
         """ "
@@ -181,6 +221,7 @@ class HopsworksUdf:
             if (
                 arg_to_remove not in list(map(str.strip, arg.split(" ")))
                 and arg_to_remove not in list(map(str.strip, arg.split(":")))
+                and arg_to_remove not in list(map(str.strip, arg.split("_")))
                 and arg.strip() != arg_to_remove
             )
         ]
@@ -218,47 +259,149 @@ class HopsworksUdf:
             ]
         )
 
-    def hopsworksUdf_wrapper(self, **statistics):
+    def hopsworksUdf_wrapper(self):
         # TODO : clean this up
+        function_source = "\t".join(self.function_source.splitlines(True))
         if isinstance(self.return_type, List):
-            self.function_source = "\t".join(self.function_source.splitlines(True))
-            self.code = f"""def renaming_wrapper(*args):
+            code = f"""def renaming_wrapper(*args):
     import pandas as pd
-    {self.function_source}
+    {function_source}
     df = {self.function_name}(*args)
     df = df.rename(columns = {{f'{{df.columns[i]}}':f'{self.function_name}<{"-".join(self.transformation_features)}>{{i}}' for i in range(len(df.columns))}})
     return df"""
         else:
-            self.code = self.function_source
+            code = f"""def renaming_wrapper(*args):
+    import pandas as pd
+    {function_source}
+    df = {self.function_name}(*args)
+    df = df.rename(f'{self.function_name}<{"-".join(self.transformation_features)}>')
+    return df"""
         scope = __import__("__main__").__dict__
-        scope.update(**statistics)
-        exec(self.code, scope)
-        if isinstance(self.transformation_features, List):
-            return eval("renaming_wrapper", scope)
-        else:
-            return eval(self.function_name, scope)
+        scope.update(self.transformation_statistics)
+        exec(code, scope)
+        return eval("renaming_wrapper", scope)
 
     def __call__(self, *args: List[str]):
         # TODO : Raise an execption if the number of features are incorrect.
+        if len(args) != len(self.transformation_features):
+            raise FeatureStoreException(
+                "Number of features provided does not match the number of features provided in the UDF definition"
+            )
         for arg in args:
             if not isinstance(arg, str):
                 raise FeatureStoreException(
                     f'Feature names provided must be string "{arg}" is not string'
                 )
 
-        self.transformation_features = list(args)
+        self._transformation_features = [
+            TransformationFeature(
+                new_feature_name, transformation_feature.statistic_argument_name
+            )
+            for transformation_feature, new_feature_name in zip(
+                self._transformation_features, args
+            )
+        ]
         return self
 
-    def get_udf(self, statistics):
+    def get_udf(self):
         if engine.get_type() in ["hive", "python", "training"]:
-            return self.hopsworksUdf_wrapper(statistics=statistics)
+            return self.hopsworksUdf_wrapper()
         else:
             from pyspark.sql.functions import pandas_udf
 
             # TODO : Make this proper
             return pandas_udf(
-                f=self.hopsworksUdf_wrapper(statistics=statistics),
+                f=self.hopsworksUdf_wrapper(),
                 returnType=self.create_pandas_udf_return_schema_from_list(
                     self.return_type
                 ),
             )
+
+    def to_dict(self):
+        return {
+            "func": self.function_source,
+            "name": self.function_name,
+            "return_type": [python_type.__name__ for python_type in self.return_type]
+            if isinstance(self.return_type, List)
+            else self.return_type.__name__,
+            "transformation_features": self.transformation_features,
+        }
+
+    def json(self) -> str:
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    @classmethod
+    def from_response_json(
+        cls: "HopsworksUdf", json_dict: Dict[str, Any]
+    ) -> "HopsworksUdf":
+        json_decamelized = humps.decamelize(json_dict)
+        function_source_code = json_decamelized["func"]
+        function_name = json_decamelized["name"]
+        return_type = json_decamelized["return_type"]
+        transformation_features = json_decamelized["transformation_features"]
+
+        hopsworks_udf = cls(
+            func=function_source_code,
+            return_type=[
+                cls.STRING_PYTHON_TYPES_MAPPING[python_type]
+                for python_type in return_type
+            ]
+            if isinstance(return_type, List)
+            else cls.STRING_PYTHON_TYPES_MAPPING[return_type],
+            name=function_name,
+            transformation_features=transformation_features,
+        )
+
+        return hopsworks_udf
+
+    @property
+    def return_type(self):
+        return self._return_type
+
+    @property
+    def function_name(self):
+        return self._function_name
+
+    @property
+    def function_source(self):
+        return self._function_source
+
+    @property
+    def statistics_required(self):
+        return bool(self.statistics_features)
+
+    @property
+    def transformation_statistics(self):
+        return self._statistics
+
+    @property
+    def transformation_features(self):
+        return [
+            transformation_feature.feature_name
+            for transformation_feature in self._transformation_features
+        ]
+
+    @property
+    def statistics_features(self):
+        return [
+            transformation_feature.feature_name
+            for transformation_feature in self._transformation_features
+            if transformation_feature.statistic_argument_name is not None
+        ]
+
+    @property
+    def statistics_argument_mapping(self):
+        return {
+            transformation_feature.feature_name: transformation_feature.statistic_argument_name
+            for transformation_feature in self._transformation_features
+        }
+
+    @transformation_statistics.setter
+    def transformation_statistics(self, statistics: List[FeatureDescriptiveStatistics]):
+        # TODO : Clean this up
+        self._statistics = dict()
+        for stat in statistics:
+            if stat.feature_name in self.statistics_argument_mapping.keys():
+                self._statistics[
+                    self.statistics_argument_mapping[stat.feature_name]
+                ] = stat
