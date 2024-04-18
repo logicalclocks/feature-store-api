@@ -109,38 +109,6 @@ class TransformationFunctionEngine:
             )
         return transformation_fn_dict
 
-    @staticmethod
-    def attach_transformation_fn(training_dataset_obj=None, feature_view_obj=None):
-        # TODO : Remove transformation function attached to training dataset object and features
-        if training_dataset_obj:
-            target_obj = training_dataset_obj  # todo why provide td and fv just to convert to target_obj?
-        else:
-            target_obj = feature_view_obj
-
-        if target_obj._transformation_functions:
-            for (
-                feature_name,
-                transformation_fn,
-            ) in target_obj._transformation_functions.items():
-                if feature_name in target_obj.labels:
-                    raise ValueError(
-                        "Online transformations for training dataset labels are not supported."
-                    )
-
-                feature, prefix, featuregroup = target_obj.query._get_feature_by_name(
-                    feature_name
-                )
-                target_obj._features.append(
-                    training_dataset_feature.TrainingDatasetFeature(
-                        name=feature_name,
-                        feature_group_feature_name=feature.name,
-                        featuregroup=featuregroup,
-                        type=transformation_fn.output_type,
-                        label=False,
-                        transformation_function=transformation_fn,
-                    )
-                )
-
     def is_builtin(self, transformation_fn_instance):
         return (
             transformation_fn_instance.name in self.BUILTIN_FN_NAMES
@@ -249,6 +217,7 @@ class TransformationFunctionEngine:
         else:
             raise TypeError("Not supported type %s." % output_type)
 
+    # TODO : Think about what to do with label encoder features.
     @staticmethod
     def compute_transformation_fn_statistics(
         training_dataset_obj,
@@ -266,58 +235,35 @@ class TransformationFunctionEngine:
         )
 
     @staticmethod
-    def populate_builtin_transformation_functions(
-        training_dataset, feature_view_obj, dataset
-    ):
-        return
-        # TODO : Remove
-        # check if there any transformation functions that require statistics attached to td features
-        builtin_tffn_label_encoder_features = [
-            ft_name
-            for ft_name in training_dataset.transformation_functions
-            if training_dataset._transformation_function_engine.is_builtin(
-                training_dataset.transformation_functions[ft_name]
+    def add_feature_statistics(training_dataset, feature_view_obj, dataset):
+        # TODO : Optimize this code portion check which i better computing all transformation feature statistics together or one by one.
+        statistics_features = set()
+        for transformation_function in feature_view_obj.transformation_functions:
+            statistics_features.update(
+                transformation_function.hopsworks_udf.statistics_features
             )
-            and training_dataset.transformation_functions[ft_name].name
-            == "label_encoder"
-        ]
-        builtin_tffn_features = [
-            ft_name
-            for ft_name in training_dataset.transformation_functions
-            if training_dataset._transformation_function_engine.is_builtin(
-                training_dataset.transformation_functions[ft_name]
-            )
-            and training_dataset.transformation_functions[ft_name].name
-            != "label_encoder"
-        ]
 
-        if builtin_tffn_features or builtin_tffn_label_encoder_features:
-            if training_dataset.splits:
-                # compute statistics before transformations are applied
-                stats = (
-                    TransformationFunctionEngine.compute_transformation_fn_statistics(
-                        training_dataset,
-                        builtin_tffn_features,
-                        builtin_tffn_label_encoder_features,
-                        dataset.get(training_dataset.train_split),
-                        feature_view_obj,
-                    )
-                )
-            else:
-                # compute statistics before transformations are applied
-                stats = (
-                    TransformationFunctionEngine.compute_transformation_fn_statistics(
-                        training_dataset,
-                        builtin_tffn_features,
-                        builtin_tffn_label_encoder_features,
-                        dataset,
-                        feature_view_obj,
-                    )
-                )
-            # Populate builtin transformations (if any) with respective arguments
-            return training_dataset._transformation_function_engine.populate_builtin_attached_fns(
-                training_dataset.transformation_functions,
-                stats.feature_descriptive_statistics,
+        if training_dataset.splits:
+            # compute statistics before transformations are applied
+            stats = TransformationFunctionEngine.compute_transformation_fn_statistics(
+                training_dataset,
+                list(statistics_features),
+                [],
+                dataset.get(training_dataset.train_split),
+                feature_view_obj,
+            )
+        else:
+            # compute statistics before transformations are applied
+            stats = TransformationFunctionEngine.compute_transformation_fn_statistics(
+                training_dataset,
+                list(statistics_features),
+                [],
+                dataset,
+                feature_view_obj,
+            )
+        for transformation_function in feature_view_obj.transformation_functions:
+            transformation_function.hopsworks_udf.transformation_statistics = (
+                stats.feature_descriptive_statistics
             )
 
     def get_ready_to_use_transformation_fns(
