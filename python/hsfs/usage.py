@@ -146,8 +146,7 @@ def init_usage(hostname, backend_version):
 
 
 def _is_target_hostname(hostname):
-    # Add "localhost" in the first release for testing.
-    target_hostname = {"c.app.hopsworks.ai", "localhost"}
+    target_hostname = {"c.app.hopsworks.ai"}
     return hostname in target_hostname
 
 
