@@ -132,6 +132,7 @@ class FeatureView:
             featurestore_id
         )
         self._vector_server: Optional["vector_server.VectorServer"] = None
+        self._batch_scoring_server: Optional["vector_server.VectorServer"] = None
         self._serving_keys = serving_keys
         self._prefix_serving_key_map = {}
         self._vector_db_client = None
