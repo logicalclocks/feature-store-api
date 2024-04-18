@@ -13,7 +13,7 @@ import sys
 import time
 import traceback
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from os.path import expanduser, join
 
 
@@ -146,8 +146,7 @@ def init_usage(hostname, backend_version):
 
 
 def _is_target_hostname(hostname):
-    # Add "localhost" in the first release for testing.
-    target_hostname = {"c.app.hopsworks.ai", "localhost"}
+    target_hostname = {"c.app.hopsworks.ai"}
     return hostname in target_hostname
 
 
@@ -222,10 +221,13 @@ def method_logger(func):
 
 
 def _send_log(execution_time, func, exception):
+    tz = _env_attr.get_timezone()
+    zoned_datetime = datetime.now(tz=tz)
     log_data = {
         # env
         "user_id": _env_attr.get_user_id(),
-        "datetime": datetime.now(_env_attr.get_timezone()).strftime(
+        "tz": tz.tzname(zoned_datetime),
+        "datetime": zoned_datetime.astimezone(timezone.utc).strftime(
             "%Y-%m-%d %H:%M:%S %Z"
         ),
         "backend_hostname": _hash_string(_env_attr.get_backend_host_name()),
