@@ -127,7 +127,7 @@ class FeatureViewEngine:
                 )
 
         # TODO : Remove this code portion attaches a transfromation function to a feature. This is not possible with the current implementation
-        # self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
+
         updated_fv = self._feature_view_api.post(feature_view_obj)
         print(
             "Feature view created successfully, explore it at \n"

@@ -60,10 +60,6 @@ from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.transformation_function import TransformationFunction
 
 
-if TYPE_CHECKING:
-    from hsfs.hopsworks_udf import HopsworksUdf
-
-
 _logger = logging.getLogger(__name__)
 
 TrainingDatasetDataFrameTypes = Union[
@@ -3402,6 +3398,12 @@ class FeatureView:
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
             logging_enabled=json_decamelized.get('enabled_logging', False),
+            transformation_functions=[
+                TransformationFunction.from_response_json(transformation)
+                for transformation in json_decamelized.get(
+                    "transformation_functions", []
+                )
+            ],
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3434,6 +3436,7 @@ class FeatureView:
             "labels",
             "inference_helper_columns",
             "training_helper_columns",
+            "transformation_functions",
             "schema",
             "serving_keys",
             "logging_enabled",
@@ -3685,6 +3688,7 @@ class FeatureView:
             "query": self._query,
             "features": self._features,
             "enabledLogging": self._logging_enabled,
+            "transformation_functions": self._transformation_functions,
             "type": "featureViewDTO",
         }
 
