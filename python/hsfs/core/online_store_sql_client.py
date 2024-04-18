@@ -44,7 +44,7 @@ class OnlineStoreSqlClient:
         self._prefix_by_serving_index = None
         self._pkname_by_serving_index = None
         self._valid_serving_key = None
-        self._serving_key_by_serving_index = {}
+        self._serving_key_by_serving_index: Dict[str, ServingKey] = {}
         self._async_pool = None
         self._serving_keys = set()
 
@@ -152,7 +152,7 @@ class OnlineStoreSqlClient:
             )
             for statement in prepared_statements
         }
-        self._serving_keys = self.build_serving_keys_from_prepared_statements(
+        self._serving_keys = util.build_serving_keys_from_prepared_statements(
             prepared_statements
         )
         _logger.debug(f"Set Serving keys: {self._serving_keys}")
@@ -210,25 +210,6 @@ class OnlineStoreSqlClient:
             )
 
         return prepared_statements_dict
-
-    def build_serving_keys_from_prepared_statements(
-        self,
-        prepared_statements: List[
-            "serving_prepared_statement.ServingPreparedStatement"
-        ],
-    ) -> Set["ServingKey"]:
-        serving_keys = set()
-        for statement in prepared_statements:
-            for param in statement.prepared_statement_parameters:
-                serving_keys.add(
-                    ServingKey(
-                        feature_name=param.name,
-                        join_index=statement.prepared_statement_index,
-                        prefix=statement.prefix,
-                        ignore_prefix=True,  # compatibility with hsfs 3.3
-                    )
-                )
-        return serving_keys
 
     def init_async_mysql_connection(self, options=None):
         assert self._prepared_statements.get(self.SINGLE_VECTOR_KEY) is not None, (
@@ -470,19 +451,6 @@ class OnlineStoreSqlClient:
                     f"'{key}' is not a correct serving key. Expect one of the"
                     f" followings: [{', '.join(self._valid_serving_keys)}]"
                 )
-
-    def filter_entry_by_join_index(self, entry: Dict[str, Any], join_index: int):
-        _logger.debug(f"Filtering entry {entry} by join index {join_index}")
-        fg_entry = {}
-        complete = True
-        for sk in self._serving_key_by_serving_index[join_index]:
-            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key) or entry.get(
-                sk.feature_name
-            )  # fallback to use raw feature name
-            if fg_entry[sk.feature_name] is None:
-                complete = False
-                break
-        return complete, fg_entry
 
     @staticmethod
     def _parametrize_query(name: str, query_online: str) -> str:

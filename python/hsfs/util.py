@@ -22,14 +22,15 @@ import re
 import threading
 import time
 from datetime import date, datetime, timezone
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, Union
 from urllib.parse import urljoin, urlparse
 
 import pandas as pd
 from aiomysql.sa import create_engine as async_create_engine
-from hsfs import client, feature, feature_group
+from hsfs import client, feature, feature_group, serving_key
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor import serving_prepared_statement
 from hsfs.core import variable_api
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
@@ -504,6 +505,23 @@ def get_feature_group_url(feature_store_id: int, feature_group_id: int) -> str:
         + str(feature_group_id)
     )
     return get_hostname_replaced_url(sub_path)
+
+
+def build_serving_keys_from_prepared_statements(
+    prepared_statements: List[serving_prepared_statement.ServingPreparedStatement],
+) -> Set[serving_key.ServingKey]:
+    serving_keys = set()
+    for statement in prepared_statements:
+        for param in statement.prepared_statement_parameters:
+            serving_keys.add(
+                serving_key.ServingKey(
+                    feature_name=param.name,
+                    join_index=statement.prepared_statement_index,
+                    prefix=statement.prefix,
+                    ignore_prefix=True,  # compatibility with hsfs 3.3
+                )
+            )
+    return serving_keys
 
 
 class VersionWarning(Warning):

@@ -50,7 +50,7 @@ class VectorServer:
         ] = None,
         training_dataset_version: Optional[int] = None,
         serving_keys: Optional[List[hsfs.serving_key.ServingKey]] = None,
-        skip_fg_ids: Optional[Set] = None,
+        skip_fg_ids: Optional[Set[int]] = None,
     ):
         self._training_dataset_version = training_dataset_version
         self._feature_store_id = feature_store_id
@@ -81,8 +81,9 @@ class VectorServer:
             )
         )
         self._transformation_functions = None
-        self._required_serving_keys = None
-        self._online_store_sql_client = None
+        self._online_store_sql_client: Optional[
+            online_store_sql_client.OnlineStoreSqlClient
+        ] = None
 
     def init_serving(
         self,
@@ -118,7 +119,8 @@ class VectorServer:
         # attach transformation functions
         self._transformation_functions = (
             self.transformation_function_engine.get_ready_to_use_transformation_fns(
-                entity
+                entity,
+                self._training_dataset_version,
             )
         )
 
@@ -365,19 +367,6 @@ class VectorServer:
                 ].transformation_fn
                 row_dict[feature_name] = transformation_fn(row_dict[feature_name])
         return row_dict
-
-    @property
-    def required_serving_keys(self) -> Set[str]:
-        """Set of primary key names that is used as keys in input dict object for `get_feature_vector` method."""
-        if self._required_serving_keys is not None:
-            return self._required_serving_keys
-        if self._serving_keys is not None:
-            self._required_serving_keys = set(
-                [key.required_serving_key for key in self._serving_keys]
-            )
-        else:
-            self._required_serving_keys = set()
-        return self._required_serving_keys
 
     @property
     def online_store_sql_client(
