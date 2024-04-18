@@ -603,7 +603,7 @@ class Engine:
             else:
                 raise ValueError("Dataset should be a query.")
 
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.add_feature_statistics(
                 training_dataset, feature_view_obj, dataset
             )
             if training_dataset.coalesce:
@@ -629,7 +629,7 @@ class Engine:
 
                 split_dataset[key] = split_dataset[key].cache()
 
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.add_feature_statistics(
                 training_dataset, feature_view_obj, split_dataset
             )
             return self._write_training_dataset_splits(
@@ -1190,7 +1190,7 @@ class Engine:
             )
 
             # TODO : Add statistics
-            pandas_udf = hopsworks_udf.get_udf(None)
+            pandas_udf = hopsworks_udf.get_udf()
             transformations.append(pandas_udf)
             transformation_features.append(hopsworks_udf.transformation_features)
 

@@ -897,7 +897,7 @@ class Engine:
                 read_options=read_options, dataframe_type=dataframe_type
             )
             # TODO : Add statistics
-            transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+            transformation_function_engine.TransformationFunctionEngine.add_feature_statistics(
                 training_dataset_obj, feature_view_obj, df
             )
             return self._apply_transformation_function(
@@ -972,7 +972,7 @@ class Engine:
 
         # apply transformations
         # 1st parametrise transformation functions with dt split stats
-        transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
+        transformation_function_engine.TransformationFunctionEngine.add_feature_statistics(
             training_dataset_obj, feature_view_obj, result_dfs
         )
         # and the apply them
@@ -1260,7 +1260,7 @@ class Engine:
                 dataset = pd.concat(
                     [
                         dataset,
-                        transformation_function.hopsworks_udf.get_udf(statistics=None)(
+                        transformation_function.hopsworks_udf.get_udf()(
                             *(
                                 [
                                     dataset[feature]
