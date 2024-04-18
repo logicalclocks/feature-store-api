@@ -129,7 +129,7 @@ class StatisticsApi:
         end_commit_time: Optional[int] = None,
         feature_names: Optional[List[str]] = None,
         row_percentage: Optional[float] = None,
-        before_transformation: bool = False,
+        before_transformation: Optional[bool] = None,
         training_dataset_version: Optional[int] = None,
     ) -> Optional[List[statistics.Statistics]]:
         """Get all statistics of an entity.
@@ -259,7 +259,7 @@ class StatisticsApi:
         filter_eq_times: bool = False,
         feature_names: Optional[List[str]] = None,
         row_percentage: Optional[float] = None,
-        before_transformation: bool = False,
+        before_transformation: Optional[bool] = None,
         training_dataset_version: Optional[int] = None,
         offset: int = 0,
         limit: Optional[int] = None,
