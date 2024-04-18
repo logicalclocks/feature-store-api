@@ -69,10 +69,9 @@ class OpensearchRequestOption:
             attribute values of the OpensearchRequestOption class, and values are obtained
             either from the provided options or default values if not available.
         """
-        # make lower case to avoid issues with cases
-        options = {k.lower(): v for k, v in options.items()}
-
         if options:
+            # make lower case to avoid issues with cases
+            options = {k.lower(): v for k, v in options.items()}
             new_options = {}
             for option, value in cls.DEFAULT_OPTION_MAP.items():
                 if option in options:
