@@ -2254,6 +2254,7 @@ class FeatureGroup(FeatureGroupBase):
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
         min_score: Optional[float] = 0,
+        options: Optional[dict] = None,
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
@@ -2269,6 +2270,8 @@ class FeatureGroup(FeatureGroupBase):
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
             min_score: The minimum similarity score for neighbors to be considered (default is 0).
+            options: The options used for the request to the vector database.
+                The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
 
         # Returns
             A list of tuples representing the nearest neighbors.
@@ -2307,6 +2310,7 @@ class FeatureGroup(FeatureGroupBase):
             k=k,
             filter=filter,
             min_score=min_score,
+            options=options,
         )
         return [
             (result[0], [result[1][f.name] for f in self.features])
@@ -3748,6 +3752,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
         min_score: Optional[float] = 0,
+        options: Optional[dict] = None,
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
@@ -3763,7 +3768,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
             min_score: The minimum similarity score for neighbors to be considered (default is 0).
-
+            options: The options used for the request to the vector database.
+                The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
         # Returns
             A list of tuples representing the nearest neighbors.
             Each tuple contains: `(The similarity score, A list of feature values)`
@@ -3801,6 +3807,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             k=k,
             filter=filter,
             min_score=min_score,
+            options=options,
         )
         return [
             (result[0], [result[1][f.name] for f in self.features])
