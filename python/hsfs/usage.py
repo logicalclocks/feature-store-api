@@ -224,6 +224,7 @@ def _send_log(execution_time, func, exception):
     log_data = {
         # env
         "user_id": _env_attr.get_user_id(),
+        "tz": _env_attr.get_timezone().tzname,
         "datetime": datetime.now(_env_attr.get_timezone())
         .astimezone(timezone.utc)
         .strftime("%Y-%m-%d %H:%M:%S %Z"),
