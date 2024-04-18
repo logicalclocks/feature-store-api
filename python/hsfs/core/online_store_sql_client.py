@@ -44,7 +44,7 @@ class OnlineStoreSqlClient:
         self._prefix_by_serving_index = None
         self._pkname_by_serving_index = None
         self._valid_serving_key = None
-        self._serving_key_by_serving_index = {}
+        self._serving_key_by_serving_index: Dict[str, ServingKey] = {}
         self._async_pool = None
         self._serving_keys = set()
 
@@ -470,19 +470,6 @@ class OnlineStoreSqlClient:
                     f"'{key}' is not a correct serving key. Expect one of the"
                     f" followings: [{', '.join(self._valid_serving_keys)}]"
                 )
-
-    def filter_entry_by_join_index(self, entry: Dict[str, Any], join_index: int):
-        _logger.debug(f"Filtering entry {entry} by join index {join_index}")
-        fg_entry = {}
-        complete = True
-        for sk in self._serving_key_by_serving_index[join_index]:
-            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key) or entry.get(
-                sk.feature_name
-            )  # fallback to use raw feature name
-            if fg_entry[sk.feature_name] is None:
-                complete = False
-                break
-        return complete, fg_entry
 
     @staticmethod
     def _parametrize_query(name: str, query_online: str) -> str:

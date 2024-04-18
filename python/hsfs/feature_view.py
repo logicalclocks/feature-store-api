@@ -125,16 +125,26 @@ class FeatureView:
             else {}
         )
         self._features = []
-        self._feature_view_engine: "feature_view_engine.FeatureViewEngine" = (
+        self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
             feature_view_engine.FeatureViewEngine(featurestore_id)
         )
-        self._transformation_function_engine: "transformation_function_engine.TransformationFunctionEngine" = transformation_function_engine.TransformationFunctionEngine(
+        self._transformation_function_engine: transformation_function_engine.TransformationFunctionEngine = transformation_function_engine.TransformationFunctionEngine(
             featurestore_id
         )
-        self._vector_server: Optional["vector_server.VectorServer"] = None
-        self._batch_scoring_server: Optional["vector_server.VectorServer"] = None
+        self._vector_server: Optional[vector_server.VectorServer] = None
+        self._batch_scoring_server: Optional[vector_server.VectorServer] = None
         self._serving_keys = serving_keys
+        self._required_serving_keys: Set[str] = (
+            set([key.required_serving_key for key in self._serving_keys])
+            if serving_keys
+            else set()
+        )
         self._prefix_serving_key_map = {}
+        self._primary_keys: Set[str] = (
+            set([key.required_serving_key for key in self._serving_keys])
+            if serving_keys
+            else set()
+        )
         self._vector_db_client = None
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -314,7 +324,9 @@ class FeatureView:
             ]
         )
         if len(self._get_embedding_fgs()) > 0:
-            self._vector_db_client = VectorDbClient(self.query)
+            self._vector_db_client = VectorDbClient(
+                self.query, serving_keys=self._serving_keys
+            )
 
     def init_batch_scoring(
         self,
@@ -488,9 +500,7 @@ class FeatureView:
             self.init_serving(external=external)
 
         if self._vector_db_client:
-            passed_features = self._update_with_vector_db_result(
-                self._vector_server, entry, passed_features
-            )
+            passed_features = self._update_with_vector_db_result(entry, passed_features)
         return self._vector_server.get_feature_vector(
             entry, return_type, passed_features, allow_missing
         )
@@ -587,7 +597,6 @@ class FeatureView:
         for i in range(len(entry)):
             updated_passed_feature.append(
                 self._update_with_vector_db_result(
-                    self._vector_server,
                     entry[i],
                     passed_features[i] if passed_features else {},
                 )
@@ -698,14 +707,14 @@ class FeatureView:
 
     def _update_with_vector_db_result(
         self,
-        vec_server: "vector_server.VectorServer",
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
         if not self._vector_db_client:
             return passed_features
+
         for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
-            complete, fg_entry = vec_server.filter_entry_by_join_index(
+            complete, fg_entry = self._vector_db_client.filter_entry_by_join_index(
                 entry, join_index
             )
             if not complete:
@@ -3496,18 +3505,10 @@ class FeatureView:
         prefix is generated and prepended to the primary key name in this format
         "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
         """
-        _vector_server = self._vector_server or self._vector_server
-        if _vector_server:
-            return _vector_server.required_serving_keys
+        if hasattr(self, "_primary_keys") and len(self._primary_keys) > 0:
+            return self._primary_keys
         else:
-            _vector_server = vector_server.VectorServer(
-                self._featurestore_id,
-                self._features,
-                serving_keys=self._serving_keys,
-                skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
-            )
-            _vector_server.init_prepared_statement(self, False, False, False)
-            return _vector_server.required_serving_keys
+            return set()
 
     @property
     def serving_keys(self) -> List[skm.ServingKey]:
