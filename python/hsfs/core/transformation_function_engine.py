@@ -316,12 +316,10 @@ class TransformationFunctionEngine:
 
     def get_ready_to_use_transformation_fns(
         self,
-        entity: Union[
-            "hsfs.feature_view.FeatureView", "training_dataset.TrainingDataset"
-        ],
+        entity: Union[hsfs.feature_view.FeatureView, training_dataset.TrainingDataset],
         training_dataset_version: Optional[int] = None,
     ) -> Dict[
-        str, "hsfs.transformation_function_attached.TransformationFunctionAttached"
+        str, hsfs.transformation_function_attached.TransformationFunctionAttached
     ]:
         is_feat_view = isinstance(entity, feature_view.FeatureView)
         if self._feature_view_api is None:
@@ -347,7 +345,6 @@ class TransformationFunctionEngine:
             )
             > 0
         )
-        is_feat_view = isinstance(entity, feature_view.FeatureView)
         if not is_stat_required:
             td_tffn_stats = None
         else:

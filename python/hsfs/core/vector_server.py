@@ -118,7 +118,8 @@ class VectorServer:
         # attach transformation functions
         self._transformation_functions = (
             self.transformation_function_engine.get_ready_to_use_transformation_fns(
-                entity
+                entity,
+                self._training_dataset_version,
             )
         )
 
