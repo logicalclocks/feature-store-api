@@ -152,7 +152,7 @@ class OnlineStoreSqlClient:
             )
             for statement in prepared_statements
         }
-        self._serving_keys = self.build_serving_keys_from_prepared_statements(
+        self._serving_keys = util.build_serving_keys_from_prepared_statements(
             prepared_statements
         )
         _logger.debug(f"Set Serving keys: {self._serving_keys}")
@@ -210,25 +210,6 @@ class OnlineStoreSqlClient:
             )
 
         return prepared_statements_dict
-
-    def build_serving_keys_from_prepared_statements(
-        self,
-        prepared_statements: List[
-            "serving_prepared_statement.ServingPreparedStatement"
-        ],
-    ) -> Set["ServingKey"]:
-        serving_keys = set()
-        for statement in prepared_statements:
-            for param in statement.prepared_statement_parameters:
-                serving_keys.add(
-                    ServingKey(
-                        feature_name=param.name,
-                        join_index=statement.prepared_statement_index,
-                        prefix=statement.prefix,
-                        ignore_prefix=True,  # compatibility with hsfs 3.3
-                    )
-                )
-        return serving_keys
 
     def init_async_mysql_connection(self, options=None):
         assert self._prepared_statements.get(self.SINGLE_VECTOR_KEY) is not None, (

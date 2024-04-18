@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import warnings
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, Set, TypeVar, Union
 
 import humps
 import numpy as np
@@ -1097,13 +1097,13 @@ class TrainingDataset(TrainingDatasetBase):
     def transformation_functions(self, transformation_functions):
         self._transformation_functions = transformation_functions
 
-    def serving_keys(self):
+    @property
+    def serving_keys(self) -> Set[str]:
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
-        if self._vector_server.required_serving_keys:
-            return self._vector_server.required_serving_keys
-        else:
-            _vector_server = vector_server.VectorServer(
-                self._feature_store_id, self._features
+        if self._serving_keys is None or len(self._serving_keys) == 0:
+            self._serving_keys = util.build_serving_keys_from_prepared_statements(
+                self._training_dataset_api.get_serving_prepared_statement(
+                    entity=self, batch=False
+                )
             )
-            _vector_server.init_prepared_statement(self, False, False)
-            return _vector_server.required_serving_keys
+        return self._serving_keys
