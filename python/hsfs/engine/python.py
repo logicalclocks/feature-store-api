@@ -575,7 +575,8 @@ class Engine:
         # parse timestamp columns to string columns
         for field in arrow_schema:
             if not (
-                pa.types.is_list(field.type)
+                pa.types.is_null(field.type)
+                or pa.types.is_list(field.type)
                 or pa.types.is_large_list(field.type)
                 or pa.types.is_struct(field.type)
             ) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
@@ -586,30 +587,28 @@ class Engine:
                 else:
                     df[field.name] = df[field.name].astype(str)
 
-        if not relevant_columns:
+        if relevant_columns is None or len(relevant_columns) == 0:
             stats = df.describe().to_dict()
             relevant_columns = df.columns
         else:
             target_cols = [col for col in df.columns if col in relevant_columns]
             stats = df[target_cols].describe().to_dict()
-
         # df.describe() does not compute stats for all col types (e.g., string)
         # we need to compute stats for the rest of the cols iteratively
         missing_cols = list(set(relevant_columns) - set(stats.keys()))
         for col in missing_cols:
             stats[col] = df[col].describe().to_dict()
-
         final_stats = []
         for col in relevant_columns:
             if isinstance(df, pl.DataFrame) or isinstance(
                 df, pl.dataframe.frame.DataFrame
             ):
                 stats[col] = dict(zip(stats["statistic"], stats[col]))
-
             # set data type
             arrow_type = arrow_schema.field(col).type
             if (
-                pa.types.is_list(arrow_type)
+                pa.types.is_null(arrow_type)
+                or pa.types.is_list(arrow_type)
                 or pa.types.is_large_list(arrow_type)
                 or pa.types.is_struct(arrow_type)
                 or PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]

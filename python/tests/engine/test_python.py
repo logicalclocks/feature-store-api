@@ -975,6 +975,44 @@ class TestPython:
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 3
 
+    def test_profile_pandas_with_null_column(self, mocker):
+        # Arrange
+        mock_python_engine_convert_pandas_statistics = mocker.patch(
+            "hsfs.engine.python.Engine._convert_pandas_statistics"
+        )
+
+        python_engine = python.Engine()
+
+        mock_python_engine_convert_pandas_statistics.side_effect = [
+            {"dataType": "Integral", "test_key": "test_value"},
+            {"dataType": "Fractional", "test_key": "test_value"},
+            {"dataType": "String", "test_key": "test_value"},
+        ]
+
+        d = {"col1": [1, 2], "col2": [0.1, None], "col3": [None, None]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result = python_engine.profile(
+            df=df,
+            relevant_columns=None,
+            correlations=None,
+            histograms=None,
+            exact_uniqueness=True,
+        )
+
+        # Assert
+        assert (
+            result
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}, '
+            '{"dataType": "Fractional", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1}, '
+            '{"dataType": "String", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1}]}'
+        )
+        assert mock_python_engine_convert_pandas_statistics.call_count == 3
+
     def test_profile_polars(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_statistics = mocker.patch(
@@ -990,6 +1028,44 @@ class TestPython:
         ]
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
+        df = pl.DataFrame(data=d)
+
+        # Act
+        result = python_engine.profile(
+            df=df,
+            relevant_columns=None,
+            correlations=None,
+            histograms=None,
+            exact_uniqueness=True,
+        )
+
+        # Assert
+        assert (
+            result
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}, '
+            '{"dataType": "Fractional", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1}, '
+            '{"dataType": "String", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1}]}'
+        )
+        assert mock_python_engine_convert_pandas_statistics.call_count == 3
+
+    def test_profile_polars_with_null_column(self, mocker):
+        # Arrange
+        mock_python_engine_convert_pandas_statistics = mocker.patch(
+            "hsfs.engine.python.Engine._convert_pandas_statistics"
+        )
+
+        python_engine = python.Engine()
+
+        mock_python_engine_convert_pandas_statistics.side_effect = [
+            {"dataType": "Integral", "test_key": "test_value"},
+            {"dataType": "Fractional", "test_key": "test_value"},
+            {"dataType": "String", "test_key": "test_value"},
+        ]
+
+        d = {"col1": [1, 2], "col2": [0.1, None], "col3": [None, None]}
         df = pl.DataFrame(data=d)
 
         # Act
