@@ -133,18 +133,10 @@ class FeatureView:
         )
         self._vector_server: Optional[vector_server.VectorServer] = None
         self._batch_scoring_server: Optional[vector_server.VectorServer] = None
-        self._serving_keys = serving_keys
-        self._required_serving_keys: Set[str] = (
-            set([key.required_serving_key for key in self._serving_keys])
-            if serving_keys
-            else set()
-        )
+        self._serving_keys = serving_keys if serving_keys else []
         self._prefix_serving_key_map = {}
-        self._primary_keys: Set[str] = (
-            set([key.required_serving_key for key in self._serving_keys])
-            if serving_keys
-            else set()
-        )
+        self._primary_keys: Set[str] = set()  # Lazy initialized via serving keys
+
         self._vector_db_client = None
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -3505,14 +3497,24 @@ class FeatureView:
         prefix is generated and prepended to the primary key name in this format
         "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
         """
-        if hasattr(self, "_primary_keys") and len(self._primary_keys) > 0:
-            return self._primary_keys
-        else:
-            return set()
+        if not (hasattr(self, "_primary_keys") and len(self._primary_keys) > 0):
+            self._primary_keys = set(
+                [key.required_serving_key for key in self.serving_keys]
+            )
+        return self._primary_keys
 
     @property
     def serving_keys(self) -> List[skm.ServingKey]:
         """All primary keys of the feature groups included in the query."""
+        if len(self._serving_keys) == 0:
+            self._serving_keys = util.build_serving_keys_from_prepared_statements(
+                self._feature_view_engine._feature_view_api.get_serving_prepared_statement(
+                    name=self.name,
+                    version=self.version,
+                    batch=False,
+                    inference_helper_columns=False,
+                )
+            )
         return self._serving_keys
 
     @serving_keys.setter
