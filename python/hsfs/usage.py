@@ -221,13 +221,15 @@ def method_logger(func):
 
 
 def _send_log(execution_time, func, exception):
+    tz = _env_attr.get_timezone()
+    zoned_datetime = datetime.now(tz=tz)
     log_data = {
         # env
         "user_id": _env_attr.get_user_id(),
-        "tz": _env_attr.get_timezone().tzname,
-        "datetime": datetime.now(_env_attr.get_timezone())
-        .astimezone(timezone.utc)
-        .strftime("%Y-%m-%d %H:%M:%S %Z"),
+        "tz": tz.tzname(zoned_datetime),
+        "datetime": zoned_datetime.astimezone(timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S %Z"
+        ),
         "backend_hostname": _hash_string(_env_attr.get_backend_host_name()),
         "backend_version": _env_attr.get_backend_version(),
         "platform": _env_attr.get_platform(),
