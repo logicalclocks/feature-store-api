@@ -45,7 +45,7 @@ class OnlineStoreSqlClient:
 
         self._prefix_by_serving_index = None
         self._pkname_by_serving_index = None
-        self._valid_serving_key: Set[str] = set()
+        self._valid_serving_keys: Set[str] = set()
         self._serving_key_by_serving_index: Dict[str, ServingKey] = {}
         self._async_pool = None
         self._serving_keys: Set[ServingKey] = set()
@@ -439,7 +439,7 @@ class OnlineStoreSqlClient:
     def _validate_serving_keys(self, entry: Dict[str, Any]):
         _logger.debug(f"Validating serving key {entry}")
         for key in entry:
-            if key not in self._valid_serving_keys:
+            if key not in self.valid_serving_keys:
                 raise ValueError(
                     f"'{key}' is not a correct serving key. Expect one of the"
                     f" followings: [{', '.join(self._valid_serving_keys)}]"
