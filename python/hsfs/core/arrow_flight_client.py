@@ -35,16 +35,20 @@ from retrying import retry
 _arrow_flight_instance = None
 
 
-def get_instance():
+def get_instance() -> ArrowFlightClient:
     global _arrow_flight_instance
     if not _arrow_flight_instance:
         _arrow_flight_instance = ArrowFlightClient()
     return _arrow_flight_instance
 
 
-def close():
+def close() -> None:
     global _arrow_flight_instance
     _arrow_flight_instance = None
+
+
+def _should_retry(exception):
+    return isinstance(exception, pyarrow._flight.FlightUnavailableError)
 
 
 class ArrowFlightClient:
@@ -58,7 +62,7 @@ class ArrowFlightClient:
     WRITE_ERROR = 'Could not write data using ArrowFlight. If the issue persists, use write_options={"use_spark": True} instead.'
     DEFAULT_TIMEOUT = 900
 
-    def __init__(self):
+    def __init__(self) -> None:
         try:
             self._variable_api = VariableApi()
             self._is_enabled = self._variable_api.get_flyingduck_enabled()
@@ -73,7 +77,7 @@ class ArrowFlightClient:
             except Exception as e:
                 self._disable(str(e))
 
-    def _disable(self, message):
+    def _disable(self, message: str) -> None:
         self._is_enabled = False
         warnings.warn(
             f"Could not establish connection to ArrowFlight Server. ({message}) "
@@ -83,7 +87,7 @@ class ArrowFlightClient:
             stacklevel=1,
         )
 
-    def _initialize_connection(self):
+    def _initialize_connection(self) -> None:
         self._client = client.get_instance()
 
         if isinstance(self._client, client.external.Client):
@@ -114,7 +118,7 @@ class ArrowFlightClient:
         self._health_check()
         self._register_certificates()
 
-    def _health_check(self):
+    def _health_check(self) -> None:
         action = pyarrow.flight.Action("healthcheck", b"")
         options = pyarrow.flight.FlightCallOptions(timeout=1)
         list(self._connection.do_action(action, options=options))
@@ -205,9 +209,6 @@ class ArrowFlightClient:
             return afs_error_handler_wrapper
 
         return decorator
-
-    def _should_retry(self, exception):
-        return isinstance(exception, pyarrow._flight.FlightUnavailableError)
 
     @retry(
         wait_exponential_multiplier=1000,
