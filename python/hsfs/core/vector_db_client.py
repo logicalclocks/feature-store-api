@@ -16,6 +16,8 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple, Union
+import base64
+from datetime import datetime
 
 import hsfs
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
@@ -100,6 +102,7 @@ class VectorDbClient:
     def find_neighbors(
         self,
         embedding,
+        schema,
         feature: Feature = None,
         index_name=None,
         k=10,
@@ -185,13 +188,29 @@ class VectorDbClient:
         return [
             (
                 1 / item["_score"] - 1,
-                self._rewrite_result_key(
+                self._convert_to_pandas_type(schema, self._rewrite_result_key(
                     item["_source"],
                     self._fg_vdb_col_td_col_map[embedding_feature.feature_group.id],
-                ),
+                )),
             )
             for item in results["hits"]["hits"]
         ]
+
+    def _convert_to_pandas_type(self, schema, result):
+        for feature in schema:
+            feature_name = feature.name
+            feature_type = feature.type
+            feature_value = result.get(feature_name)
+            if not feature_value:  # Feature value can be null
+                continue
+            if feature_type == "date":
+                result[feature_name] = datetime.utcfromtimestamp(feature_value // 10**3).date()
+            elif feature_type == "timestamp":
+                # convert timestamp in ms to datetime in s
+                result[feature_name] = datetime.utcfromtimestamp(feature_value // 10**3)
+            elif feature.is_complex() and feature not in self._embedding_features:
+                result[feature_name] = base64.b64decode(feature_value)
+        return result
 
     def _check_filter(self, filter, fg):
         if not filter:
@@ -286,7 +305,7 @@ class VectorDbClient:
             new_map[new_key] = value
         return new_map
 
-    def read(self, fg_id, keys=None, pk=None, index_name=None, n=10):
+    def read(self, fg_id, schema, keys=None, pk=None, index_name=None, n=10):
         if fg_id not in self._fg_vdb_col_fg_col_map:
             raise FeatureStoreException("Provided fg does not have embedding.")
         if not index_name:
@@ -316,9 +335,9 @@ class VectorDbClient:
         results = self._opensearch_client.search(body=query, index=index_name)
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
         return [
-            self._rewrite_result_key(
+            self._convert_to_pandas_type(schema, self._rewrite_result_key(
                 item["_source"], self._fg_vdb_col_td_col_map[fg_id]
-            )
+            ))
             for item in results["hits"]["hits"]
         ]
 
