@@ -114,7 +114,7 @@ class VectorServer:
 
     def init_transformation(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
     ):
         # attach transformation functions
         self._transformation_functions = (
@@ -126,7 +126,7 @@ class VectorServer:
 
     def setup_online_store_sql_client(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
         external: bool,
         inference_helper_columns: bool,
         options: Optional[Dict[str, Any]] = None,
@@ -135,6 +135,7 @@ class VectorServer:
         self._online_store_sql_client = online_store_sql_client.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
+            serving_keys=self.serving_keys,
         )
         self.online_store_sql_client.init_prepared_statements(
             entity,

@@ -1104,6 +1104,7 @@ class TrainingDataset(TrainingDatasetBase):
             self._serving_keys = util.build_serving_keys_from_prepared_statements(
                 self._training_dataset_api.get_serving_prepared_statement(
                     entity=self, batch=False
-                )
+                ),
+                ignore_prefix=True,  # if serving_keys have to be built it is because fv created prior to 3.3, this ensure compatibility
             )
         return self._serving_keys

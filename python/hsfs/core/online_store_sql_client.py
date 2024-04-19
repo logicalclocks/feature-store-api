@@ -37,7 +37,12 @@ class OnlineStoreSqlClient:
     BATCH_VECTOR_KEY = "batch_feature_vectors"
     SINGLE_VECTOR_KEY = "single_feature_vector"
 
-    def __init__(self, feature_store_id: id, skip_fg_ids: Optional[Set[int]]):
+    def __init__(
+        self,
+        feature_store_id: id,
+        skip_fg_ids: Optional[Set[int]],
+        serving_keys: Optional[Set[ServingKey]] = None,
+    ):
         _logger.info("Initialising OnlineStoreSqlClient")
         self._feature_store_id = feature_store_id
         self._skip_fg_ids: Set[int] = skip_fg_ids or set()
@@ -48,7 +53,7 @@ class OnlineStoreSqlClient:
         self._valid_serving_keys: Set[str] = set()
         self._serving_key_by_serving_index: Dict[str, ServingKey] = {}
         self._async_pool = None
-        self._serving_keys: Set[ServingKey] = set()
+        self._serving_keys: Set[ServingKey] = set(serving_keys or [])
 
         self._prepared_statements: Dict[str, List[ServingPreparedStatement]] = {}
         self._parametrised_prepared_statements = {}
@@ -153,10 +158,6 @@ class OnlineStoreSqlClient:
             )
             for statement in prepared_statements
         }
-        self._serving_keys = util.build_serving_keys_from_prepared_statements(
-            prepared_statements
-        )
-        _logger.debug(f"Set Serving keys: {self._serving_keys}")
 
         _logger.debug("Build serving keys by PreparedStatementParameter.index")
         for sk in self._serving_keys:
@@ -663,8 +664,12 @@ class OnlineStoreSqlClient:
                 "Prepared statements are not initialized. Please call `init_prepared_statement` method first."
             )
         else:
+            _logger.debug(
+                "Build serving keys from prepared statements ignoring prefix to ensure compatibility with older version."
+            )
             self._serving_keys = util.build_serving_keys_from_prepared_statements(
-                self.prepared_statements[self.SINGLE_VECTOR_KEY]
+                self.prepared_statements[self.SINGLE_VECTOR_KEY],
+                ignore_prefix=True,  # if serving_keys are not set it is because the feature view is anterior to 3.3, this ensures compatibility
             )
         return self._serving_keys
 
