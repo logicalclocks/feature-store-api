@@ -655,13 +655,16 @@ class OnlineStoreSqlClient:
 
     @property
     def serving_keys(self) -> Set[ServingKey]:
-        if len(self._serving_keys) == 0 and len(self.prepared_statements) > 0:
-            self._serving_keys = util.build_serving_keys_from_prepared_statements(
-                self.prepared_statements[self.SINGLE_VECTOR_KEY]
+        if len(self._serving_keys) > 0:
+            return self._serving_keys
+
+        if len(self.prepared_statements) == 0:
+            raise ValueError(
+                "Prepared statements are not initialized. Please call `init_prepared_statement` method first."
             )
         else:
-            raise ValueError(
-                "Serving keys are not initialized. Please call `init_prepared_statement` method first."
+            self._serving_keys = util.build_serving_keys_from_prepared_statements(
+                self.prepared_statements[self.SINGLE_VECTOR_KEY]
             )
         return self._serving_keys
 
