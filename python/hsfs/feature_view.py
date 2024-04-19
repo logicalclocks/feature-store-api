@@ -3498,7 +3498,9 @@ class FeatureView:
         "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
         """
         if not (hasattr(self, "_primary_keys") and len(self._primary_keys) > 0):
-            self._primary_keys = set([key.feature_name for key in self.serving_keys])
+            self._primary_keys = set(
+                [key.required_serving_key for key in self.serving_keys]
+            )
         return self._primary_keys
 
     @property
