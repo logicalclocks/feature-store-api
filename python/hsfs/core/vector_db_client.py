@@ -46,6 +46,7 @@ class VectorDbClient:
         self._opensearch_client = None
         self._index_result_limit_k = {}
         self._serving_keys = serving_keys
+        self._serving_key_by_serving_index: Dict[int, hsfs.serving_key.ServingKey] = {}
         self.init()
 
     def init(self):

@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -20,7 +22,7 @@ import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from hsfs import feature_view, training_dataset, util
-from hsfs.constructor import serving_prepared_statement
+from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
 from hsfs.serving_key import ServingKey
 from sqlalchemy import bindparam, exc, sql, text
@@ -35,20 +37,25 @@ class OnlineStoreSqlClient:
     BATCH_VECTOR_KEY = "batch_feature_vectors"
     SINGLE_VECTOR_KEY = "single_feature_vector"
 
-    def __init__(self, feature_store_id: id, skip_fg_ids: Optional[Set[int]]):
-        _logger.info("Initializing OnlineStoreSqlClient")
+    def __init__(
+        self,
+        feature_store_id: id,
+        skip_fg_ids: Optional[Set[int]],
+        serving_keys: Optional[Set[ServingKey]] = None,
+    ):
+        _logger.info("Initialising OnlineStoreSqlClient")
         self._feature_store_id = feature_store_id
-        self._skip_fg_ids = skip_fg_ids or set()
+        self._skip_fg_ids: Set[int] = skip_fg_ids or set()
         self._external = True
 
         self._prefix_by_serving_index = None
         self._pkname_by_serving_index = None
-        self._valid_serving_key = None
+        self._valid_serving_keys: Set[str] = set()
         self._serving_key_by_serving_index: Dict[str, ServingKey] = {}
         self._async_pool = None
-        self._serving_keys = set()
+        self._serving_keys: Set[ServingKey] = set(serving_keys or [])
 
-        self._prepared_statements = {}
+        self._prepared_statements: Dict[str, List[ServingPreparedStatement]] = {}
         self._parametrised_prepared_statements = {}
         self._prepared_statement_engine = None
 
@@ -60,12 +67,12 @@ class OnlineStoreSqlClient:
 
     def fetch_prepared_statements(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
         inference_helper_columns: bool,
     ) -> None:
         if isinstance(entity, feature_view.FeatureView):
             _logger.debug(
-                f"Initializing prepared statements for feature view {entity.name} version {entity.version}."
+                f"Initialising prepared statements for feature view {entity.name} version {entity.version}."
             )
             for key in self.get_prepared_statement_labels(inference_helper_columns):
                 _logger.debug(f"Fetching prepared statement for key {key}")
@@ -80,7 +87,7 @@ class OnlineStoreSqlClient:
                 _logger.debug(f"{self.prepared_statements[key]}")
         elif isinstance(entity, training_dataset.TrainingDataset):
             _logger.debug(
-                f"Initializing prepared statements for training dataset {entity.name} version {entity.version}."
+                f"Initialising prepared statements for training dataset {entity.name} version {entity.version}."
             )
             for key in self.get_prepared_statement_labels(
                 with_inference_helper_column=False
@@ -98,7 +105,7 @@ class OnlineStoreSqlClient:
 
         if len(self.skip_fg_ids) > 0:
             _logger.debug(
-                f"Skip feature groups {self.skip_fg_ids} when initializing prepared statements."
+                f"Skip feature groups {self.skip_fg_ids} when initialising prepared statements."
             )
             self.prepared_statements[key] = {
                 ps
@@ -108,7 +115,7 @@ class OnlineStoreSqlClient:
 
     def init_prepared_statements(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
         external: bool,
         inference_helper_columns: bool,
     ) -> None:
@@ -132,12 +139,11 @@ class OnlineStoreSqlClient:
 
     def init_parametrize_and_serving_utils(
         self,
-        prepared_statements: List[
-            "serving_prepared_statement.ServingPreparedStatement"
-        ],
+        prepared_statements: List[ServingPreparedStatement],
     ) -> None:
         _logger.debug(
-            f"Initializing parametrize and serving utils property using {json.dumps(prepared_statements, default=lambda x: x.__dict__, indent=2)}"
+            "Initializing parametrize and serving utils property using %s",
+            json.dumps(prepared_statements, default=lambda x: x.__dict__, indent=2),
         )
         self._prefix_by_serving_index = {
             statement.prepared_statement_index: statement.prefix
@@ -152,10 +158,6 @@ class OnlineStoreSqlClient:
             )
             for statement in prepared_statements
         }
-        self._serving_keys = util.build_serving_keys_from_prepared_statements(
-            prepared_statements
-        )
-        _logger.debug(f"Set Serving keys: {self._serving_keys}")
 
         _logger.debug("Build serving keys by PreparedStatementParameter.index")
         for sk in self._serving_keys:
@@ -175,17 +177,9 @@ class OnlineStoreSqlClient:
                     ].get(_sk.feature_name, 0),
                 )
 
-        self._valid_serving_keys = set(
-            [sk.feature_name for sk in self._serving_keys]
-            + [sk.required_serving_key for sk in self._serving_keys]
-        )
-        _logger.debug(f"Set valid serving keys: {self._valid_serving_keys}")
-
     def _parametrize_prepared_statements(
         self,
-        prepared_statements: List[
-            "serving_prepared_statement.ServingPreparedStatement"
-        ],
+        prepared_statements: List[ServingPreparedStatement],
         batch: bool,
     ) -> Dict[int, sql.text]:
         prepared_statements_dict = {}
@@ -446,7 +440,7 @@ class OnlineStoreSqlClient:
     def _validate_serving_keys(self, entry: Dict[str, Any]):
         _logger.debug(f"Validating serving key {entry}")
         for key in entry:
-            if key not in self._valid_serving_keys:
+            if key not in self.valid_serving_keys:
                 raise ValueError(
                     f"'{key}' is not a correct serving key. Expect one of the"
                     f" followings: [{', '.join(self._valid_serving_keys)}]"
@@ -582,23 +576,18 @@ class OnlineStoreSqlClient:
         return self._feature_store_id
 
     @property
-    def prepared_statement_engine(
-        self,
-    ) -> "prepared_statement_engine.PreparedStatementsEngine":
+    def prepared_statement_engine(self) -> Optional[Any]:
         """JDBC connection engine to retrieve connections to online features store from."""
         return self._prepared_statement_engine
 
     @prepared_statement_engine.setter
-    def prepared_statement_engine(
-        self,
-        prepared_statement_engine: "prepared_statement_engine.PreparedStatementsEngine",
-    ) -> None:
+    def prepared_statement_engine(self, prepared_statement_engine: Any) -> None:
         self._prepared_statement_engine = prepared_statement_engine
 
     @property
     def prepared_statements(
         self,
-    ) -> Dict[str, List["serving_prepared_statement.ServingPreparedStatement"]]:
+    ) -> Dict[str, List[ServingPreparedStatement]]:
         """Contains up to 4 prepared statements for single and batch vector retrieval, and single or batch inference helpers.
 
         The keys are the labels for the prepared statements, and the values are dictionaries of prepared statements
@@ -609,9 +598,7 @@ class OnlineStoreSqlClient:
     @prepared_statements.setter
     def prepared_statements(
         self,
-        prepared_statements: Dict[
-            str, List["serving_prepared_statement.ServingPreparedStatement"]
-        ],
+        prepared_statements: Dict[str, List[ServingPreparedStatement]],
     ) -> None:
         self._prepared_statements = prepared_statements
 
@@ -645,7 +632,7 @@ class OnlineStoreSqlClient:
     @property
     def serving_key_by_serving_index(
         self,
-    ) -> Dict[int, List["ServingKey"]]:
+    ) -> Dict[int, List[ServingKey]]:
         """The dict object of serving keys as values and keys as indices of positions in the query for
         selecting features from feature groups of the training dataset.
         """
@@ -668,8 +655,33 @@ class OnlineStoreSqlClient:
         return self._skip_fg_ids
 
     @property
-    def serving_keys(self) -> Set["ServingKey"]:
+    def serving_keys(self) -> Set[ServingKey]:
+        if len(self._serving_keys) > 0:
+            return self._serving_keys
+
+        if len(self.prepared_statements) == 0:
+            raise ValueError(
+                "Prepared statements are not initialized. Please call `init_prepared_statement` method first."
+            )
+        else:
+            _logger.debug(
+                "Build serving keys from prepared statements ignoring prefix to ensure compatibility with older version."
+            )
+            self._serving_keys = util.build_serving_keys_from_prepared_statements(
+                self.prepared_statements[self.SINGLE_VECTOR_KEY],
+                ignore_prefix=True,  # if serving_keys are not set it is because the feature view is anterior to 3.3, this ensures compatibility
+            )
         return self._serving_keys
+
+    @property
+    def valid_serving_keys(self) -> Set[str]:
+        if len(self._valid_serving_keys) == 0:
+            self._valid_serving_keys = set(
+                [sk.feature_name for sk in self.serving_keys]
+                + [sk.required_serving_key for sk in self.serving_keys]
+            )
+            _logger.debug(f"Set valid serving keys: {self.valid_serving_keys}")
+        return self._valid_serving_keys
 
     @property
     def training_dataset_api(self) -> training_dataset_api.TrainingDatasetApi:

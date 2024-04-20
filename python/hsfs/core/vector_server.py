@@ -73,7 +73,8 @@ class VectorServer:
         ]
 
         self._skip_fg_ids = skip_fg_ids or set()
-        self._serving_keys = serving_keys
+        self._serving_keys = serving_keys or []
+        self._required_serving_keys = []
 
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(
@@ -114,7 +115,7 @@ class VectorServer:
 
     def init_transformation(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
     ):
         # attach transformation functions
         self._transformation_functions = (
@@ -126,15 +127,16 @@ class VectorServer:
 
     def setup_online_store_sql_client(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
         external: bool,
         inference_helper_columns: bool,
         options: Optional[Dict[str, Any]] = None,
     ) -> None:
-        _logger.info("Initialising Vector Server Online SQL client")
+        _logger.info("Online SQL client")
         self._online_store_sql_client = online_store_sql_client.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
+            serving_keys=self.serving_keys,
         )
         self.online_store_sql_client.init_prepared_statements(
             entity,
@@ -381,6 +383,14 @@ class VectorServer:
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys: List[hsfs.serving_key.ServingKey]):
         self._serving_keys = serving_vector_keys
+
+    @property
+    def required_serving_keys(self) -> List[str]:
+        if len(self._required_serving_keys) == 0:
+            self._required_serving_keys = [
+                sk.required_serving_key for sk in self.serving_keys
+            ]
+        return self._required_serving_keys
 
     @property
     def training_dataset_version(self) -> Optional[int]:

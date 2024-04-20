@@ -3506,14 +3506,19 @@ class FeatureView:
     @property
     def serving_keys(self) -> List[skm.ServingKey]:
         """All primary keys of the feature groups included in the query."""
-        if len(self._serving_keys) == 0:
+        if (
+            (not hasattr(self, "_serving_keys"))
+            or self._serving_keys is None
+            or len(self._serving_keys) == 0
+        ):
             self._serving_keys = util.build_serving_keys_from_prepared_statements(
                 self._feature_view_engine._feature_view_api.get_serving_prepared_statement(
                     name=self.name,
                     version=self.version,
                     batch=False,
                     inference_helper_columns=False,
-                )
+                ),
+                ignore_prefix=True,  # if serving_keys have to be built it is because feature_view older than 3.3, this ensure compatibility
             )
         return self._serving_keys
 

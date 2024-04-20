@@ -509,6 +509,7 @@ def get_feature_group_url(feature_store_id: int, feature_group_id: int) -> str:
 
 def build_serving_keys_from_prepared_statements(
     prepared_statements: List[serving_prepared_statement.ServingPreparedStatement],
+    ignore_prefix: bool = False,
 ) -> Set[serving_key.ServingKey]:
     serving_keys = set()
     for statement in prepared_statements:
@@ -518,7 +519,7 @@ def build_serving_keys_from_prepared_statements(
                     feature_name=param.name,
                     join_index=statement.prepared_statement_index,
                     prefix=statement.prefix,
-                    ignore_prefix=True,  # compatibility with hsfs 3.3
+                    ignore_prefix=ignore_prefix,
                 )
             )
     return serving_keys
