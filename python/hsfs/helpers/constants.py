@@ -1,3 +1,7 @@
+#
+#   Copyright 2024 HOPSWOKRS AB
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
 #
@@ -17,4 +21,10 @@ DEFAULT_VERBOSE_CONFIG = {
     "tab_size": 4,
     "width": 88,
     "color_system": "truecolor",
+}
+
+SHOW_FG_TYPE_MAPPING = {
+    "stream": "Stream",
+    "spine": "Spine",
+    "external": "External",
 }

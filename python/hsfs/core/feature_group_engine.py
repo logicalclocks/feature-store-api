@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import warnings
+from typing import List
 
 from hsfs import engine, util
 from hsfs import feature_group as fg
@@ -388,3 +389,46 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feature_group_id=feature_group.id,
             )
         )
+
+    def list_feature_groups(
+        self,
+        latest_version_only: bool,
+        online_enabled_only: bool,
+        spine_only: bool,
+        external_only: bool,
+        with_features: bool,
+    ) -> List[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup]:
+        if spine_only:
+            feature_group_type = "spine"
+        elif external_only:
+            feature_group_type = "external"
+        else:
+            feature_group_type = None
+        fg_list = self._feature_group_api.get_all(
+            feature_store_id=self._feature_store_id,
+            feature_group_type=feature_group_type,
+            with_features=with_features,
+        )
+
+        if online_enabled_only:
+            fg_list = [fgroup for fgroup in fg_list if fgroup.online_enabled]
+        if spine_only:
+            fg_list = [
+                fgroup for fgroup in fg_list if isinstance(fgroup, fg.SpineGroup)
+            ]
+        if external_only:
+            fg_list = [
+                fgroup
+                for fgroup in fg_list
+                if isinstance(fgroup, fg.ExternalFeatureGroup)
+            ]
+
+        if latest_version_only:
+            fg_list = [
+                fgroup
+                for fgroup in fg_list
+                if fgroup.version
+                == max(fg1.version for fg1 in fg_list if fg1.name == fgroup.name)
+            ]
+
+        return sorted(fg_list, key=lambda fgroup: fgroup.name)
