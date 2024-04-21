@@ -190,13 +190,8 @@ class Connection:
         if not name:
             name = client.get_instance()._project_name
         fs = self._feature_store_api.get(util.append_feature_store_suffix(name))
+        self.connected_to_feature_store_message(fs)
 
-        if os.environ.get(constants.USE_RICH_CONSOLE_ENV_VAR, "false") == "true":
-            rich_console = verbose.get_rich_console()
-            rich_console.print(
-                f"Connected to feature store {fs.name} in project {fs.project_name}.\n"
-                f""
-            )
         return fs
 
     def connected_to_feature_store_message(self, fs: feature_store.FeatureStore):
@@ -222,7 +217,7 @@ class Connection:
             (
                 rich_console.print(
                     Panel(
-                        f"Connected to feature store {fs.name} in project {fs.project_name}.",
+                        f"Connected to feature store of project {fs.project_name}.",
                         style="bold green",
                     ),
                     get_started_message,

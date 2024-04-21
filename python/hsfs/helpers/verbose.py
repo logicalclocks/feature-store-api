@@ -21,6 +21,9 @@ from hsfs.helpers import constants
 from rich.console import Console
 
 
+_rich_console = None
+
+
 def is_rich_print_enabled() -> bool:
     use_rich = os.getenv(constants.USE_RICH_CONSOLE_ENV_VAR, "true").lower()
     return use_rich == "true" or use_rich == "1"
