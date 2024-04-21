@@ -19,6 +19,7 @@ import os
 
 from hsfs.helpers import constants
 from rich.console import Console
+from rich.terminal_theme import MONOKAI
 
 
 _rich_console = None
@@ -30,14 +31,14 @@ def is_rich_print_enabled() -> bool:
 
 
 def is_hsfs_verbose() -> bool:
-    hopsworks_verbose = os.getenv(constants.HOPSWORKS_VERBOSE_ENV_VAR, "1").lower()
+    hopsworks_verbose = os.getenv(constants.VERBOSE_ENV_VAR, "1").lower()
     return hopsworks_verbose == "true" or hopsworks_verbose == "1"
 
 
-def init_rich_with_default_config():
+def init_rich_with_default_config() -> None:
     global _rich_console
     if _rich_console is None:
-        _rich_console = Console(**constants.DEFAULT_VERBOSE_CONFIG)
+        _rich_console = Console(**constants.DEFAULT_VERBOSE_CONFIG, theme=MONOKAI)
 
 
 def get_rich_console() -> Console:

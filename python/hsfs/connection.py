@@ -29,8 +29,10 @@ from hsfs.core import (
 )
 from hsfs.core.opensearch import OpenSearchClientSingleton
 from hsfs.decorators import connected, not_connected
-from hsfs.helpers import constants, verbose
+from hsfs.helpers import verbose
 from requests.exceptions import ConnectionError
+from rich import box
+from rich.markdown import Markdown
 from rich.panel import Panel
 
 
@@ -195,36 +197,47 @@ class Connection:
         return fs
 
     def connected_to_feature_store_message(self, fs: feature_store.FeatureStore):
-        feature_groups = fs.get_all_feature_groups()
+        # feature_groups = fs.get_all_feature_groups()
+        feature_groups = []
         if len(feature_groups) == 0:
-            get_started_message = (
-                "To learn how to get started with Hopsworks feature store, checkout our "
-                + " [link=https://docs.hopsworks.ai/latest/user_guides/fs/]guides and docs[/link] "
-                + "or our [link=https://github.com/logicalclocks/hopsworks-tutorials]tutorials[/link] on github."
+            get_started_message = Markdown(
+                "- To learn how to get started with Hopsworks feature store, checkout our "
+                "[guides and docs](https://docs.hopsworks.ai/latest/user_guides/fs/) "
+                "or our [tutorials](https://github.com/logicalclocks/hopsworks-tutorials) on github.\n"
+                "- Call `quicktour()` method to get an overview of the feature store API and capabilities.",
+                justify="left",
+                inline_code_lexer="python",
+                inline_code_theme="one-dark",
             )
         else:
-            get_started_message = (
-                "Call `show_feature_groups` to show a list of existing Feature Groups to insert/upsert new data or "
-                "use `with_features=True` to see which features you can select to build a new Feature View.\n"
-                "Call `show_feature_views` to show a list of existing Feature Views, you can use them to read data "
-                "and create Training Datasets. Feature Views composed of Features from online_enabled FeatureGroups can "
-                "be used to serve feature value for real-time use cases. Checkout the :lightning:"
-                "[link=https://www.hopsworks.ai/post/feature-store-benchmark-comparison-hopsworks-and-feast]benchmarks[/link]!\n"
+            get_started_message = Markdown(
+                "- Call `show_feature_groups()` to show a list of existing Feature Groups to insert/upsert new data or "
+                "set `with_features=True` to see which features you can select to build a new Feature View.\n"
+                "- Call `show_feature_views()` to show a list of existing Feature Views, you can use them to read data "
+                "and create Training Datasets. Feature Views composed of Features from online-enabled FeatureGroups can "
+                "be used to serve feature value for real-time use cases. Checkout the ⚡ "
+                "[benchmarks](https://www.hopsworks.ai/post/feature-store-benchmark-comparison-hopsworks-and-feast)\n"
+                "- Call the `quicktour()` method to get an overview of the feature store API and capabilities.",
+                justify="left",
+                inline_code_lexer="python",
+                inline_code_theme="one-dark",
             )
 
-        if os.environ.get(constants.USE_RICH_CONSOLE_ENV_VAR, "false") == "true":
+        if verbose.is_hsfs_verbose() and verbose.is_rich_print_enabled():
             rich_console = verbose.get_rich_console()
             (
                 rich_console.print(
-                    Panel(
-                        f"Connected to feature store of project {fs.project_name}.",
-                        style="bold green",
+                    Panel.fit(
+                        f"Connected to the Feature Store of project [bold red]{fs.project_name}[/bold red] on [italic red]{client.get_instance()._host}[/italic red].",
+                        style="bold",
+                        box=box.ASCII2,
                     ),
                     get_started_message,
+                    justify="center",
                 ),
             )
         else:
-            print(f"Connected to feature store {fs.name} in project {fs.project_name}.")
+            print(f"Connected to feature store in project {fs.project_name}.")
 
     @not_connected
     def connect(self) -> None:

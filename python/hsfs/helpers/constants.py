@@ -9,11 +9,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+
 VERBOSE_ENV_VAR = "HOPSWORKS_VERBOSE"
 USE_RICH_LOGGER_ENV_VAR = "HOPSWORKS_USE_RICH_LOGGER"
 USE_RICH_CONSOLE_ENV_VAR = "HOPSWORKS_USE_RICH_CONSOLE"
 DEFAULT_VERBOSE_CONFIG = {
     "tab_size": 4,
-    "width": 120,
+    "width": 88,
     "color_system": "truecolor",
 }
