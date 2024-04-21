@@ -29,7 +29,9 @@ from hsfs.core import (
 )
 from hsfs.core.opensearch import OpenSearchClientSingleton
 from hsfs.decorators import connected, not_connected
+from hsfs.helpers import constants, verbose
 from requests.exceptions import ConnectionError
+from rich.panel import Panel
 
 
 AWS_DEFAULT_REGION = "default"
@@ -187,7 +189,47 @@ class Connection:
         """
         if not name:
             name = client.get_instance()._project_name
-        return self._feature_store_api.get(util.append_feature_store_suffix(name))
+        fs = self._feature_store_api.get(util.append_feature_store_suffix(name))
+
+        if os.environ.get(constants.USE_RICH_CONSOLE_ENV_VAR, "false") == "true":
+            rich_console = verbose.get_rich_console()
+            rich_console.print(
+                f"Connected to feature store {fs.name} in project {fs.project_name}.\n"
+                f""
+            )
+        return fs
+
+    def connected_to_feature_store_message(self, fs: feature_store.FeatureStore):
+        feature_groups = fs.get_all_feature_groups()
+        if len(feature_groups) == 0:
+            get_started_message = (
+                "To learn how to get started with Hopsworks feature store, checkout our "
+                + " [link=https://docs.hopsworks.ai/latest/user_guides/fs/]guides and docs[/link] "
+                + "or our [link=https://github.com/logicalclocks/hopsworks-tutorials]tutorials[/link] on github."
+            )
+        else:
+            get_started_message = (
+                "Call `show_feature_groups` to show a list of existing Feature Groups to insert/upsert new data or "
+                "use `with_features=True` to see which features you can select to build a new Feature View.\n"
+                "Call `show_feature_views` to show a list of existing Feature Views, you can use them to read data "
+                "and create Training Datasets. Feature Views composed of Features from online_enabled FeatureGroups can "
+                "be used to serve feature value for real-time use cases. Checkout the :lightning:"
+                "[link=https://www.hopsworks.ai/post/feature-store-benchmark-comparison-hopsworks-and-feast]benchmarks[/link]!\n"
+            )
+
+        if os.environ.get(constants.USE_RICH_CONSOLE_ENV_VAR, "false") == "true":
+            rich_console = verbose.get_rich_console()
+            (
+                rich_console.print(
+                    Panel(
+                        f"Connected to feature store {fs.name} in project {fs.project_name}.",
+                        style="bold green",
+                    ),
+                    get_started_message,
+                ),
+            )
+        else:
+            print(f"Connected to feature store {fs.name} in project {fs.project_name}.")
 
     @not_connected
     def connect(self) -> None:
@@ -264,7 +306,6 @@ class Connection:
         except (TypeError, ConnectionError):
             self._connected = False
             raise
-        print("Connected. Call `.close()` to terminate connection gracefully.")
 
     def close(self) -> None:
         """Close a connection gracefully.
