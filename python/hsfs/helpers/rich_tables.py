@@ -15,11 +15,11 @@
 #
 from __future__ import annotations
 
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 from hsfs import feature as feature_mod
 from hsfs import feature_group as fg_mod
-from hsfs import feature_view as fv_mod
+from hsfs import query as query_mod
 from hsfs import util
 from hsfs.helpers import constants
 from rich import box
@@ -143,11 +143,11 @@ def make_rich_text_fg(
 ):
     fg_type = ""
     if isinstance(fgroup, fg_mod.SpineGroup):
-        fg_type = constants.SHOW_TYPE_MAPPING["spine"]
+        fg_type = constants.SHOW_FG_TYPE_MAPPING["spine"]
     elif isinstance(fgroup, fg_mod.ExternalFeatureGroup):
-        fg_type = constants.SHOW_TYPE_MAPPING["external"]
+        fg_type = constants.SHOW_FG_TYPE_MAPPING["external"]
     else:
-        fg_type = constants.SHOW_TYPE_MAPPING["stream"]
+        fg_type = constants.SHOW_FG_TYPE_MAPPING["stream"]
     online_status = "🟢 Real-Time" if fgroup.online_enabled else "🔴 Batch"
     entry_list = [
         fgroup.name,
@@ -186,11 +186,11 @@ def make_rich_text_fg_alt(
     renderables = []
     table = make_table_feature_groups(show_header=False)
     if isinstance(fgroup, fg_mod.SpineGroup):
-        fg_type = constants.SHOW_TYPE_MAPPING["spine"]
+        fg_type = constants.SHOW_FG_TYPE_MAPPING["spine"]
     elif isinstance(fgroup, fg_mod.ExternalFeatureGroup):
-        fg_type = constants.SHOW_TYPE_MAPPING["external"]
+        fg_type = constants.SHOW_FG_TYPE_MAPPING["external"]
     else:
-        fg_type = constants.SHOW_TYPE_MAPPING["stream"]
+        fg_type = constants.SHOW_FG_TYPE_MAPPING["stream"]
     online_status = (
         "🟢 Online (Real-Time)" if fgroup.online_enabled else "🔴 Offline (Batch)"
     )
@@ -218,12 +218,12 @@ def build_feature_bullets(
     feature_table.add_column("")
     for feature in fgroup.features:
         extra = ""
-        if feature.primary:
-            extra = "  (primary key)"
-        if feature.partition:
-            extra = "  (partition key)"
         if feature.primary and feature.partition:
             extra = "  (primary & partition key)"
+        elif feature.primary:
+            extra = "  (primary key)"
+        elif feature.partition:
+            extra = "  (partition key)"
         if fgroup.event_time and fgroup.event_time == feature.name:
             extra = "  (event-time)"
         feature_table.add_row(f"    * {feature.name}", feature.type, extra)
@@ -238,33 +238,27 @@ def make_table_feature_views():
     table.add_column("Version")
     table.add_column("ID")
     table.add_column("Online")
-    table.add_column("Training Datasets")
 
     return table
 
 
 def make_rich_text_feature_view_row(
     table: Table,
-    fv_obj: fv_mod.FeatureView,
+    fv_obj: Dict[str, Any],
     show_feature_list: bool,
 ) -> str:
+    query = query_mod.Query.from_response_json(fv_obj["query"])
     online_status = (
         "🟢 Online"
-        if all(fv_obj.query.featuregroups.map(lambda x: x.online_enabled))
+        if all(query.featuregroups.map(lambda x: x.online_enabled))
         else "🔴 Offline"
     )
-    entry_list = [
-        f"{fv_obj.name}",
-        f"v{fv_obj.version}",
-        f"{fv_obj.id}",
-        online_status,
-    ]
 
     table.add_row(
-        *entry_list,
+        fv_obj["name"], f"v{fv_obj['version']}", f"{fv_obj['id']}", online_status
     )
 
     if show_feature_list:
         table.add_row("", "- Columns:", "", "")
-        for feature in fv_obj.features:
-            table.add_row("", "*", f"{feature.name} :", f"{feature.type}")
+        for feature in fv_obj["features"]:
+            table.add_row("", "*", f"{feature['name']} :", f"{feature['type']}")

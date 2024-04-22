@@ -29,7 +29,6 @@ SHOW_FG_TYPE_MAPPING = {
     "spine": "Spine",
     "external": "External",
 }
-
 GET_OR_ENABLE_RICH_CONSOLE_ERROR_MESSAGE = (
     "Using `rich` console is not enabled."
     + f" Please set the environment variable `{USE_RICH_CONSOLE_ENV_VAR}` to `true` or `1` to enable it."
