@@ -58,6 +58,7 @@ def print_connected_to_feature_store_message(fs_obj: fs_mod.FeatureStore):
                     title="Hopsworks Feature Store",
                     style="bold",
                     box=box.ASCII2,
+                    padding=(1, 2),
                 ),
                 get_started_message,
                 justify="center",
