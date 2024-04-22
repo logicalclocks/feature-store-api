@@ -491,10 +491,13 @@ class FeatureView:
         if self._vector_server is None:
             self.init_serving(external=external)
 
+        vector_db_features = None
         if self._vector_db_client:
-            passed_features = self._update_with_vector_db_result(entry, passed_features)
+            vector_db_features = self._get_vector_db_result(
+                self._vector_server, entry
+            )
         return self._vector_server.get_feature_vector(
-            entry, return_type, passed_features, allow_missing
+            entry, return_type, passed_features, vector_db_features, self._vector_db_client.td_embedding_feature_names, allow_missing
         )
 
     def get_feature_vectors(
@@ -585,16 +588,16 @@ class FeatureView:
         """
         if self._vector_server is None:
             self.init_serving(external=external)
-        updated_passed_feature = []
-        for i in range(len(entry)):
-            updated_passed_feature.append(
-                self._update_with_vector_db_result(
-                    entry[i],
-                    passed_features[i] if passed_features else {},
+        vector_db_features = []
+        if self._vector_db_client:
+            for _entry in entry:
+                vector_db_features.append(
+                    self._get_vector_db_result(
+                        self._vector_server, _entry
+                    )
                 )
-            )
         return self._vector_server.get_feature_vectors(
-            entry, return_type, updated_passed_feature, allow_missing
+            entry, return_type, passed_features, vector_db_features, self._vector_db_client.td_embedding_feature_names, allow_missing
         )
 
     def get_inference_helper(
@@ -697,14 +700,13 @@ class FeatureView:
             self.init_serving(external=external)
         return self._vector_server.get_inference_helpers(self, entry, return_type)
 
-    def _update_with_vector_db_result(
+    def _get_vector_db_result(
         self,
         entry: Dict[str, Any],
-        passed_features: Optional[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
         if not self._vector_db_client:
-            return passed_features
-
+            return {}
+        result_vectors = {}
         for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
             complete, fg_entry = self._vector_db_client.filter_entry_by_join_index(
                 entry, join_index
@@ -713,16 +715,14 @@ class FeatureView:
                 # Not retrieving from vector db if entry is not completed
                 continue
             vector_db_features = self._vector_db_client.read(
-                fg.id, keys=fg_entry, index_name=fg.embedding_index.index_name
+                fg.id, fg.features, keys=fg_entry, index_name=fg.embedding_index.index_name
             )
 
             # if result is not empty
             if vector_db_features:
                 vector_db_features = vector_db_features[0]  # get the first result
-                if passed_features and vector_db_features:
-                    vector_db_features.update(passed_features)
-                passed_features = vector_db_features
-        return passed_features
+                result_vectors.update(vector_db_features)
+        return result_vectors
 
     def find_neighbors(
         self,

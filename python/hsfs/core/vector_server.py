@@ -86,6 +86,19 @@ class VectorServer:
             online_store_sql_client.OnlineStoreSqlClient
         ] = None
 
+    def filter_entry_by_join_index(self, entry: Dict[str, Any], join_index: int):
+        _logger.debug(f"Filtering entry {entry} by join index {join_index}")
+        fg_entry = {}
+        complete = True
+        for sk in  self.online_store_sql_client._serving_key_by_serving_index[join_index]:
+            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key) or entry.get(
+                sk.feature_name
+            )  # fallback to use raw feature name
+            if fg_entry[sk.feature_name] is None:
+                complete = False
+                break
+        return complete, fg_entry
+
     def init_serving(
         self,
         entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
@@ -150,18 +163,21 @@ class VectorServer:
         entry: Dict[str, Any],
         return_type: Optional[str] = None,
         passed_features: Optional[Dict[str, Any]] = None,
+        vector_db_features: Optional[Dict[str, Any]] = None,
+        td_embedding_feature_names = None,
         allow_missing: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = {}
-
         # get result row
         _logger.info("get_feature_vector Online SQL client")
         serving_vector = self.online_store_sql_client.get_single_feature_vector(entry)
+        if vector_db_features:
+            serving_vector.update(vector_db_features)
         # Deserialize complex features
         _logger.debug("Deserializing complex features")
-        serving_vector = self.deserialize_complex_features(serving_vector)
+        serving_vector = self.deserialize_complex_features(serving_vector, td_embedding_feature_names)
 
         # Add the passed features
         _logger.debug("Updating with passed features")
@@ -184,7 +200,9 @@ class VectorServer:
         self,
         entries: List[Dict[str, Any]],
         return_type: Optional[str] = None,
-        passed_features: List[Dict[str, Any]] = None,
+        passed_features: Optional[List[Dict[str, Any]]] = None,
+        vector_db_features: Optional[List[Dict[str, Any]]] = None,
+        td_embedding_feature_names = None,
         allow_missing: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], List[Dict[str, Any]]]:
         if passed_features is None:
@@ -194,11 +212,14 @@ class VectorServer:
         batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
             entries
         )
+        if vector_db_features:
+            for i in range(len(batch_results)):
+                batch_results[i].update(vector_db_features[i])
         # Deserialize complex features
         _logger.debug("Deserializing complex features")
         batch_results = list(
             map(
-                lambda row_dict: self.deserialize_complex_features(row_dict),
+                lambda row_dict: self.deserialize_complex_features(row_dict, td_embedding_feature_names),
                 batch_results,
             )
         )
@@ -333,9 +354,9 @@ class VectorServer:
             if f.is_complex()
         }
 
-    def deserialize_complex_features(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def deserialize_complex_features(self, row_dict: Dict[str, Any], td_embedding_feature_names) -> Dict[str, Any]:
         for feature_name, schema in self._complex_features.items():
-            if feature_name in row_dict:
+            if feature_name in row_dict and feature_name not in td_embedding_feature_names:
                 bytes_reader = io.BytesIO(row_dict[feature_name])
                 decoder = avro.io.BinaryDecoder(bytes_reader)
                 row_dict[feature_name] = schema.read(decoder)

@@ -43,6 +43,7 @@ class VectorDbClient:
         self._fg_vdb_col_td_col_map = {}
         self._fg_col_vdb_col_map = {}
         self._fg_embedding_map = {}
+        self._td_embedding_feature_names = set()
         self._embedding_fg_by_join_index = {}
         self._fg_id_to_vdb_pks = {}
         self._opensearch_client = None
@@ -58,7 +59,7 @@ class VectorDbClient:
                 for feat in fg.embedding_index.get_embeddings():
                     for fgf in fg.features:
                         if fgf.name == feat.name and fgf.feature_group_id == fg.id:
-                            self._embedding_features[fgf] = feat
+                            self._embedding_features[fgf] = fgf
         for q in [self._query] + [j.query for j in self._query.joins]:
             fg = q._left_feature_group
             if fg.embedding_index:
@@ -92,6 +93,8 @@ class VectorDbClient:
                         "Do not support join of same fg multiple times."
                     )
                 self._embedding_fg_by_join_index[i] = join_fg
+                for embedding_feature in join_fg.embedding_index.get_embeddings():
+                    self._td_embedding_feature_names.add((join.prefix or "") + embedding_feature.name)
                 vdb_col_td_col_map = {}
                 for feat in join_fg.features:
                     vdb_col_td_col_map[
@@ -199,7 +202,7 @@ class VectorDbClient:
     def _convert_to_pandas_type(self, schema, result):
         for feature in schema:
             feature_name = feature.name
-            feature_type = feature.type
+            feature_type = feature.type.lower()
             feature_value = result.get(feature_name)
             if not feature_value:  # Feature value can be null
                 continue
@@ -208,6 +211,9 @@ class VectorDbClient:
             elif feature_type == "timestamp":
                 # convert timestamp in ms to datetime in s
                 result[feature_name] = datetime.utcfromtimestamp(feature_value // 10**3)
+            elif feature_type == "binary":
+                # convert timestamp in ms to datetime in s
+                result[feature_name] = base64.b64decode(feature_value)
             elif feature.is_complex() and feature not in self._embedding_features:
                 result[feature_name] = base64.b64decode(feature_value)
         return result
@@ -394,3 +400,6 @@ class VectorDbClient:
         else:
             self._serving_key_by_serving_index = {}
         return self._serving_key_by_serving_index
+
+    def td_embedding_feature_names(self):
+        return self._td_embedding_feature_names
