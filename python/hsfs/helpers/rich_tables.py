@@ -20,7 +20,49 @@ from typing import Union
 from hsfs import feature_group as fg_mod
 from hsfs import feature_view as fv_mod
 from hsfs.helpers import constants
+from rich import box
 from rich.table import Table
+
+
+def make_base_info_feature_group_table(
+    fg_obj: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
+) -> Table:
+    table = Table(show_header=True, header_style="bold", box=box.ASCII2)
+
+    table.add_column(f"{constants.SHOW_FG_TYPE_MAPPING[fg_obj.ENTITY_TYPE]}")
+    table.add_column("", overflow="ellipsis")
+
+    table.add_row("Name", f"{fg_obj.name}")
+    table.add_row("Version", f"v{fg_obj.version}")
+    if fg_obj.description and fg_obj.description != "":
+        table.add_row("Description", f"{fg_obj.description}")
+    table.add_row("ID", f"{fg_obj.id}")
+    table.add_row(
+        f"{'Online (Real-Time) 🟢' if fg_obj.online_enabled else 'Offline (Batch) 🔴'}"
+    )
+    table.add_row("Primary Key", "".join(fg_obj.primary_key))
+    table.add_row(
+        "Event-Time Column",
+        fg_obj.event_time_column if fg_obj.event_time_column else "N/A",
+    )
+    if fg_obj.partition_key is not None and len(fg_obj.partition_key) > 0:
+        table.add_row("Partition Key", "".join(fg_obj.partition_key))
+
+    if fg_obj.expectation_suite:
+        table.add_row(
+            "Expectation Suite",
+            f"{'🟢' if fg_obj.expectation_suite.run_validation else '🔴'}",
+        )
+        table.add_row("Ingestion", fg_obj.expectation_suite.validation_ingestion_policy)
+
+    table.add_row(
+        "Statistics",
+        f"{'🟢 Enabled' if fg_obj.statistics_config.enabled else '🔴 Disabled'}",
+    )
+    table.add_row(
+        "Table Format",
+        fg_obj.time_travel_format if fg_obj.time_travel_format else "PARQUET",
+    )
 
 
 def make_table_feature_groups() -> Table:

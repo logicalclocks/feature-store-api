@@ -197,8 +197,7 @@ class Connection:
         return fs
 
     def connected_to_feature_store_message(self, fs: feature_store.FeatureStore):
-        # feature_groups = fs.get_all_feature_groups()
-        feature_groups = []
+        feature_groups = fs._feature_group_api.get_all(feature_store_id=fs.id)
         if len(feature_groups) == 0:
             get_started_message = Markdown(
                 "- To learn how to get started with Hopsworks feature store, checkout our "
@@ -227,12 +226,11 @@ class Connection:
             rich_console = verbose.get_rich_console()
             (
                 rich_console.print(
-                    Panel(
+                    Panel.fit(
+                        f"[bold red]{fs.project_name}[/bold red] on [italic red]{client.get_instance()._host}[/italic red].",
                         title="Connected to Hopsworks.",
-                        subtitle=f"[bold red]{fs.project_name}[/bold red] on [italic red]{client.get_instance()._host}[/italic red].",
                         style="bold",
                         box=box.ASCII2,
-                        expand=False,
                     ),
                     get_started_message,
                     justify="center",
