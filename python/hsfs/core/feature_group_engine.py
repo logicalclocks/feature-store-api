@@ -15,13 +15,14 @@
 from __future__ import annotations
 
 import warnings
-from typing import List
+from typing import List, Union
 
 from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import delta_engine, feature_group_base_engine, hudi_engine
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
+from hsfs.helpers import rich_tables, verbose
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -398,15 +399,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         external_only: bool,
         with_features: bool,
     ) -> List[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup]:
-        if spine_only:
-            feature_group_type = "spine"
-        elif external_only:
-            feature_group_type = "external"
-        else:
-            feature_group_type = None
         fg_list = self._feature_group_api.get_all(
             feature_store_id=self._feature_store_id,
-            feature_group_type=feature_group_type,
             with_features=with_features,
         )
 
@@ -432,3 +426,26 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             ]
 
         return sorted(fg_list, key=lambda fgroup: fgroup.name)
+
+    def show_info(
+        self,
+        feature_group: Union[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup],
+        show_features: bool = False,
+    ):
+        rich_console = verbose.get_rich_console()
+        renderables = rich_tables.build_info_feature_group_table(
+            feature_group, show_features=show_features
+        )
+        rich_console.print(*renderables)
+
+    def show_all(
+        self, latest_version_only: bool = True, show_features: bool = False
+    ) -> None:
+        fgroup_list = self.list_feature_groups(
+            latest_version_only, False, False, False, show_features
+        )
+        rich_console = verbose.get_rich_console()
+        table = rich_tables.make_table_feature_groups()
+        for fg_obj in fgroup_list:
+            rich_tables.make_rich_text_fg(table, fg_obj, show_features)
+        rich_console.print(table)

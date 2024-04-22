@@ -15,8 +15,9 @@
 #
 from __future__ import annotations
 
-from typing import Union
+from typing import List, Union
 
+from hsfs import feature as feature_mod
 from hsfs import feature_group as fg_mod
 from hsfs import feature_view as fv_mod
 from hsfs import util
@@ -123,33 +124,33 @@ def build_info_feature_group_table(
     return renderables
 
 
-def make_table_feature_groups() -> Table:
-    table = Table(show_header=True, header_style="bold")
+def make_table_feature_groups(show_header: bool = True) -> Table:
+    table = Table(show_header=show_header, header_style="bold")
 
     table.add_column("Name")
     table.add_column("Version")
     table.add_column("ID")
     table.add_column("Type")
-    table.add_column("Real-Time")
+    table.add_column("Online")
 
     return table
 
 
-def make_rich_text_feature_group_row(
+def make_rich_text_fg(
     table: Table,
     fgroup: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
     show_feature_list: bool,
-) -> str:
+):
     fg_type = ""
     if isinstance(fgroup, fg_mod.SpineGroup):
-        fg_type = constants.SHOW_FG_TYPE_MAPPING["spine"]
+        fg_type = constants.SHOW_TYPE_MAPPING["spine"]
     elif isinstance(fgroup, fg_mod.ExternalFeatureGroup):
-        fg_type = constants.SHOW_FG_TYPE_MAPPING["external"]
+        fg_type = constants.SHOW_TYPE_MAPPING["external"]
     else:
-        fg_type = constants.SHOW_FG_TYPE_MAPPING["stream"]
-    online_status = "🟢 Online" if fgroup.online_enabled else "🔴 Offline"
+        fg_type = constants.SHOW_TYPE_MAPPING["stream"]
+    online_status = "🟢 Real-Time" if fgroup.online_enabled else "🔴 Batch"
     entry_list = [
-        f"{fgroup.name}",
+        fgroup.name,
         f"v{fgroup.version}",
         f"{fgroup.id}",
         fg_type,
@@ -161,11 +162,73 @@ def make_rich_text_feature_group_row(
     )
 
     if show_feature_list:
-        table.add_row("", "- Columns:", "", "", "", "")
-        for feature in fgroup.features:
-            table.add_row("", "*", f"{feature.name} :", f"{feature.type}")
+        nested_entry = ["" for _ in range(len(entry_list))]
+        nested_entry[0] = build_nested_feature_list_table(fgroup.features)
+        table.add_row(*nested_entry)
 
-    return table
+
+def build_nested_feature_list_table(features: List[feature_mod.Feature]) -> Table:
+    feature_table = Table(show_header=True, header_style="bold", box=box.ASCII2)
+    feature_table.add_column("Features")
+    feature_table.add_column("Type")
+
+    for feature in features:
+        feature_table.add_row(feature.name, feature.type)
+
+    return feature_table
+
+
+def make_rich_text_fg_alt(
+    fgroup: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
+    show_description: bool,
+    show_feature_list: bool,
+) -> List[Union[str, Table]]:
+    renderables = []
+    table = make_table_feature_groups(show_header=False)
+    if isinstance(fgroup, fg_mod.SpineGroup):
+        fg_type = constants.SHOW_TYPE_MAPPING["spine"]
+    elif isinstance(fgroup, fg_mod.ExternalFeatureGroup):
+        fg_type = constants.SHOW_TYPE_MAPPING["external"]
+    else:
+        fg_type = constants.SHOW_TYPE_MAPPING["stream"]
+    online_status = (
+        "🟢 Online (Real-Time)" if fgroup.online_enabled else "🔴 Offline (Batch)"
+    )
+    table.add_row(
+        fgroup.name, f"v{fgroup.version}", f"{fgroup.id}", fg_type, online_status
+    )
+    renderables.append(table)
+    if all(
+        [show_description, fgroup.description is not None, len(fgroup.description) > 0]
+    ):
+        renderables.append("  [bold]Description :[/bold]\n    " + fgroup.description)
+
+    if show_feature_list:
+        renderables.append(build_feature_bullets(fgroup))
+
+    return renderables
+
+
+def build_feature_bullets(
+    fgroup: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
+) -> Table:
+    feature_table = Table(box=None, show_lines=False)
+    feature_table.add_column("  Features :")
+    feature_table.add_column("")
+    feature_table.add_column("")
+    for feature in fgroup.features:
+        extra = ""
+        if feature.primary:
+            extra = "  (primary key)"
+        if feature.partition:
+            extra = "  (partition key)"
+        if feature.primary and feature.partition:
+            extra = "  (primary & partition key)"
+        if fgroup.event_time and fgroup.event_time == feature.name:
+            extra = "  (event-time)"
+        feature_table.add_row(f"    * {feature.name}", feature.type, extra)
+
+    return feature_table
 
 
 def make_table_feature_views():
@@ -174,7 +237,8 @@ def make_table_feature_views():
     table.add_column("Name")
     table.add_column("Version")
     table.add_column("ID")
-    table.add_column("Real-Time")
+    table.add_column("Online")
+    table.add_column("Training Datasets")
 
     return table
 
