@@ -60,10 +60,10 @@ def build_list_feature_table(
     return feature_table
 
 
-def build_info_feature_group_table(
+def build_and_print_info_fg_table(
     fg_obj: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
     show_features: bool = True,
-) -> Table:
+) -> None:
     renderables = []
     table = Table(show_header=True, header_style="bold", box=box.ASCII2)
 
@@ -119,8 +119,7 @@ def build_info_feature_group_table(
         renderables.append(
             f"You can also check out your [link={util.get_feature_group_url(feature_store_id=fg_obj._feature_store_id, feature_group_id=fg_obj.id)}]Feature Group page in the Hopsworks UI[/link] for more information."
         )
-
-    return renderables
+    verbose.get_rich_console().print(*renderables)
 
 
 def make_table_fg_list(

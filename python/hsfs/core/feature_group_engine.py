@@ -432,7 +432,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         feature_group: Union[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup],
         show_features: bool = False,
     ):
-        richer_feature_group.build_and_print_info_feature_group_table(
+        richer_feature_group.build_and_print_info_fg_table(
             feature_group, show_features=show_features
         )
 

@@ -948,7 +948,7 @@ class FeatureViewEngine:
         return sorted(fv_list, key=lambda fview: fview["name"])
 
     def show_info(self, feature_view_obj: feature_view.FeatureView) -> None:
-        richer_feature_view.build_and_print_info_table(feature_view_obj)
+        richer_feature_view.build_and_print_info_fv_table(feature_view_obj)
 
     def show_all(
         self,
