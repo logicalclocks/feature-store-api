@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
+from hsfs import feature_view as feature_view_mod
 from hsfs.helpers import verbose
 from rich import box
 from rich.table import Table
@@ -141,3 +142,55 @@ def show_rich_table_feature_views(
             the_table.add_row(*entries)
 
         verbose.get_rich_console().print(the_table)
+
+
+def build_training_feature_table(fview_obj: feature_view_mod.FeatureView) -> Table:
+    serving_key_table = Table(
+        box=box.ASCII2, title="Serving Keys", title_justify="left"
+    )
+
+    serving_key_table.add_column("Name")
+    serving_key_table.add_column("Type")
+    serving_key_table.add_column("Required")
+    serving_key_table.add_column("Feature Group")
+
+    for serving_key in fview_obj.serving_keys:
+        serving_key_table.add_row(
+            serving_key.required_serving_key,
+            serving_key.type,
+            "required" if serving_key.required else "optional",
+            serving_key.feature_group.name,
+        )
+
+    feature_table = Table(box=box.ASCII2, title="Features", title_justify="left")
+
+    feature_table.add_column("Name")
+    feature_table.add_column("Type")
+    feature_table.add_column("Feature Group")
+    feature_table.add_column("Join")
+    feature_table.add_column("Extra")
+
+    for feature in fview_obj.query.features:
+        join = ""
+        extra = ""
+        feature_table.add_row(
+            feature.name, feature.type, feature.feature_group.name, join, extra
+        )
+
+    return feature_table, serving_key_table
+
+
+def build_and_print_info_fv_table(fview_obj: feature_view_mod.FeatureView) -> None:
+    table = Table(show_header=True, box=box.ASCII2)
+    table.add_column(fview_obj.name, justify="center", style="bold")
+    table.add_row("Name", fview_obj.name)
+    table.add_row("Version", f"v{fview_obj.version}")
+    table.add_row("ID", f"{fview_obj.id}")
+    table.add_row(
+        "Parent Feature Groups",
+        ", ".join([fg.name for fg in fview_obj.query.feature_groups]),
+    )
+
+    feature_table, serving_key_table = build_training_feature_table(fview_obj)
+
+    verbose.get_rich_console().print(table, feature_table, serving_key_table)
