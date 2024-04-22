@@ -1791,7 +1791,7 @@ class FeatureStore:
 
     def quicktour(self) -> None:
         """Prints a quick tour of the feature store API."""
-        quicktours.rich_print("feature_store")
+        quicktours.rich_print_quicktour("feature_store")
 
     @property
     def id(self) -> int:

@@ -50,3 +50,7 @@ def get_rich_console() -> Console:
     if _rich_console is None:
         init_rich_with_default_config()
     return _rich_console
+
+
+def get_python_lexer_theme() -> str:
+    return constants.PYTHON_LEXER_THEME

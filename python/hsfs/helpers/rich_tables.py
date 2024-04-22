@@ -15,7 +15,7 @@
 #
 from __future__ import annotations
 
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hsfs import feature as feature_mod
 from hsfs import feature_group as fg_mod
@@ -181,31 +181,33 @@ def make_rich_text_fg_alt(
     fgroup: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
     show_description: bool,
     show_feature_list: bool,
-) -> List[Union[str, Table]]:
-    renderables = []
-    table = make_table_feature_groups(show_header=False)
+) -> Tuple[List[str], Optional[str], Optional[Table]]:
     if isinstance(fgroup, fg_mod.SpineGroup):
         fg_type = constants.SHOW_FG_TYPE_MAPPING["spine"]
     elif isinstance(fgroup, fg_mod.ExternalFeatureGroup):
         fg_type = constants.SHOW_FG_TYPE_MAPPING["external"]
     else:
         fg_type = constants.SHOW_FG_TYPE_MAPPING["stream"]
-    online_status = (
-        "🟢 Online (Real-Time)" if fgroup.online_enabled else "🔴 Offline (Batch)"
-    )
-    table.add_row(
-        fgroup.name, f"v{fgroup.version}", f"{fgroup.id}", fg_type, online_status
-    )
-    renderables.append(table)
+    online_status = "🟢 Real-Time" if fgroup.online_enabled else "🔴 Batch"
+    entries = [
+        fgroup.name,
+        f"v{fgroup.version}",
+        f"{fgroup.id}",
+        fg_type,
+        online_status,
+    ]
+
+    description = None
     if all(
         [show_description, fgroup.description is not None, len(fgroup.description) > 0]
     ):
-        renderables.append("  [bold]Description :[/bold]\n    " + fgroup.description)
+        description = "  [bold]Description :[/bold]\n    " + fgroup.description
 
+    feature_table = None
     if show_feature_list:
-        renderables.append(build_feature_bullets(fgroup))
+        feature_table = build_feature_bullets(fgroup)
 
-    return renderables
+    return entries, description, feature_table
 
 
 def build_feature_bullets(
@@ -236,32 +238,53 @@ def make_table_feature_views() -> Table:
     table.add_column("Name")
     table.add_column("Version")
     table.add_column("ID")
-    table.add_column("Online")
+    table.add_column("Parent Feature Groups")
 
     return table
 
 
 def make_rich_text_feature_view_row(
-    table: Table,
     fv_dict: Dict[str, Any],
     show_feature_list: bool,
-) -> None:
-    online_status = (
-        "🟢 Online"
-        if all(
-            map(
-                lambda x: x["feature_group"]["online_enabled"],
-                fv_dict["serving_keys"],
-            )
-        )
-        else "🔴 Offline"
+) -> Tuple[List[str], Optional[Table]]:
+    fg_names = [sk["feature_group"]["name"] for sk in fv_dict["serving_keys"]]
+    entries = (
+        fv_dict["name"],
+        f"v{fv_dict['version']}",
+        f"{fv_dict['id']}",
+        ", ".join(fg_names),
     )
 
-    table.add_row(
-        fv_dict["name"], f"v{fv_dict['version']}", f"{fv_dict['id']}", online_status
-    )
-
+    feature_table = None
     if show_feature_list:
-        table.add_row("", "- Columns:", "", "")
-        for feature in fv_dict["features"]:
-            table.add_row("", "*", f"{feature['name']} :", f"{feature['type']}")
+        feature_table = build_training_feature_bullets(fv_dict)
+
+    return entries, feature_table
+
+
+def build_training_feature_bullets(fv_dict: Dict[str, Any]) -> Table:
+    feature_table = Table(box=None, show_lines=False)
+    feature_table.add_column("  Features :")
+    feature_table.add_column("")
+    feature_table.add_column("")
+
+    for feature in fv_dict["serving_keys"]:
+        feature_table.add_row(
+            f"    * {feature['prefix'] + feature['name']}",
+            feature["type"],
+            "serving key",
+            feature["feature_group"]["name"],
+        )
+
+    sk_names = [sk["name"] for sk in fv_dict["serving_keys"]]
+
+    for feature in fv_dict["features"]:
+        if feature["name"] not in sk_names:
+            feature_table.add_row(
+                f"    * {feature['name']}",
+                feature["type"],
+                "",
+                feature["feature_group"]["name"],
+            )
+
+    return feature_table

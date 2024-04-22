@@ -31,13 +31,13 @@ def load_class_quicktour(class_name: Literal["feature_store"]) -> str:
         return f"Quicktour for {class_name} not found"
 
 
-def print_quicktour(class_name: Literal["feature_store"]) -> None:
+def rich_print_quicktour(class_name: Literal["feature_store"]) -> None:
     if verbose.is_rich_print_enabled():
         markdown = Markdown(
             load_class_quicktour(class_name),
             justify="left",
-            code_theme="one-dark",
-            inline_code_theme="one-dark",
+            code_theme=verbose.get_python_lexer_theme(),
+            inline_code_theme=verbose.get_python_lexer_theme(),
             inline_code_lexer="python",
         )
         verbose.get_rich_console().print(markdown)

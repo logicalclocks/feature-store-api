@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from hsfs import client
 from hsfs import feature_store as fs_mod
-from hsfs.helpers import constants, verbose
+from hsfs.helpers import verbose
 from rich import box
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -33,7 +33,7 @@ def print_connected_to_feature_store_message(fs_obj: fs_mod.FeatureStore):
             "- Call `quicktour()` method to get an overview of the feature store API and capabilities.",
             justify="left",
             inline_code_lexer="python",
-            inline_code_theme="one-dark",
+            inline_code_theme=verbose.get_python_lexer_theme(),
         )
     else:
         get_started_message = Markdown(
@@ -46,7 +46,7 @@ def print_connected_to_feature_store_message(fs_obj: fs_mod.FeatureStore):
             "- Call the `quicktour()` method to get an overview of the feature store API and capabilities.",
             justify="left",
             inline_code_lexer="python",
-            inline_code_theme=constants.PYTHON_LEXER_THEME,
+            inline_code_theme=verbose.get_python_lexer_theme(),
         )
 
     if verbose.is_hsfs_verbose() and verbose.is_rich_print_enabled():
