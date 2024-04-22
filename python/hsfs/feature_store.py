@@ -48,7 +48,7 @@ from hsfs.core import (
 )
 from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
-from hsfs.helpers import quicktours
+from hsfs.helpers import quicktours, verbose
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
 
@@ -737,6 +737,10 @@ class FeatureStore:
                 self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
             )
             feature_group_object.feature_store = self
+            if verbose.is_hsfs_verbose():
+                self._feature_group_engine.show_info(
+                    feature_group_object, show_features=True
+                )
             return feature_group_object
         except exceptions.RestAPIError as e:
             if (
@@ -765,6 +769,10 @@ class FeatureStore:
                     notification_topic_name=notification_topic_name,
                 )
                 feature_group_object.feature_store = self
+                if verbose.is_hsfs_verbose():
+                    self._feature_group_engine.show_info(
+                        feature_group_object, show_features=False
+                    )
                 return feature_group_object
             else:
                 raise e
@@ -1640,13 +1648,16 @@ class FeatureStore:
             `FeatureView`: The feature view metadata object.
         """
         try:
-            return self._feature_view_engine.get(name, version)
+            feature_view_object = self._feature_view_engine.get(name, version)
+            if verbose.is_hsfs_verbose():
+                self._feature_view_engine.show_info(feature_view_object)
+            return feature_view_object
         except exceptions.RestAPIError as e:
             if (
                 e.response.json().get("errorCode", "") == 270181
                 and e.response.status_code == 404
             ):
-                return self.create_feature_view(
+                feature_view_object = self.create_feature_view(
                     name=name,
                     query=query,
                     version=version,
@@ -1656,6 +1667,9 @@ class FeatureStore:
                     training_helper_columns=training_helper_columns or [],
                     transformation_functions=transformation_functions or {},
                 )
+                if verbose.is_hsfs_verbose():
+                    self._feature_view_engine.show_info(feature_view_object)
+                return feature_view_object
             else:
                 raise e
 

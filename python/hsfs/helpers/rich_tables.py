@@ -20,12 +20,12 @@ from typing import Union
 from hsfs import feature_group as fg_mod
 from hsfs import feature_view as fv_mod
 from hsfs import util
-from hsfs.helpers import constants, verbose
+from hsfs.helpers import constants
 from rich import box
 from rich.table import Table
 
 
-def make_feature_group_feature_table(
+def build_list_feature_table(
     fg_obj: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
 ):
     feature_table = Table(show_header=True, header_style="bold", box=box.ASCII2)
@@ -60,8 +60,9 @@ def make_feature_group_feature_table(
     return feature_table
 
 
-def make_base_info_feature_group_table(
+def build_info_feature_group_table(
     fg_obj: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
+    show_features: bool = True,
 ) -> Table:
     renderables = []
     table = Table(show_header=True, header_style="bold", box=box.ASCII2)
@@ -107,9 +108,9 @@ def make_base_info_feature_group_table(
         fg_obj.time_travel_format if fg_obj.time_travel_format else "PARQUET",
     )
     renderables.append(table)
-
-    if len(fg_obj.features) > 0:
-        renderables.append(make_feature_group_feature_table(fg_obj))
+    if len(fg_obj.features) > 0 and show_features:
+        renderables.append("\n[underline]Features :[underline]")
+        renderables.append(build_list_feature_table(fg_obj))
     if fg_obj.id is None:
         renderables.append(
             "Start writing data to the `FeatureStore` with the `insert()` method to register your `FeatureGroup`."
@@ -119,8 +120,7 @@ def make_base_info_feature_group_table(
             f"You can also check out your [link={util.get_feature_group_url(feature_store_id=fg_obj._feature_store_id, feature_group_id=fg_obj.id)}]Feature Group page in the Hopsworks UI[/link] for more information."
         )
 
-    rich_console = verbose.get_rich_console()
-    rich_console.print(*renderables)
+    return renderables
 
 
 def make_table_feature_groups() -> Table:
