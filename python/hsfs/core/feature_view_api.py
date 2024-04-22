@@ -55,8 +55,15 @@ class FeatureViewApi:
             "featureview",
         ]
 
-    def get_all(self, with_features: bool) -> List[Dict[str, Any]]:
+    def get_all(
+        self, latest_version_only: bool = True, with_features: bool = False
+    ) -> List[Dict[str, Any]]:
         path = self._base_path
+        query_params = {}
+        if latest_version_only:
+            query_params["filter_by"] = "latest_version"
+        if with_features:
+            query_params["expand"] = ["features"]
         return self._client._send_request(
             "GET",
             path_params=path,

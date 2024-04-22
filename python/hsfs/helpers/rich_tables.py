@@ -19,7 +19,6 @@ from typing import Any, Dict, List, Union
 
 from hsfs import feature as feature_mod
 from hsfs import feature_group as fg_mod
-from hsfs import query as query_mod
 from hsfs import util
 from hsfs.helpers import constants
 from rich import box
@@ -231,7 +230,7 @@ def build_feature_bullets(
     return feature_table
 
 
-def make_table_feature_views():
+def make_table_feature_views() -> Table:
     table = Table(show_header=True, header_style="bold")
 
     table.add_column("Name")
@@ -244,21 +243,25 @@ def make_table_feature_views():
 
 def make_rich_text_feature_view_row(
     table: Table,
-    fv_obj: Dict[str, Any],
+    fv_dict: Dict[str, Any],
     show_feature_list: bool,
-) -> str:
-    query = query_mod.Query.from_response_json(fv_obj["query"])
+) -> None:
     online_status = (
         "🟢 Online"
-        if all(query.featuregroups.map(lambda x: x.online_enabled))
+        if all(
+            map(
+                lambda x: x["feature_group"]["online_enabled"],
+                fv_dict["serving_keys"],
+            )
+        )
         else "🔴 Offline"
     )
 
     table.add_row(
-        fv_obj["name"], f"v{fv_obj['version']}", f"{fv_obj['id']}", online_status
+        fv_dict["name"], f"v{fv_dict['version']}", f"{fv_dict['id']}", online_status
     )
 
     if show_feature_list:
         table.add_row("", "- Columns:", "", "")
-        for feature in fv_obj["features"]:
+        for feature in fv_dict["features"]:
             table.add_row("", "*", f"{feature['name']} :", f"{feature['type']}")

@@ -19,6 +19,7 @@ import datetime
 import warnings
 from typing import Any, Dict, List, Optional
 
+import humps
 from hsfs import (
     client,
     engine,
@@ -928,7 +929,12 @@ class FeatureViewEngine:
     def list_feature_views(
         self, latest_version_only: bool = True, with_features: bool = False
     ) -> List[Dict[str, Any]]:
-        fv_list = self._feature_view_api.get_all(with_features=with_features)
+        fv_list = [
+            humps.decamelize(fv_obj)
+            for fv_obj in self._feature_view_api.get_all(
+                latest_version_only=latest_version_only, with_features=with_features
+            )
+        ]
         if latest_version_only:
             fv_list = [
                 fview
