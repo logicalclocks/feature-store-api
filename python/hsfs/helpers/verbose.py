@@ -24,6 +24,11 @@ from rich.console import Console
 _rich_console = None
 
 
+def enable_rich_verbose_mode() -> None:
+    os.environ[constants.VERBOSE_ENV_VAR] = "true"
+    os.environ[constants.USE_RICH_CONSOLE_ENV_VAR] = "true"
+
+
 def is_rich_print_enabled() -> bool:
     use_rich = os.getenv(constants.USE_RICH_CONSOLE_ENV_VAR, "true").lower()
     return use_rich == "true" or use_rich == "1"

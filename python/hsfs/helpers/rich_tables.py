@@ -19,7 +19,8 @@ from typing import Union
 
 from hsfs import feature_group as fg_mod
 from hsfs import feature_view as fv_mod
-from hsfs.helpers import constants
+from hsfs import util
+from hsfs.helpers import constants, verbose
 from rich import box
 from rich.table import Table
 
@@ -63,6 +64,14 @@ def make_base_info_feature_group_table(
         "Table Format",
         fg_obj.time_travel_format if fg_obj.time_travel_format else "PARQUET",
     )
+
+    if fg_obj.id is None:
+        extra_info = "Start writing data to the `FeatureStore` with the `insert()` method to register your `FeatureGroup`."
+    else:
+        extra_info = f"You can also check out your [link={util.get_feature_group_url(feature_store_id=fg_obj._feature_store_id, feature_group_id=fg_obj.id)}]Feature Group page in the Hopsworks UI[/link] for more information."
+
+    rich_console = verbose.get_rich_console()
+    rich_console.print(table, extra_info)
 
 
 def make_table_feature_groups() -> Table:

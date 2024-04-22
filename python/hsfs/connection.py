@@ -29,11 +29,7 @@ from hsfs.core import (
 )
 from hsfs.core.opensearch import OpenSearchClientSingleton
 from hsfs.decorators import connected, not_connected
-from hsfs.helpers import verbose
-from requests.exceptions import ConnectionError
-from rich import box
-from rich.markdown import Markdown
-from rich.panel import Panel
+from hsfs.helpers import user_messages
 
 
 AWS_DEFAULT_REGION = "default"
@@ -192,52 +188,8 @@ class Connection:
         if not name:
             name = client.get_instance()._project_name
         fs = self._feature_store_api.get(util.append_feature_store_suffix(name))
-        self.connected_to_feature_store_message(fs)
-
+        user_messages.print_connected_to_feature_store_message(fs)
         return fs
-
-    def connected_to_feature_store_message(self, fs: feature_store.FeatureStore):
-        feature_groups = fs._feature_group_api.get_all(feature_store_id=fs.id)
-        if len(feature_groups) == 0:
-            get_started_message = Markdown(
-                "- To learn how to get started with Hopsworks feature store, checkout our "
-                "[guides and docs](https://docs.hopsworks.ai/latest/user_guides/fs/) "
-                "or our [tutorials](https://github.com/logicalclocks/hopsworks-tutorials) on github.\n"
-                "- Call `quicktour()` method to get an overview of the feature store API and capabilities.",
-                justify="left",
-                inline_code_lexer="python",
-                inline_code_theme="one-dark",
-            )
-        else:
-            get_started_message = Markdown(
-                "- Call `show_feature_groups()` to show a list of existing Feature Groups to insert/upsert new data or "
-                "set `with_features=True` to see which features you can select to build a new Feature View.\n"
-                "- Call `show_feature_views()` to show a list of existing Feature Views, you can use them to read data "
-                "and create Training Datasets. Feature Views composed of Features from online-enabled FeatureGroups can "
-                "be used to serve feature value for real-time use cases. Checkout the ⚡ "
-                "[benchmarks](https://www.hopsworks.ai/post/feature-store-benchmark-comparison-hopsworks-and-feast)\n"
-                "- Call the `quicktour()` method to get an overview of the feature store API and capabilities.",
-                justify="left",
-                inline_code_lexer="python",
-                inline_code_theme="one-dark",
-            )
-
-        if verbose.is_hsfs_verbose() and verbose.is_rich_print_enabled():
-            rich_console = verbose.get_rich_console()
-            (
-                rich_console.print(
-                    Panel.fit(
-                        f"[bold red]{fs.project_name}[/bold red] on [italic red]{client.get_instance()._host}[/italic red].",
-                        title="Connected to Hopsworks.",
-                        style="bold",
-                        box=box.ASCII2,
-                    ),
-                    get_started_message,
-                    justify="center",
-                ),
-            )
-        else:
-            print(f"Connected to feature store in project {fs.project_name}.")
 
     @not_connected
     def connect(self) -> None:
