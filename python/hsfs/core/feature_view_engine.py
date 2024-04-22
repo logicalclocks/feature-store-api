@@ -40,7 +40,7 @@ from hsfs.core import (
     training_dataset_engine,
     transformation_function_engine,
 )
-from hsfs.helpers import rich_tables, verbose
+from hsfs.helpers import richer_feature_view
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
@@ -948,21 +948,18 @@ class FeatureViewEngine:
         return sorted(fv_list, key=lambda fview: fview["name"])
 
     def show_info(self, feature_view_obj: feature_view.FeatureView) -> None:
-        rich_console = verbose.get_rich_console()
-        renderables = rich_tables.build_info_feature_view_table(feature_view_obj)
+        richer_feature_view.build_and_print_info_table(feature_view_obj)
 
-        rich_console.print(*renderables)
-
-    def show_all(self, latest_version_only: bool = True, with_features: bool = False):
-        feature_views = self.list_feature_views(
+    def show_all(
+        self,
+        latest_version_only: bool = True,
+        show_features: bool = False,
+        show_description: bool = False,
+    ):
+        fview_dicts = self.list_feature_views(
             latest_version_only=latest_version_only,
-            with_features=with_features,
+            with_features=show_features,
         )
-        rich_console = verbose.get_rich_console()
-        table = rich_tables.make_table_feature_views()
-        for feature_view_obj in feature_views:
-            rich_tables.make_rich_text_feature_view_row(
-                table, feature_view_obj, with_features
-            )
-
-        rich_console.print(table)
+        richer_feature_view.print_feature_views_table(
+            fview_dicts, show_features, show_description
+        )

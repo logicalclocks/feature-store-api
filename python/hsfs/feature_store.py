@@ -1744,7 +1744,10 @@ class FeatureStore:
         return self._feature_view_engine.get(name)
 
     def show_feature_groups(
-        self, latest_only: bool = True, show_features: bool = False
+        self,
+        latest_only: bool = True,
+        show_features: bool = False,
+        show_description: bool = False,
     ) -> None:
         """Prints a list of all feature groups in the feature store.
 
@@ -1760,14 +1763,20 @@ class FeatureStore:
         # Arguments
             latest_only: If `True` only the latest version of each feature group is shown, defaults to `True`.
             show_features: If `True` also show the features of the feature groups, defaults to `False`.
+            show_description: If `True` also show the description of the feature groups, defaults to `False`.
 
         # Returns
             `None`
         """
-        self._feature_group_engine.show_all(latest_only, show_features)
+        self._feature_group_engine.show_all(
+            latest_only, show_features, show_description
+        )
 
     def show_feature_views(
-        self, latest_only: bool = True, show_features: bool = False
+        self,
+        latest_only: bool = True,
+        show_features: bool = False,
+        show_description: bool = False,
     ) -> None:
         """Prints a list of all feature views in the feature store.
 
@@ -1783,11 +1792,12 @@ class FeatureStore:
         # Arguments
             latest_only: If `True` only the latest version of each feature view is shown, defaults to `True`.
             show_features: If `True` also show the features of the feature views, defaults to `False`.
+            show_description: If `True` also show the description of the feature views, defaults to `False`.
 
         # Returns
             `None`
         """
-        self._feature_view_engine.show_all(latest_only, show_features)
+        self._feature_view_engine.show_all(latest_only, show_features, show_description)
 
     def quicktour(self) -> None:
         """Prints a quick tour of the feature store API."""

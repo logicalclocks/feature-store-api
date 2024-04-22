@@ -22,7 +22,7 @@ DEFAULT_VERBOSE_CONFIG = {
     "width": 88,
     "color_system": "truecolor",
 }
-PYTHON_LEXER_THEME = "one-dark"
+PYTHON_LEXER_THEME = "github-dark"
 
 SHOW_FG_TYPE_MAPPING = {
     "stream": "Stream",

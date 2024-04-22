@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from hsfs import feature as feature_mod
 from hsfs import feature_group as fg_mod
 from hsfs import util
-from hsfs.helpers import constants
+from hsfs.helpers import constants, verbose
 from rich import box
 from rich.table import Table
 
@@ -123,19 +123,24 @@ def build_info_feature_group_table(
     return renderables
 
 
-def make_table_feature_groups(show_header: bool = True) -> Table:
-    table = Table(show_header=show_header, header_style="bold")
-
+def make_table_fg_list(
+    show_header: bool = True,
+    show_features: bool = False,
+    show_description: bool = False,
+) -> Table:
+    table = Table(show_header=show_header, header_style="bold", box=box.ASCII2)
     table.add_column("Name")
     table.add_column("Version")
     table.add_column("ID")
     table.add_column("Type")
     table.add_column("Online")
+    if show_description and not show_features:
+        table.add_column("Description")
 
     return table
 
 
-def make_rich_text_fg(
+def make_rich_text_fg_row_alt(
     table: Table,
     fgroup: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
     show_feature_list: bool,
@@ -148,20 +153,12 @@ def make_rich_text_fg(
     else:
         fg_type = constants.SHOW_FG_TYPE_MAPPING["stream"]
     online_status = "🟢 Real-Time" if fgroup.online_enabled else "🔴 Batch"
-    entry_list = [
-        fgroup.name,
-        f"v{fgroup.version}",
-        f"{fgroup.id}",
-        fg_type,
-        online_status,
-    ]
-
     table.add_row(
-        *entry_list,
+        fgroup.name, f"v{fgroup.version}", f"{fgroup.id}", fg_type, online_status
     )
 
     if show_feature_list:
-        nested_entry = ["" for _ in range(len(entry_list))]
+        nested_entry = ["" for _ in range(len(table.columns))]
         nested_entry[0] = build_nested_feature_list_table(fgroup.features)
         table.add_row(*nested_entry)
 
@@ -177,10 +174,10 @@ def build_nested_feature_list_table(features: List[feature_mod.Feature]) -> Tabl
     return feature_table
 
 
-def make_rich_text_fg_alt(
+def make_rich_text_row(
     fgroup: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
     show_description: bool,
-    show_feature_list: bool,
+    show_features: bool,
 ) -> Tuple[List[str], Optional[str], Optional[Table]]:
     if isinstance(fgroup, fg_mod.SpineGroup):
         fg_type = constants.SHOW_FG_TYPE_MAPPING["spine"]
@@ -204,7 +201,7 @@ def make_rich_text_fg_alt(
         description = "  [bold]Description :[/bold]\n    " + fgroup.description
 
     feature_table = None
-    if show_feature_list:
+    if show_features:
         feature_table = build_feature_bullets(fgroup)
 
     return entries, description, feature_table
@@ -232,59 +229,51 @@ def build_feature_bullets(
     return feature_table
 
 
-def make_table_feature_views() -> Table:
-    table = Table(show_header=True, header_style="bold")
-
-    table.add_column("Name")
-    table.add_column("Version")
-    table.add_column("ID")
-    table.add_column("Parent Feature Groups")
-
-    return table
-
-
-def make_rich_text_feature_view_row(
-    fv_dict: Dict[str, Any],
-    show_feature_list: bool,
-) -> Tuple[List[str], Optional[Table]]:
-    fg_names = [sk["feature_group"]["name"] for sk in fv_dict["serving_keys"]]
-    entries = (
-        fv_dict["name"],
-        f"v{fv_dict['version']}",
-        f"{fv_dict['id']}",
-        ", ".join(fg_names),
-    )
-
-    feature_table = None
-    if show_feature_list:
-        feature_table = build_training_feature_bullets(fv_dict)
-
-    return entries, feature_table
-
-
-def build_training_feature_bullets(fv_dict: Dict[str, Any]) -> Table:
-    feature_table = Table(box=None, show_lines=False)
-    feature_table.add_column("  Features :")
-    feature_table.add_column("")
-    feature_table.add_column("")
-
-    for feature in fv_dict["serving_keys"]:
-        feature_table.add_row(
-            f"    * {feature['prefix'] + feature['name']}",
-            feature["type"],
-            "serving key",
-            feature["feature_group"]["name"],
+def show_rich_table_feature_groups(
+    fgroup_list: List[Dict[str, Any]],
+    show_features: bool = False,
+    show_description: bool = False,
+) -> None:
+    rich_console = verbose.get_rich_console()
+    row_entries_and_opt_features_and_description = [
+        make_rich_text_row(
+            fgroup_obj,
+            show_description,
+            show_features,
         )
+        for fgroup_obj in fgroup_list
+    ]
 
-    sk_names = [sk["name"] for sk in fv_dict["serving_keys"]]
-
-    for feature in fv_dict["features"]:
-        if feature["name"] not in sk_names:
-            feature_table.add_row(
-                f"    * {feature['name']}",
-                feature["type"],
-                "",
-                feature["feature_group"]["name"],
+    if show_features:
+        tables = []
+        for (
+            entries,
+            description,
+            feature_table,
+        ) in row_entries_and_opt_features_and_description:
+            new_table = make_table_fg_list(
+                show_header=False,
+                show_features=show_features,
+                show_description=show_description,
+            )
+            new_table.add_row(*entries)
+            tables.extend(
+                [
+                    tab
+                    for tab in [new_table, description, feature_table]
+                    if tab is not None
+                ]
             )
 
-    return feature_table
+        rich_console.print(*tables)
+    else:
+        the_table = make_table_fg_list(
+            show_header=True,
+            show_description=show_description,
+            show_features=show_features,
+        )
+        for entries, description, _ in row_entries_and_opt_features_and_description:
+            if show_description:
+                entries.append(description or "")
+            the_table.add_row(*entries)
+        rich_console.print(the_table)

@@ -22,7 +22,7 @@ from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import delta_engine, feature_group_base_engine, hudi_engine
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
-from hsfs.helpers import rich_tables, verbose
+from hsfs.helpers.richer_repr import richer_feature_group
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -432,20 +432,23 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         feature_group: Union[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup],
         show_features: bool = False,
     ):
-        rich_console = verbose.get_rich_console()
-        renderables = rich_tables.build_info_feature_group_table(
+        richer_feature_group.build_and_print_info_feature_group_table(
             feature_group, show_features=show_features
         )
-        rich_console.print(*renderables)
 
     def show_all(
-        self, latest_version_only: bool = True, show_features: bool = False
-    ) -> None:
+        self,
+        latest_version_only: bool = True,
+        show_features: bool = False,
+        show_description: bool = False,
+    ):
         fgroup_list = self.list_feature_groups(
-            latest_version_only, False, False, False, show_features
+            latest_version_only=latest_version_only,
+            online_enabled_only=False,
+            spine_only=False,
+            external_only=False,
+            with_features=show_features,
         )
-        rich_console = verbose.get_rich_console()
-        table = rich_tables.make_table_feature_groups()
-        for fg_obj in fgroup_list:
-            rich_tables.make_rich_text_fg(table, fg_obj, show_features)
-        rich_console.print(table)
+        richer_feature_group.show_rich_table_feature_groups(
+            fgroup_list, show_features=show_features, show_description=show_description
+        )
