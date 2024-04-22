@@ -19,7 +19,6 @@ import os
 
 from hsfs.helpers import constants
 from rich.console import Console
-from rich.terminal_theme import MONOKAI
 
 
 _rich_console = None
@@ -38,7 +37,7 @@ def is_hsfs_verbose() -> bool:
 def init_rich_with_default_config() -> None:
     global _rich_console
     if _rich_console is None:
-        _rich_console = Console(**constants.DEFAULT_VERBOSE_CONFIG, theme=MONOKAI)
+        _rich_console = Console(**constants.DEFAULT_VERBOSE_CONFIG)
 
 
 def get_rich_console() -> Console:

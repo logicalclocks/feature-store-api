@@ -28,3 +28,13 @@ SHOW_FG_TYPE_MAPPING = {
     "spine": "Spine",
     "external": "External",
 }
+
+GET_OR_ENABLE_RICH_CONSOLE_ERROR_MESSAGE = (
+    "Using `rich` console is not enabled."
+    + f" Please set the environment variable `{USE_RICH_CONSOLE_ENV_VAR}` to `true` or `1` to enable it."
+)
+ENABLE_RICH_FOR_PRETTY_VERBOSITY_ERROR_MESSAGE = (
+    "Hopsworks Python SDK has a verbose mode"
+    + " using `rich` to print nicely formatted user message design help you get started."
+    + f"Please set the environment variable `{USE_RICH_CONSOLE_ENV_VAR}` and `{VERBOSE_ENV_VAR}` to `true` or `1` to enable it."
+)

@@ -227,10 +227,12 @@ class Connection:
             rich_console = verbose.get_rich_console()
             (
                 rich_console.print(
-                    Panel.fit(
-                        f"Connected to the Feature Store of project [bold red]{fs.project_name}[/bold red] on [italic red]{client.get_instance()._host}[/italic red].",
+                    Panel(
+                        title="Connected to Hopsworks.",
+                        subtitle=f"[bold red]{fs.project_name}[/bold red] on [italic red]{client.get_instance()._host}[/italic red].",
                         style="bold",
                         box=box.ASCII2,
+                        expand=False,
                     ),
                     get_started_message,
                     justify="center",

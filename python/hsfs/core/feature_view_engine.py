@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from hsfs import (
     client,
@@ -923,3 +923,19 @@ class FeatureViewEngine:
             )
         else:
             return f_name
+
+    def list_feature_views(
+        self, latest_version_only: bool = True, with_features: bool = False
+    ) -> List[Dict[str, Any]]:
+        fv_list = self._feature_view_api.get_all(with_features=with_features)
+        if latest_version_only:
+            fv_list = [
+                fview
+                for fview in fv_list
+                if fview["version"]
+                == max(
+                    fv1["version"] for fv1 in fv_list if fv1["name"] == fview["name"]
+                )
+            ]
+
+        return sorted(fv_list, key=lambda fview: fview["name"])
