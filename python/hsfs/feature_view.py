@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import warnings
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
@@ -59,6 +60,8 @@ from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
+
+_logger = logging.getLogger(__name__)
 
 TrainingDatasetDataFrameTypes = Union[
     pd.DataFrame,
@@ -144,6 +147,14 @@ class FeatureView:
 
         if self._id:
             self._init_feature_monitoring_engine()
+
+        # last_accessed_training_dataset is only from the perspective of the client itself, and not the backend.
+        # if multiple clients do training datasets operations, each will have their own view of the last accessed.
+        # last accessed (read/write) training dataset is not necessarily the newest (highest version).
+        self._last_accessed_training_dataset = None
+
+    def get_last_accessed_training_dataset(self):
+        return self._last_accessed_training_dataset
 
     def delete(self) -> None:
         """Delete current feature view, all associated metadata and training data.
@@ -1077,6 +1088,13 @@ class FeatureView:
         """
         return self._feature_view_engine.delete_tag(self, name)
 
+    def update_last_accessed_training_dataset(self, version):
+        if self._last_accessed_training_dataset is not None:
+            _logger.info(
+                f"Provenance cached data - overwriting last accessed/created training dataset from {self._last_accessed_training_dataset} to {version}."
+            )
+        self._last_accessed_training_dataset = version
+
     @usage.method_logger
     def create_training_data(
         self,
@@ -1302,6 +1320,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
 
         return td.version, td_job
 
@@ -1588,7 +1607,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
-
+        self.update_last_accessed_training_dataset(td.version)
         return td.version, td_job
 
     @usage.method_logger
@@ -1871,6 +1890,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
 
         return td.version, td_job
 
@@ -1938,13 +1958,15 @@ class FeatureView:
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
-        _, td_job = self._feature_view_engine.recreate_training_dataset(
+        td, td_job = self._feature_view_engine.recreate_training_dataset(
             self,
             training_dataset_version=training_dataset_version,
             statistics_config=statistics_config,
             user_write_options=write_options or {},
             spine=spine,
         )
+        self.update_last_accessed_training_dataset(td.version)
+
         return td_job
 
     @usage.method_logger
@@ -2096,6 +2118,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2271,6 +2294,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @staticmethod
@@ -2490,6 +2514,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @staticmethod
@@ -2575,7 +2600,7 @@ class FeatureView:
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
-        _, df = self._feature_view_engine.get_training_data(
+        td, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2584,6 +2609,7 @@ class FeatureView:
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2646,7 +2672,7 @@ class FeatureView:
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
         """
-        _, df = self._feature_view_engine.get_training_data(
+        td, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2656,6 +2682,7 @@ class FeatureView:
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2720,7 +2747,7 @@ class FeatureView:
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
         """
-        _, df = self._feature_view_engine.get_training_data(
+        td, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2734,6 +2761,7 @@ class FeatureView:
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2952,6 +2980,8 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
+        if self._last_accessed_training_dataset == training_dataset_version:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_dataset_only(
             self, training_data_version=training_dataset_version
         )
@@ -2975,6 +3005,8 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
+        if self._last_accessed_training_dataset is not None:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_dataset_only(self)
 
     @usage.method_logger
@@ -3001,6 +3033,8 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
+        if self._last_accessed_training_dataset == training_dataset_version:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_data(
             self, training_data_version=training_dataset_version
         )
@@ -3024,6 +3058,8 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
+        if self._last_accessed_training_dataset is not None:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_data(self)
 
     def get_feature_monitoring_configs(
