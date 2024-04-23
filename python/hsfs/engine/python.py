@@ -514,7 +514,7 @@ class Engine:
         ).head(n)
 
     def register_external_temporary_table(
-        self, external_fg: "ExternalFeatureGroup", alias: str
+        self, external_fg: ExternalFeatureGroup, alias: str
     ) -> None:
         # No op to avoid query failure
         pass
@@ -575,7 +575,8 @@ class Engine:
         # parse timestamp columns to string columns
         for field in arrow_schema:
             if not (
-                pa.types.is_list(field.type)
+                pa.types.is_null(field.type)
+                or pa.types.is_list(field.type)
                 or pa.types.is_large_list(field.type)
                 or pa.types.is_struct(field.type)
             ) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
@@ -586,30 +587,28 @@ class Engine:
                 else:
                     df[field.name] = df[field.name].astype(str)
 
-        if not relevant_columns:
+        if relevant_columns is None or len(relevant_columns) == 0:
             stats = df.describe().to_dict()
             relevant_columns = df.columns
         else:
             target_cols = [col for col in df.columns if col in relevant_columns]
             stats = df[target_cols].describe().to_dict()
-
         # df.describe() does not compute stats for all col types (e.g., string)
         # we need to compute stats for the rest of the cols iteratively
         missing_cols = list(set(relevant_columns) - set(stats.keys()))
         for col in missing_cols:
             stats[col] = df[col].describe().to_dict()
-
         final_stats = []
         for col in relevant_columns:
             if isinstance(df, pl.DataFrame) or isinstance(
                 df, pl.dataframe.frame.DataFrame
             ):
                 stats[col] = dict(zip(stats["statistic"], stats[col]))
-
             # set data type
             arrow_type = arrow_schema.field(col).type
             if (
-                pa.types.is_list(arrow_type)
+                pa.types.is_null(arrow_type)
+                or pa.types.is_list(arrow_type)
                 or pa.types.is_large_list(arrow_type)
                 or pa.types.is_struct(arrow_type)
                 or PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
@@ -716,6 +715,7 @@ class Engine:
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
             ]
+            space_features = [col for col in dataframe.columns if " " in col]
 
             # make shallow copy so the original df does not get changed
             # this is always needed to keep the user df unchanged
@@ -734,7 +734,18 @@ class Engine:
                     util.FeatureGroupWarning,
                     stacklevel=1,
                 )
-                dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
+            if len(space_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains feature names with spaces: `{}`. "
+                    "Feature names are sanitized to use underscore '_' in the feature store.".format(
+                        space_features
+                    ),
+                    util.FeatureGroupWarning,
+                    stacklevel=1,
+                )
+            dataframe_copy.columns = [
+                util.autofix_feature_name(x) for x in dataframe_copy.columns
+            ]
 
             # convert timestamps with timezone to UTC
             for col in dataframe_copy.columns:
@@ -768,7 +779,7 @@ class Engine:
             arrow_schema = dataframe.to_arrow().schema
         features = []
         for feat_name in arrow_schema.names:
-            name = feat_name.lower()
+            name = util.autofix_feature_name(feat_name)
             try:
                 converted_type = self._convert_pandas_dtype_to_offline_type(
                     arrow_schema.field(feat_name).type
@@ -1299,10 +1310,10 @@ class Engine:
 
     def _write_dataframe_kafka(
         self,
-        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
         dataframe: Union[pd.DataFrame, pl.DataFrame],
         offline_write_options: Dict[str, Any],
-    ) -> Optional["job.Job"]:
+    ) -> Optional[job.Job]:
         initial_check_point = ""
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
@@ -1436,7 +1447,7 @@ class Engine:
 
     def _kafka_get_offsets(
         self,
-        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
         offline_write_options: Dict[str, Any],
         high: bool,
     ) -> str:
@@ -1461,8 +1472,8 @@ class Engine:
 
     def _kafka_produce(
         self,
-        producer: "Producer",
-        feature_group: Union["FeatureGroup", "ExternalFeatureGroup"],
+        producer: Producer,
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
         key: str,
         encoded_row: bytes,
         acked: callable,

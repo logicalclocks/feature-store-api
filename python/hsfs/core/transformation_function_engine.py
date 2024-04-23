@@ -17,10 +17,24 @@ from __future__ import annotations
 
 import datetime
 from functools import partial
+from typing import Dict, Optional, Union
 
+import hsfs
 import numpy
-from hsfs import statistics, training_dataset, training_dataset_feature, util
-from hsfs.core import statistics_api, transformation_function_api
+from hsfs import (
+    feature_view,
+    statistics,
+    training_dataset,
+    training_dataset_feature,
+    transformation_function_attached,
+    util,
+)
+from hsfs.core import (
+    feature_view_api,
+    statistics_api,
+    statistics_engine,
+    transformation_function_api,
+)
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
 
 
@@ -37,7 +51,7 @@ class TransformationFunctionEngine:
     )
     FEATURE_NOT_EXIST_ERROR = "Provided feature '{}' in transformation functions do not exist in any of the feature groups."
 
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id: int):
         self._feature_store_id = feature_store_id
         self._transformation_function_api = (
             transformation_function_api.TransformationFunctionApi(feature_store_id)
@@ -45,6 +59,8 @@ class TransformationFunctionEngine:
         self._statistics_api = statistics_api.StatisticsApi(
             feature_store_id, training_dataset.TrainingDataset.ENTITY_TYPE
         )
+        self._feature_view_api: Optional["feature_view_api.FeatureViewApi"] = None
+        self._statistics_engine: Optional["statistics_engine.StatisticsEngine"] = None
 
     def save(self, transformation_fn_instance):
         if self.is_builtin(transformation_fn_instance):
@@ -105,7 +121,7 @@ class TransformationFunctionEngine:
                 feature_name,
                 transformation_fn,
             ) in target_obj._transformation_functions.items():
-                if feature_name in target_obj.labels:  # todo td does not have labels
+                if feature_name in target_obj.labels:
                     raise ValueError(
                         "Online transformations for training dataset labels are not supported."
                     )
@@ -297,3 +313,93 @@ class TransformationFunctionEngine:
                 training_dataset.transformation_functions,
                 stats.feature_descriptive_statistics,
             )
+
+    def get_ready_to_use_transformation_fns(
+        self,
+        entity: Union[hsfs.feature_view.FeatureView, training_dataset.TrainingDataset],
+        training_dataset_version: Optional[int] = None,
+    ) -> Dict[
+        str, hsfs.transformation_function_attached.TransformationFunctionAttached
+    ]:
+        is_feat_view = isinstance(entity, feature_view.FeatureView)
+        if self._feature_view_api is None:
+            self._feature_view_api = feature_view_api.FeatureViewApi(
+                self._feature_store_id
+            )
+        if self._statistics_engine is None:
+            self._statistics_engine = statistics_engine.StatisticsEngine(
+                self._feature_store_id,
+                entity_type="featureview" if is_feat_view else "trainingdataset",
+            )
+        # get attached transformation functions
+        transformation_functions = (
+            self.get_td_transformation_fn(entity)
+            if isinstance(entity, training_dataset.TrainingDataset)
+            else (self.get_fv_attached_transformation_fn(entity.name, entity.version))
+        )
+        is_stat_required = (
+            len(
+                set(self.BUILTIN_FN_NAMES).intersection(
+                    set([tf.name for tf in transformation_functions.values()])
+                )
+            )
+            > 0
+        )
+        if not is_stat_required:
+            td_tffn_stats = None
+        else:
+            # if there are any built-in transformation functions get related statistics and
+            # populate with relevant arguments
+            # there should be only one statistics object with before_transformation=true
+            if is_feat_view and training_dataset_version is None:
+                raise ValueError(
+                    "Training data version is required for transformation. Call `feature_view.init_serving(version)` "
+                    "or `feature_view.init_batch_scoring(version)` to pass the training dataset version."
+                    "Training data can be created by `feature_view.create_training_data` or `feature_view.training_data`."
+                )
+            td_tffn_stats = self._statistics_engine.get(
+                entity,
+                before_transformation=True,
+                training_dataset_version=training_dataset_version,
+            )
+
+        if is_stat_required and td_tffn_stats is None:
+            raise ValueError(
+                "No statistics available for initializing transformation functions."
+                + "Training data can be created by `feature_view.create_training_data` or `feature_view.training_data`."
+            )
+
+        transformation_fns = self.populate_builtin_attached_fns(
+            transformation_functions,
+            td_tffn_stats.feature_descriptive_statistics
+            if td_tffn_stats is not None
+            else None,
+        )
+        return transformation_fns
+
+    def get_fv_attached_transformation_fn(
+        self, fv_name: str, fv_version: int
+    ) -> Dict[str, "transformation_function_attached.TransformationFunctionAttached"]:
+        if self._feature_view_api is None:
+            self._feature_view_api = feature_view_api.FeatureViewApi(
+                self._feature_store_id
+            )
+            self._statistics_engine = statistics_engine.StatisticsEngine(
+                self._feature_store_id,
+                entity_type="featureview",
+            )
+        transformation_functions = (
+            self._feature_view_api.get_attached_transformation_fn(fv_name, fv_version)
+        )
+        if isinstance(transformation_functions, list):
+            transformation_functions_dict = dict(
+                [
+                    (tf.name, tf.transformation_function)
+                    for tf in transformation_functions
+                ]
+            )
+        else:
+            transformation_functions_dict = {
+                transformation_functions.name: transformation_functions.transformation_function
+            }
+        return transformation_functions_dict
