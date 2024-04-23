@@ -26,12 +26,12 @@
 
 .md-tabs__item {
   min-width: 2.25rem;
+  min-height: 1.5rem;
 }
 
 .md-tabs__item:hover {
   background-color: var(--md-tertiary-fg-color);
   transition: background-color 450ms;
-
 }
 
 /*
@@ -69,7 +69,6 @@
   background-color: var(--md-secondary-fg-color);
   transition: background-color 250ms;
 }
-
 
 .wrapper {
   display: grid;
