@@ -401,5 +401,6 @@ class VectorDbClient:
             self._serving_key_by_serving_index = {}
         return self._serving_key_by_serving_index
 
+    @property
     def td_embedding_feature_names(self):
         return self._td_embedding_feature_names

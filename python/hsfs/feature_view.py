@@ -492,12 +492,12 @@ class FeatureView:
             self.init_serving(external=external)
 
         vector_db_features = None
+        td_embedding_feature_names = set()
         if self._vector_db_client:
-            vector_db_features = self._get_vector_db_result(
-                self._vector_server, entry
-            )
+            vector_db_features = self._get_vector_db_result(entry)
+            td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
         return self._vector_server.get_feature_vector(
-            entry, return_type, passed_features, vector_db_features, self._vector_db_client.td_embedding_feature_names, allow_missing
+            entry, return_type, passed_features, vector_db_features, td_embedding_feature_names, allow_missing
         )
 
     def get_feature_vectors(
@@ -589,15 +589,16 @@ class FeatureView:
         if self._vector_server is None:
             self.init_serving(external=external)
         vector_db_features = []
+        td_embedding_feature_names = set()
         if self._vector_db_client:
             for _entry in entry:
                 vector_db_features.append(
-                    self._get_vector_db_result(
-                        self._vector_server, _entry
-                    )
+                    self._get_vector_db_result(_entry)
                 )
+            td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
+
         return self._vector_server.get_feature_vectors(
-            entry, return_type, passed_features, vector_db_features, self._vector_db_client.td_embedding_feature_names, allow_missing
+            entry, return_type, passed_features, vector_db_features, td_embedding_feature_names, allow_missing
         )
 
     def get_inference_helper(

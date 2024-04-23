@@ -86,18 +86,7 @@ class VectorServer:
             online_store_sql_client.OnlineStoreSqlClient
         ] = None
 
-    def filter_entry_by_join_index(self, entry: Dict[str, Any], join_index: int):
-        _logger.debug(f"Filtering entry {entry} by join index {join_index}")
-        fg_entry = {}
-        complete = True
-        for sk in  self.online_store_sql_client._serving_key_by_serving_index[join_index]:
-            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key) or entry.get(
-                sk.feature_name
-            )  # fallback to use raw feature name
-            if fg_entry[sk.feature_name] is None:
-                complete = False
-                break
-        return complete, fg_entry
+
 
     def init_serving(
         self,
@@ -164,12 +153,14 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: Optional[Dict[str, Any]] = None,
         vector_db_features: Optional[Dict[str, Any]] = None,
-        td_embedding_feature_names = None,
+        td_embedding_feature_names: Optional[set[str]] = None,
         allow_missing: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = {}
+        if td_embedding_feature_names is None:
+            td_embedding_feature_names = set()
         # get result row
         _logger.info("get_feature_vector Online SQL client")
         serving_vector = self.online_store_sql_client.get_single_feature_vector(entry)
@@ -202,11 +193,13 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: Optional[List[Dict[str, Any]]] = None,
         vector_db_features: Optional[List[Dict[str, Any]]] = None,
-        td_embedding_feature_names = None,
+        td_embedding_feature_names: Optional[set[str]] = None,
         allow_missing: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], List[Dict[str, Any]]]:
         if passed_features is None:
             passed_features = []
+        if td_embedding_feature_names is None:
+            td_embedding_feature_names = set()
         """Assembles serving vector from online feature store."""
         _logger.info("get_feature_vectors through SQL client")
         batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
@@ -354,7 +347,7 @@ class VectorServer:
             if f.is_complex()
         }
 
-    def deserialize_complex_features(self, row_dict: Dict[str, Any], td_embedding_feature_names) -> Dict[str, Any]:
+    def deserialize_complex_features(self, row_dict: Dict[str, Any], td_embedding_feature_names: set[str]) -> Dict[str, Any]:
         for feature_name, schema in self._complex_features.items():
             if feature_name in row_dict and feature_name not in td_embedding_feature_names:
                 bytes_reader = io.BytesIO(row_dict[feature_name])
