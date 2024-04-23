@@ -50,7 +50,22 @@ You can retrieve or create `StorageConnector` objects using the `get_or_create_s
 You can list all the `FeatureGroup`s and `FeatureView`s in your project using the `show_feature_groups()` and `show_feature_views()` methods. Use `with_feature=True` to list their features `FeatureGroup` or `FeatureView`.
 
 ```python
-fs.show_feature_groups(with_features=True)
+fs.show_feature_groups(with_features=True) # or fs.show_feature_views(with_features=True)
 # output
-
+# +----------------------------+----+-------+--------+----------+
+# | offline_fg_with_complex_ft | v1 | 11339 | Stream | 🔴 Batch |
+# +----------------------------+----+-------+--------+----------+
+#    Features :
+#      * id        bigint            (primary key)
+#      * cc_num    bigint
+#      * when      timestamp         (event-time)
+#      * array_ft  array <double>
+# +---------------------+----+------+--------+--------------+
+# | prices_composite_fg | v3 | 7300 | Stream | 🟢 Real-Time |
+# +---------------------+----+------+--------+--------------+
+#    Features :
+#      * ticker         string       (primary key)
+#      * ticker_number  bigint       (primary key)
+#      * when           timestamp    (event-time)
+#      * price          bigint
 ```
