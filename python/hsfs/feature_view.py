@@ -3360,8 +3360,8 @@ class FeatureView:
             "type": "featureViewDTO",
         }
 
-    def _show_info(self) -> None:
-        self._feature_view_engine.show_info(self)
+    def _show_info(self, show_features: bool = True) -> None:
+        self._feature_view_engine.show_info(self, show_features=show_features)
 
     @property
     def id(self) -> int:

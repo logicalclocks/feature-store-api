@@ -15,12 +15,11 @@
 #
 from __future__ import annotations
 
-import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from hsfs import feature_view as feature_view_mod
 from hsfs.helpers import verbose
-from rich import box, print_json
+from rich import box
 from rich.table import Table
 
 
@@ -69,7 +68,6 @@ def build_training_feature_bullets(fv_dict: Dict[str, Any]) -> Table:
     feature_table.add_column("  Features :")
     feature_table.add_column("")
     feature_table.add_column("")
-    print_json(json.dumps(fv_dict["features"]))
 
     for sk in fv_dict["serving_keys"]:
         feature_table.add_row(
@@ -165,63 +163,81 @@ def build_training_feature_table(fview_obj: feature_view_mod.FeatureView) -> Tab
         )
 
     feature_table = Table(box=box.ASCII2, title="Features", title_justify="left")
-
+    has_transformation = (
+        fview_obj.transformation_functions
+        and len(fview_obj.transformation_functions) > 0
+    )
     feature_table.add_column("Name")
     feature_table.add_column("Type")
-    # feature_table.add_column("JoinOn")
-    feature_table.add_column("Extra")
-    if (
-        fview_obj.training_helper_columns
-        and len(fview_obj.transformation_functions) > 0
-    ):
+    feature_table.add_column("Metadata")
+    if has_transformation:
         feature_table.add_column("Transformation Function")
     feature_table.add_column("Feature Group")
 
     for feature in sorted(fview_obj.features, key=lambda x: x.feature_group.name):
-        extra = ""
+        metadata = ""
         if feature.inference_helper_column:
-            extra += "inference helper,"
+            metadata += "inference helper,"
         if feature.training_helper_column:
-            extra += "training helper,"
+            metadata += "training helper,"
         if feature.label:
-            extra += "label,"
-        if feature.index:
-            extra += "index,"
+            metadata += "label,"
 
-        tf_name = ""
-        opt_tf_obj = fview_obj.transformation_functions.get(feature.name, None)
-        if opt_tf_obj:
-            tf_name = opt_tf_obj.name
+        if has_transformation:
+            tf_name = ""
+            opt_tf_obj = fview_obj.transformation_functions.get(feature.name, None)
+            if opt_tf_obj:
+                tf_name = opt_tf_obj.name
+            entries = [
+                feature.name,
+                feature.type,
+                metadata[:-1],
+                tf_name,
+                feature.feature_group.name,
+            ]
+        else:
+            entries = [
+                feature.name,
+                feature.type,
+                metadata[:-1],
+                feature.feature_group.name,
+            ]
 
-        feature_table.add_row(
-            feature.name,
-            feature.type,
-            feature.feature_group.name,
-            extra[:-1] if len(extra) > 0 else "",
-            tf_name,
-        )
+        feature_table.add_row(*entries)
 
-    return feature_table, serving_key_table
+    return serving_key_table, feature_table
 
 
-def build_and_print_info_fv_table(fview_obj: feature_view_mod.FeatureView) -> None:
+def build_and_print_info_fv_table(
+    fview_obj: feature_view_mod.FeatureView, show_features: bool = False
+) -> None:
+    tables = []
+    description = ""
+    if fview_obj.description and len(fview_obj.description) > 0:
+        description = f"Description: {fview_obj.description}"
+    online_enabled = all([fg.online_enabled for fg in fview_obj.query.featuregroups])
+    required_serving_keys = [
+        sk.required_serving_key for sk in fview_obj.serving_keys if sk.required
+    ]
     table = Table(
-        title="Properties",
-        title_justify="left",
-        title_style="bold",
-        show_header=False,
+        show_header=True,
+        header_style="bold",
         box=box.ASCII2,
         expand=False,
+        caption=description,
     )
-    table.add_column("")
-    table.add_column("")
-    table.add_row("Name", fview_obj.name)
+    table.add_column("Feature View")
+    table.add_column(fview_obj.name)
     table.add_row("Version", f"v{fview_obj.version}")
     table.add_row("ID", f"{fview_obj.id}")
+    table.add_row("Serving", "🟢 Real-Time" if online_enabled else "🔴 Batch")
+    table.add_row("Required Serving Keys", ", ".join(required_serving_keys) or "N/A")
     table.add_row(
         "Parent Feature Groups",
-        ", ".join([fg.name for fg in fview_obj.query.featuregroups]),
+        ",\n".join([fg.name for fg in fview_obj.query.featuregroups]),
     )
-    feature_table, serving_key_table = build_training_feature_table(fview_obj)
+    tables.append(table)
+    if show_features:
+        tables.extend(build_training_feature_table(fview_obj))
 
-    verbose.get_rich_console().print(table, feature_table, serving_key_table)
+    verbose.get_rich_console().print(*tables)

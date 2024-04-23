@@ -65,7 +65,12 @@ def build_and_print_info_fg_table(
     show_features: bool = True,
 ) -> None:
     renderables = []
-    table = Table(show_header=True, header_style="bold", box=box.ASCII2)
+    description = None
+    if fg_obj.description and fg_obj.description != "":
+        description = f"[bold]Description :[/bold] {fg_obj.description}"
+    table = Table(
+        show_header=True, header_style="bold", box=box.ASCII2, caption=description
+    )
 
     if isinstance(fg_obj, fg_mod.ExternalFeatureGroup):
         table.add_column("External Feature Group")
@@ -77,8 +82,6 @@ def build_and_print_info_fg_table(
     table.add_column(fg_obj.name, overflow="ellipsis")
 
     table.add_row("Version", f"v{fg_obj.version}")
-    if fg_obj.description and fg_obj.description != "":
-        table.add_row("Description", f"{fg_obj.description}")
     table.add_row("ID", f"{fg_obj.id}")
     table.add_row(
         "Serving",
