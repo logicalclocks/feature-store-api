@@ -21,14 +21,12 @@
     src="https://pepy.tech/badge/hsfs/month"
     alt="Downloads"
   /></a>
-  <a href="https://github.com/psf/black"><img
-    src="https://img.shields.io/badge/code%20style-black-000000.svg"
-    alt="CodeStyle"
-  /></a>
+  [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
   <a><img
     src="https://img.shields.io/pypi/l/hsfs?color=green"
     alt="License"
   /></a>
+  [![Python Versions](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 </p>
 
 HSFS is the library to interact with the Hopsworks Feature Store. The library makes creating new features, feature groups and training datasets easy.
@@ -135,7 +133,7 @@ You can find more examples on how to use the library in our [hops-examples](http
 
 ## Usage
 
-Usage data is collected for improving quality of the library. It is turned on by default if the backend 
+Usage data is collected for improving quality of the library. It is turned on by default if the backend
 is "c.app.hopsworks.ai". To turn it off, use one of the following way:
 ```python
 # use environment variable
