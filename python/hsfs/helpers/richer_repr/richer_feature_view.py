@@ -47,12 +47,12 @@ def make_rich_text_row(
     show_description: bool,
 ) -> Tuple[List[str], Optional[str], Optional[Table]]:
     fg_names = set([sk["feature_group"]["name"] for sk in fv_dict["serving_keys"]])
-    entries = (
+    entries = [
         fv_dict["name"],
         f"v{fv_dict['version']}",
         f"{fv_dict['id']}",
         ", ".join(fg_names),
-    )
+    ]
     description = None
     if show_description and fv_dict["description"] is not None:
         description = "  [bold]Description :[/bold]\n    " + fv_dict["description"]
@@ -159,8 +159,8 @@ def build_training_feature_table(fview_obj: feature_view_mod.FeatureView) -> Tab
     for serving_key in fview_obj.serving_keys:
         serving_key_table.add_row(
             serving_key.required_serving_key,
-            serving_key.join_on if serving_key.join_on else "N/A",
             "required" if serving_key.required else "optional",
+            serving_key.join_on if serving_key.join_on else "N/A",
             serving_key.feature_group.name,
         )
 
@@ -197,7 +197,7 @@ def build_training_feature_table(fview_obj: feature_view_mod.FeatureView) -> Tab
             feature.name,
             feature.type,
             feature.feature_group.name,
-            extra,
+            extra[:-1] if len(extra) > 0 else "",
             tf_name,
         )
 
@@ -213,7 +213,6 @@ def build_and_print_info_fv_table(fview_obj: feature_view_mod.FeatureView) -> No
         box=box.ASCII2,
         expand=False,
     )
-    # table.add_column("Properties", justify="center", style="bold")
     table.add_column("")
     table.add_column("")
     table.add_row("Name", fview_obj.name)
@@ -223,7 +222,6 @@ def build_and_print_info_fv_table(fview_obj: feature_view_mod.FeatureView) -> No
         "Parent Feature Groups",
         ", ".join([fg.name for fg in fview_obj.query.featuregroups]),
     )
-
     feature_table, serving_key_table = build_training_feature_table(fview_obj)
 
     verbose.get_rich_console().print(table, feature_table, serving_key_table)
