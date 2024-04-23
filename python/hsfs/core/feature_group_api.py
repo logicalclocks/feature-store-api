@@ -15,8 +15,11 @@
 #
 from __future__ import annotations
 
-from hsfs import client, feature_group, feature_group_commit
-from hsfs.core import explicit_provenance, ingestion_job
+from typing import List, Optional, Union
+
+from hsfs import client, feature_group_commit
+from hsfs import feature_group as fg_mod
+from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf
 
 
 class FeatureGroupApi:
@@ -28,7 +31,12 @@ class FeatureGroupApi:
     BACKEND_FG_EXTERNAL = "onDemandFeatureGroupDTO"
     BACKEND_FG_SPINE = "onDemandFeatureGroupDTO"
 
-    def save(self, feature_group_instance: feature_group.FeatureGroup):
+    def save(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup
+        ],
+    ) -> Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup]:
         """Save feature group metadata to the feature store.
 
         :param feature_group_instance: metadata object of feature group to be
@@ -56,7 +64,16 @@ class FeatureGroupApi:
         )
         return feature_group_object
 
-    def get_smart(self, feature_store_id, name, version):
+    def get_smart(
+        self, feature_store_id: int, name: str, version: Optional[int]
+    ) -> Union[
+        fg_mod.FeatureGroup,
+        fg_mod.SpineGroup,
+        fg_mod.ExternalFeatureGroup,
+        List[fg_mod.FeatureGroup],
+        List[fg_mod.SpineGroup],
+        List[fg_mod.ExternalFeatureGroup],
+    ]:
         """Get the metadata of a feature group with a certain name and version.
 
         :param feature_store_id: feature store id
@@ -88,13 +105,13 @@ class FeatureGroupApi:
                 fg_json["type"] == self.BACKEND_FG_STREAM
                 or fg_json["type"] == self.BACKEND_FG_BATCH
             ):
-                fg_objs.append(feature_group.FeatureGroup.from_response_json(fg_json))
+                fg_objs.append(fg_mod.FeatureGroup.from_response_json(fg_json))
             elif fg_json["type"] == self.BACKEND_FG_EXTERNAL:
                 if fg_json["spine"]:
-                    fg_objs.append(feature_group.SpineGroup.from_response_json(fg_json))
+                    fg_objs.append(fg_mod.SpineGroup.from_response_json(fg_json))
                 else:
                     fg_objs.append(
-                        feature_group.ExternalFeatureGroup.from_response_json(fg_json)
+                        fg_mod.ExternalFeatureGroup.from_response_json(fg_json)
                     )
             else:
                 raise ValueError(
@@ -107,44 +124,6 @@ class FeatureGroupApi:
             return fg_objs[0]
         else:
             return fg_objs
-
-    def get(self, feature_store_id, name, version, fg_type):
-        """Get the metadata of a feature group with a certain name and version.
-
-        :param feature_store_id: feature store id
-        :type feature_store_id: int
-        :param name: name of the feature group
-        :type name: str
-        :param version: version of the feature group
-        :type version: int
-        :param fg_type: type of the feature group to return
-        :type version: string
-        :return: feature group metadata object
-        :rtype: FeatureGroup
-        """
-        _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            feature_store_id,
-            "featuregroups",
-            name,
-        ]
-        query_params = None if version is None else {"version": version}
-        json_list = _client._send_request("GET", path_params, query_params)
-
-        if fg_type == self.CACHED:
-            fg_list = feature_group.FeatureGroup.from_response_json(json_list)
-        elif fg_type == self.SPINE:
-            fg_list = feature_group.SpineGroup.from_response_json(json_list)
-        else:
-            fg_list = feature_group.ExternalFeatureGroup.from_response_json(json_list)
-
-        if version is not None:
-            return fg_list[0]
-        else:
-            return fg_list
 
     def delete_content(self, feature_group_instance):
         """Delete the content of a feature group.
@@ -233,7 +212,11 @@ class FeatureGroupApi:
         )
         return feature_group_object
 
-    def commit(self, feature_group_instance, feature_group_commit_instance):
+    def commit(
+        self,
+        feature_group_instance: fg_mod.FeatureGroup,
+        feature_group_commit_instance: feature_group_commit.FeatureGroupCommit,
+    ) -> feature_group_commit.FeatureGroupCommit:
         """
         Save feature group commit metadata.
         # Arguments
@@ -264,7 +247,12 @@ class FeatureGroupApi:
             ),
         )
 
-    def get_commit_details(self, feature_group_instance, wallclock_timestamp, limit):
+    def get_commit_details(
+        self,
+        feature_group_instance: fg_mod.FeatureGroup,
+        wallclock_timestamp: int,
+        limit: int,
+    ):
         """
         Get feature group commit metadata.
         # Arguments
@@ -294,7 +282,11 @@ class FeatureGroupApi:
             _client._send_request("GET", path_params, query_params, headers=headers),
         )
 
-    def ingestion(self, feature_group_instance, ingestion_conf):
+    def ingestion(
+        self,
+        feature_group_instance: fg_mod.FeatureGroup,
+        ingestion_conf: ingestion_job_conf.IngestionJobConf,
+    ):
         """
         Setup a Hopsworks job for dataframe ingestion
         Args:
@@ -321,7 +313,12 @@ class FeatureGroupApi:
             ),
         )
 
-    def get_parent_feature_groups(self, feature_group_instance):
+    def get_parent_feature_groups(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.SpineGroup, fg_mod.ExternalFeatureGroup
+        ],
+    ) -> explicit_provenance.Links:
         """Get the parents of this feature group, based on explicit provenance.
         Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
@@ -358,7 +355,12 @@ class FeatureGroupApi:
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
 
-    def get_generated_feature_views(self, feature_group_instance):
+    def get_generated_feature_views(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.SpineGroup, fg_mod.ExternalFeatureGroup
+        ],
+    ) -> explicit_provenance.Links:
         """Get the generated feature view using this feature group, based on explicit
         provenance. These feature views can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature view links, so deleted
@@ -395,7 +397,12 @@ class FeatureGroupApi:
             explicit_provenance.Links.Type.FEATURE_VIEW,
         )
 
-    def get_generated_feature_groups(self, feature_group_instance):
+    def get_generated_feature_groups(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.SpineGroup, fg_mod.ExternalFeatureGroup
+        ],
+    ) -> explicit_provenance.Links:
         """Get the generated feature groups using this feature group, based on explicit
         provenance. These feature groups can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature group links, so deleted
