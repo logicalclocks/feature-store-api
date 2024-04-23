@@ -42,7 +42,7 @@ def make_list_fv_table(
 
 def make_rich_text_row(
     fv_dict: Dict[str, Any],
-    show_feature_list: bool,
+    show_features: bool,
     show_description: bool,
 ) -> Tuple[List[str], Optional[str], Optional[Table]]:
     fg_names = set([sk["feature_group"]["name"] for sk in fv_dict["serving_keys"]])
@@ -54,10 +54,13 @@ def make_rich_text_row(
     ]
     description = None
     if show_description and fv_dict["description"] is not None:
-        description = "  [bold]Description :[/bold]\n    " + fv_dict["description"]
+        if show_features:
+            description = "  [bold]Description :[/bold]\n    " + fv_dict["description"]
+        else:
+            description = fv_dict["description"]
 
     feature_table = None
-    if show_feature_list:
+    if show_features:
         feature_table = build_training_feature_bullets(fv_dict)
 
     return entries, description, feature_table

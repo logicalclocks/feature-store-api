@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from hsfs import feature as feature_mod
 from hsfs import feature_group as fg_mod
 from hsfs import util
 from hsfs.helpers import constants, verbose
@@ -142,40 +141,6 @@ def make_table_fg_list(
     return table
 
 
-def make_rich_text_fg_row_alt(
-    table: Table,
-    fgroup: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
-    show_feature_list: bool,
-):
-    fg_type = ""
-    if isinstance(fgroup, fg_mod.SpineGroup):
-        fg_type = constants.SHOW_FG_TYPE_MAPPING["spine"]
-    elif isinstance(fgroup, fg_mod.ExternalFeatureGroup):
-        fg_type = constants.SHOW_FG_TYPE_MAPPING["external"]
-    else:
-        fg_type = constants.SHOW_FG_TYPE_MAPPING["stream"]
-    online_status = "🟢 Real-Time" if fgroup.online_enabled else "🔴 Batch"
-    table.add_row(
-        fgroup.name, f"v{fgroup.version}", f"{fgroup.id}", fg_type, online_status
-    )
-
-    if show_feature_list:
-        nested_entry = ["" for _ in range(len(table.columns))]
-        nested_entry[0] = build_nested_feature_list_table(fgroup.features)
-        table.add_row(*nested_entry)
-
-
-def build_nested_feature_list_table(features: List[feature_mod.Feature]) -> Table:
-    feature_table = Table(show_header=True, header_style="bold", box=box.ASCII2)
-    feature_table.add_column("Features")
-    feature_table.add_column("Type")
-
-    for feature in features:
-        feature_table.add_row(feature.name, feature.type)
-
-    return feature_table
-
-
 def make_rich_text_row(
     fgroup: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup],
     show_description: bool,
@@ -200,7 +165,10 @@ def make_rich_text_row(
     if all(
         [show_description, fgroup.description is not None, len(fgroup.description) > 0]
     ):
-        description = "  [bold]Description :[/bold]\n    " + fgroup.description
+        if show_features:
+            description = "  [bold]Description :[/bold]\n    " + fgroup.description
+        else:
+            description = fgroup.description
 
     feature_table = None
     if show_features:
