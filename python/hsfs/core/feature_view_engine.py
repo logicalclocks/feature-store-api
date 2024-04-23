@@ -945,7 +945,7 @@ class FeatureViewEngine:
                 )
             ]
 
-        return sorted(fv_list, key=lambda fview: fview["name"])[:3]
+        return sorted(fv_list, key=lambda fview: fview["name"])
 
     def show_info(
         self, feature_view_obj: feature_view.FeatureView, show_features: bool = True
