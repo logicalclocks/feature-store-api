@@ -85,7 +85,7 @@ setup(
         ],
     },
     author="Hopsworks AB",
-    author_email="moritz@logicalclocks.com",
+    author_email="robin@logicalclocks.com",
     description="HSFS: An environment independent client to interact with the Hopsworks Featurestore",
     license="Apache License 2.0",
     keywords="Hopsworks, Feature Store, Spark, Machine Learning, MLOps, DataOps",
