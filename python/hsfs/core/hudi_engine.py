@@ -230,11 +230,10 @@ class HudiEngine:
         if sorted(self._spark_session.table(hudi_fg_alias.alias).columns) != sorted(
             self._spark_session.table(fg_table_name).columns
         ):
-            full_fg = self._feature_group_api.get(
-                hudi_fg_alias.feature_group._feature_store_id,
-                hudi_fg_alias.feature_group.name,
-                hudi_fg_alias.feature_group.version,
-                feature_group_api.FeatureGroupApi.CACHED,
+            full_fg = self._feature_group_api.get_smart(
+                feature_store_id=hudi_fg_alias.feature_group._feature_store_id,
+                name=hudi_fg_alias.feature_group.name,
+                version=hudi_fg_alias.feature_group.version,
             )
 
             save_empty_dataframe_callback(full_fg)
