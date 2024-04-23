@@ -40,7 +40,7 @@ from hsfs.core import (
     training_dataset_engine,
     transformation_function_engine,
 )
-from hsfs.helpers import richer_feature_view
+from hsfs.helpers.richer_repr import richer_feature_view
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
@@ -945,7 +945,7 @@ class FeatureViewEngine:
                 )
             ]
 
-        return sorted(fv_list, key=lambda fview: fview["name"])
+        return sorted(fv_list, key=lambda fview: fview["name"])[:3]
 
     def show_info(self, feature_view_obj: feature_view.FeatureView) -> None:
         richer_feature_view.build_and_print_info_fv_table(feature_view_obj)
@@ -960,6 +960,6 @@ class FeatureViewEngine:
             latest_version_only=latest_version_only,
             with_features=show_features,
         )
-        richer_feature_view.print_feature_views_table(
+        richer_feature_view.show_rich_table_feature_views(
             fview_dicts, show_features, show_description
         )

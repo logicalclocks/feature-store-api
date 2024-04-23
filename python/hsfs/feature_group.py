@@ -3262,6 +3262,9 @@ class FeatureGroup(FeatureGroupBase):
             and self._time_travel_format.upper() == "HUDI"
         )
 
+    def _show_info(self) -> None:
+        self._feature_group_engine.show_info(self)
+
     @property
     def id(self) -> Optional[int]:
         """Feature group id."""

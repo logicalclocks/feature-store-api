@@ -15,11 +15,12 @@
 #
 from __future__ import annotations
 
+import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from hsfs import feature_view as feature_view_mod
 from hsfs.helpers import verbose
-from rich import box
+from rich import box, print_json
 from rich.table import Table
 
 
@@ -68,13 +69,14 @@ def build_training_feature_bullets(fv_dict: Dict[str, Any]) -> Table:
     feature_table.add_column("  Features :")
     feature_table.add_column("")
     feature_table.add_column("")
+    print_json(json.dumps(fv_dict["features"]))
 
-    for feature in fv_dict["serving_keys"]:
+    for sk in fv_dict["serving_keys"]:
         feature_table.add_row(
-            f"    * {feature.get('prefix', '') + feature['feature_name']}",
-            feature["type"],
+            f"    * {sk.get('prefix', '') + sk['feature_name']}",
+            sk.get("join_on", ""),
             "serving key",
-            feature["feature_group"]["name"],
+            sk["feature_group"]["name"],
         )
 
     sk_names = [sk["feature_name"] for sk in fv_dict["serving_keys"]]
@@ -85,7 +87,7 @@ def build_training_feature_bullets(fv_dict: Dict[str, Any]) -> Table:
                 f"    * {feature['name']}",
                 feature["type"],
                 "",
-                feature["feature_group"]["name"],
+                feature["featuregroup"]["name"],
             )
 
     return feature_table
@@ -150,14 +152,14 @@ def build_training_feature_table(fview_obj: feature_view_mod.FeatureView) -> Tab
     )
 
     serving_key_table.add_column("Name")
-    serving_key_table.add_column("Type")
     serving_key_table.add_column("Required")
+    serving_key_table.add_column("JoinOn")
     serving_key_table.add_column("Feature Group")
 
     for serving_key in fview_obj.serving_keys:
         serving_key_table.add_row(
             serving_key.required_serving_key,
-            serving_key.type,
+            serving_key.join_on if serving_key.join_on else "N/A",
             "required" if serving_key.required else "optional",
             serving_key.feature_group.name,
         )
@@ -166,29 +168,60 @@ def build_training_feature_table(fview_obj: feature_view_mod.FeatureView) -> Tab
 
     feature_table.add_column("Name")
     feature_table.add_column("Type")
-    feature_table.add_column("Feature Group")
-    feature_table.add_column("Join")
+    # feature_table.add_column("JoinOn")
     feature_table.add_column("Extra")
+    if (
+        fview_obj.training_helper_columns
+        and len(fview_obj.transformation_functions) > 0
+    ):
+        feature_table.add_column("Transformation Function")
+    feature_table.add_column("Feature Group")
 
-    for feature in fview_obj.query.features:
-        join = ""
+    for feature in sorted(fview_obj.features, key=lambda x: x.feature_group.name):
         extra = ""
+        if feature.inference_helper_column:
+            extra += "inference helper,"
+        if feature.training_helper_column:
+            extra += "training helper,"
+        if feature.label:
+            extra += "label,"
+        if feature.index:
+            extra += "index,"
+
+        tf_name = ""
+        opt_tf_obj = fview_obj.transformation_functions.get(feature.name, None)
+        if opt_tf_obj:
+            tf_name = opt_tf_obj.name
+
         feature_table.add_row(
-            feature.name, feature.type, feature.feature_group.name, join, extra
+            feature.name,
+            feature.type,
+            feature.feature_group.name,
+            extra,
+            tf_name,
         )
 
     return feature_table, serving_key_table
 
 
 def build_and_print_info_fv_table(fview_obj: feature_view_mod.FeatureView) -> None:
-    table = Table(show_header=True, box=box.ASCII2)
-    table.add_column(fview_obj.name, justify="center", style="bold")
+    table = Table(
+        title="Properties",
+        title_justify="left",
+        title_style="bold",
+        show_header=False,
+        box=box.ASCII2,
+        expand=False,
+    )
+    # table.add_column("Properties", justify="center", style="bold")
+    table.add_column("")
+    table.add_column("")
     table.add_row("Name", fview_obj.name)
     table.add_row("Version", f"v{fview_obj.version}")
     table.add_row("ID", f"{fview_obj.id}")
     table.add_row(
         "Parent Feature Groups",
-        ", ".join([fg.name for fg in fview_obj.query.feature_groups]),
+        ", ".join([fg.name for fg in fview_obj.query.featuregroups]),
     )
 
     feature_table, serving_key_table = build_training_feature_table(fview_obj)

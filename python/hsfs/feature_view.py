@@ -3360,6 +3360,9 @@ class FeatureView:
             "type": "featureViewDTO",
         }
 
+    def _show_info(self) -> None:
+        self._feature_view_engine.show_info(self)
+
     @property
     def id(self) -> int:
         """Feature view id."""
