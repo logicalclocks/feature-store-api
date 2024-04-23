@@ -125,7 +125,10 @@ class FeatureGroupApi:
         else:
             return fg_objs
 
-    def delete_content(self, feature_group_instance):
+    def delete_content(
+        self,
+        feature_group_instance: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
+    ) -> None:
         """Delete the content of a feature group.
 
         This endpoint serves to simulate the overwrite/insert mode.
@@ -146,7 +149,12 @@ class FeatureGroupApi:
         ]
         _client._send_request("POST", path_params)
 
-    def delete(self, feature_group_instance):
+    def delete(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup
+        ],
+    ) -> None:
         """Drop a feature group from the feature store.
 
         Drops the metadata and data of a version of a feature group.
@@ -167,11 +175,15 @@ class FeatureGroupApi:
 
     def update_metadata(
         self,
-        feature_group_instance,
-        feature_group_copy,
-        query_parameter,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup
+        ],
+        feature_group_copy: Union[
+            fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup
+        ],
+        query_parameter: str,
         query_parameter_value=True,
-    ):
+    ) -> Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup]:
         """Update the metadata of a feature group.
 
         This only updates description and schema/features. The
@@ -252,7 +264,7 @@ class FeatureGroupApi:
         feature_group_instance: fg_mod.FeatureGroup,
         wallclock_timestamp: int,
         limit: int,
-    ):
+    ) -> feature_group_commit.FeatureGroupCommit:
         """
         Get feature group commit metadata.
         # Arguments
@@ -286,7 +298,7 @@ class FeatureGroupApi:
         self,
         feature_group_instance: fg_mod.FeatureGroup,
         ingestion_conf: ingestion_job_conf.IngestionJobConf,
-    ):
+    ) -> ingestion_job.IngestionJob:
         """
         Setup a Hopsworks job for dataframe ingestion
         Args:
