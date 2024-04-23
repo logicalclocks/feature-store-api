@@ -15,9 +15,9 @@
 #
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple, Union
 import base64
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import hsfs
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
