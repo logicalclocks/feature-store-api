@@ -9,6 +9,10 @@
     src="https://img.shields.io/badge/docs-HSFS-orange"
     alt="Hopsworks Feature Store Documentation"
   /></a>
+  <a><img 
+    src="https://img.shields.io/badge/python-3.8+-blue"
+    alt="python"
+  /></a>
   <a href="https://pypi.org/project/hsfs/"><img
     src="https://img.shields.io/pypi/v/hsfs?color=blue"
     alt="PyPiStatus"
@@ -21,12 +25,14 @@
     src="https://pepy.tech/badge/hsfs/month"
     alt="Downloads"
   /></a>
-  [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+  <a href=https://github.com/astral-sh/ruff><img 
+    src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" 
+    alt="Ruff"
+  /></a>
   <a><img
     src="https://img.shields.io/pypi/l/hsfs?color=green"
     alt="License"
   /></a>
-  [![Python Versions](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 </p>
 
 HSFS is the library to interact with the Hopsworks Feature Store. The library makes creating new features, feature groups and training datasets easy.
