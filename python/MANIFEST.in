@@ -1,2 +1,3 @@
 include ../README.md
 include ../LICENSE
+include hsfs/helpers/quicktours/feature_store.md
