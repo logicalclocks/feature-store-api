@@ -959,6 +959,8 @@ class TestFeatureGroupEngine:
             == "Features are not compatible with Feature Group schema: \n"
             " - f (type: 'str') is missing from input dataframe.\n"
             " - f1 (type: 'int') is missing from input dataframe."
+            "\nNote that feature (or column) names are case insensitive and "
+            "spaces are automatically replaced with underscores."
         )
 
     def test_verify_schema_compatibility_dataframe_features(self):
@@ -989,6 +991,8 @@ class TestFeatureGroupEngine:
             == "Features are not compatible with Feature Group schema: \n"
             " - f (type: 'str') does not exist in feature group.\n"
             " - f1 (type: 'int') does not exist in feature group."
+            "\nNote that feature (or column) names are case insensitive and "
+            "spaces are automatically replaced with underscores."
         )
 
     def test_verify_schema_compatibility_feature_group_features_dataframe_features(
@@ -1047,6 +1051,8 @@ class TestFeatureGroupEngine:
             str(e_info.value)
             == "Features are not compatible with Feature Group schema: \n"
             " - f1 (expected type: 'int', derived from input: 'bool') has the wrong type."
+            "\nNote that feature (or column) names are case insensitive and "
+            "spaces are automatically replaced with underscores."
         )
 
     def test_save_feature_group_metadata(self, mocker):

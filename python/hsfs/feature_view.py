@@ -125,19 +125,19 @@ class FeatureView:
             else {}
         )
         self._features = []
-        self._feature_view_engine = feature_view_engine.FeatureViewEngine(
+        self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
+            feature_view_engine.FeatureViewEngine(featurestore_id)
+        )
+        self._transformation_function_engine: transformation_function_engine.TransformationFunctionEngine = transformation_function_engine.TransformationFunctionEngine(
             featurestore_id
         )
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
-        )
-        self._single_vector_server = None
-        self._batch_vectors_server = None
-        self._batch_scoring_server = None
-        self._serving_keys = serving_keys
+        self._vector_server: Optional[vector_server.VectorServer] = None
+        self._batch_scoring_server: Optional[vector_server.VectorServer] = None
+        self._serving_keys = serving_keys if serving_keys else []
         self._prefix_serving_key_map = {}
-        self._vector_db_client = None
+        self._primary_keys: Set[str] = set()  # Lazy initialized via serving keys
 
+        self._vector_db_client = None
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
@@ -274,7 +274,6 @@ class FeatureView:
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
         """
-
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
         try:
@@ -296,37 +295,30 @@ class FeatureView:
             )
 
         # initiate single vector server
-        self._single_vector_server = vector_server.VectorServer(
+        self._vector_server = vector_server.VectorServer(
             self._featurestore_id,
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
-        self._single_vector_server.init_serving(
-            self, False, external, True, options=options
+        self._vector_server.init_serving(
+            entity=self,
+            external=external,
+            inference_helper_columns=True,
+            options=options,
         )
 
         self._prefix_serving_key_map = dict(
             [
                 (f"{sk.prefix}{sk.feature_name}", sk)
-                for sk in self._single_vector_server.serving_keys
+                for sk in self._vector_server.serving_keys
             ]
         )
-
-        # initiate batch vector server
-        self._batch_vectors_server = vector_server.VectorServer(
-            self._featurestore_id,
-            self._features,
-            training_dataset_version,
-            serving_keys=self._serving_keys,
-            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
-        )
-        self._batch_vectors_server.init_serving(
-            self, True, external, True, options=options
-        )
         if len(self._get_embedding_fgs()) > 0:
-            self._vector_db_client = VectorDbClient(self.query)
+            self._vector_db_client = VectorDbClient(
+                self.query, serving_keys=self._serving_keys
+            )
 
     def init_batch_scoring(
         self,
@@ -353,7 +345,6 @@ class FeatureView:
             training_dataset_version: int, optional. Default to be None. Transformation statistics
                 are fetched from training dataset and applied to the feature vector.
         """
-
         self._batch_scoring_server = vector_server.VectorServer(
             self._featurestore_id,
             self._features,
@@ -405,11 +396,9 @@ class FeatureView:
             self,
             start_time,
             end_time,
-            training_dataset_version=(
-                self._batch_scoring_server.training_dataset_version
-                if self._batch_scoring_server
-                else None
-            ),
+            training_dataset_version=self._batch_scoring_server.training_dataset_version
+            if self._batch_scoring_server
+            else None,
         )
 
     def get_feature_vector(
@@ -499,12 +488,12 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._single_vector_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
-        passed_features = self._update_with_vector_db_result(
-            self._single_vector_server, entry, passed_features
-        )
-        return self._single_vector_server.get_feature_vector(
+
+        if self._vector_db_client:
+            passed_features = self._update_with_vector_db_result(entry, passed_features)
+        return self._vector_server.get_feature_vector(
             entry, return_type, passed_features, allow_missing
         )
 
@@ -594,18 +583,17 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._batch_vectors_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
         updated_passed_feature = []
         for i in range(len(entry)):
             updated_passed_feature.append(
                 self._update_with_vector_db_result(
-                    self._batch_vectors_server,
                     entry[i],
                     passed_features[i] if passed_features else {},
                 )
             )
-        return self._batch_vectors_server.get_feature_vectors(
+        return self._vector_server.get_feature_vectors(
             entry, return_type, updated_passed_feature, allow_missing
         )
 
@@ -648,9 +636,9 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._single_vector_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
-        return self._single_vector_server.get_inference_helper(entry, return_type)
+        return self._vector_server.get_inference_helper(entry, return_type)
 
     def get_inference_helpers(
         self,
@@ -696,7 +684,7 @@ class FeatureView:
             return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
-            `pd.DataFrame`, `polars.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
+            `pd.DataFrame`, `polars.DataFrame` or `List[Dict[str, Any]]`.  Defaults to `pd.DataFrame`.
 
             Returned `pd.DataFrame` or `List[dict]`  contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
@@ -705,22 +693,20 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._batch_vectors_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
-        return self._batch_vectors_server.get_inference_helpers(
-            self, entry, return_type
-        )
+        return self._vector_server.get_inference_helpers(self, entry, return_type)
 
     def _update_with_vector_db_result(
         self,
-        vec_server: "vector_server.VectorServer",
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
         if not self._vector_db_client:
             return passed_features
+
         for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
-            complete, fg_entry = vec_server.filter_entry_by_join_index(
+            complete, fg_entry = self._vector_db_client.filter_entry_by_join_index(
                 entry, join_index
             )
             if not complete:
@@ -819,7 +805,7 @@ class FeatureView:
                 primary_key_map[sk.required_serving_key] = result_key[prefix_sk]
             elif sk.feature_name in result_key:  # fall back to use raw feature name
                 primary_key_map[sk.required_serving_key] = result_key[sk.feature_name]
-        if len(self._single_vector_server.required_serving_keys) > len(primary_key_map):
+        if len(self._vector_server.required_serving_keys) > len(primary_key_map):
             raise FeatureStoreException(
                 f"Failed to get feature vector because required primary key [{', '.join([k for k in set([sk.required_serving_key for sk in self._prefix_serving_key_map.values()]) - primary_key_map.keys()])}] are not present in vector db."
                 "If the join of the embedding feature group in the query does not have a prefix,"
@@ -909,7 +895,6 @@ class FeatureView:
             `numpy.ndarray`. A two-dimensional Numpy array.
             `list`. A two-dimensional Python list.
         """
-
         if self._batch_scoring_server is None:
             self.init_batch_scoring()
 
@@ -3426,7 +3411,7 @@ class FeatureView:
 
     @labels.setter
     def labels(self, labels: List[str]) -> None:
-        self._labels = [lb.lower() for lb in labels]
+        self._labels = [util.autofix_feature_name(lb) for lb in labels]
 
     @property
     def inference_helper_columns(self) -> List[str]:
@@ -3439,7 +3424,7 @@ class FeatureView:
     @inference_helper_columns.setter
     def inference_helper_columns(self, inference_helper_columns: List[str]) -> None:
         self._inference_helper_columns = [
-            exf.lower() for exf in inference_helper_columns
+            util.autofix_feature_name(exf) for exf in inference_helper_columns
         ]
 
     @property
@@ -3452,7 +3437,9 @@ class FeatureView:
 
     @training_helper_columns.setter
     def training_helper_columns(self, training_helper_columns: List[str]) -> None:
-        self._training_helper_columns = [exf.lower() for exf in training_helper_columns]
+        self._training_helper_columns = [
+            util.autofix_feature_name(exf) for exf in training_helper_columns
+        ]
 
     @property
     def description(self) -> Optional[str]:
@@ -3510,22 +3497,29 @@ class FeatureView:
         prefix is generated and prepended to the primary key name in this format
         "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
         """
-        _vector_server = self._single_vector_server or self._batch_vectors_server
-        if _vector_server:
-            return _vector_server.required_serving_keys
-        else:
-            _vector_server = vector_server.VectorServer(
-                self._featurestore_id,
-                self._features,
-                serving_keys=self._serving_keys,
-                skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+        if not (hasattr(self, "_primary_keys") and len(self._primary_keys) > 0):
+            self._primary_keys = set(
+                [key.required_serving_key for key in self.serving_keys]
             )
-            _vector_server.init_prepared_statement(self, False, False, False)
-            return _vector_server.required_serving_keys
+        return self._primary_keys
 
     @property
     def serving_keys(self) -> List[skm.ServingKey]:
         """All primary keys of the feature groups included in the query."""
+        if (
+            (not hasattr(self, "_serving_keys"))
+            or self._serving_keys is None
+            or len(self._serving_keys) == 0
+        ):
+            self._serving_keys = util.build_serving_keys_from_prepared_statements(
+                self._feature_view_engine._feature_view_api.get_serving_prepared_statement(
+                    name=self.name,
+                    version=self.version,
+                    batch=False,
+                    inference_helper_columns=False,
+                ),
+                ignore_prefix=True,  # if serving_keys have to be built it is because feature_view older than 3.3, this ensure compatibility
+            )
         return self._serving_keys
 
     @serving_keys.setter

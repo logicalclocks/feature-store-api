@@ -1604,7 +1604,7 @@ class FeatureGroupBase:
 
     @primary_key.setter
     def primary_key(self, new_primary_key: List[str]) -> None:
-        self._primary_key = [pk.lower() for pk in new_primary_key]
+        self._primary_key = [util.autofix_feature_name(pk) for pk in new_primary_key]
 
     def get_statistics(
         self,
@@ -2066,7 +2066,7 @@ class FeatureGroup(FeatureGroupBase):
             self.primary_key = primary_key
             self.partition_key = partition_key
             self._hudi_precombine_key = (
-                hudi_precombine_key.lower()
+                util.autofix_feature_name(hudi_precombine_key)
                 if hudi_precombine_key is not None
                 and self._time_travel_format is not None
                 and self._time_travel_format == "HUDI"
@@ -2254,6 +2254,7 @@ class FeatureGroup(FeatureGroupBase):
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
         min_score: Optional[float] = 0,
+        options: Optional[dict] = None,
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
@@ -2269,6 +2270,8 @@ class FeatureGroup(FeatureGroupBase):
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
             min_score: The minimum similarity score for neighbors to be considered (default is 0).
+            options: The options used for the request to the vector database.
+                The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
 
         # Returns
             A list of tuples representing the nearest neighbors.
@@ -2307,6 +2310,7 @@ class FeatureGroup(FeatureGroupBase):
             k=k,
             filter=filter,
             min_score=min_score,
+            options=options,
         )
         return [
             (result[0], [result[1][f.name] for f in self.features])
@@ -3357,11 +3361,13 @@ class FeatureGroup(FeatureGroupBase):
 
     @partition_key.setter
     def partition_key(self, new_partition_key: List[str]) -> None:
-        self._partition_key = [pk.lower() for pk in new_partition_key]
+        self._partition_key = [
+            util.autofix_feature_name(pk) for pk in new_partition_key
+        ]
 
     @hudi_precombine_key.setter
     def hudi_precombine_key(self, hudi_precombine_key: str) -> None:
-        self._hudi_precombine_key = hudi_precombine_key.lower()
+        self._hudi_precombine_key = util.autofix_feature_name(hudi_precombine_key)
 
     @stream.setter
     def stream(self, stream: bool) -> None:
@@ -3746,6 +3752,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
         min_score: Optional[float] = 0,
+        options: Optional[dict] = None,
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
@@ -3761,7 +3768,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
             min_score: The minimum similarity score for neighbors to be considered (default is 0).
-
+            options: The options used for the request to the vector database.
+                The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
         # Returns
             A list of tuples representing the nearest neighbors.
             Each tuple contains: `(The similarity score, A list of feature values)`
@@ -3799,6 +3807,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             k=k,
             filter=filter,
             min_score=min_score,
+            options=options,
         )
         return [
             (result[0], [result[1][f.name] for f in self.features])
