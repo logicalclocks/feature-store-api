@@ -6,6 +6,7 @@ readme = "README.md"
 description = "HSFS Python SDK to interact with Hopsworks Feature Store"
 keywords = ["Hopsworks", "Feature Store", "hsfs", "Spark", "Machine Learning", "MLOps", "DataOps"]
 authors = [{name = "Hopsworks AB", email = "robin@hopswors.ai"}]
+license = { text = "Apache-2.0" }
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -88,6 +89,12 @@ python = [
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "hsfs.version.__version__"}
 
 [project.urls]
 Documentation = "https://docs.hopsworks.ai/latest"
