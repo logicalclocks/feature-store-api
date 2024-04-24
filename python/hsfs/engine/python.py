@@ -166,7 +166,7 @@ class Engine:
     ):
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
             result_df = util.run_with_loading_animation(
-                "Reading data from Hopsworks, using ArrowFlight",
+                "Reading data from Hopsworks, using Hopsworks Feature Query Service",
                 arrow_flight_client.get_instance().read_query,
                 sql_query,
                 arrow_flight_config,
@@ -770,7 +770,7 @@ class Engine:
         ):
             query_obj, _ = dataset._prep_read(False, user_write_options)
             response = util.run_with_loading_animation(
-                "Materializing data to Hopsworks, using ArrowFlight",
+                "Materializing data to Hopsworks, using Hopsworks Feature Query Service",
                 arrow_flight_client.get_instance().create_training_dataset,
                 feature_view_obj,
                 training_dataset,

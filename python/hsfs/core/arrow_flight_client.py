@@ -550,7 +550,7 @@ class ArrowFlightClient:
 
     @property
     def timeout(self) -> Union[int, float]:
-        """Timeout in seconds for ArrowFlight do_get or do_action operations, not including the healthcheck."""
+        """Timeout in seconds for Hopsworks Feature Query Service do_get or do_action operations, not including the healthcheck."""
         return self._timeout
 
     @timeout.setter
@@ -568,7 +568,7 @@ class ArrowFlightClient:
 
     @property
     def host_url(self) -> Optional[str]:
-        """URL of the ArrowFlight server."""
+        """URL of Hopsworks Feature Query Service."""
         return self._host_url
 
     @host_url.setter
