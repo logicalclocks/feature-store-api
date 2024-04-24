@@ -26,7 +26,7 @@ jobs:
               - 'python/tests/**/*.py'
 
       - name: install deps
-        run: pip install ruff==0.3.5
+        run: pip install ruff==0.4.1
 
       - name: ruff on python files
         if: steps.get-changed-files.outputs.src_any_changed == 'true'
