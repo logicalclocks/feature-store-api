@@ -128,6 +128,11 @@ class ArrowFlightClient:
         self._health_check()
         self._register_certificates()
 
+    @retry(
+        wait_exponential_multiplier=1000,
+        stop_max_attempt_number=5,
+        retry_on_exception=_should_retry,
+    )
     def _health_check(self):
         action = pyarrow.flight.Action("healthcheck", b"")
         options = pyarrow.flight.FlightCallOptions(timeout=self.health_check_timeout)
