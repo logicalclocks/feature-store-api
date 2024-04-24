@@ -17,6 +17,7 @@
 import datetime
 import json
 import base64
+from typing import Union
 import warnings
 from functools import wraps
 
@@ -46,6 +47,10 @@ def close():
     _arrow_flight_instance = None
 
 
+def _should_retry(exception):
+    return isinstance(exception, pyarrow._flight.FlightUnavailableError)
+
+
 class ArrowFlightClient:
     SUPPORTED_FORMATS = ["parquet"]
     SUPPORTED_EXTERNAL_CONNECTORS = [
@@ -55,7 +60,7 @@ class ArrowFlightClient:
     FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
     READ_ERROR = 'Could not read data using ArrowFlight. If the issue persists, use read_options={"use_hive": True} instead.'
     WRITE_ERROR = 'Could not write data using ArrowFlight. If the issue persists, use write_options={"use_spark": True} instead.'
-    DEFAULT_TIMEOUT = 900
+    DEFAULT_TIMEOUT_SECONDS = 5
 
     def __init__(self):
         try:
@@ -71,6 +76,8 @@ class ArrowFlightClient:
                 self._initialize_connection()
             except Exception as e:
                 self._disable(str(e))
+
+        self._timeout = self.DEFAULT_TIMEOUT_SECONDS
 
     def _disable(self, message):
         self._is_enabled = False
@@ -114,7 +121,7 @@ class ArrowFlightClient:
 
     def _health_check(self):
         action = pyarrow.flight.Action("healthcheck", b"")
-        options = pyarrow.flight.FlightCallOptions(timeout=1)
+        options = pyarrow.flight.FlightCallOptions(timeout=self.timeout)
         list(self._connection.do_action(action, options=options))
 
     def _should_be_used(self, read_options):
@@ -204,9 +211,6 @@ class ArrowFlightClient:
 
         return decorator
 
-    def _should_retry(exception):
-        return isinstance(exception, pyarrow._flight.FlightUnavailableError)
-
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
@@ -215,7 +219,9 @@ class ArrowFlightClient:
     def get_flight_info(self, descriptor):
         return self._connection.get_flight_info(descriptor)
 
-    def _get_dataset(self, descriptor, timeout=DEFAULT_TIMEOUT):
+    def _get_dataset(self, descriptor, timeout=None):
+        if timeout is None:
+            timeout = self.timeout
         info = self.get_flight_info(descriptor)
         options = pyarrow.flight.FlightCallOptions(timeout=timeout)
         reader = self._connection.do_get(self._info_to_ticket(info), options)
@@ -227,15 +233,20 @@ class ArrowFlightClient:
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(
             descriptor,
-            arrow_flight_config.get("timeout")
+            timeout=arrow_flight_config.get("timeout", self.timeout)
             if arrow_flight_config
-            else self.DEFAULT_TIMEOUT,
+            else self.timeout,
         )
 
     @_handle_afs_exception(user_message=READ_ERROR)
     def read_path(self, path, arrow_flight_config):
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
-        return self._get_dataset(descriptor, arrow_flight_config)
+        return self._get_dataset(
+            descriptor,
+            timeout=arrow_flight_config.get("timeout", self.timeout)
+            if arrow_flight_config
+            else self.timeout,
+        )
 
     @_handle_afs_exception(user_message=WRITE_ERROR)
     def create_training_dataset(
@@ -257,9 +268,9 @@ class ArrowFlightClient:
                 "create-training-dataset", training_dataset_buf
             )
             timeout = (
-                arrow_flight_config.get("timeout", self.DEFAULT_TIMEOUT)
+                arrow_flight_config.get("timeout", self.timeout)
                 if arrow_flight_config
-                else self.DEFAULT_TIMEOUT
+                else self.timeout
             )
             options = pyarrow.flight.FlightCallOptions(timeout=timeout)
             for result in self._connection.do_action(action, options):
@@ -397,3 +408,15 @@ class ArrowFlightClient:
             if fg.storage_connector.type not in self.SUPPORTED_EXTERNAL_CONNECTORS:
                 return False
         return True
+
+    @property
+    def timeout(self) -> Union[int, float]:
+        return self._timeout
+
+    @timeout.setter
+    def timeout(self, value: Union[int, float]):
+        if value >= 100:
+            raise ValueError(
+                "Timeout value is in seconds, please choose a value accordingly (below 100)."
+            )
+        self._timeout = value
