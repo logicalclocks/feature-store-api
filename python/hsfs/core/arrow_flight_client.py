@@ -119,6 +119,8 @@ class ArrowFlightClient:
                 self._disable_for_session()
                 return
         except Exception as e:
+            _logger.debug("Failed to connect to Hopsworks Feature Query Service")
+            _logger.exception(e)
             self._disable_for_session(str(e))
             return
 
@@ -126,9 +128,8 @@ class ArrowFlightClient:
             self._health_check()
             self._register_certificates()
         except Exception as e:
-            _logger.debug(
-                "Failed to connect to Hopsworks Feature Query Service: %s", str(e)
-            )
+            _logger.debug("Failed to connect to Hopsworks Feature Query Service")
+            _logger.exception(e)
             warnings.warn(
                 f"Failed to connect to Hopsworks Feature Query Service, got {str(e)}."
                 + self.DEFAULTING_TO_DIFFERENT_SERVICE_FOR_CURRENT_CALL_WARNING
@@ -144,11 +145,12 @@ class ArrowFlightClient:
             )
             self._enabled_on_cluster = self._variable_api.get_flyingduck_enabled()
             self._missing_variable_name = None
-        except Exception:
+        except Exception as e:
             # if feature flag cannot be retrieved, assume it is disabled
             _logger.debug(
                 "Unable to fetch Hopsworks Feature Query Service flag, disabling HFQS client."
             )
+            _logger.exception(e)
             self._missing_variable_name = "enable_flyingduck"
 
     def _retrieve_host_url(self) -> Optional[str]:
@@ -216,6 +218,7 @@ class ArrowFlightClient:
         action = pyarrow.flight.Action("healthcheck", b"")
         options = pyarrow.flight.FlightCallOptions(timeout=self.health_check_timeout)
         list(self._connection.do_action(action, options=options))
+        _logger.debug("Healthcheck succeeded.")
         self._health_check_succeeded_once = True
 
     def _should_be_used(self, read_options):
@@ -240,6 +243,9 @@ class ArrowFlightClient:
             )
             return False
 
+        _logger.debug(
+            "Hopsworks Feature Query Service will be used if query/data_format/connector supported."
+        )
         return True
 
     def is_query_supported(self, query, read_options):
@@ -274,6 +280,7 @@ class ArrowFlightClient:
         return supported
 
     def _extract_certs(self, client):
+        _logger.debug("Extracting client certificates.")
         with open(client._get_ca_chain_path(), "rb") as f:
             tls_root_certs = f.read()
         with open(client._get_client_cert_path(), "r") as f:
@@ -283,6 +290,7 @@ class ArrowFlightClient:
         return tls_root_certs, cert_chain, private_key
 
     def _encode_certs(self, path):
+        _logger.debug(f"Encoding certificates from path: {path}")
         with open(path, "rb") as f:
             content = f.read()
             return base64.b64encode(content).decode("utf-8")
@@ -293,7 +301,6 @@ class ArrowFlightClient:
         retry_on_exception=_should_retry_healthcheck_or_certificate_registration,
     )
     def _register_certificates(self):
-        _logger.debug("Encoding client certificates.")
         kstore = self._encode_certs(self._client._get_jks_key_store_path())
         tstore = self._encode_certs(self._client._get_jks_trust_store_path())
         cert_key = self._client._cert_key
@@ -310,6 +317,7 @@ class ArrowFlightClient:
             "Registering client certificates with Hopsworks Feature Query Service."
         )
         self._connection.do_action(action, options=options)
+        _logger.debug("Client certificates registered.")
         self._ready = True
 
     def _handle_afs_exception(user_message="None"):
@@ -320,6 +328,8 @@ class ArrowFlightClient:
                     return func(instance, *args, **kw)
                 except Exception as e:
                     message = str(e)
+                    _logger.debug("Caught exception in %s: %s", func.__name__, message)
+                    _logger.exception(e)
                     if (
                         isinstance(e, FlightServerError)
                         and "Please register client certificates first." in message
@@ -354,6 +364,11 @@ class ArrowFlightClient:
             options=options,
         )
 
+    @retry(
+        wait_exponential_multiplier=1000,
+        stop_max_attempt_number=3,
+        retry_on_exception=_should_retry,
+    )
     def _get_dataset(self, descriptor, timeout=None):
         if timeout is None:
             timeout = self.timeout
@@ -364,6 +379,7 @@ class ArrowFlightClient:
         _logger.debug("Dataset fetched. Converting to dataframe.")
         return reader.read_pandas()
 
+    # retry is handled in get_dataset
     @_handle_afs_exception(user_message=READ_ERROR)
     def read_query(self, query_object, arrow_flight_config):
         query_encoded = json.dumps(query_object).encode("ascii")
@@ -375,6 +391,7 @@ class ArrowFlightClient:
             else self.timeout,
         )
 
+    # retry is handled in get_dataset
     @_handle_afs_exception(user_message=READ_ERROR)
     def read_path(self, path, arrow_flight_config):
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
@@ -385,6 +402,7 @@ class ArrowFlightClient:
             else self.timeout,
         )
 
+    # we cannot retry this operation as it is a write operation
     @_handle_afs_exception(user_message=WRITE_ERROR)
     def create_training_dataset(
         self, feature_view_obj, training_dataset_obj, query_obj, arrow_flight_config
@@ -397,7 +415,7 @@ class ArrowFlightClient:
         training_dataset["fv_version"] = feature_view_obj.version
         training_dataset["tds_version"] = training_dataset_obj.version
         training_dataset["query"] = query_obj
-
+        _logger.debug(f"Creating training dataset: {training_dataset}")
         try:
             training_dataset_encoded = json.dumps(training_dataset).encode("ascii")
             training_dataset_buf = pyarrow.py_buffer(training_dataset_encoded)
@@ -413,6 +431,8 @@ class ArrowFlightClient:
             for result in self._connection.do_action(action, options):
                 return result.body.to_pybytes()
         except pyarrow.lib.ArrowIOError as e:
+            _logger.debug("Caught ArrowIOError in create_training_dataset: %s", str(e))
+            _logger.exception(e)
             print("Error calling action:", e)
 
     def is_flyingduck_query_object(self, query_obj):
