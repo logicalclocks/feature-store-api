@@ -232,7 +232,12 @@ class ArrowFlightClient:
         retry_on_exception=_should_retry,
     )
     def get_flight_info(self, descriptor):
-        return self._connection.get_flight_info(descriptor)
+        # The timeout needs not be as long as timeout for do_get or do_action
+        options = pyarrow.flight.FlightCallOptions(timeout=self.health_check_timeout)
+        return self._connection.get_flight_info(
+            descriptor,
+            options=options,
+        )
 
     def _get_dataset(self, descriptor, timeout=None):
         if timeout is None:
