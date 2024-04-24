@@ -60,7 +60,9 @@ class ArrowFlightClient:
     FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
     READ_ERROR = 'Could not read data using ArrowFlight. If the issue persists, use read_options={"use_hive": True} instead.'
     WRITE_ERROR = 'Could not write data using ArrowFlight. If the issue persists, use write_options={"use_spark": True} instead.'
-    DEFAULT_TIMEOUT_SECONDS = 5
+    DEFAULT_TIMEOUT_SECONDS = 900
+    DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS = 5
+    DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS = 2000
 
     def __init__(self):
         try:
@@ -78,6 +80,7 @@ class ArrowFlightClient:
                 self._disable(str(e))
 
         self._timeout = self.DEFAULT_TIMEOUT_SECONDS
+        self._health_check_timeout = self.DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS
 
     def _disable(self, message):
         self._is_enabled = False
@@ -115,13 +118,19 @@ class ArrowFlightClient:
             cert_chain=cert_chain,
             private_key=private_key,
             override_hostname="flyingduck.service.consul",
+            generic_options=[
+                (
+                    "GRPC_ARG_MIN_RECONNECT_BACKOFF_MS",
+                    self.DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS,
+                )
+            ],
         )
         self._health_check()
         self._register_certificates()
 
     def _health_check(self):
         action = pyarrow.flight.Action("healthcheck", b"")
-        options = pyarrow.flight.FlightCallOptions(timeout=self.timeout)
+        options = pyarrow.flight.FlightCallOptions(timeout=self.health_check_timeout)
         list(self._connection.do_action(action, options=options))
 
     def _should_be_used(self, read_options):
@@ -411,12 +420,18 @@ class ArrowFlightClient:
 
     @property
     def timeout(self) -> Union[int, float]:
+        """Timeout in seconds for ArrowFlight do_get or do_action operations, not including the healthcheck."""
         return self._timeout
 
     @timeout.setter
     def timeout(self, value: Union[int, float]):
-        if value >= 100:
-            raise ValueError(
-                "Timeout value is in seconds, please choose a value accordingly (below 100)."
-            )
         self._timeout = value
+
+    @property
+    def health_check_timeout(self) -> Union[int, float]:
+        """Timeout in seconds for the healthcheck operation."""
+        return self._health_check_timeout
+
+    @health_check_timeout.setter
+    def health_check_timeout(self, value: Union[int, float]):
+        self._health_check_timeout = value
