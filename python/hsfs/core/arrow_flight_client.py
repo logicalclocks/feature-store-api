@@ -65,6 +65,9 @@ class ArrowFlightClient:
     DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS = 2000
 
     def __init__(self):
+        self._timeout = self.DEFAULT_TIMEOUT_SECONDS
+        self._health_check_timeout = self.DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS
+
         try:
             self._variable_api = VariableApi()
             self._is_enabled = self._variable_api.get_flyingduck_enabled()
@@ -78,9 +81,6 @@ class ArrowFlightClient:
                 self._initialize_connection()
             except Exception as e:
                 self._disable(str(e))
-
-        self._timeout = self.DEFAULT_TIMEOUT_SECONDS
-        self._health_check_timeout = self.DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS
 
     def _disable(self, message):
         self._is_enabled = False
