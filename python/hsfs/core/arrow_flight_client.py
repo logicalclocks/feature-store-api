@@ -120,6 +120,7 @@ class ArrowFlightClient:
             override_hostname="flyingduck.service.consul",
             generic_options=[
                 (
+                    # https://arrow.apache.org/docs/cpp/flight.html#excessive-traffic
                     "GRPC_ARG_MIN_RECONNECT_BACKOFF_MS",
                     self.DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS,
                 )
