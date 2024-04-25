@@ -33,6 +33,7 @@ import os
 import sys
 import pytz
 from datetime import datetime, timezone
+from pathlib import Path
 
 import great_expectations as ge
 
@@ -239,6 +240,9 @@ class Engine:
                 )
             )
 
+    def _is_metadata_file(self, path):
+        return Path(path).stem.startswith("_")
+
     def _read_hopsfs(self, location, data_format, read_options={}):
         # providing more informative error
         try:
@@ -252,7 +256,7 @@ class Engine:
         for path in path_list:
             if (
                 hdfs.path.isfile(path)
-                and not path.endswith("_SUCCESS")
+                and not self._is_metadata_file(path)
                 and hdfs.path.getsize(path) > 0
             ):
                 df_list.append(self._read_pandas(data_format, path))
@@ -272,7 +276,7 @@ class Engine:
             )
 
             for inode in inode_list:
-                if not inode.path.endswith("_SUCCESS"):
+                if not self._is_metadata_file(inode.path):
                     if arrow_flight_client.get_instance().is_data_format_supported(
                         data_format, read_options
                     ):
@@ -330,7 +334,7 @@ class Engine:
                 )
 
             for obj in object_list["Contents"]:
-                if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
+                if not self._is_metadata_file(obj["Key"]) and obj["Size"] > 0:
                     obj = s3.get_object(
                         Bucket=storage_connector.bucket,
                         Key=obj["Key"],
