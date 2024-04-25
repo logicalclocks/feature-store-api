@@ -151,9 +151,7 @@ class Engine:
             )
 
     def is_flyingduck_query_supported(self, query, read_options={}):
-        return arrow_flight_client.get_instance().is_query_supported(
-            query, read_options
-        )
+        return arrow_flight_client.is_query_supported(query, read_options)
 
     def _sql_offline(
         self,
@@ -164,7 +162,7 @@ class Engine:
         hive_config=None,
         arrow_flight_config={},
     ):
-        if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
+        if isinstance(sql_query, dict) and "query_string" in sql_query:
             result_df = util.run_with_loading_animation(
                 "Reading data from Hopsworks, using Hopsworks Feature Query Service",
                 arrow_flight_client.get_instance().read_query,
@@ -273,7 +271,7 @@ class Engine:
 
             for inode in inode_list:
                 if not inode.path.endswith("_SUCCESS"):
-                    if arrow_flight_client.get_instance().is_data_format_supported(
+                    if arrow_flight_client.is_data_format_supported(
                         data_format, read_options
                     ):
                         arrow_flight_config = read_options.get("arrow_flight_config")
@@ -761,9 +759,7 @@ class Engine:
             )
 
         if (
-            arrow_flight_client.get_instance().is_query_supported(
-                dataset, user_write_options
-            )
+            arrow_flight_client.is_query_supported(dataset, user_write_options)
             and len(training_dataset.splits) == 0
             and len(training_dataset.transformation_functions) == 0
             and training_dataset.data_format == "parquet"

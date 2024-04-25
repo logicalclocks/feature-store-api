@@ -13,15 +13,17 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import datetime
 import json
 import base64
 import logging
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 import warnings
 from functools import wraps
 
+from hsfs.constructor import query
 import pyarrow
 import pyarrow._flight
 import pyarrow.flight
@@ -62,6 +64,12 @@ def _is_feature_query_service_queue_full_error(exception):
     ) and "no free slot available for" in str(exception)
 
 
+def _is_no_commits_found_error(exception):
+    return isinstance(
+        exception, pyarrow._flight.FlightServerError
+    ) and "No commits found" in str(exception)
+
+
 def _should_retry_healthcheck_or_certificate_registration(exception):
     return (
         isinstance(exception, pyarrow._flight.FlightUnavailableError)
@@ -69,6 +77,50 @@ def _should_retry_healthcheck_or_certificate_registration(exception):
         # not applicable for healthcheck, only certificate registration
         or _is_feature_query_service_queue_full_error(exception)
     )
+
+
+# Avoid unnecessary client init
+def is_data_format_supported(data_format: str, read_options: Optional[Dict[str, Any]]):
+    if data_format not in ArrowFlightClient.SUPPORTED_FORMATS:
+        return False
+    elif read_options and (
+        read_options.get("use_hive", False) or read_options.get("use_spark", False)
+    ):
+        return False
+    else:
+        return get_instance()._should_be_used()
+
+
+def _is_query_supported_rec(query: query.Query):
+    hudi_no_time_travel = (
+        isinstance(query._left_feature_group, feature_group.FeatureGroup)
+        and query._left_feature_group.time_travel_format == "HUDI"
+        and (
+            query._left_feature_group_start_time is None
+            or query._left_feature_group_start_time == 0
+        )
+        and query._left_feature_group_end_time is None
+    )
+    supported_connector = (
+        isinstance(query._left_feature_group, feature_group.ExternalFeatureGroup)
+        and query._left_feature_group.storage_connector.type
+        in ArrowFlightClient.SUPPORTED_EXTERNAL_CONNECTORS
+    )
+    supported = hudi_no_time_travel or supported_connector
+    for j in query._joins:
+        supported &= _is_query_supported_rec(j._query)
+    return supported
+
+
+def is_query_supported(query: query.Query, read_options: Optional[Dict[str, Any]]):
+    if read_options and (
+        read_options.get("use_hive", False) or read_options.get("use_spark", False)
+    ):
+        return False
+    elif not _is_query_supported_rec(query):
+        return False
+    else:
+        return get_instance()._should_be_used()
 
 
 class ArrowFlightClient:
@@ -98,6 +150,7 @@ class ArrowFlightClient:
         self._enabled_on_cluster: bool = False
         self._disabled_for_session: bool = False
         self._host_url: Optional[str] = None
+        self._connection: Optional[pyarrow.flight.FlightClient] = None
 
         self._client = client.get_instance()
         self._variable_api: VariableApi = VariableApi()
@@ -211,15 +264,7 @@ class ArrowFlightClient:
         list(self._connection.do_action(action, options=options))
         _logger.debug("Healthcheck succeeded.")
 
-    def _should_be_used(self, read_options):
-        if read_options and (
-            read_options.get("use_hive", False) or read_options.get("use_spark", False)
-        ):
-            _logger.debug(
-                "Hopsworks Feature Query Service not used based on read_options."
-            )
-            return False
-
+    def _should_be_used(self):
         if not self._enabled_on_cluster:
             _logger.debug(
                 "Hopsworks Feature Query Service not used as it is disabled on the cluster."
@@ -236,37 +281,6 @@ class ArrowFlightClient:
             "Hopsworks Feature Query Service will be used if query/data_format/connector supported."
         )
         return True
-
-    def is_query_supported(self, query, read_options):
-        return self._should_be_used(read_options) and self._is_query_supported_rec(
-            query
-        )
-
-    def is_data_format_supported(self, data_format, read_options):
-        return (
-            self._should_be_used(read_options)
-            and data_format in ArrowFlightClient.SUPPORTED_FORMATS
-        )
-
-    def _is_query_supported_rec(self, query):
-        hudi_no_time_travel = (
-            isinstance(query._left_feature_group, feature_group.FeatureGroup)
-            and query._left_feature_group.time_travel_format == "HUDI"
-            and (
-                query._left_feature_group_start_time is None
-                or query._left_feature_group_start_time == 0
-            )
-            and query._left_feature_group_end_time is None
-        )
-        supported_connector = (
-            isinstance(query._left_feature_group, feature_group.ExternalFeatureGroup)
-            and query._left_feature_group.storage_connector.type
-            in ArrowFlightClient.SUPPORTED_EXTERNAL_CONNECTORS
-        )
-        supported = hudi_no_time_travel or supported_connector
-        for j in query._joins:
-            supported &= self._is_query_supported_rec(j._query)
-        return supported
 
     def _extract_certs(self):
         _logger.debug("Extracting client certificates.")
@@ -324,13 +338,12 @@ class ArrowFlightClient:
                     ):
                         instance._register_certificates()
                         return func(instance, *args, **kw)
-                    elif (
-                        isinstance(e, FlightServerError)
-                        and "no free slot available for" in message
-                    ):
+                    elif _is_feature_query_service_queue_full_error(e):
                         raise FeatureStoreException(
                             "Hopsworks Feature Query Service is busy right now. Please try again later."
                         ) from e
+                    elif _is_no_commits_found_error(e):
+                        raise FeatureStoreException(str(e).split("Details:")[0]) from e
                     else:
                         raise FeatureStoreException(user_message) from e
 
@@ -340,12 +353,12 @@ class ArrowFlightClient:
 
     @retry(
         wait_exponential_multiplier=1000,
-        stop_max_attempt_number=5,
+        stop_max_attempt_number=3,
         retry_on_exception=_should_retry,
     )
     def get_flight_info(self, descriptor):
         # The timeout needs not be as long as timeout for do_get or do_action
-        _logger.debug(f"Getting flight info for descriptor: {descriptor!r}")
+        _logger.debug("Getting flight info for descriptor: %s", str(descriptor))
         options = pyarrow.flight.FlightCallOptions(timeout=self.health_check_timeout)
         return self._connection.get_flight_info(
             descriptor,
@@ -361,9 +374,9 @@ class ArrowFlightClient:
         if timeout is None:
             timeout = self.timeout
         info = self.get_flight_info(descriptor)
-        _logger.debug(f"Retrieved flight info: {info!r}. Fetching dataset.")
+        _logger.debug("Retrieved flight info: %s. Fetching dataset.", str(info))
         options = pyarrow.flight.FlightCallOptions(timeout=timeout)
-        reader = self._connection.do_get(self._info_to_ticket(info), options)
+        reader = self._connection.do_get(info.endpoints[0].ticket, options)
         _logger.debug("Dataset fetched. Converting to dataframe.")
         return reader.read_pandas()
 
@@ -433,137 +446,29 @@ class ArrowFlightClient:
             _logger.exception(e)
             print("Error calling action:", e)
 
-    def is_flyingduck_query_object(self, query_obj):
-        return isinstance(query_obj, dict) and "query_string" in query_obj
-
     def create_query_object(self, query, query_str, on_demand_fg_aliases=[]):
         features = {}
         connectors = {}
         for fg in query.featuregroups:
-            fg_name = self._serialize_featuregroup_name(fg)
-            fg_connector = self._serialize_featuregroup_connector(
+            fg_name = _serialize_featuregroup_name(fg)
+            fg_connector = _serialize_featuregroup_connector(
                 fg, query, on_demand_fg_aliases
             )
             features[fg_name] = [feat.name for feat in fg.features]
             connectors[fg_name] = fg_connector
-        filters = self._serialize_filter_expression(query.filters, query)
+        filters = _serialize_filter_expression(query.filters, query)
 
         query = {
-            "query_string": self._translate_to_duckdb(query, query_str),
+            "query_string": _translate_to_duckdb(query, query_str),
             "features": features,
             "filters": filters,
             "connectors": connectors,
         }
         return query
 
-    def _serialize_featuregroup_connector(self, fg, query, on_demand_fg_aliases):
-        connector = {}
-        if isinstance(fg, feature_group.ExternalFeatureGroup):
-            connector["type"] = fg.storage_connector.type
-            connector["options"] = fg.storage_connector.connector_options()
-            connector["query"] = fg.query[:-1] if fg.query.endswith(";") else fg.query
-            for on_demand_fg_alias in on_demand_fg_aliases:
-                if on_demand_fg_alias.on_demand_feature_group.name == fg.name:
-                    connector["alias"] = on_demand_fg_alias.alias
-                    break
-            if query._left_feature_group == fg:
-                connector["filters"] = self._serialize_filter_expression(
-                    query._filter, query, True
-                )
-            else:
-                for join_obj in query._joins:
-                    if join_obj._query._left_feature_group == fg:
-                        connector["filters"] = self._serialize_filter_expression(
-                            join_obj._query._filter, join_obj._query, True
-                        )
-        else:
-            connector["type"] = "hudi"
-
-        return connector
-
-    def _serialize_featuregroup_name(self, fg):
-        return f"{fg._get_project_name()}.{fg.name}_{fg.version}"
-
-    def _serialize_filter_expression(self, filters, query, short_name=False):
-        if filters is None:
-            return None
-        return self._serialize_logic(filters, query, short_name)
-
-    def _serialize_logic(self, logic, query, short_name):
-        return {
-            "type": "logic",
-            "logic_type": logic._type,
-            "left_filter": self._serialize_filter_or_logic(
-                logic._left_f, logic._left_l, query, short_name
-            ),
-            "right_filter": self._serialize_filter_or_logic(
-                logic._right_f, logic._right_l, query, short_name
-            ),
-        }
-
-    def _serialize_filter_or_logic(self, filter, logic, query, short_name):
-        if filter:
-            return self._serialize_filter(filter, query, short_name)
-        elif logic:
-            return self._serialize_logic(logic, query, short_name)
-        else:
-            return None
-
-    def _serialize_filter(self, filter, query, short_name):
-        if isinstance(filter._value, datetime.datetime):
-            filter_value = filter._value.strftime("%Y-%m-%d %H:%M:%S")
-        else:
-            filter_value = filter._value
-
-        return {
-            "type": "filter",
-            "condition": filter._condition,
-            "value": filter_value,
-            "feature": self._serialize_feature_name(filter._feature, query, short_name),
-        }
-
-    def _serialize_feature_name(self, feature, query, short_name):
-        if short_name:
-            return feature.name
-
-        fg = query._get_featuregroup_by_feature(feature)
-        fg_name = self._serialize_featuregroup_name(fg)
-        return f"{fg_name}.{feature.name}"
-
-    def _translate_to_duckdb(self, query, query_str):
-        translated = query_str
-        for fg in query.featuregroups:
-            translated = translated.replace(
-                f"`{fg.feature_store_name}`.`",
-                f"`{fg._get_project_name()}.",
-            )
-        return translated.replace("`", '"')
-
-    def _info_to_ticket(self, info):
-        return info.endpoints[0].ticket
-
     def is_enabled(self):
         if self._disabled_for_session or not self._enabled_on_cluster:
             return False
-        return True
-
-    def supports(self, featuregroups):
-        if len(featuregroups) > sum(
-            1
-            for fg in featuregroups
-            if isinstance(
-                fg,
-                (feature_group.FeatureGroup, feature_group.ExternalFeatureGroup),
-            )
-        ):
-            # Contains unsupported feature group types such as a spine group
-            return False
-
-        for fg in filter(
-            lambda fg: isinstance(fg, feature_group.ExternalFeatureGroup), featuregroups
-        ):
-            if fg.storage_connector.type not in self.SUPPORTED_EXTERNAL_CONNECTORS:
-                return False
         return True
 
     @property
@@ -602,3 +507,115 @@ class ArrowFlightClient:
     def enabled_on_cluster(self) -> bool:
         """Whether the client is enabled on the cluster."""
         return self._enabled_on_cluster
+
+
+def _serialize_featuregroup_connector(fg, query, on_demand_fg_aliases):
+    connector = {}
+    if isinstance(fg, feature_group.ExternalFeatureGroup):
+        connector["type"] = fg.storage_connector.type
+        connector["options"] = fg.storage_connector.connector_options()
+        connector["query"] = fg.query[:-1] if fg.query.endswith(";") else fg.query
+        for on_demand_fg_alias in on_demand_fg_aliases:
+            if on_demand_fg_alias.on_demand_feature_group.name == fg.name:
+                connector["alias"] = on_demand_fg_alias.alias
+                break
+        if query._left_feature_group == fg:
+            connector["filters"] = _serialize_filter_expression(
+                query._filter, query, True
+            )
+        else:
+            for join_obj in query._joins:
+                if join_obj._query._left_feature_group == fg:
+                    connector["filters"] = _serialize_filter_expression(
+                        join_obj._query._filter, join_obj._query, True
+                    )
+    else:
+        connector["type"] = "hudi"
+    return connector
+
+
+def _serialize_featuregroup_name(fg):
+    return f"{fg._get_project_name()}.{fg.name}_{fg.version}"
+
+
+def _serialize_filter_expression(filters, query, short_name=False):
+    if filters is None:
+        return None
+    return _serialize_logic(filters, query, short_name)
+
+
+def _serialize_logic(logic, query, short_name):
+    return {
+        "type": "logic",
+        "logic_type": logic._type,
+        "left_filter": _serialize_filter_or_logic(
+            logic._left_f, logic._left_l, query, short_name
+        ),
+        "right_filter": _serialize_filter_or_logic(
+            logic._right_f, logic._right_l, query, short_name
+        ),
+    }
+
+
+def _serialize_filter_or_logic(filter, logic, query, short_name):
+    if filter:
+        return _serialize_filter(filter, query, short_name)
+    elif logic:
+        return _serialize_logic(logic, query, short_name)
+    else:
+        return None
+
+
+def _serialize_filter(filter, query, short_name):
+    if isinstance(filter._value, datetime.datetime):
+        filter_value = filter._value.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        filter_value = filter._value
+
+    return {
+        "type": "filter",
+        "condition": filter._condition,
+        "value": filter_value,
+        "feature": _serialize_feature_name(filter._feature, query, short_name),
+    }
+
+
+def _serialize_feature_name(feature, query, short_name):
+    if short_name:
+        return feature.name
+    fg = query._get_featuregroup_by_feature(feature)
+    fg_name = _serialize_featuregroup_name(fg)
+    return f"{fg_name}.{feature.name}"
+
+
+def _translate_to_duckdb(query, query_str):
+    translated = query_str
+    for fg in query.featuregroups:
+        translated = translated.replace(
+            f"`{fg.feature_store_name}`.`",
+            f"`{fg._get_project_name()}.",
+        )
+    return translated.replace("`", '"')
+
+
+def supports(featuregroups):
+    if len(featuregroups) > sum(
+        1
+        for fg in featuregroups
+        if isinstance(
+            fg,
+            (feature_group.FeatureGroup, feature_group.ExternalFeatureGroup),
+        )
+    ):
+        # Contains unsupported feature group types such as a spine group
+        return False
+
+    for fg in filter(
+        lambda fg: isinstance(fg, feature_group.ExternalFeatureGroup), featuregroups
+    ):
+        if (
+            fg.storage_connector.type
+            not in ArrowFlightClient.SUPPORTED_EXTERNAL_CONNECTORS
+        ):
+            return False
+    return True

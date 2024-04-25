@@ -2108,9 +2108,7 @@ class TestFeatureViewEngine:
         )
 
         assert arrow_flight_client.get_instance().is_enabled()
-        assert arrow_flight_client.get_instance().supports(
-            mock_constructor_query.featuregroups
-        )
+        assert arrow_flight_client.supports(mock_constructor_query.featuregroups)
 
         # Act
         # All good if we don't get an exception

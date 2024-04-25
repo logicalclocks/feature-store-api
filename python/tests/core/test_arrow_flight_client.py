@@ -552,9 +552,7 @@ class TestArrowFlightClient:
         )
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
-            [external_feature_group]
-        )
+        supported = arrow_flight_client.supports([external_feature_group])
 
         # Assert
         assert supported
@@ -573,9 +571,7 @@ class TestArrowFlightClient:
         )
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
-            [external_feature_group]
-        )
+        supported = arrow_flight_client.supports([external_feature_group])
 
         # Assert
         assert not supported
@@ -589,7 +585,7 @@ class TestArrowFlightClient:
         mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
+        supported = arrow_flight_client.supports(
             [external_feature_group, mock_feature_group]
         )
 
@@ -604,7 +600,7 @@ class TestArrowFlightClient:
         mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
+        supported = arrow_flight_client.supports(
             [external_feature_group, mock_feature_group]
         )
 
@@ -617,9 +613,7 @@ class TestArrowFlightClient:
         mock_sping = MagicMock(spec=feature_group.SpineGroup)
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
-            [mock_feature_group, mock_sping]
-        )
+        supported = arrow_flight_client.supports([mock_feature_group, mock_sping])
 
         # Assert
         assert not supported
