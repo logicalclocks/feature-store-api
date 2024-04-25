@@ -97,11 +97,7 @@ class ArrowFlightClient:
 
         self._enabled_on_cluster: bool = False
         self._disabled_for_session: bool = False
-        self._missing_variable_name = None
         self._host_url: Optional[str] = None
-
-        self._health_check_succeeded_once: bool = False
-        self._ready: bool = False
 
         self._client = client.get_instance()
         self._variable_api: VariableApi = VariableApi()
@@ -110,13 +106,15 @@ class ArrowFlightClient:
             self._check_cluster_service_enabled()
             self._host_url = self._retrieve_host_url()
 
-            if self._enabled_on_cluster or self._missing_variable_name is None:
+            if self._enabled_on_cluster:
                 _logger.debug(
                     "Hopsworks Feature Query Service is enabled on the cluster."
                 )
                 self._initialize_flight_client()
             else:
-                # the service is disabled on the cluster or there is a missing variable
+                _logger.debug(
+                    "Hopsworks Feature Query Service Client is not enabled on the cluster or a cluster variable is misconfigured."
+                )
                 self._disable_for_session()
                 return
         except Exception as e:
@@ -136,7 +134,6 @@ class ArrowFlightClient:
                 + self.DEFAULTING_TO_DIFFERENT_SERVICE_WARNING
                 + self.CLIENT_WILL_STAY_ACTIVE_WARNING
             )
-            self._ready = False
             return
 
     def _check_cluster_service_enabled(self) -> None:
@@ -145,27 +142,26 @@ class ArrowFlightClient:
                 "Connecting to Hopsworks Cluster to check if Feature Query Service is enabled."
             )
             self._enabled_on_cluster = self._variable_api.get_flyingduck_enabled()
-            self._missing_variable_name = None
         except Exception as e:
             # if feature flag cannot be retrieved, assume it is disabled
             _logger.debug(
                 "Unable to fetch Hopsworks Feature Query Service flag, disabling HFQS client."
             )
             _logger.exception(e)
-            self._missing_variable_name = "enable_flyingduck"
+            self._enabled_on_cluster = False
 
     def _retrieve_host_url(self) -> Optional[str]:
         _logger.debug("Retrieving host URL.")
         if isinstance(self._client, client.external.Client):
             external_domain = self._variable_api.get_loadbalancer_external_domain()
             if external_domain == "":
-                self._missing_variable_name = "loadbalancer_external_domain"
+                _logger.debug("loadbalancer_external_domain not set on cluster")
                 return None
             host_url = f"grpc+tls://{external_domain}:5005"
         else:
             service_discovery_domain = self._variable_api.get_service_discovery_domain()
             if service_discovery_domain == "":
-                self._missing_variable_name = "service_discovery_domain"
+                _logger.debug("service_discovery_domain not set on cluster")
                 return None
             host_url = f"grpc+tls://flyingduck.service.{service_discovery_domain}:5005"
         _logger.debug(
@@ -175,14 +171,9 @@ class ArrowFlightClient:
 
     def _disable_for_session(self, message: Optional[str] = None) -> None:
         self._disabled_for_session = True
-        if self._missing_variable_name is None and message is None:
+        if self._enabled_on_cluster:
             warnings.warn(
                 "Hospworks Feature Query Service is disabled on cluster. Contact your administrator to enable it."
-            )
-        elif self._missing_variable_name is not None:
-            warnings.warn(
-                "Hopsworks Feature Query Service failed to initialise due to invalid cluster configuration. "
-                f"Missing variable: {self._missing_variable_name}."
             )
         else:
             warnings.warn(
@@ -219,7 +210,6 @@ class ArrowFlightClient:
         options = pyarrow.flight.FlightCallOptions(timeout=self.health_check_timeout)
         list(self._connection.do_action(action, options=options))
         _logger.debug("Healthcheck succeeded.")
-        self._health_check_succeeded_once = True
 
     def _should_be_used(self, read_options):
         if read_options and (
@@ -238,8 +228,7 @@ class ArrowFlightClient:
 
         if self._disabled_for_session:
             _logger.debug(
-                "Hopsworks Feature Query Service not used as it is disabled for this session,"
-                " either due to a missing variable or a failed initialisation."
+                "Hopsworks Feature Query Service client failed to initialise and is disabled for the session."
             )
             return False
 
@@ -318,7 +307,6 @@ class ArrowFlightClient:
         )
         self._connection.do_action(action, options=options)
         _logger.debug("Client certificates registered.")
-        self._ready = True
 
     def _handle_afs_exception(user_message="None"):
         def decorator(func):
@@ -341,7 +329,7 @@ class ArrowFlightClient:
                         and "no free slot available for" in message
                     ):
                         raise FeatureStoreException(
-                            "No free slots available in Hopsworks Feature Query Service. Please try again later."
+                            "Hopsworks Feature Query Service is busy right now. Please try again later."
                         ) from e
                     else:
                         raise FeatureStoreException(user_message) from e
@@ -402,8 +390,18 @@ class ArrowFlightClient:
             else self.timeout,
         )
 
-    # we cannot retry this operation as it is a write operation
     @_handle_afs_exception(user_message=WRITE_ERROR)
+    @retry(
+        wait_exponential_multiplier=1000,
+        stop_max_attempt_number=3,
+        # this retry only on FlightUnavailableError, which is only raised as long as
+        # do_action call did not trigger any write on the server
+        # Technically same as _should_retry, used for read operations but to avoid future mistakes
+        # it is better to have separate retry_on_exception function with explicit limitations
+        retry_on_exception=lambda e: isinstance(
+            e, pyarrow._flight.FlightUnavailableError
+        ),
+    )
     def create_training_dataset(
         self, feature_view_obj, training_dataset_obj, query_obj, arrow_flight_config
     ):
@@ -545,7 +543,7 @@ class ArrowFlightClient:
         return info.endpoints[0].ticket
 
     def is_enabled(self):
-        if self._disabled_for_session:
+        if self._disabled_for_session or not self._enabled_on_cluster:
             return False
         return True
 
@@ -604,18 +602,3 @@ class ArrowFlightClient:
     def enabled_on_cluster(self) -> bool:
         """Whether the client is enabled on the cluster."""
         return self._enabled_on_cluster
-
-    @property
-    def missing_variable_name(self) -> Optional[str]:
-        """Name of the missing variable that caused the client to be disabled, if any."""
-        return self._missing_variable_name
-
-    @property
-    def health_check_succeeded_once(self) -> bool:
-        """Whether the healthcheck has succeeded at least once."""
-        return self._health_check_succeeded_once
-
-    @property
-    def ready(self) -> bool:
-        """Whether the client is ready to use."""
-        return self._ready
