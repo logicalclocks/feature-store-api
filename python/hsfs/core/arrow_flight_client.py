@@ -277,9 +277,7 @@ class ArrowFlightClient:
             )
             return False
 
-        _logger.debug(
-            "Hopsworks Feature Query Service will be used if query/data_format/connector supported."
-        )
+        _logger.debug("Using Hopsworks Feature Query Service.")
         return True
 
     def _extract_certs(self):
