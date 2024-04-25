@@ -15,9 +15,9 @@
 #
 
 import ast
+import copy
 import inspect
 import json
-import warnings
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -56,7 +56,7 @@ class HopsworksUdf:
     PYTHON_SPARK_TYPE_MAPPING = {
         str: "string",
         int: "int",
-        float: "float",
+        float: "double",
         # "timestamp": TimestampType(),
         bool: "boolean",
         # "date": DateType(),
@@ -161,10 +161,10 @@ class HopsworksUdf:
         except Exception:
             module_imports = ""
             # TODO : Check if warning is actually required.
-            warnings.warn(
-                "Passed UDF defined in a Jupyter notebook. Cannot extract dependices from a notebook. Please make sure to import all dependcies for the UDF inside the code.",
-                stacklevel=2,
-            )
+            # warnings.warn(
+            #    "Passed UDF defined in a Jupyter notebook. Cannot extract dependices from a notebook. Please make sure to import all dependcies for the UDF inside the code.",
+            #    stacklevel=2,
+            # )
 
         function_code = inspect.getsource(udf_function)
         source_code = "\n".join(module_imports) + "\n" + function_code
@@ -206,14 +206,18 @@ class HopsworksUdf:
         # Get source code of the original function
         source_code = source_code.split("\n")
 
+        signature_start_line = None
+        signature_end_line = None
         # Find the line where the function signature is defined
         for i, line in enumerate(source_code):
             if line.strip().startswith("def "):
-                signature_line = i
+                signature_start_line = i
+            if signature_start_line is not None and ")" in line:
+                signature_end_line = i
                 break
 
         # Parse the function signature to remove the specified argument
-        signature = source_code[signature_line]
+        signature = "".join(source_code[signature_start_line : signature_end_line + 1])
         arg_list = signature.split("(")[1].split(")")[0].split(",")
         arg_list = [
             arg.split(":")[0].strip()
@@ -234,15 +238,10 @@ class HopsworksUdf:
             + ")"
             + signature.split(")")[1]
         )
-
-        # Modify the source code to reflect the changes
-        source_code[signature_line] = new_signature
-
-        # Removing test before function signatre since they are decorators
-        source_code = source_code[signature_line:]
-
         # Reconstruct the modified function as a string
-        modified_source = "\n".join(source_code)
+        modified_source = (
+            new_signature + "\n" + "\n".join(source_code[signature_end_line + 1 :])
+        )
 
         # Define a new function with the modified source code
         return modified_source
@@ -252,12 +251,15 @@ class HopsworksUdf:
         return HopsworksUdf.PYTHON_SPARK_TYPE_MAPPING[python_type]
 
     def create_pandas_udf_return_schema_from_list(self, return_types: List[type]):
-        return ", ".join(
-            [
-                f'`{self.function_name}<{"-".join(self.transformation_features)}>{i}` {HopsworksUdf.PYTHON_SPARK_TYPE_MAPPING[return_types[i]]}'
-                for i in range(len(return_types))
-            ]
-        )
+        if isinstance(return_types, List):
+            return ", ".join(
+                [
+                    f'`{self.function_name}<{"-".join(self.transformation_features)}>{i}` {HopsworksUdf.PYTHON_SPARK_TYPE_MAPPING[return_types[i]]}'
+                    for i in range(len(return_types))
+                ]
+            )
+        else:
+            return f"{HopsworksUdf.PYTHON_SPARK_TYPE_MAPPING[return_types]}"
 
     def hopsworksUdf_wrapper(self):
         # TODO : clean this up
@@ -292,8 +294,10 @@ class HopsworksUdf:
                 raise FeatureStoreException(
                     f'Feature names provided must be string "{arg}" is not string'
                 )
-
-        self._transformation_features = [
+        udf = copy.deepcopy(
+            self
+        )  # TODO : Clean this copy is needed so that if the uses the same function to multiple feature, if copy not done then all variable would share the same traanformation feature,
+        udf._transformation_features = [
             TransformationFeature(
                 new_feature_name, transformation_feature.statistic_argument_name
             )
@@ -301,7 +305,7 @@ class HopsworksUdf:
                 self._transformation_features, args
             )
         ]
-        return self
+        return udf
 
     def get_udf(self):
         if engine.get_type() in ["hive", "python", "training"]:
@@ -319,12 +323,12 @@ class HopsworksUdf:
 
     def to_dict(self):
         return {
-            "func": self.function_source,
-            "name": self.function_name,
-            "return_type": [python_type.__name__ for python_type in self.return_type]
+            "sourceCode": self.function_source,
+            "outputTypes": [python_type.__name__ for python_type in self.return_type]
             if isinstance(self.return_type, List)
             else self.return_type.__name__,
-            "transformation_features": self.transformation_features,
+            "transformationFeatures": self.transformation_features,
+            "name": self._function_name,
         }
 
     def json(self) -> str:
@@ -335,10 +339,10 @@ class HopsworksUdf:
         cls: "HopsworksUdf", json_dict: Dict[str, Any]
     ) -> "HopsworksUdf":
         json_decamelized = humps.decamelize(json_dict)
-        function_source_code = json_decamelized["func"]
+        function_source_code = json_decamelized["source_code"]
         function_name = json_decamelized["name"]
-        return_type = json_decamelized["return_type"]
-        transformation_features = json_decamelized["transformation_features"]
+        return_type = json_decamelized["output_types"]
+        transformation_features = json_decamelized["transformation_features"].split(",")
 
         hopsworks_udf = cls(
             func=function_source_code,
@@ -349,10 +353,9 @@ class HopsworksUdf:
             if isinstance(return_type, List)
             else cls.STRING_PYTHON_TYPES_MAPPING[return_type],
             name=function_name,
-            transformation_features=transformation_features,
         )
 
-        return hopsworks_udf
+        return hopsworks_udf(*transformation_features)
 
     @property
     def return_type(self):
