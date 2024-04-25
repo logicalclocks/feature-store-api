@@ -103,6 +103,7 @@ class ArrowFlightClient:
         self._health_check_succeeded_once: bool = False
         self._ready: bool = False
 
+        self._client = client.get_instance()
         self._variable_api: VariableApi = VariableApi()
 
         try:
@@ -132,7 +133,7 @@ class ArrowFlightClient:
             _logger.exception(e)
             warnings.warn(
                 f"Failed to connect to Hopsworks Feature Query Service, got {str(e)}."
-                + self.DEFAULTING_TO_DIFFERENT_SERVICE_FOR_CURRENT_CALL_WARNING
+                + self.DEFAULTING_TO_DIFFERENT_SERVICE_WARNING
                 + self.CLIENT_WILL_STAY_ACTIVE_WARNING
             )
             self._ready = False
@@ -155,7 +156,7 @@ class ArrowFlightClient:
 
     def _retrieve_host_url(self) -> Optional[str]:
         _logger.debug("Retrieving host URL.")
-        if isinstance(client.get_instance(), client.external.Client):
+        if isinstance(self._client, client.external.Client):
             external_domain = self._variable_api.get_loadbalancer_external_domain()
             if external_domain == "":
                 self._missing_variable_name = "loadbalancer_external_domain"
@@ -191,8 +192,7 @@ class ArrowFlightClient:
             )
 
     def _initialize_flight_client(self):
-        self._client = client.get_instance()
-        (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
+        (tls_root_certs, cert_chain, private_key) = self._extract_certs()
         self._connection = pyarrow.flight.FlightClient(
             location=self.host_url,
             tls_root_certs=tls_root_certs,
@@ -279,13 +279,13 @@ class ArrowFlightClient:
             supported &= self._is_query_supported_rec(j._query)
         return supported
 
-    def _extract_certs(self, client):
+    def _extract_certs(self):
         _logger.debug("Extracting client certificates.")
-        with open(client._get_ca_chain_path(), "rb") as f:
+        with open(self._client._get_ca_chain_path(), "rb") as f:
             tls_root_certs = f.read()
-        with open(client._get_client_cert_path(), "r") as f:
+        with open(self._client._get_client_cert_path(), "r") as f:
             cert_chain = f.read()
-        with open(client._get_client_key_path(), "r") as f:
+        with open(self._client._get_client_key_path(), "r") as f:
             private_key = f.read()
         return tls_root_certs, cert_chain, private_key
 
