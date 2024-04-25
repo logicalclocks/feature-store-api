@@ -140,7 +140,7 @@ class OnlineStoreRestClientEngine:
             `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
             ValueError: If the length of the feature values and metadata in the reponse does not match.
         """
-        _logger.info(
+        _logger.debug(
             f"Getting single raw feature vector for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
         )
         _logger.debug(f"entry: {entry}, passed features: {passed_features}")
@@ -255,37 +255,25 @@ class OnlineStoreRestClientEngine:
         if row_feature_values is None:
             _logger.debug("Feature vector is null, returning None for all features.")
             return (
-                {name: None for name in self._ordered_feature_names}
+                {name: None for name, _ in self._ordered_feature_names_and_dtypes}
                 if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
-                else [None for _ in self._ordered_feature_names]
+                else [None for _, _ in self._ordered_feature_names_and_dtypes]
             )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
             _logger.debug(
                 f"Apply deserializer or transformation function to feature value list : {row_feature_values}."
             )
-            return [
-                self._return_feature_value_handlers[name](value)
-                if value is not None
-                else None
-                for name, value in zip(
-                    self.ordered_feature_names_and_dtypes,
-                    row_feature_values,
-                )
-            ]
+            return row_feature_values
+
         elif return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
             _logger.debug(
                 f"Apply deserializer or transformation function and convert feature values to dictionary : {row_feature_values}."
             )
             return {
-                name: (
-                    self._return_feature_value_handlers[name](value)
-                    if value is not None
-                    else None
-                )
-                for (name, value) in zip(
-                    self._ordered_feature_names,
-                    row_feature_values,
+                name: value
+                for ((name, _), value) in zip(
+                    self._ordered_feature_names_and_dtypes, row_feature_values
                 )
             }
 

@@ -366,7 +366,7 @@ class VectorServer:
     def set_return_feature_value_handlers(self) -> List[Callable]:
         """Build a dictionary of functions to convert/deserialize/transform the feature values returned from RonDB Server.
 
-        TODO: This function will be refactored with sql client to avoid duplicating logic and code.
+        TODO: Trim down logging once stabilised
 
         Re-using the current logic from the vector server means that we currently iterate over the feature vectors
         and values multiple times, as well as converting the feature values to a dictionary and then back to a list.
@@ -379,18 +379,14 @@ class VectorServer:
         self._ordered_feature_names = []
         self._ordered_feature_group_feature_names = []
         _logger.debug(
-            f"Setting return feature value handlers for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
+            f"Setting return feature value handlers for Feature View {self._feature_view_name},"
+            f" version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
         )
         for feature in self._features:
             # These features are not part of the feature vector.
-            if feature.label:
+            if feature.label or feature.training_helper_column:
                 _logger.debug(
-                    f"Skipping Feature {feature.name} as it is a label therefore not part of feature vector."
-                )
-                continue
-            if feature.training_helper_column:
-                _logger.debug(
-                    f"Skipping Feature {feature.name} as it is a training helper column therefore not part of feature vector."
+                    f"Skipping Feature {feature.name} as it is a label or training helper column."
                 )
                 continue
 
@@ -555,16 +551,16 @@ class VectorServer:
         self._training_dataset_version = training_dataset_version
 
     @property
+    def ordered_feature_names_and_dtypes(self) -> List[Tuple[str, str]]:
+        return self._ordered_feature_names
+
+    @property
     def transformation_functions(
         self,
     ) -> Optional[
         Dict[str, transformation_function_attached.TransformationFunctionAttached]
     ]:
         return self._transformation_functions
-
-    @property
-    def ordered_feature_names_and_dtypes(self) -> List[Tuple[str, str]]:
-        return self._ordered_feature_names
 
     @property
     def complex_feature_decoders(self) -> Dict[str, Callable]:
