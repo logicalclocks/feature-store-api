@@ -86,6 +86,9 @@ class HopsworksUdf:
         else:
             self._function_source: str = func
 
+        # TODO : Must clean this up : [Store actual source code]. The actual code without any clean up should be stored in the backed and the cleaned source must be dynamically build up when the data is read from the backend.
+        self._original_code = self._function_source
+
         if transformation_features:
             self._transformation_features: List[TransformationFeature] = (
                 transformation_features
@@ -264,7 +267,9 @@ class HopsworksUdf:
     def hopsworksUdf_wrapper(self):
         # TODO : clean this up
         function_source = "\t".join(self.function_source.splitlines(True))
-        if isinstance(self.return_type, List):
+        if (
+            isinstance(self.return_type, List) and len(self.return_type) > 1
+        ):  # TODO : This check must be cleaned up for sure
             code = f"""def renaming_wrapper(*args):
     import pandas as pd
     {function_source}
@@ -323,8 +328,10 @@ class HopsworksUdf:
 
     def to_dict(self):
         return {
-            "sourceCode": self.function_source,
-            "outputTypes": [python_type.__name__ for python_type in self.return_type]
+            "sourceCode": self._original_code,
+            "outputTypes": ",".join(
+                [python_type.__name__ for python_type in self.return_type]
+            )
             if isinstance(self.return_type, List)
             else self.return_type.__name__,
             "transformationFeatures": self.transformation_features,
@@ -341,7 +348,7 @@ class HopsworksUdf:
         json_decamelized = humps.decamelize(json_dict)
         function_source_code = json_decamelized["source_code"]
         function_name = json_decamelized["name"]
-        return_type = json_decamelized["output_types"]
+        return_type = json_decamelized["output_types"].split(",")
         transformation_features = json_decamelized["transformation_features"].split(",")
 
         hopsworks_udf = cls(
@@ -354,7 +361,6 @@ class HopsworksUdf:
             else cls.STRING_PYTHON_TYPES_MAPPING[return_type],
             name=function_name,
         )
-
         return hopsworks_udf(*transformation_features)
 
     @property
