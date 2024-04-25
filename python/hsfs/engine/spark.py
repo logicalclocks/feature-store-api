@@ -1172,6 +1172,7 @@ class Engine:
         transformed_features = set()
         transformations = []
         transformation_features = []
+        output_col_names = []
         explode_name = []
         for transformation_function in transformation_functions:
             hopsworks_udf = transformation_function.hopsworks_udf
@@ -1191,13 +1192,15 @@ class Engine:
 
             # TODO : Add statistics
             pandas_udf = hopsworks_udf.get_udf()
+            output_col_name = f'{hopsworks_udf.function_name}<{"-".join(hopsworks_udf.transformation_features)}>'
             transformations.append(pandas_udf)
             transformation_features.append(hopsworks_udf.transformation_features)
+            output_col_names.append(output_col_name)
 
             if isinstance(hopsworks_udf.return_type, List):
-                explode_name.append(
-                    f'{pandas_udf.__name__}({", ".join(hopsworks_udf.transformation_features)}).*'
-                )
+                explode_name.append(f"{output_col_name}.*")
+            else:
+                explode_name.append(output_col_name)
 
             def timezone_decorator(func, trans_fn=hopsworks_udf):
                 if trans_fn.output_type != "TIMESTAMP":
@@ -1236,8 +1239,10 @@ class Engine:
         transformed_dataset = dataset.select(
             *untransformed_columns,
             *[
-                fun(*feature)
-                for fun, feature in zip(transformations, transformation_features)
+                fun(*feature).alias(output_col_name)
+                for fun, feature, output_col_name in zip(
+                    transformations, transformation_features, output_col_names
+                )
             ],
         ).select(*untransformed_columns, *explode_name)
 

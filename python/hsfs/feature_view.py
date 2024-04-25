@@ -3436,7 +3436,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
-            "transformation_functions": self._transformation_functions,
+            "transformationFunctions": self._transformation_functions,
             "type": "featureViewDTO",
         }
 
