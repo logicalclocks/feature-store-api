@@ -132,7 +132,7 @@ class TransformationFunction:
             "name": self._name,
             "version": self._version,
             "featurestoreId": self._featurestore_id,
-            "hopsworks_udf": self._hopsworks_udf,
+            "hopsworksUdf": self._hopsworks_udf,
         }
 
     @property
