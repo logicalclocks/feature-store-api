@@ -18,12 +18,14 @@ from __future__ import annotations
 import io
 import logging
 from base64 import b64decode
+from datetime import datetime, timezone
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 import avro.io
 import hsfs
 import hsfs.client
+import hsfs.training_dataset_feature
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -100,11 +102,10 @@ class VectorServer:
             feature_store_id
         )
         self._transformation_functions = None
-        self._online_store_sql_client: Optional[
-            online_store_sql_client.OnlineStoreSqlClient
-        ] = None
+        self._online_store_sql_client = None
+        self._online_store_rest_client_engine = None
 
-        self.set_return_feature_value_handlers()
+        self.set_return_feature_value_handlers(features=self._features)
 
     def init_serving(
         self,
@@ -125,7 +126,7 @@ class VectorServer:
             self._complex_feature_decoders = self.build_complex_feature_decoders(
                 complex_feature_schemas=self._complex_features
             )
-        self.set_return_feature_value_handlers()
+        self.set_return_feature_value_handlers(features=entity.features)
 
         self.setup_online_store_rest_client_and_engine(entity=entity, options=options)
 
@@ -138,7 +139,7 @@ class VectorServer:
 
     def init_batch_scoring(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
     ):
         self.init_transformation(entity)
 
@@ -161,7 +162,7 @@ class VectorServer:
         inference_helper_columns: bool,
         options: Optional[Dict[str, Any]] = None,
     ) -> None:
-        _logger.info("Online SQL client")
+        _logger.info("Initialising Vector Server Online Store SQL client")
         self._online_store_sql_client = online_store_sql_client.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
@@ -176,7 +177,7 @@ class VectorServer:
 
     def setup_online_store_rest_client_and_engine(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
         options: Optional[Dict[str, Any]] = None,
     ):
         # naming is off here, but it avoids confusion with the argument init_online_store_rest_client
@@ -406,7 +407,42 @@ class VectorServer:
                 for (f_name, schema) in complex_feature_schemas.items()
             }
 
-    def set_return_feature_value_handlers(self) -> List[Callable]:
+    def _handle_timestamp_based_on_dtype(
+        self, timestamp_value: Union[str, int]
+    ) -> Optional[datetime]:
+        """Handle the timestamp based on the dtype which is returned.
+
+        Currently timestamp which are in the database are returned as string. Whereas
+        passed features which were given as datetime are returned as integer timestamp.
+
+        # Arguments:
+            timestamp_value: The timestamp value to be handled, either as int or str.
+        """
+        if isinstance(timestamp_value, int):
+            _logger.debug(
+                f"Converting timestamp {timestamp_value} to datetime from UNIX timestamp."
+            )
+            return datetime.fromtimestamp(
+                timestamp_value / 1000, tz=timezone.utc
+            ).replace(tzinfo=None)
+        elif isinstance(timestamp_value, str):
+            _logger.debug(
+                f"Parsing timestamp {timestamp_value} to datetime from SQL timestamp string."
+            )
+            return datetime.strptime(timestamp_value, self.SQL_TIMESTAMP_STRING_FORMAT)
+        elif isinstance(timestamp_value, datetime):
+            _logger.debug(
+                f"Returning passed timestamp {timestamp_value} as it is already a datetime."
+            )
+            return timestamp_value
+        else:
+            raise ValueError(
+                f"Timestamp value {timestamp_value} was expected to be of type int or str."
+            )
+
+    def set_return_feature_value_handlers(
+        self, features: List[hsfs.training_dataset_feature.TrainingDatasetFeature]
+    ) -> List[Callable]:
         """Build a dictionary of functions to convert/deserialize/transform the feature values returned from RonDB Server.
 
         TODO: Trim down logging once stabilised
@@ -425,7 +461,7 @@ class VectorServer:
             f"Setting return feature value handlers for Feature View {self._feature_view_name},"
             f" version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
         )
-        for feature in self._features:
+        for feature in features:
             # These features are not part of the feature vector.
             if feature.label or feature.training_helper_column:
                 _logger.debug(
@@ -600,7 +636,7 @@ class VectorServer:
         self._training_dataset_version = training_dataset_version
 
     @property
-    def ordered_feature_names_and_dtypes(self) -> List[Tuple[str, str]]:
+    def ordered_feature_names(self) -> List[str]:
         return self._ordered_feature_names
 
     @property

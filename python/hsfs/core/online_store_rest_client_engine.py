@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
 
 import hsfs
@@ -60,7 +59,15 @@ class OnlineStoreRestClientEngine:
         self._feature_view_name = feature_view_name
         self._feature_view_version = feature_view_version
         self._features = features
-        _logger.debug(f"Features: {features}")
+        self._ordered_feature_names = [
+            feat.name
+            for feat in features
+            if not (
+                feat.label
+                or feat.inference_helper_column
+                or feat.training_helper_column
+            )
+        ]
 
     def build_base_payload(
         self,
@@ -247,63 +254,30 @@ class OnlineStoreRestClientEngine:
             A dictionary with the feature names as keys and the feature values as values. Values types are not guaranteed to
             match the feature type in the metadata. Timestamp SQL types are converted to python datetime.
         """
-        if row_feature_values is None:
-            _logger.debug("Feature vector is null, returning None for all features.")
-            return (
-                {name: None for name, _ in self._ordered_feature_names_and_dtypes}
-                if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
-                else [None for _, _ in self._ordered_feature_names_and_dtypes]
-            )
-
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
+            if row_feature_values is None:
+                _logger.debug(
+                    "Feature vector is null, returning None for all features."
+                )
+                return [None for _ in self.ordered_feature_names]
             _logger.debug(
                 f"Apply deserializer or transformation function to feature value list : {row_feature_values}."
             )
             return row_feature_values
 
         elif return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
+            if row_feature_values is None:
+                _logger.debug(
+                    "Feature vector is null, returning None for all features."
+                )
+                return {name: None for name in self.ordered_feature_names}
             _logger.debug(
                 f"Apply deserializer or transformation function and convert feature values to dictionary : {row_feature_values}."
             )
             return {
                 name: value
-                for ((name, _), value) in zip(
-                    self._ordered_feature_names_and_dtypes, row_feature_values
-                )
+                for (name, value) in zip(self.ordered_feature_names, row_feature_values)
             }
-
-    def _handle_timestamp_based_on_dtype(
-        self, timestamp_value: Union[str, int]
-    ) -> Optional[datetime]:
-        """Handle the timestamp based on the dtype which is returned.
-
-        Currently timestamp which are in the database are returned as string. Whereas
-        passed features which were given as datetime are returned as integer timestamp.
-
-        # Arguments:
-            timestamp_value: The timestamp value to be handled, either as int or str.
-        """
-        if isinstance(timestamp_value, int):
-            _logger.debug(
-                f"Converting timestamp {timestamp_value} to datetime from UNIX timestamp."
-            )
-            return datetime.fromtimestamp(
-                timestamp_value / 1000, tz=timezone.utc
-            ).replace(tzinfo=None)
-        elif isinstance(timestamp_value, str):
-            _logger.debug(
-                f"Parsing timestamp {timestamp_value} to datetime from SQL timestamp string."
-            )
-            return datetime.strptime(timestamp_value, self.SQL_TIMESTAMP_STRING_FORMAT)
-        elif isinstance(timestamp_value, datetime):
-            _logger.debug(
-                f"Returning passed timestamp {timestamp_value} as it is already a datetime."
-            )
-            return timestamp_value
-        else:
-            raise ValueError(
-                f"Timestamp value {timestamp_value} was expected to be of type int or str."
-            )
 
     @property
     def feature_store_name(self) -> str:
@@ -318,11 +292,15 @@ class OnlineStoreRestClientEngine:
         return self._feature_view_version
 
     @property
-    def features(self) -> List["hsfs.training_dataset_feature.TrainingDatasetFeature"]:
-        return self._features
+    def features(self) -> List[hsfs.training_dataset_feature.TrainingDatasetFeature]:
+        return self._ordered_feature_names
+
+    @property
+    def ordered_feature_names(self) -> List[str]:
+        return self._ordered_feature_names
 
     @property
     def online_store_rest_client_api(
         self,
-    ) -> "online_store_rest_client_api.OnlineStoreRestClientApi":
+    ) -> online_store_rest_client_api.OnlineStoreRestClientApi:
         return self._online_store_rest_client_api
