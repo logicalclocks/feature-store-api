@@ -15,12 +15,14 @@
 from __future__ import annotations
 
 import warnings
+from typing import List, Union
 
 from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import delta_engine, feature_group_base_engine, hudi_engine
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
+from hsfs.helpers.richer_repr import richer_feature_group
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -387,4 +389,66 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feature_store_id=feature_group.feature_store_id,
                 feature_group_id=feature_group.id,
             )
+        )
+
+    def list_feature_groups(
+        self,
+        latest_version_only: bool,
+        online_enabled_only: bool,
+        spine_only: bool,
+        external_only: bool,
+        with_features: bool,
+    ) -> List[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup]:
+        fg_list = self._feature_group_api.get_all(
+            feature_store_id=self._feature_store_id,
+            with_features=with_features,
+        )
+
+        if online_enabled_only:
+            fg_list = [fgroup for fgroup in fg_list if fgroup.online_enabled]
+        if spine_only:
+            fg_list = [
+                fgroup for fgroup in fg_list if isinstance(fgroup, fg.SpineGroup)
+            ]
+        if external_only:
+            fg_list = [
+                fgroup
+                for fgroup in fg_list
+                if isinstance(fgroup, fg.ExternalFeatureGroup)
+            ]
+
+        if latest_version_only:
+            fg_list = [
+                fgroup
+                for fgroup in fg_list
+                if fgroup.version
+                == max(fg1.version for fg1 in fg_list if fg1.name == fgroup.name)
+            ]
+
+        return sorted(fg_list, key=lambda fgroup: fgroup.name)
+
+    def show_info(
+        self,
+        feature_group: Union[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup],
+        show_features: bool = False,
+    ):
+        richer_feature_group.build_and_print_info_fg_table(
+            feature_group, show_features=show_features
+        )
+
+    def show_all(
+        self,
+        latest_version_only: bool = True,
+        show_features: bool = False,
+        show_description: bool = False,
+    ):
+        fgroup_list = self.list_feature_groups(
+            latest_version_only=latest_version_only,
+            online_enabled_only=False,
+            spine_only=False,
+            external_only=False,
+            with_features=show_features,
+        )
+        richer_feature_group.show_rich_table_feature_groups(
+            fgroup_list, show_features=show_features, show_description=show_description
         )

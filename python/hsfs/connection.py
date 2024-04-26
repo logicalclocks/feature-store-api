@@ -29,7 +29,7 @@ from hsfs.core import (
 )
 from hsfs.core.opensearch import OpenSearchClientSingleton
 from hsfs.decorators import connected, not_connected
-from requests.exceptions import ConnectionError
+from hsfs.helpers import user_messages
 
 
 AWS_DEFAULT_REGION = "default"
@@ -187,7 +187,9 @@ class Connection:
         """
         if not name:
             name = client.get_instance()._project_name
-        return self._feature_store_api.get(util.append_feature_store_suffix(name))
+        fs = self._feature_store_api.get(util.append_feature_store_suffix(name))
+        user_messages.print_connected_to_feature_store_message(fs)
+        return fs
 
     @not_connected
     def connect(self) -> None:
@@ -264,7 +266,6 @@ class Connection:
         except (TypeError, ConnectionError):
             self._connected = False
             raise
-        print("Connected. Call `.close()` to terminate connection gracefully.")
 
     def close(self) -> None:
         """Close a connection gracefully.

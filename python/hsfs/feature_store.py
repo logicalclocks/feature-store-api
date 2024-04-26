@@ -48,6 +48,7 @@ from hsfs.core import (
 )
 from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
+from hsfs.helpers import quicktours, verbose
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
 
@@ -736,6 +737,10 @@ class FeatureStore:
                 self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
             )
             feature_group_object.feature_store = self
+            if verbose.is_hsfs_verbose():
+                self._feature_group_engine.show_info(
+                    feature_group_object, show_features=True
+                )
             return feature_group_object
         except exceptions.RestAPIError as e:
             if (
@@ -764,6 +769,10 @@ class FeatureStore:
                     notification_topic_name=notification_topic_name,
                 )
                 feature_group_object.feature_store = self
+                if verbose.is_hsfs_verbose():
+                    self._feature_group_engine.show_info(
+                        feature_group_object, show_features=False
+                    )
                 return feature_group_object
             else:
                 raise e
@@ -1639,13 +1648,16 @@ class FeatureStore:
             `FeatureView`: The feature view metadata object.
         """
         try:
-            return self._feature_view_engine.get(name, version)
+            feature_view_object = self._feature_view_engine.get(name, version)
+            if verbose.is_hsfs_verbose():
+                self._feature_view_engine.show_info(feature_view_object)
+            return feature_view_object
         except exceptions.RestAPIError as e:
             if (
                 e.response.json().get("errorCode", "") == 270181
                 and e.response.status_code == 404
             ):
-                return self.create_feature_view(
+                feature_view_object = self.create_feature_view(
                     name=name,
                     query=query,
                     version=version,
@@ -1655,6 +1667,9 @@ class FeatureStore:
                     training_helper_columns=training_helper_columns or [],
                     transformation_functions=transformation_functions or {},
                 )
+                if verbose.is_hsfs_verbose():
+                    self._feature_view_engine.show_info(feature_view_object)
+                return feature_view_object
             else:
                 raise e
 
@@ -1727,6 +1742,66 @@ class FeatureStore:
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature view from the feature store.
         """
         return self._feature_view_engine.get(name)
+
+    def show_feature_groups(
+        self,
+        latest_only: bool = True,
+        show_features: bool = False,
+        show_description: bool = False,
+    ) -> None:
+        """Prints a list of all feature groups in the feature store.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # show all feature groups
+            fs.show_feature_groups()
+            ```
+
+        # Arguments
+            latest_only: If `True` only the latest version of each feature group is shown, defaults to `True`.
+            show_features: If `True` also show the features of the feature groups, defaults to `False`.
+            show_description: If `True` also show the description of the feature groups, defaults to `False`.
+
+        # Returns
+            `None`
+        """
+        self._feature_group_engine.show_all(
+            latest_only, show_features, show_description
+        )
+
+    def show_feature_views(
+        self,
+        latest_only: bool = True,
+        show_features: bool = False,
+        show_description: bool = False,
+    ) -> None:
+        """Prints a list of all feature views in the feature store.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # show all feature views
+            fs.show_feature_views()
+            ```
+
+        # Arguments
+            latest_only: If `True` only the latest version of each feature view is shown, defaults to `True`.
+            show_features: If `True` also show the features of the feature views, defaults to `False`.
+            show_description: If `True` also show the description of the feature views, defaults to `False`.
+
+        # Returns
+            `None`
+        """
+        self._feature_view_engine.show_all(latest_only, show_features, show_description)
+
+    def quicktour(self) -> None:
+        """Prints a quick tour of the feature store API."""
+        quicktours.rich_print_quicktour("feature_store")
 
     @property
     def id(self) -> int:

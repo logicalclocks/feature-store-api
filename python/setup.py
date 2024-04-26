@@ -38,6 +38,7 @@ setup(
         "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql",
         "polars>=0.20.18,<=0.21.0",
         "opensearch-py>=1.1.0,<=2.4.2",
+        "rich[jupyter]>=13.0.0",
     ],
     extras_require={
         "dev": [

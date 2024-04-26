@@ -17,8 +17,9 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
+import humps
 from hsfs import (
     client,
     engine,
@@ -39,6 +40,7 @@ from hsfs.core import (
     training_dataset_engine,
     transformation_function_engine,
 )
+from hsfs.helpers.richer_repr import richer_feature_view
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
@@ -923,3 +925,45 @@ class FeatureViewEngine:
             )
         else:
             return f_name
+
+    def list_feature_views(
+        self, latest_version_only: bool = True, with_features: bool = False
+    ) -> List[Dict[str, Any]]:
+        fv_list = [
+            humps.decamelize(fv_obj)
+            for fv_obj in self._feature_view_api.get_all(
+                latest_version_only=latest_version_only, with_features=with_features
+            )
+        ]
+        if latest_version_only:
+            fv_list = [
+                fview
+                for fview in fv_list
+                if fview["version"]
+                == max(
+                    fv1["version"] for fv1 in fv_list if fv1["name"] == fview["name"]
+                )
+            ]
+
+        return sorted(fv_list, key=lambda fview: fview["name"])
+
+    def show_info(
+        self, feature_view_obj: feature_view.FeatureView, show_features: bool = True
+    ) -> None:
+        richer_feature_view.build_and_print_info_fv_table(
+            feature_view_obj, show_features=show_features
+        )
+
+    def show_all(
+        self,
+        latest_version_only: bool = True,
+        show_features: bool = False,
+        show_description: bool = False,
+    ):
+        fview_dicts = self.list_feature_views(
+            latest_version_only=latest_version_only,
+            with_features=show_features,
+        )
+        richer_feature_view.show_rich_table_feature_views(
+            fview_dicts, show_features, show_description
+        )
