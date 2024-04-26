@@ -161,7 +161,7 @@ class FeatureStore:
                 stacklevel=1,
             )
             version = self.DEFAULT_VERSION
-        feature_group_object = self._feature_group_api.get_smart(self.id, name, version)
+        feature_group_object = self._feature_group_api.get(self.id, name, version)
         feature_group_object.feature_store = self
         return feature_group_object
 
@@ -199,7 +199,7 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        feature_group_object = self._feature_group_api.get_smart(self.id, name, None)
+        feature_group_object = self._feature_group_api.get(self.id, name, None)
         for fg_object in feature_group_object:
             fg_object.feature_store = self
         return feature_group_object
@@ -268,7 +268,7 @@ class FeatureStore:
                 stacklevel=1,
             )
             version = self.DEFAULT_VERSION
-        feature_group_object = self._feature_group_api.get_smart(
+        feature_group_object = self._feature_group_api.get(
             self.id,
             name,
             version,
@@ -327,7 +327,7 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        feature_group_object = self._feature_group_api.get_smart(
+        feature_group_object = self._feature_group_api.get(
             feature_store_id=self.id, name=name, version=None
         )
         for fg_object in feature_group_object:
@@ -730,9 +730,7 @@ class FeatureStore:
             `FeatureGroup`. The feature group metadata object.
         """
         try:
-            feature_group_object = self._feature_group_api.get_smart(
-                self.id, name, version
-            )
+            feature_group_object = self._feature_group_api.get(self.id, name, version)
             feature_group_object.feature_store = self
             return feature_group_object
         except exceptions.RestAPIError as e:
@@ -1143,7 +1141,7 @@ class FeatureStore:
             `SpineGroup`. The spine group metadata object.
         """
         try:
-            spine = self._feature_group_api.get_smart(self.id, name, version)
+            spine = self._feature_group_api.get(self.id, name, version)
             spine.feature_store = self
             spine.dataframe = dataframe
             return spine

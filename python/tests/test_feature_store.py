@@ -74,9 +74,7 @@ class TestFeatureStore:
         fg = feature_group_mod.FeatureGroup.from_response_json(
             backend_fixtures["feature_group"]["get"]["response"]
         )
-        mocker.patch(
-            "hsfs.core.feature_group_api.FeatureGroupApi.get_smart", return_value=fg
-        )
+        mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi.get", return_value=fg)
 
         # Act
         fg_res = fs.get_feature_group("test_feature_group_name")
