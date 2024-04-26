@@ -54,6 +54,15 @@ def close():
     _arrow_flight_instance = None
 
 
+def _disable_feature_query_service_client():
+    global _arrow_flight_instance
+    _logger.debug("Disabling Hopsworks Feature Query Service Client.")
+    if _arrow_flight_instance is None:
+        _arrow_flight_instance.ArrowFlightClient(disabled_for_session=True)
+    else:
+        _arrow_flight_instance._disable_for_session(on_purpose=True)
+
+
 def _should_retry(exception):
     return isinstance(exception, pyarrow._flight.FlightUnavailableError)
 
@@ -142,15 +151,19 @@ class ArrowFlightClient:
     DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS = 5
     DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS = 2000
 
-    def __init__(self):
+    def __init__(self, disabled_for_session: bool = False):
         _logger.debug("Initializing Hopsworks Feature Query Service Client.")
         self._timeout: float = self.DEFAULT_TIMEOUT_SECONDS
         self._health_check_timeout: float = self.DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS
 
         self._enabled_on_cluster: bool = False
-        self._disabled_for_session: bool = False
         self._host_url: Optional[str] = None
         self._connection: Optional[pyarrow.flight.FlightClient] = None
+        if disabled_for_session:
+            self._disable_for_session(on_purpose=True)
+            return
+        else:
+            self._disabled_for_session: bool = False
 
         self._client = client.get_instance()
         self._variable_api: VariableApi = VariableApi()
@@ -222,8 +235,14 @@ class ArrowFlightClient:
         )
         return host_url
 
-    def _disable_for_session(self, message: Optional[str] = None) -> None:
+    def _disable_for_session(
+        self, message: Optional[str] = None, on_purpose: bool = False
+    ) -> None:
         self._disabled_for_session = True
+        if on_purpose:
+            warnings.warn(
+                "Hopsworks Feature Query Service will be disabled for this session."
+            )
         if self._enabled_on_cluster:
             warnings.warn(
                 "Hospworks Feature Query Service is disabled on cluster. Contact your administrator to enable it."
