@@ -21,9 +21,6 @@ from hsfs.client.exceptions import RestAPIError
 
 
 class VariableApi:
-    def __init__(self):
-        pass
-
     def get_version(self, software: str):
         _client = client.get_instance()
         path_params = [

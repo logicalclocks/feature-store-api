@@ -2004,6 +2004,7 @@ class TestFeatureViewEngine:
         # Arrange
         feature_store_id = 99
 
+        mocker.patch("hsfs.client.get_instance")  # for arrow_flight_client
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
         mock_constructor_query = mocker.patch("hsfs.constructor.query.Query")
@@ -2038,6 +2039,7 @@ class TestFeatureViewEngine:
         # Arrange
         feature_store_id = 99
 
+        mocker.patch("hsfs.client.get_instance")  # for arrow_flight_client
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_engine_get_type = mocker.patch(
             "hsfs.engine.get_type", return_value="python"
@@ -2074,11 +2076,13 @@ class TestFeatureViewEngine:
         # Arrange
         feature_store_id = 99
 
+        mocker.patch("hsfs.client.get_instance")  # for arrow_flight_client
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch("hsfs.engine.get_type", return_value="python")
 
         afc = arrow_flight_client.get_instance()
-        afc._is_enabled = True
+        afc._disabled_for_session = False
+        afc._enabled_on_cluster = True
 
         mock_constructor_query = mocker.patch("hsfs.constructor.query.Query")
         connector = BigQueryConnector(0, "BigQueryConnector", 99)
@@ -2104,9 +2108,7 @@ class TestFeatureViewEngine:
         )
 
         assert arrow_flight_client.get_instance().is_enabled()
-        assert arrow_flight_client.get_instance().supports(
-            mock_constructor_query.featuregroups
-        )
+        assert arrow_flight_client.supports(mock_constructor_query.featuregroups)
 
         # Act
         # All good if we don't get an exception
@@ -2116,6 +2118,7 @@ class TestFeatureViewEngine:
         # Arrange
         feature_store_id = 99
 
+        mocker.patch("hsfs.client.get_instance")  # for arrow_flight_client
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch("hsfs.engine.get_type", return_value="python")
 

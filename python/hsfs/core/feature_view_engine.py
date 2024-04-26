@@ -772,11 +772,11 @@ class FeatureViewEngine:
     def _check_feature_group_accessibility(self, feature_view_obj):
         if engine.get_type() in ["python", "hive"]:
             if arrow_flight_client.get_instance().is_enabled():
-                if not arrow_flight_client.get_instance().supports(
+                if not arrow_flight_client.supports(
                     feature_view_obj.query.featuregroups
                 ):
                     raise NotImplementedError(
-                        "ArrowFlightServer can only read from cached feature groups"
+                        "Hopsworks Feature Query Service can only read from cached feature groups"
                         " and external feature groups on BigQuery and Snowflake."
                         " When using other external feature groups please use "
                         "`feature_view.create_training_data` instead. "

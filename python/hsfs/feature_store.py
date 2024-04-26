@@ -14,6 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import warnings
 import datetime
@@ -41,6 +42,7 @@ from hsfs import (
     usage,
 )
 from hsfs.core import (
+    arrow_flight_client,
     feature_group_api,
     storage_connector_api,
     training_dataset_api,
@@ -1680,6 +1682,15 @@ class FeatureStore:
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature view from the feature store.
         """
         return self._feature_view_engine.get(name)
+
+    def _disable_hopsworks_feature_query_service_client(self):
+        """Disable Hopsworks feature query service for the current session. This behaviour is not persisted on reset."""
+        arrow_flight_client._disable_feature_query_service_client()
+
+    def _reset_hopsworks_feature_query_service_client(self):
+        """Reset Hopsworks feature query service for the current session."""
+        arrow_flight_client.close()
+        arrow_flight_client.get_instance()
 
     @property
     def id(self):
