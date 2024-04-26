@@ -354,6 +354,9 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+            feature_store_name=self._feature_store_name,
         )
         self._batch_scoring_server.init_batch_scoring(self)
 

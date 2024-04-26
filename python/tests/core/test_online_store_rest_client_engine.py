@@ -111,9 +111,6 @@ class TestOnlineRestClientEngine:
             feature_view_name="test_feature_view",
             feature_view_version=2,
             features=[],
-            skip_fg_ids=[],
-            complex_features=None,
-            transformation_functions=None,
         )
 
     @pytest.fixture()
@@ -123,9 +120,6 @@ class TestOnlineRestClientEngine:
             feature_view_name="test_feature_view",
             feature_view_version=2,
             features=training_dataset_features_ticker,
-            skip_fg_ids=[],
-            complex_features=None,
-            transformation_functions=None,
         )
 
     @pytest.fixture()
@@ -137,7 +131,6 @@ class TestOnlineRestClientEngine:
             feature_view_name="test_feature_view",
             feature_view_version=2,
             features=training_dataset_features_composite_keys,
-            skip_fg_ids=[],
         )
 
     @pytest.fixture()
@@ -149,7 +142,6 @@ class TestOnlineRestClientEngine:
             feature_view_name="test_feature_view",
             feature_view_version=2,
             features=training_dataset_features_mix_rondb_and_opensearch,
-            skip_fg_ids=[],
         )
 
     @pytest.fixture()
@@ -159,7 +151,6 @@ class TestOnlineRestClientEngine:
             feature_view_name="test_feature_view",
             feature_view_version=2,
             features=training_dataset_complex_features,
-            skip_fg_ids=[],
         )
 
     def test_build_base_payload_no_metadata_options(

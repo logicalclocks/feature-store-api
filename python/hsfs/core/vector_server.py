@@ -181,16 +181,13 @@ class VectorServer:
     ):
         # naming is off here, but it avoids confusion with the argument init_online_store_rest_client
         _logger.info("Initialising Vector Server Online Store REST client")
-        self._online_store_rest_client_engine = online_store_rest_client_engine.OnlineStoreRestClientEngine(
-            feature_store_name=self._feature_store_name,
-            feature_view_name=entity.name,
-            feature_view_version=entity.version,
-            features=entity.features,
-            skip_fg_ids=self._skip_fg_ids,
-            # Code duplication added to avoid unnecessary transforming and iterating over feature vectors
-            # multiple times. This is a temporary solution until the code is refactored with new sql client
-            complex_features=self._complex_features,
-            transformation_functions=self._transformation_functions,
+        self._online_store_rest_client_engine = (
+            online_store_rest_client_engine.OnlineStoreRestClientEngine(
+                feature_store_name=self._feature_store_name,
+                feature_view_name=entity.name,
+                feature_view_version=entity.version,
+                features=entity.features,
+            )
         )
         # This logic needs to move to the above engine init
         reset_online_rest_client = False

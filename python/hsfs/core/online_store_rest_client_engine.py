@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
@@ -36,7 +38,7 @@ class OnlineStoreRestClientEngine:
         feature_store_name: str,
         feature_view_name: str,
         feature_view_version: int,
-        features: List["hsfs.training_dataset_feature.TrainingDatasetFeature"],
+        features: List[hsfs.training_dataset_feature.TrainingDatasetFeature],
     ):
         """Initialize the Online Store Rest Client Engine. This class contains the logic to mediate
         the interaction between the python client and the RonDB Rest Server Feature Store API.
@@ -47,13 +49,6 @@ class OnlineStoreRestClientEngine:
             feature_view_version: The version of the feature view from which to retrieve the feature vector.
             features: A list of features to be used for the feature vector conversion. Note that the features
                 must be ordered according to the feature vector schema.
-            skip_fg_ids: A set of feature group ids to skip when inferring feature vector schema.
-                These ids are linked to Feature Groups with embeddings and
-                therefore stored in the embedding online store (see vector_db_client).
-            complex_features: A dictionary of complex feature schemas. The keys are the feature names
-                and the values are the Avro schemas.
-            transformation_functions: A dictionary of transformation functions. The keys are the feature names
-                and the values are the transformation functions.
         """
         _logger.info(
             f"Initializing Online Store Rest Client Engine for Feature View {feature_view_name}, version: {feature_view_version} in Feature Store {feature_store_name}."
