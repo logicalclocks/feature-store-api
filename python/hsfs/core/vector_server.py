@@ -32,11 +32,16 @@ from hsfs import (
     client,
     feature_view,
     training_dataset,
-    transformation_function_attached,
+)
+from hsfs import (
+    transformation_function_attached as tfa_mod,
 )
 from hsfs.core import (
+    online_store_rest_client_engine,
     online_store_sql_client,
-    transformation_function_engine,
+)
+from hsfs.core import (
+    transformation_function_engine as tfe_mod,
 )
 
 
@@ -61,9 +66,15 @@ class VectorServer:
         training_dataset_version: Optional[int] = None,
         serving_keys: Optional[List[hsfs.serving_key.ServingKey]] = None,
         skip_fg_ids: Optional[Set[int]] = None,
+        feature_store_name: Optional[str] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
     ):
         self._training_dataset_version = training_dataset_version
         self._feature_store_id = feature_store_id
+        self._feature_store_name = feature_store_name
+        self._feature_view_name = feature_view_name
+        self._feature_view_version = feature_view_version
 
         if features is None:
             features = []
@@ -85,10 +96,8 @@ class VectorServer:
         self._serving_keys = serving_keys or []
         self._required_serving_keys = []
 
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(
-                feature_store_id
-            )
+        self._transformation_function_engine = tfe_mod.TransformationFunctionEngine(
+            feature_store_id
         )
         self._transformation_functions = None
         self._online_store_sql_client: Optional[
@@ -117,6 +126,8 @@ class VectorServer:
                 complex_feature_schemas=self._complex_features
             )
         self.set_return_feature_value_handlers()
+
+        self.setup_online_store_rest_client_and_engine(entity=entity, options=options)
 
         self.setup_online_store_sql_client(
             entity=entity,
@@ -162,6 +173,41 @@ class VectorServer:
             inference_helper_columns,
         )
         self.online_store_sql_client.init_async_mysql_connection(options=options)
+
+    def setup_online_store_rest_client_and_engine(
+        self,
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        options: Optional[Dict[str, Any]] = None,
+    ):
+        # naming is off here, but it avoids confusion with the argument init_online_store_rest_client
+        _logger.info("Initialising Vector Server Online Store REST client")
+        self._online_store_rest_client_engine = online_store_rest_client_engine.OnlineStoreRestClientEngine(
+            feature_store_name=self._feature_store_name,
+            feature_view_name=entity.name,
+            feature_view_version=entity.version,
+            features=entity.features,
+            skip_fg_ids=self._skip_fg_ids,
+            # Code duplication added to avoid unnecessary transforming and iterating over feature vectors
+            # multiple times. This is a temporary solution until the code is refactored with new sql client
+            complex_features=self._complex_features,
+            transformation_functions=self._transformation_functions,
+        )
+        # This logic needs to move to the above engine init
+        reset_online_rest_client = False
+        online_store_rest_client_config = None
+        if isinstance(options, dict):
+            reset_online_rest_client = options.get(
+                self.RESET_ONLINE_REST_CLIENT_OPTIONS_KEY, reset_online_rest_client
+            )
+            online_store_rest_client_config = options.get(
+                self.ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY,
+                online_store_rest_client_config,
+            )
+
+        client.online_store_rest_client.init_or_reset_online_store_rest_client(
+            optional_config=online_store_rest_client_config,
+            reset_client=reset_online_rest_client,
+        )
 
     def get_feature_vector(
         self,
@@ -527,6 +573,12 @@ class VectorServer:
         return self._online_store_sql_client
 
     @property
+    def online_store_rest_client_engine(
+        self,
+    ) -> Optional[online_store_rest_client_engine.OnlineStoreRestClientEngine]:
+        return self._online_store_rest_client_engine
+
+    @property
     def serving_keys(self) -> List[hsfs.serving_key.ServingKey]:
         return self._serving_keys
 
@@ -557,9 +609,7 @@ class VectorServer:
     @property
     def transformation_functions(
         self,
-    ) -> Optional[
-        Dict[str, transformation_function_attached.TransformationFunctionAttached]
-    ]:
+    ) -> Optional[Dict[str, tfa_mod.TransformationFunctionAttached]]:
         return self._transformation_functions
 
     @property
