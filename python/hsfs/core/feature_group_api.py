@@ -23,9 +23,6 @@ from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf
 
 
 class FeatureGroupApi:
-    CACHED = "cached"
-    ONDEMAND = "ondemand"
-    SPINE = "spine"
     BACKEND_FG_STREAM = "streamFeatureGroupDTO"
     BACKEND_FG_BATCH = "cachedFeatureGroupDTO"
     BACKEND_FG_EXTERNAL = "onDemandFeatureGroupDTO"
@@ -64,7 +61,7 @@ class FeatureGroupApi:
         )
         return feature_group_object
 
-    def get_smart(
+    def get(
         self, feature_store_id: int, name: str, version: Optional[int]
     ) -> Union[
         fg_mod.FeatureGroup,
@@ -84,7 +81,7 @@ class FeatureGroupApi:
         :type version: int
 
         :return: feature group metadata object
-        :rtype: FeatureGroup, SpineGroup, ExternalFeatureGroup
+        :rtype: FeatureGroup, SpineGroup, ExternalFeatureGroup, List[FeatureGroup], List[SpineGroup], List[ExternalFeatureGroup]
         """
         _client = client.get_instance()
         path_params = [
@@ -102,11 +99,11 @@ class FeatureGroupApi:
         # return only list of the same type. But it cost nothing to check in case this gets forgotten.
         for fg_json in _client._send_request("GET", path_params, query_params):
             if (
-                fg_json["type"] == self.BACKEND_FG_STREAM
-                or fg_json["type"] == self.BACKEND_FG_BATCH
+                fg_json["type"] == FeatureGroupApi.BACKEND_FG_STREAM
+                or fg_json["type"] == FeatureGroupApi.BACKEND_FG_BATCH
             ):
                 fg_objs.append(fg_mod.FeatureGroup.from_response_json(fg_json))
-            elif fg_json["type"] == self.BACKEND_FG_EXTERNAL:
+            elif fg_json["type"] == FeatureGroupApi.BACKEND_FG_EXTERNAL:
                 if fg_json["spine"]:
                     fg_objs.append(fg_mod.SpineGroup.from_response_json(fg_json))
                 else:
@@ -114,10 +111,15 @@ class FeatureGroupApi:
                         fg_mod.ExternalFeatureGroup.from_response_json(fg_json)
                     )
             else:
+                list_of_types = [
+                    FeatureGroupApi.BACKEND_FG_STREAM,
+                    FeatureGroupApi.BACKEND_FG_BATCH,
+                    FeatureGroupApi.BACKEND_FG_EXTERNAL,
+                    FeatureGroupApi.BACKEND_FG_SPINE,
+                ]
                 raise ValueError(
-                    "Unknown feature group type: "
-                    + fg_json["type"]
-                    + ". Use get_external_feature_group or get_spine_feature_group instead."
+                    f"Unknown feature group type: {fg_json['type']}, expected one of: "
+                    + str(list_of_types)
                 )
 
         if version is not None:
