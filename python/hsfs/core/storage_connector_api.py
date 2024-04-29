@@ -90,7 +90,7 @@ class StorageConnectorApi:
             _client._send_request("GET", path_params, query_params=query_params)
         )
 
-    def get_generated_feature_groups(
+    def get_feature_groups_provenance(
         self, storage_connector_instance
     ):
         """Get the generated feature groups using this storage connector, based on explicit

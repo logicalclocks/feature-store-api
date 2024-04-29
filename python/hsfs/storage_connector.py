@@ -144,7 +144,7 @@ class StorageConnector(ABC):
         """
         return {}
 
-    def get_generated_feature_groups(self):
+    def get_feature_groups_provenance(self):
         """Get the generated feature groups using this storage connector, based on explicit
         provenance. These feature groups can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature group links, so deleted
@@ -158,7 +158,21 @@ class StorageConnector(ABC):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        return self._storage_connector_api.get_generated_feature_groups(self)
+        return self._storage_connector_api.get_feature_groups_provenance(self)
+    
+    def get_feature_groups(self):
+        """Get the feature groups using this storage connector, based on explicit
+        provenance. Only the accessible feature groups are returned.
+        For more items use the base method - get_feature_groups_provenance
+
+        # Returns
+            `List[FeatureGroup]: List of feature groups.
+        """
+        feature_groups_provenance = self.get_feature_groups_provenance().accessible
+        if feature_groups_provenance.accessible:
+            return feature_groups_provenance.accessible
+        else:
+            return None
 
 
 class HopsFSConnector(StorageConnector):
