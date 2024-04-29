@@ -206,13 +206,12 @@ class VectorDbClient:
             feature_value = result.get(feature_name)
             if not feature_value:  # Feature value can be null
                 continue
-            if feature_type == "date":
+            elif feature_type == "date":
                 result[feature_name] = datetime.utcfromtimestamp(feature_value // 10**3).date()
             elif feature_type == "timestamp":
                 # convert timestamp in ms to datetime in s
                 result[feature_name] = datetime.utcfromtimestamp(feature_value // 10**3)
             elif feature_type == "binary":
-                # convert timestamp in ms to datetime in s
                 result[feature_name] = base64.b64decode(feature_value)
             elif feature.is_complex() and feature not in self._embedding_features:
                 result[feature_name] = base64.b64decode(feature_value)
