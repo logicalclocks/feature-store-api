@@ -66,7 +66,7 @@ You can start a notebook and instantiate a connection and get the project featur
 import hopsworks
 
 project = hopsworks.login() # you will be prompted for your api key
-fs = project.feature_store()
+fs = project.get_feature_store()
 ```
 
 or using `hsfs` directly:
