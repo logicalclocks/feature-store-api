@@ -101,6 +101,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 exclude = ["tests*"]
+include = ["../Readme.md", "../LICENSE"]
 
 [tool.setuptools.dynamic]
 version = { attr = "hsfs.version.__version__" }
