@@ -9,7 +9,7 @@
     src="https://img.shields.io/badge/docs-HSFS-orange"
     alt="Hopsworks Feature Store Documentation"
   /></a>
-  <a><img 
+  <a><img
     src="https://img.shields.io/badge/python-3.8+-blue"
     alt="python"
   /></a>
@@ -25,8 +25,8 @@
     src="https://pepy.tech/badge/hsfs/month"
     alt="Downloads"
   /></a>
-  <a href=https://github.com/astral-sh/ruff><img 
-    src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" 
+  <a href=https://github.com/astral-sh/ruff><img
+    src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"
     alt="Ruff"
   /></a>
   <a><img
@@ -49,7 +49,19 @@ additional connection information, such as host and port, is required. For more 
 
 ## Getting Started On Hopsworks
 
-Instantiate a connection and get the project feature store handler
+Get started easily by registering an account on [Hopsworks Serverless](https://app.hopsworks.ai/). In a new python environment with Python 3.8 or higher, install the [client library](https://docs.hopsworks.ai/latest/user_guides/client_installation/) using pip:
+
+```bash
+# Get all Hopsworks SDKs: Feature Store, Model Serving and Platform SDK
+pip install hopsworks
+# or minimum install with the Feature Store SDK
+pip install hsfs[python]
+# if using zsh don't forget the quotes
+pip install 'hsfs[python]'
+```
+
+You can start a notebook and instantiate a connection and get the project feature store handler.
+
 ```python
 import hsfs
 
@@ -57,7 +69,7 @@ connection = hsfs.connection()
 fs = connection.get_feature_store()
 ```
 
-Create a new feature group
+Create a new feature group to start inserting feature values.
 ```python
 fg = fs.create_feature_group("rain",
                         version=1,
