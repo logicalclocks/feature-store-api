@@ -16,8 +16,8 @@ nav:
   - Guides: https://docs.hopsworks.ai/
   - Setup and Installation: https://docs.hopsworks.ai/
   - Administration: https://docs.hopsworks.ai/
-  - API:
-    - API Reference:
+  - API<div class="dropdown"><button class="dropbtn"> API </button> <div id="myDropdown" class="dropdown-content"> <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/latest">Hopsworks API</a> <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/latest">Feature Store API</a> <a id="hsfs_javadoc_link" href="https://docs.hopsworks.ai/feature-store-api/latest/javadoc">Feature Store JavaDoc</a> <a id="hsml_api_link" href="https://docs.hopsworks.ai/machine-learning-api/latest">MLOps API</a> </div></div>:
+    - Feature Store API Reference:
       - Connection: generated/api/connection_api.md
       - ExpectationSuite: generated/api/expectation_suite_api.md
       - FeatureStore: generated/api/feature_store_api.md
@@ -45,11 +45,15 @@ nav:
           - EmbeddingIndex: generated/api/embedding_index_api.md
           - EmbeddingFeature: generated/api/embedding_feature_api.md
           - SimilarityFunctionType: generated/api/similarity_function_type_api.md
+    - Hopsworks API: https://docs.hopsworks.ai/hopsworks-api/latest/
+    - MLOps API: https://docs.hopsworks.ai/machine-learning-api/latest/
+    - Feature Store JavaDoc: https://docs.hopsworks.ai/feature-store-javadoc/latest/
     - Contributing: CONTRIBUTING.md
   - Community ↗: https://community.hopsworks.ai/
 
 theme:
   name: material
+  custom_dir: docs/overrides
   favicon: assets/images/favicon.ico
   logo: assets/images/hops-logo.png
   icon:
@@ -59,18 +63,21 @@ theme:
     code: "IBM Plex Mono"
   palette:
     accent: teal
+    scheme: hopsworks
   features:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
     - navigation.indexes
-  custom_dir: docs/overrides
 
 extra:
   analytics:
     provider: google
     property: G-64FEEXPSDN
   generator: false
+  version:
+    - provider: mike
+    - default: latest
   social:
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/logicalclocks
@@ -90,9 +97,16 @@ extra_css:
 extra_javascript:
     - js/version-select.js
     - js/inject-api-links.js
+    - js/dropdown.js
 
 plugins:
     - search
+    - minify:
+        minify_html: true
+        minify_css: true
+        minify_js: true
+    - mike:
+        canonical_version: latest
 
 markdown_extensions:
     - admonition
