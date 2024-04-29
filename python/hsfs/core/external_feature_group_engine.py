@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from hsfs import engine, util
 from hsfs import feature_group as fg
@@ -44,7 +45,9 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
         for feat in feature_group.features:
             if feat.name in feature_group.primary_key:
                 feat.primary = True
-        util.validate_embedding_feature_type(feature_group.embedding_index, feature_group._features)
+        util.validate_embedding_feature_type(
+            feature_group.embedding_index, feature_group._features
+        )
 
         self._feature_group_api.save(feature_group)
 

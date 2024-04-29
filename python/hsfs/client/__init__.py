@@ -13,6 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
+from typing import Literal, Optional, Union
 
 from hsfs.client import external, hopsworks
 
@@ -21,19 +24,19 @@ _client = None
 
 
 def init(
-    client_type,
-    host=None,
-    port=None,
-    project=None,
-    engine=None,
-    region_name=None,
+    client_type: Union[Literal["hopsworks"], Literal["external"]],
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+    project: Optional[str] = None,
+    engine: Optional[str] = None,
+    region_name: Optional[str] = None,
     secrets_store=None,
-    hostname_verification=None,
-    trust_store_path=None,
-    cert_folder=None,
-    api_key_file=None,
-    api_key_value=None,
-):
+    hostname_verification: Optional[bool] = None,
+    trust_store_path: Optional[str] = None,
+    cert_folder: Optional[str] = None,
+    api_key_file: Optional[str] = None,
+    api_key_value: Optional[str] = None,
+) -> None:
     global _client
     if not _client:
         if client_type == "hopsworks":
@@ -54,14 +57,14 @@ def init(
             )
 
 
-def get_instance():
+def get_instance() -> Union[hopsworks.Client, external.Client]:
     global _client
     if _client:
         return _client
     raise Exception("Couldn't find client. Try reconnecting to Hopsworks.")
 
 
-def stop():
+def stop() -> None:
     global _client
     _client._close()
     _client = None

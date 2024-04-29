@@ -34,7 +34,7 @@ class TestFeature:
         assert f.partition is False
         assert f.hudi_precombine_key is True
         assert f.online_type == "int"
-        assert f.default_value == 1
+        assert f.default_value == "1"  # default value should be specified as string
         assert f._feature_group_id == 15
 
     def test_from_response_json_basic_info(self, backend_fixtures):
@@ -55,14 +55,30 @@ class TestFeature:
         assert f.default_value is None
         assert f._feature_group_id is None
 
-    def test_like(self, backend_fixtures):
+    def test_like(self):
         # Arrange
         f = feature.Feature("feature_name")
 
         # Act
-        filter = f.like("max%")
+        filter_obj = f.like("max%")
 
         # Assert
-        assert filter._feature == f
-        assert filter._condition == filter.LK
-        assert filter._value == "max%"
+        assert filter_obj._feature == f
+        assert filter_obj._condition == filter_obj.LK
+        assert filter_obj._value == "max%"
+
+    def test_name_sanitizing(self):
+        # Arrange
+        spaced_name = "col 1"
+        upper_name = "Col1"
+        both = "Bravo Col"
+
+        # Act
+        spaced_feature = feature.Feature(name=spaced_name)
+        upper_feature = feature.Feature(name=upper_name)
+        both_feature = feature.Feature(name=both)
+
+        # Assert
+        assert spaced_feature.name == "col_1"
+        assert upper_feature.name == "col1"
+        assert both_feature.name == "bravo_col"

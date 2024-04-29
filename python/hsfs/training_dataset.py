@@ -12,10 +12,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 import warnings
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, Set, TypeVar, Union
 
 import humps
 import numpy as np
@@ -152,7 +153,11 @@ class TrainingDatasetBase:
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
-            self._label = [feat.name.lower() for feat in self._features if feat.label]
+            self._label = [
+                util.autofix_feature_name(feat.name)
+                for feat in self._features
+                if feat.label
+            ]
             self._extra_filter = filter.Logic.from_response_json(extra_filter)
 
     def _set_time_splits(
@@ -1059,7 +1064,7 @@ class TrainingDataset(TrainingDatasetBase):
         return self._vector_server.get_feature_vectors(entry)
 
     @property
-    def label(self):
+    def label(self) -> Union[str, List[str]]:
         """The label/prediction feature of the training dataset.
 
         Can be a composite of multiple features.
@@ -1067,15 +1072,15 @@ class TrainingDataset(TrainingDatasetBase):
         return self._label
 
     @label.setter
-    def label(self, label):
-        self._label = [lb.lower() for lb in label]
+    def label(self, label: str) -> None:
+        self._label = [util.autofix_feature_name(lb) for lb in label]
 
     @property
-    def feature_store_id(self):
+    def feature_store_id(self) -> int:
         return self._feature_store_id
 
     @property
-    def feature_store_name(self):
+    def feature_store_name(self) -> str:
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 
@@ -1092,13 +1097,14 @@ class TrainingDataset(TrainingDatasetBase):
     def transformation_functions(self, transformation_functions):
         self._transformation_functions = transformation_functions
 
-    def serving_keys(self):
+    @property
+    def serving_keys(self) -> Set[str]:
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
-        if self._vector_server.required_serving_keys:
-            return self._vector_server.required_serving_keys
-        else:
-            _vector_server = vector_server.VectorServer(
-                self._feature_store_id, self._features
+        if self._serving_keys is None or len(self._serving_keys) == 0:
+            self._serving_keys = util.build_serving_keys_from_prepared_statements(
+                self._training_dataset_api.get_serving_prepared_statement(
+                    entity=self, batch=False
+                ),
+                ignore_prefix=True,  # if serving_keys have to be built it is because fv created prior to 3.3, this ensure compatibility
             )
-            _vector_server.init_prepared_statement(self, False, False)
-            return _vector_server.required_serving_keys
+        return self._serving_keys

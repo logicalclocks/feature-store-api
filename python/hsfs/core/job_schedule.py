@@ -13,9 +13,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from typing import Any, Dict, Optional, Union
 
 import humps
 from hsfs import util
@@ -24,14 +26,14 @@ from hsfs import util
 class JobSchedule:
     def __init__(
         self,
-        start_date_time,
-        enabled,
-        cron_expression,
-        next_execution_date_time=None,
-        id=None,
-        end_date_time=None,
+        start_date_time: Union[int, datetime],
+        enabled: bool,
+        cron_expression: str,
+        next_execution_date_time: Optional[Union[int, datetime]] = None,
+        id: Optional[int] = None,
+        end_date_time: Optional[Union[int, datetime]] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._id = id
         self._start_date_time = (
             datetime.fromtimestamp(start_date_time / 1000, tz=timezone.utc)
@@ -54,11 +56,11 @@ class JobSchedule:
         )
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> JobSchedule:
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self._id,
             "startDateTime": int(self._start_date_time.timestamp() * 1000.0)
@@ -71,35 +73,35 @@ class JobSchedule:
             "enabled": self._enabled,
         }
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     @property
-    def id(self):
+    def id(self) -> Optional[int]:
         """Return the schedule id"""
         return self._id
 
     @property
-    def start_date_time(self):
+    def start_date_time(self) -> datetime:
         """Return the schedule start time"""
         return self._start_date_time
 
     @property
-    def end_date_time(self):
+    def end_date_time(self) -> Optional[datetime]:
         """Return the schedule end time"""
         return self._end_date_time
 
     @property
-    def enabled(self):
+    def enabled(self) -> bool:
         """Return whether the schedule is enabled or not"""
         return self._enabled
 
     @property
-    def cron_expression(self):
+    def cron_expression(self) -> str:
         """Return the schedule cron expression"""
         return self._cron_expression
 
     @property
-    def next_execution_date_time(self):
+    def next_execution_date_time(self) -> Optional[datetime]:
         """Return the next execution time"""
         return self._next_execution_date_time

@@ -13,11 +13,13 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-import hsfs.feature_group as feature_group
 import humps
-from hsfs.feature import Feature
-from hsfs.transformation_function import TransformationFunction
+from hsfs import feature as feature_mod
+from hsfs import feature_group as feature_group_mod
+from hsfs import transformation_function as tf_mod
+from hsfs import util
 
 
 class TrainingDatasetFeature:
@@ -34,11 +36,11 @@ class TrainingDatasetFeature:
         transformation_function=None,
         **kwargs,
     ):
-        self._name = name.lower()
+        self._name = util.autofix_feature_name(name)
         self._type = type
         self._index = index
         self._feature_group = (
-            feature_group.FeatureGroup.from_response_json(featuregroup)
+            feature_group_mod.FeatureGroup.from_response_json(featuregroup)
             if isinstance(featuregroup, dict)
             else featuregroup
         )
@@ -47,7 +49,7 @@ class TrainingDatasetFeature:
         self._inference_helper_column = inference_helper_column
         self._training_helper_column = training_helper_column
         self._transformation_function = (
-            TransformationFunction.from_response_json(transformation_function)
+            tf_mod.TransformationFunction.from_response_json(transformation_function)
             if isinstance(transformation_function, dict)
             else transformation_function
         )
@@ -72,7 +74,9 @@ class TrainingDatasetFeature:
 
     def is_complex(self):
         """Returns true if the feature has a complex type."""
-        return any(map(self._type.upper().startswith, Feature.COMPLEX_TYPES))
+        return any(
+            map(self._type.upper().startswith, feature_mod.Feature.COMPLEX_TYPES)
+        )
 
     @property
     def name(self):

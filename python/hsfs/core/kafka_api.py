@@ -13,6 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
+from typing import Any, Dict, Union
 
 from hsfs import client
 
@@ -20,10 +23,10 @@ from hsfs import client
 class KafkaApi:
     def get_subject(
         self,
-        feature_store_id: str,
+        feature_store_id: int,
         subject: str,
-        version: str = "latest",
-    ):
+        version: Union[str, int] = "latest",
+    ) -> Dict[str, Any]:
         _client = client.get_instance()
         path_params = [
             "project",

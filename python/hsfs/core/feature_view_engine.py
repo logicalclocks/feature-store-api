@@ -13,12 +13,20 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import datetime
 import warnings
 from typing import Optional
 
-from hsfs import client, engine, feature_group, training_dataset_feature, util
+from hsfs import (
+    client,
+    engine,
+    feature_group,
+    feature_view,
+    training_dataset_feature,
+    util,
+)
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
@@ -135,9 +143,11 @@ class FeatureViewEngine:
                 self.attach_transformation_function(_fv)
         return fv
 
-    def attach_transformation_function(self, fv):
-        fv.transformation_functions = self.get_attached_transformation_fn(
-            fv.name, fv.version
+    def attach_transformation_function(self, fv: "feature_view.FeatureView"):
+        fv.transformation_functions = (
+            self._transformation_function_engine.get_fv_attached_transformation_fn(
+                fv.name, fv.version
+            )
         )
         if fv.transformation_functions:
             for feature in fv.schema:
@@ -236,23 +246,6 @@ class FeatureViewEngine:
         if fs_query.pit_query is not None:
             return fs_query.pit_query
         return fs_query.query
-
-    def get_attached_transformation_fn(self, name, version):
-        transformation_functions = (
-            self._feature_view_api.get_attached_transformation_fn(name, version)
-        )
-        if isinstance(transformation_functions, list):
-            transformation_functions_dict = dict(
-                [
-                    (tf.name, tf.transformation_function)
-                    for tf in transformation_functions
-                ]
-            )
-        else:
-            transformation_functions_dict = {
-                transformation_functions.name: transformation_functions.transformation_function
-            }
-        return transformation_functions_dict
 
     def create_training_dataset(
         self,
@@ -862,16 +855,16 @@ class FeatureViewEngine:
                     "If you are using spines, use a Spark Kernel."
                 )
 
-    def _get_feature_view_url(self, feature_view):
+    def _get_feature_view_url(self, fv: "feature_view.FeatureView"):
         path = (
             "/p/"
             + str(client.get_instance()._project_id)
             + "/fs/"
-            + str(feature_view.featurestore_id)
+            + str(fv.featurestore_id)
             + "/fv/"
-            + str(feature_view.name)
+            + str(fv.name)
             + "/version/"
-            + str(feature_view.version)
+            + str(fv.version)
         )
         return util.get_hostname_replaced_url(path)
 
