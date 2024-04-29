@@ -49,7 +49,7 @@ additional connection information, such as host and port, is required. For more 
 
 ## Getting Started On Hopsworks
 
-Get started easily by registering an account on [Hopsworks Serverless](https://app.hopsworks.ai/). In a new python environment with Python 3.8 or higher, install the [client library](https://docs.hopsworks.ai/latest/user_guides/client_installation/) using pip:
+Get started easily by registering an account on [Hopsworks Serverless](https://app.hopsworks.ai/). Create your project and a [new Api key](https://docs.hopsworks.ai/latest/user_guides/projects/api_key/create_api_key/). In a new python environment with Python 3.8 or higher, install the [client library](https://docs.hopsworks.ai/latest/user_guides/client_installation/) using pip:
 
 ```bash
 # Get all Hopsworks SDKs: Feature Store, Model Serving and Platform SDK
@@ -63,9 +63,22 @@ pip install 'hsfs[python]'
 You can start a notebook and instantiate a connection and get the project feature store handler.
 
 ```python
+import hopsworks
+
+project = hopsworks.login() # you will be prompted for your api key
+fs = project.feature_store()
+```
+
+or using `hsfs` directly:
+
+```python
 import hsfs
 
-connection = hsfs.connection()
+connection = hsfs.connection(
+    host="c.app.hopsworks.ai", #
+    project="your-project",
+    api_key_value="your-api-key",
+)
 fs = connection.get_feature_store()
 ```
 
