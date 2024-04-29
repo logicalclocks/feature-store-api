@@ -361,7 +361,11 @@ class HopsworksUdf:
             else cls.STRING_PYTHON_TYPES_MAPPING[return_type],
             name=function_name,
         )
-        return hopsworks_udf(*transformation_features)
+        # TODO : Write proper comments for this use case. If we get a transformation function saved in the feature store then it will not have any specific transformaiton feature other than the ones in the code.
+        if "" not in transformation_features:
+            return hopsworks_udf(*transformation_features)
+        else:
+            return hopsworks_udf
 
     @property
     def return_type(self):
@@ -414,3 +418,13 @@ class HopsworksUdf:
                 self._statistics[
                     self.statistics_argument_mapping[stat.feature_name]
                 ] = stat
+
+    @property
+    def transformation_feature_names(self) -> List[str]:
+        if isinstance(self.return_type, List) and len(self.return_type) > 1:
+            return [
+                f'{self.function_name}<{"-".join(self.transformation_features)}>{{i}}'
+                for i in range(len(self.return_type))
+            ]
+        else:
+            return [f'{self.function_name}<{"-".join(self.transformation_features)}>']

@@ -21,6 +21,7 @@ from typing import Dict, Optional, Union
 
 import hsfs
 import numpy
+
 from hsfs import (
     feature_view,
     statistics,
@@ -36,7 +37,6 @@ from hsfs.core import (
     transformation_function_api,
 )
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
-
 
 class TransformationFunctionEngine:
     BUILTIN_FN_NAMES = [
@@ -62,16 +62,7 @@ class TransformationFunctionEngine:
         self._feature_view_api: Optional["feature_view_api.FeatureViewApi"] = None
         self._statistics_engine: Optional["statistics_engine.StatisticsEngine"] = None
 
-    def save(self, transformation_fn_instance):
-        if self.is_builtin(transformation_fn_instance):
-            raise ValueError(
-                "Transformation function name '{name:}' with version 1 is reserved for built-in hsfs "
-                "functions. Please use other name or version".format(
-                    name=transformation_fn_instance.name
-                )
-            )
-        if not callable(transformation_fn_instance.transformation_fn):
-            raise ValueError("transformer must be callable")
+    def save(self, transformation_fn_instance: TransformationFunction):
         self._transformation_function_api.register_transformation_fn(
             transformation_fn_instance
         )
@@ -108,73 +99,6 @@ class TransformationFunctionEngine:
                 attached_transformation_fn.transformation_function
             )
         return transformation_fn_dict
-
-    def is_builtin(self, transformation_fn_instance):
-        return (
-            transformation_fn_instance.name in self.BUILTIN_FN_NAMES
-            and transformation_fn_instance.version == 1
-        )
-
-    @staticmethod
-    def populate_builtin_fn_arguments(
-        feature_name, transformation_function_instance, feature_descriptive_stats
-    ):
-        # TODO : Make this statistics
-        if transformation_function_instance.name == "min_max_scaler":
-            min_value, max_value = BuiltInTransformationFunction.min_max_scaler_stats(
-                feature_descriptive_stats, feature_name
-            )
-            transformation_function_instance.transformation_fn = partial(
-                transformation_function_instance.transformation_fn,
-                min_value=min_value,
-                max_value=max_value,
-            )
-        elif transformation_function_instance.name == "standard_scaler":
-            mean, std_dev = BuiltInTransformationFunction.standard_scaler_stats(
-                feature_descriptive_stats, feature_name
-            )
-            transformation_function_instance.transformation_fn = partial(
-                transformation_function_instance.transformation_fn,
-                mean=mean,
-                std_dev=std_dev,
-            )
-        elif transformation_function_instance.name == "robust_scaler":
-            robust_scaler_stats = BuiltInTransformationFunction.robust_scaler_stats(
-                feature_descriptive_stats, feature_name
-            )
-            transformation_function_instance.transformation_fn = partial(
-                transformation_function_instance.transformation_fn,
-                p25=robust_scaler_stats[24],
-                p50=robust_scaler_stats[49],
-                p75=robust_scaler_stats[74],
-            )
-        elif transformation_function_instance.name == "label_encoder":
-            value_to_index = BuiltInTransformationFunction.encoder_stats(
-                feature_descriptive_stats, feature_name
-            )
-            transformation_function_instance.transformation_fn = partial(
-                transformation_function_instance.transformation_fn,
-                value_to_index=value_to_index,
-            )
-        else:
-            raise ValueError("Not implemented")
-
-        return transformation_function_instance
-
-    def populate_builtin_attached_fns(
-        self, attached_transformation_fns, feature_descriptive_stats
-    ):
-        # TODO : Remove
-        for ft_name in attached_transformation_fns:
-            if self.is_builtin(attached_transformation_fns[ft_name]):
-                # check if its built-in transformation function and populated with statistics arguments
-                transformation_fn = self.populate_builtin_fn_arguments(
-                    ft_name,
-                    attached_transformation_fns[ft_name],
-                    feature_descriptive_stats,
-                )
-                attached_transformation_fns[ft_name] = transformation_fn
-        return attached_transformation_fns
 
     @staticmethod
     def infer_spark_type(output_type):
@@ -216,6 +140,8 @@ class TransformationFunctionEngine:
             return "BOOLEAN"
         else:
             raise TypeError("Not supported type %s." % output_type)
+
+    # TODO : about statistics computation and fetching.
 
     # TODO : Think about what to do with label encoder features.
     @staticmethod
