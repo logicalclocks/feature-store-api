@@ -15,10 +15,11 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
+from typing import List, Optional
 
 import humps
 from hsfs import util
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_engine
 from hsfs.decorators import typechecked
 from hsfs.hopsworks_udf import HopsworksUdf
@@ -48,8 +49,11 @@ class TransformationFunction:
                 self._featurestore_id
             )
         )
+        if not isinstance(hopsworks_udf, HopsworksUdf):
+            raise FeatureStoreException(
+                "Use hopsworks_udf decorator when creating the feature view."
+            )
         self._hopsworks_udf = hopsworks_udf
-        self._name = hopsworks_udf.function_name
         self._feature_group_feature_name: Optional[str] = None
         self._feature_group_id: Optional[int] = None
 
@@ -102,20 +106,29 @@ class TransformationFunction:
         """
         self._transformation_function_engine.delete(self)
 
+    def __call__(self, *args: List[str]):
+        self._hopsworks_udf = self._hopsworks_udf(*args)
+        return self
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-
-        if json_decamelized.get("hopsworks_udf", False):
-            json_decamelized["hopsworks_udf"] = HopsworksUdf.from_response_json(
-                json_decamelized["hopsworks_udf"]
-            )
-
+        print(json_decamelized)
+        # TODO : Clean this up.
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
                 return []
+            for tffn_dto in json_decamelized["items"]:
+                if tffn_dto.get("hopsworks_udf", False):
+                    tffn_dto["hopsworks_udf"] = HopsworksUdf.from_response_json(
+                        tffn_dto["hopsworks_udf"]
+                    )
             return [cls(**tffn_dto) for tffn_dto in json_decamelized["items"]]
         else:
+            if json_decamelized.get("hopsworks_udf", False):
+                json_decamelized["hopsworks_udf"] = HopsworksUdf.from_response_json(
+                    json_decamelized["hopsworks_udf"]
+                )
             return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
@@ -129,7 +142,6 @@ class TransformationFunction:
     def to_dict(self):
         return {
             "id": self._id,
-            "name": self._name,
             "version": self._version,
             "featurestoreId": self._featurestore_id,
             "hopsworksUdf": self._hopsworks_udf,
@@ -145,20 +157,12 @@ class TransformationFunction:
         self._id = id
 
     @property
-    def name(self) -> str:
-        return self._name
-
-    @property
     def version(self) -> int:
         return self._version
 
     @property
     def hopsworks_udf(self) -> HopsworksUdf:
         return self._hopsworks_udf
-
-    @name.setter
-    def name(self, name: str):
-        self._name = name
 
     @version.setter
     def version(self, version: int):

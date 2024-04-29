@@ -17,12 +17,7 @@ from __future__ import annotations
 
 from typing import List, Optional, Union
 
-from hsfs import (
-    client,
-    feature_view,
-    training_dataset,
-    transformation_function_attached,
-)
+from hsfs import client, feature_view, training_dataset, transformation_function
 from hsfs.client.exceptions import RestAPIError
 from hsfs.constructor import query, serving_prepared_statement
 from hsfs.core import explicit_provenance, job, training_dataset_job_conf
@@ -110,7 +105,9 @@ class FeatureViewApi:
         try:
             return feature_view.FeatureView.from_response_json(
                 self._client._send_request(
-                    self._GET, path, {"expand": ["query", "features"]}
+                    self._GET,
+                    path,
+                    {"expand": ["query", "features", "transformationfunctions"]},
                 )
             )
         except RestAPIError as e:
@@ -191,11 +188,11 @@ class FeatureViewApi:
     def get_attached_transformation_fn(
         self, name: str, version: int
     ) -> Union[
-        "transformation_function_attached.TransformationFunctionAttached",
-        List["transformation_function_attached.TransformationFunctionAttached"],
+        "transformation_function.TransformationFunction",
+        List["transformation_function.TransformationFunction"],
     ]:
         path = self._base_path + [name, self._VERSION, version, self._TRANSFORMATION]
-        return transformation_function_attached.TransformationFunctionAttached.from_response_json(
+        return transformation_function.TransformationFunction.from_response_json(
             self._client._send_request("GET", path)
         )
 

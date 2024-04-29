@@ -111,6 +111,7 @@ class VectorServer:
         self._inference_helper_col_name = [
             feat.name for feat in features if feat.inference_helper_column
         ]
+        self._transformed_feature_vector_col_name = None
 
         self._skip_fg_ids = skip_fg_ids or set()
         self._serving_keys = serving_keys or []
@@ -135,7 +136,7 @@ class VectorServer:
 
     def init_serving(
         self,
-        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
+        entity: Union[feature_view.FeatureView],
         external: Optional[bool] = None,
         inference_helper_columns: bool = False,
         options: Optional[Dict[str, Any]] = None,
@@ -600,6 +601,7 @@ class VectorServer:
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
 
+
     def which_client_and_ensure_initialised(
         self, force_rest_client: bool, force_sql_client: bool
     ) -> str:
@@ -661,15 +663,23 @@ class VectorServer:
             self.default_client = self.DEFAULT_SQL_CLIENT
             self._init_sql_client = True
 
-    def apply_transformation(self, row_dict: Dict[str, Any]):
-        matching_keys = set(self.transformation_functions.keys()).intersection(
-            row_dict.keys()
-        )
+    def apply_transformation(self, row_dict: dict):
         _logger.debug("Applying transformation functions to : %s", matching_keys)
-        for feature_name in matching_keys:
-            row_dict[feature_name] = self.transformation_functions[
-                feature_name
-            ].transformation_fn(row_dict[feature_name])
+        for transformation_function in self.transformation_functions:
+            features = [
+                pd.Series(row_dict[feature])
+                for feature in transformation_function.hopsworks_udf.transformation_features
+            ]
+            transformed_result = transformation_function.hopsworks_udf.get_udf()(
+                *features
+            )
+            if isinstance(transformed_result, pd.Series):
+                row_dict[transformed_result.name] = transformed_result.values[0]
+            else:
+                for col in transformed_result:
+                    row_dict[transformed_result.name] = transformed_result[col].values[
+                        0
+                    ]
         return row_dict
 
     def apply_return_value_handlers(
@@ -1127,3 +1137,12 @@ class VectorServer:
 
         _logger.debug(f"Default Online Store Client is set to {default_client}.")
         self._default_client = default_client
+
+    def transformed_feature_vector_col_name(self):
+        if self._transformed_feature_vector_col_name is None:
+            for transformation_function in self._transformation_functions:
+                self._transformed_feature_vector_col_name = (
+                    self._feature_vector_col_name
+                    + transformation_function.hopsworks_udf.transformation_feature_names
+                )
+        return self._transformed_feature_vector_col_name
