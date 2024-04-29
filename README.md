@@ -45,7 +45,7 @@ The library is environment independent and can be used in two modes:
 
 The library automatically configures itself based on the environment it is run.
 However, to connect from an external environment such as Databricks or AWS Sagemaker,
-additional connection information, such as host and port, is required. For more information about the setup from external environments, see the setup section.
+additional connection information, such as host and port, is required. For more information checkout the [Hospworks documentation](https://docs.hopsworks.ai/latest/).
 
 ## Getting Started On Hopsworks
 
