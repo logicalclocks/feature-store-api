@@ -9,13 +9,11 @@ window.addEventListener("DOMContentLoaded", function () {
         document.getElementById("hsml_api_link").href = "https://docs.hopsworks.ai/machine-learning-api/" + windowPathNameSplits[1] + "/generated/connection_api/";
     } else { // on docs.hopsworks.api/feature-store-api/3.0 / docs.hopsworks.api/hopsworks-api/3.0 / docs.hopsworks.api/machine-learning-api/3.0
         if (latestRegex.test(windowPathNameSplits[2]) || latestRegex.test(windowPathNameSplits[1])) {
-          console.log("latest version");
           var majorVersion = "latest";
         } else {
 
           var apiVersion = windowPathNameSplits[2];
           var majorVersion = apiVersion.match(majorVersionRegex)[0];
-          console.log("specific version", majorVersion);
         }
         // Version main navigation
         document.getElementsByClassName("md-tabs__link")[0].href = "https://docs.hopsworks.ai/" + majorVersion;

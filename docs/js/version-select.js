@@ -29,11 +29,9 @@ window.addEventListener("DOMContentLoaded", function() {
       return i.version === CURRENT_VERSION ||
              i.aliases.includes(CURRENT_VERSION);
     }).version;
-    console.log("Current version: " + realVersion);
     var latestVersion = versions.find(function(i) {
       return i.aliases.includes("latest");
     }).version;
-    console.log("Latest version: " + latestVersion);
     let outdated_banner = document.querySelector('div[data-md-color-scheme="default"][data-md-component="outdated"]');
     if (realVersion !== latestVersion) {
       outdated_banner.removeAttribute("hidden");
