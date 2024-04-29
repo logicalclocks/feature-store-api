@@ -15,6 +15,7 @@
 #
 from __future__ import annotations
 
+import logging
 import copy
 import json
 import time
@@ -75,6 +76,9 @@ from hsfs.ge_validation_result import ValidationResult
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
+
+
+_logger = logging.getLogger(__name__)
 
 
 @typechecked
@@ -538,6 +542,10 @@ class FeatureGroupBase:
             `List[StorageConnector]: List of storage connectors.
         """
         storage_connector_provenance = self.get_storage_connector_provenance()
+
+        if storage_connector_provenance.inaccessible or storage_connector_provenance.deleted:
+            _logger.info("Explicit feature group provenance links to inaccessible or deleted storage connectors")
+
         if storage_connector_provenance.accessible:
             return storage_connector_provenance.accessible
         else:

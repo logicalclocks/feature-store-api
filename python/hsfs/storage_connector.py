@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import base64
+import logging
 import os
 import re
 import warnings
@@ -28,6 +29,9 @@ import pandas as pd
 import polars as pl
 from hsfs import client, engine
 from hsfs.core import storage_connector_api
+
+
+_logger = logging.getLogger(__name__)
 
 
 class StorageConnector(ABC):
@@ -204,7 +208,11 @@ class StorageConnector(ABC):
         # Returns
             `List[FeatureGroup]: List of feature groups.
         """
-        feature_groups_provenance = self.get_feature_groups_provenance().accessible
+        feature_groups_provenance = self.get_feature_groups_provenance()
+
+        if feature_groups_provenance.inaccessible or feature_groups_provenance.deleted:
+            _logger.info("Explicit storage connector provenance links to inaccessible or deleted feature groups")
+
         if feature_groups_provenance.accessible:
             return feature_groups_provenance.accessible
         else:
