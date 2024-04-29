@@ -138,3 +138,6 @@ keyFile.json
 
 # delombok dir
 delombok
+
+# dev scripts dir
+dev_scripts
