@@ -102,6 +102,7 @@ class VectorServer:
         self._inference_helper_col_name = [
             feat.name for feat in features if feat.inference_helper_column
         ]
+        self._transformed_feature_vector_col_name = None
 
         self._skip_fg_ids = skip_fg_ids or set()
         self._serving_keys = serving_keys or []
@@ -124,7 +125,7 @@ class VectorServer:
 
     def init_serving(
         self,
-        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
+        entity: Union[feature_view.FeatureView],
         external: Optional[bool] = None,
         inference_helper_columns: bool = False,
         options: Optional[Dict[str, Any]] = None,
@@ -529,6 +530,7 @@ class VectorServer:
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
 
+
     def which_client_and_ensure_initialised(
         self, force_rest_client: bool, force_sql_client: bool
     ) -> str:
@@ -605,15 +607,23 @@ class VectorServer:
             self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
             self._init_online_store_sql_client = True
 
-    def apply_transformation(self, row_dict: Dict[str, Any]):
-        matching_keys = set(self.transformation_functions.keys()).intersection(
-            row_dict.keys()
-        )
+    def apply_transformation(self, row_dict: dict):
         _logger.debug("Applying transformation functions to : %s", matching_keys)
-        for feature_name in matching_keys:
-            row_dict[feature_name] = self.transformation_functions[
-                feature_name
-            ].transformation_fn(row_dict[feature_name])
+        for transformation_function in self.transformation_functions:
+            features = [
+                pd.Series(row_dict[feature])
+                for feature in transformation_function.hopsworks_udf.transformation_features
+            ]
+            transformed_result = transformation_function.hopsworks_udf.get_udf()(
+                *features
+            )
+            if isinstance(transformed_result, pd.Series):
+                row_dict[transformed_result.name] = transformed_result.values[0]
+            else:
+                for col in transformed_result:
+                    row_dict[transformed_result.name] = transformed_result[col].values[
+                        0
+                    ]
         return row_dict
 
     def apply_return_value_handlers(self, row_dict: Dict[str, Any]):
@@ -875,6 +885,143 @@ class VectorServer:
     ) -> Optional[online_store_sql_engine.OnlineStoreSqlClient]:
         return self._online_store_sql_client
 
+
+    @staticmethod
+    def _get_result_key(primary_keys, result_dict):
+        result_key = []
+        for pk in primary_keys:
+            result_key.append(result_dict.get(pk))
+        return tuple(result_key)
+
+    @staticmethod
+    def _get_result_key_serving_key(serving_keys, result_dict):
+        result_key = []
+        for sk in serving_keys:
+            result_key.append(
+                result_dict.get(sk.required_serving_key)
+                or result_dict.get(sk.feature_name)
+            )
+        return tuple(result_key)
+
+    @staticmethod
+    def _parametrize_query(name, query_online):
+        # Now we have ordered pk_names, iterate over it and replace `?` with `:feature_name` one by one.
+        # Regex `"^(.*?)\?"` will identify 1st occurrence of `?` in the sql string and replace it with provided
+        # feature name, e.g. `:feature_name`:. As we iteratively update `query_online` we are always aiming to
+        # replace 1st occurrence of `?`. This approach can only work if primary key names are sorted properly.
+        # Regex `"^(.*?)\?"`:
+        # `^` - asserts position at start of a line
+        # `.*?` - matches any character (except for line terminators). `*?` Quantifier —
+        # Matches between zero and unlimited times, expanding until needed, i.e 1st occurrence of `\?`
+        # character.
+        return re.sub(
+            r"^(.*?)\?",
+            r"\1:" + name,
+            query_online,
+        )
+
+    def _get_transformation_fns(self, fv: feature_view.FeatureView):
+        # get attached transformation functions
+        transformation_functions = (
+            self._feature_view_engine.get_attached_transformation_fn(
+                fv.name, fv.version
+            )
+        )
+        print(transformation_functions)
+        is_stat_required = any(
+            [tf.hopsworks_udf.statistics_required for tf in fv.transformation_functions]
+        )
+        is_feat_view = isinstance(fv, feature_view.FeatureView)
+        if not is_stat_required:
+            td_tffn_stats = None
+        else:
+            # if there are any built-in transformation functions get related statistics and
+            # populate with relevant arguments
+            # there should be only one statistics object with before_transformation=true
+            if is_feat_view and self._training_dataset_version is None:
+                raise ValueError(
+                    "Training data version is required for transformation. Call `feature_view.init_serving(version)` "
+                    "or `feature_view.init_batch_scoring(version)` to pass the training dataset version."
+                    "Training data can be created by `feature_view.create_training_data` or `feature_view.get_training_data`."
+                )
+            td_tffn_stats = self._feature_view_engine._statistics_engine.get(
+                fv,
+                before_transformation=True,
+                training_dataset_version=self._training_dataset_version,
+            )
+        # TODO : clean this up
+        if is_stat_required and td_tffn_stats is None:
+            raise ValueError(
+                "No statistics available for initializing transformation functions."
+            )
+        if is_stat_required:
+            for transformation_function in transformation_functions:
+                transformation_function.hopsworks_udf.transformation_statistics = (
+                    td_tffn_stats.feature_descriptive_statistics
+                )
+
+        return transformation_functions
+
+    def filter_entry_by_join_index(self, entry, join_index):
+        fg_entry = {}
+        complete = True
+        for sk in self._serving_key_by_serving_index[join_index]:
+            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key) or entry.get(
+                sk.feature_name
+            )  # fallback to use raw feature name
+            if fg_entry[sk.feature_name] is None:
+                complete = False
+                break
+        return complete, fg_entry
+
+    async def _set_aiomysql_connection(self, default_min_size: int, options=None):
+        online_connector = self._storage_connector_api.get_online_connector(
+            self._feature_store_id
+        )
+        self._async_pool = await util.create_async_engine(
+            online_connector, self._external, default_min_size, options=options
+        )
+
+    async def _query_async_sql(self, stmt, bind_params):
+        """Query prepared statement together with bind params using aiomysql connection pool"""
+        # Get a connection from the pool
+        async with self._async_pool.acquire() as conn:
+            # Execute the prepared statement
+            cursor = await conn.execute(stmt, bind_params)
+            # Fetch the result
+            resultset = await cursor.fetchall()
+            await cursor.close()
+
+        return resultset
+
+    async def _execute_prep_statements(self, prepared_statements: dict, entries: dict):
+        """Iterate over prepared statements to create async tasks
+        and gather all tasks results for a given list of entries."""
+
+        # validate if prepared_statements and entries have the same keys
+        if prepared_statements.keys() != entries.keys():
+            # iterate over prepared_statements and entries to find the missing key
+            # remove missing keys from prepared_statements
+            for key in list(prepared_statements.keys()):
+                if key not in entries:
+                    prepared_statements.pop(key)
+
+        tasks = [
+            asyncio.ensure_future(
+                self._query_async_sql(prepared_statements[key], entries[key])
+            )
+            for key in prepared_statements
+        ]
+        # Run the queries in parallel using asyncio.gather
+        results = await asyncio.gather(*tasks)
+        results_dict = {}
+        # Create a dict of results with the prepared statement index as key
+        for i, key in enumerate(prepared_statements):
+            results_dict[key] = results[i]
+        # TODO: close connection? closing connection pool here will make un-acquirable for future connections
+        # unless init_serving is explicitly called before get_feature_vector(s).
+        return results_dict
+
     @property
     def online_store_rest_client_engine(
         self,
@@ -1010,3 +1157,12 @@ class VectorServer:
             f"Default Online Store Client is set to {default_online_store_client}."
         )
         self._default_online_store_client = default_online_store_client
+
+    def transformed_feature_vector_col_name(self):
+        if self._transformed_feature_vector_col_name is None:
+            for transformation_function in self._transformation_functions:
+                self._transformed_feature_vector_col_name = (
+                    self._feature_vector_col_name
+                    + transformation_function.hopsworks_udf.transformation_feature_names
+                )
+        return self._transformed_feature_vector_col_name
