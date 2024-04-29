@@ -54,6 +54,7 @@ from hsfs import (
 from hsfs import storage_connector as sc
 from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.constructor import query
 from hsfs.core import (
     arrow_flight_client,
@@ -514,6 +515,28 @@ class Engine:
         return self.sql(
             sql_query, feature_store, online_conn, "default", read_options or {}
         ).head(n)
+
+    def read_vector_db(self, feature_group: "hsfs.feature_group.FeatureGroup", n: int =None, dataframe_type: str="default") -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
+        dataframe_type = dataframe_type.lower()
+        if not isinstance(dataframe_type, str) or dataframe_type not in [
+            "pandas",
+            "polars",
+            "numpy",
+            "python",
+            "default",
+        ]:
+            raise FeatureStoreException(
+                f'dataframe_type : {dataframe_type} not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
+            )
+        results = VectorDbClient.read_feature_group(feature_group, n)
+        feature_names = [f.name for f in feature_group.features]
+        if dataframe_type == "polars":
+            df = pl.DataFrame(results)
+            # Rename columns to match feature names
+            df = df.with_column_names(feature_names)
+        else:
+            df = pd.DataFrame(results, columns=feature_names, index=None)
+        return self._return_dataframe_type(df, dataframe_type)
 
     def register_external_temporary_table(
         self, external_fg: ExternalFeatureGroup, alias: str

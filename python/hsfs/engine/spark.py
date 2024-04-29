@@ -23,7 +23,7 @@ import re
 import shutil
 import warnings
 from datetime import date, datetime, timezone
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Union, List, Any
 
 import avro
 import numpy as np
@@ -32,6 +32,7 @@ import tzlocal
 
 
 # in case importing in %%local
+from hsfs.core.vector_db_client import VectorDbClient
 
 try:
     import pyspark
@@ -150,6 +151,17 @@ class Engine:
         return self.sql(
             sql_query, feature_store, online_conn, "default", read_options
         ).show(n)
+
+    def read_vector_db(self, feature_group: "hsfs.feature_group.FeatureGroup", n: int =None, dataframe_type: str="default") -> Union[pd.DataFrame, np.ndarray, List[List[Any]], TypeVar("pyspark.sql.DataFrame")]:
+        results = VectorDbClient.read_feature_group(feature_group, n)
+        feature_names = [f.name for f in feature_group.features]
+        dataframe_type = dataframe_type.lower()
+        if dataframe_type in ["default", "spark"]:
+            rdd = self._spark_session.sparkContext.parallelize(results)
+            return rdd.toDF(*feature_names)
+        else:
+            df = pd.DataFrame(results, columns=feature_names, index=None)
+            return self._return_dataframe_type(df, dataframe_type)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
