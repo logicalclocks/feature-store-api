@@ -473,7 +473,10 @@ class VectorServer:
             self._ordered_feature_group_feature_names.append(
                 feature.feature_group_feature_name
             )
-            if feature.is_complex() and feature.name in self._transformation_fns.keys():
+            if (
+                feature.is_complex()
+                and feature.name in self.transformation_functions.keys()
+            ):
                 # deserialize and then transform
                 _logger.debug(
                     f"Adding return feature value deserializer for complex feature {feature.name} with transformation function."
@@ -499,7 +502,7 @@ class VectorServer:
                 )
             elif (
                 feature.type == "timestamp"
-                and feature.name in self._transformation_fns.keys()
+                and feature.name in self.transformation_functions.keys()
             ):
                 # convert and then transform
                 _logger.debug(
@@ -509,7 +512,7 @@ class VectorServer:
                     lambda feature_value, feature_name=feature.name: _logger.debug(
                         f"Convert and transform timestamp feature {feature_name}"
                     )
-                    or self._transformation_fns[feature_name].transformation_fn(
+                    or self._transformation_functions[feature_name].transformation_fn(
                         self._handle_timestamp_based_on_dtype(feature_value)
                     )
                 )
@@ -521,7 +524,7 @@ class VectorServer:
                 self._return_feature_value_handlers[feature.name] = (
                     self._handle_timestamp_based_on_dtype
                 )
-            elif feature.name in self._transformation_fns.keys():
+            elif feature.name in self.transformation_functions.keys():
                 # transform only
                 _logger.debug(
                     f"Adding return feature value transformation for feature {feature.name}."
@@ -530,7 +533,7 @@ class VectorServer:
                     lambda feature_value, feature_name=feature.name: _logger.debug(
                         f"Transform value of feature {feature_name}"
                     )
-                    or self._transformation_fns[feature_name].transformation_fn(
+                    or self.transformation_functions[feature_name].transformation_fn(
                         feature_value
                     )
                 )
@@ -642,7 +645,9 @@ class VectorServer:
     @property
     def transformation_functions(
         self,
-    ) -> Optional[Dict[str, tfa_mod.TransformationFunctionAttached]]:
+    ) -> Dict[str, tfa_mod.TransformationFunctionAttached]:
+        if self._transformation_functions is None:
+            self._transformation_functions = {}
         return self._transformation_functions
 
     @property
