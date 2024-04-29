@@ -45,6 +45,21 @@ def _handle_opensearch_exception(func):
     def error_handler_wrapper(*args, **kw):
         try:
             return func(*args, **kw)
+        except (ConnectionError, AuthenticationException):
+            # OpenSearchConnectionError occurs when connection is closed.
+            # OpenSearchAuthenticationException occurs when jwt is expired
+            OpenSearchClientSingleton()._refresh_opensearch_connection()
+            return func(*args, **kw)
+        except RequestError as e:
+            caused_by = e.info.get("error") and e.info["error"].get("caused_by")
+            if caused_by and caused_by["type"] == "illegal_argument_exception":
+                raise OpenSearchClientSingleton()._create_vector_database_exception(
+                    caused_by["reason"]) from e
+            raise VectorDatabaseException(
+                VectorDatabaseException.OTHERS,
+                f"Error in Opensearch request: {e}",
+                e.info,
+            ) from e
         except Exception as e:
             if _is_timeout(e):
                 raise FeatureStoreException(
@@ -146,30 +161,7 @@ class OpenSearchClientSingleton:
     )
     @_handle_opensearch_exception
     def search(self, index=None, body=None, options=None):
-        try:
-            return self._opensearch_client.search(
-                body=body,
-                index=index,
-                params=OpensearchRequestOption.get_options(options),
-            )
-        except (ConnectionError, AuthenticationException):
-            # OpenSearchConnectionError occurs when connection is closed.
-            # OpenSearchAuthenticationException occurs when jwt is expired
-            self._refresh_opensearch_connection()
-            return self._opensearch_client.search(
-                body=body,
-                index=index,
-                params=OpensearchRequestOption.get_options(options),
-            )
-        except RequestError as e:
-            caused_by = e.info.get("error") and e.info["error"].get("caused_by")
-            if caused_by and caused_by["type"] == "illegal_argument_exception":
-                raise self._create_vector_database_exception(caused_by["reason"]) from e
-            raise VectorDatabaseException(
-                VectorDatabaseException.OTHERS,
-                f"Error in Opensearch request: {e}",
-                e.info,
-            ) from e
+        return self._opensearch_client.search(body=body, index=index, params=OpensearchRequestOption.get_options(options))
 
     @retry(
         wait_exponential_multiplier=1000,
