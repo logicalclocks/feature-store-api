@@ -29,6 +29,7 @@ import uuid
 import warnings
 from datetime import datetime, timezone
 from io import BytesIO
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import avro
@@ -348,6 +349,9 @@ class Engine:
                 )
             )
 
+    def _is_metadata_file(self, path):
+        return Path(path).stem.startswith("_")
+
     def _read_hopsfs(
         self,
         location: str,
@@ -369,7 +373,7 @@ class Engine:
         for path in path_list:
             if (
                 hdfs.path.isfile(path)
-                and not path.endswith("_SUCCESS")
+                and not self._is_metadata_file(path)
                 and hdfs.path.getsize(path) > 0
             ):
                 if dataframe_type.lower() == "polars":
@@ -471,7 +475,7 @@ class Engine:
                 )
 
             for obj in object_list["Contents"]:
-                if not obj["Key"].endswith("_SUCCESS") and obj["Size"] > 0:
+                if not self._is_metadata_file(obj["Key"]) and obj["Size"] > 0:
                     obj = s3.get_object(
                         Bucket=storage_connector.bucket,
                         Key=obj["Key"],

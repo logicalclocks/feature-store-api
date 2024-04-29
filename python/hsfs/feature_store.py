@@ -88,29 +88,29 @@ class FeatureStore:
         self._num_storage_connectors = num_storage_connectors
         self._num_feature_views = num_feature_views
 
-        self._feature_group_api: "feature_group_api.FeatureGroupApi" = (
+        self._feature_group_api: feature_group_api.FeatureGroupApi = (
             feature_group_api.FeatureGroupApi()
         )
-        self._storage_connector_api: "storage_connector_api.StorageConnectorApi" = (
+        self._storage_connector_api: storage_connector_api.StorageConnectorApi = (
             storage_connector_api.StorageConnectorApi()
         )
-        self._training_dataset_api: "training_dataset_api.TrainingDatasetApi" = (
+        self._training_dataset_api: training_dataset_api.TrainingDatasetApi = (
             training_dataset_api.TrainingDatasetApi(self._id)
         )
 
-        self._feature_group_engine: "feature_group_engine.FeatureGroupEngine" = (
+        self._feature_group_engine: feature_group_engine.FeatureGroupEngine = (
             feature_group_engine.FeatureGroupEngine(self._id)
         )
 
-        self._transformation_function_engine: "transformation_function_engine.TransformationFunctionEngine" = transformation_function_engine.TransformationFunctionEngine(
+        self._transformation_function_engine: transformation_function_engine.TransformationFunctionEngine = transformation_function_engine.TransformationFunctionEngine(
             self._id
         )
-        self._feature_view_engine: "feature_view_engine.FeatureViewEngine" = (
+        self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
             feature_view_engine.FeatureViewEngine(self._id)
         )
 
     @classmethod
-    def from_response_json(cls, json_dict: Dict[str, Any]) -> "FeatureStore":
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> FeatureStore:
         json_decamelized = humps.decamelize(json_dict)
         # fields below are removed from 3.4. remove them for backward compatibility.
         json_decamelized.pop("hdfs_store_path", None)
@@ -162,9 +162,7 @@ class FeatureStore:
                 stacklevel=1,
             )
             version = self.DEFAULT_VERSION
-        feature_group_object = self._feature_group_api.get(
-            self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
-        )
+        feature_group_object = self._feature_group_api.get(self.id, name, version)
         feature_group_object.feature_store = self
         return feature_group_object
 
@@ -202,9 +200,7 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        feature_group_object = self._feature_group_api.get(
-            self.id, name, None, feature_group_api.FeatureGroupApi.CACHED
-        )
+        feature_group_object = self._feature_group_api.get(self.id, name, None)
         for fg_object in feature_group_object:
             fg_object.feature_store = self
         return feature_group_object
@@ -274,7 +270,9 @@ class FeatureStore:
             )
             version = self.DEFAULT_VERSION
         feature_group_object = self._feature_group_api.get(
-            self.id, name, version, feature_group_api.FeatureGroupApi.ONDEMAND
+            self.id,
+            name,
+            version,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -331,7 +329,7 @@ class FeatureStore:
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         feature_group_object = self._feature_group_api.get(
-            self.id, name, None, feature_group_api.FeatureGroupApi.ONDEMAND
+            feature_store_id=self.id, name=name, version=None
         )
         for fg_object in feature_group_object:
             fg_object.feature_store = self
@@ -733,9 +731,7 @@ class FeatureStore:
             `FeatureGroup`. The feature group metadata object.
         """
         try:
-            feature_group_object = self._feature_group_api.get(
-                self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
-            )
+            feature_group_object = self._feature_group_api.get(self.id, name, version)
             feature_group_object.feature_store = self
             return feature_group_object
         except exceptions.RestAPIError as e:
@@ -1146,9 +1142,7 @@ class FeatureStore:
             `SpineGroup`. The spine group metadata object.
         """
         try:
-            spine = self._feature_group_api.get(
-                self.id, name, version, feature_group_api.FeatureGroupApi.SPINE
-            )
+            spine = self._feature_group_api.get(self.id, name, version)
             spine.feature_store = self
             spine.dataframe = dataframe
             return spine
