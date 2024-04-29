@@ -211,9 +211,7 @@ class VectorDbClient:
             elif feature_type == "timestamp":
                 # convert timestamp in ms to datetime in s
                 result[feature_name] = datetime.utcfromtimestamp(feature_value // 10**3)
-            elif feature_type == "binary":
-                result[feature_name] = base64.b64decode(feature_value)
-            elif feature.is_complex() and feature not in self._embedding_features:
+            elif feature_type == "binary" or (feature.is_complex() and feature not in self._embedding_features):
                 result[feature_name] = base64.b64decode(feature_value)
         return result
 
