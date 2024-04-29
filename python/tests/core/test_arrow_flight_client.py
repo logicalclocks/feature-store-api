@@ -29,16 +29,19 @@ from hsfs.storage_connector import HopsFSConnector, StorageConnector
 
 class TestArrowFlightClient:
     @pytest.fixture(autouse=True)
-    def run_around_tests(self):
-        arrow_flight_client.get_instance()._is_enabled = True
+    def run_around_tests(self, mocker):
+        mocker.patch("hsfs.client.get_instance")
+        arrow_flight_client.get_instance()._enabled_on_cluster = True
+        arrow_flight_client.get_instance()._disabled_for_session = False
         yield
-        arrow_flight_client.get_instance()._is_enabled = False
+        arrow_flight_client.get_instance()._enabled_on_cluster = False
+        arrow_flight_client.get_instance()._disabled_for_session = True
 
     def _arrange_engine_mocks(self, mocker, backend_fixtures):
+        mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type", return_value="python")
         python_engine = python.Engine()
         mocker.patch("hsfs.engine.get_instance", return_value=python_engine)
-        mocker.patch("hsfs.client.get_instance")
         json_query = backend_fixtures["fs_query"]["get_basic_info"]["response"]
         q = fs_query.FsQuery.from_response_json(json_query)
         mocker.patch(
@@ -46,7 +49,7 @@ class TestArrowFlightClient:
             return_value=q,
         )
 
-    def _arrange_featuregroup_mocks(self, mocker, backend_fixtures):
+    def _arrange_featuregroup_mocks(self, backend_fixtures):
         json_fg = backend_fixtures["feature_group"]["get_stream_list"]["response"]
         fg_list = feature_group.FeatureGroup.from_response_json(json_fg)
         fg = fg_list[0]
@@ -69,7 +72,7 @@ class TestArrowFlightClient:
             return_value=td,
         )
 
-        fg = self._arrange_featuregroup_mocks(mocker, backend_fixtures)
+        fg = self._arrange_featuregroup_mocks(backend_fixtures)
         mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query",
             return_value=fg.select_all(),
@@ -111,7 +114,7 @@ class TestArrowFlightClient:
     def test_read_feature_group(self, mocker, backend_fixtures):
         # Arrange
         self._arrange_engine_mocks(mocker, backend_fixtures)
-        fg = self._arrange_featuregroup_mocks(mocker, backend_fixtures)
+        fg = self._arrange_featuregroup_mocks(backend_fixtures)
         mock_read_query = mocker.patch(
             "hsfs.core.arrow_flight_client.ArrowFlightClient.read_query"
         )
@@ -125,7 +128,7 @@ class TestArrowFlightClient:
     def test_read_feature_group_spark(self, mocker, backend_fixtures):
         # Arrange
         self._arrange_engine_mocks(mocker, backend_fixtures)
-        fg = self._arrange_featuregroup_mocks(mocker, backend_fixtures)
+        fg = self._arrange_featuregroup_mocks(backend_fixtures)
         mock_creat_hive_connection = mocker.patch(
             "hsfs.engine.python.Engine._create_hive_connection"
         )
@@ -139,7 +142,7 @@ class TestArrowFlightClient:
     def test_read_query(self, mocker, backend_fixtures):
         # Arrange
         self._arrange_engine_mocks(mocker, backend_fixtures)
-        fg = self._arrange_featuregroup_mocks(mocker, backend_fixtures)
+        fg = self._arrange_featuregroup_mocks(backend_fixtures)
         mock_read_query = mocker.patch(
             "hsfs.core.arrow_flight_client.ArrowFlightClient.read_query"
         )
@@ -154,7 +157,7 @@ class TestArrowFlightClient:
     def test_read_query_spark(self, mocker, backend_fixtures):
         # Arrange
         self._arrange_engine_mocks(mocker, backend_fixtures)
-        fg = self._arrange_featuregroup_mocks(mocker, backend_fixtures)
+        fg = self._arrange_featuregroup_mocks(backend_fixtures)
         mock_creat_hive_connection = mocker.patch(
             "hsfs.engine.python.Engine._create_hive_connection"
         )
@@ -539,7 +542,7 @@ class TestArrowFlightClient:
 
         assert str(query_object_reference) == str(query_object)
 
-    def test_supports(self, mocker, backend_fixtures):
+    def test_supports(self):
         # Arrange
         connector = storage_connector.BigQueryConnector(0, "BigQueryConnector", 99)
         external_feature_group = feature_group.ExternalFeatureGroup(
@@ -547,9 +550,7 @@ class TestArrowFlightClient:
         )
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
-            [external_feature_group]
-        )
+        supported = arrow_flight_client.supports([external_feature_group])
 
         # Assert
         assert supported
@@ -561,21 +562,19 @@ class TestArrowFlightClient:
         def spark_options(self):
             pass
 
-    def test_supports_unsupported(self, mocker, backend_fixtures):
+    def test_supports_unsupported(self):
         # Arrange
         external_feature_group = feature_group.ExternalFeatureGroup(
             storage_connector=self.FakeConnector(), primary_key=[""]
         )
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
-            [external_feature_group]
-        )
+        supported = arrow_flight_client.supports([external_feature_group])
 
         # Assert
         assert not supported
 
-    def test_supports_mixed_featuregroups(self, mocker, backend_fixtures):
+    def test_supports_mixed_featuregroups(self):
         # Arrange
         connector = storage_connector.BigQueryConnector(0, "BigQueryConnector", 99)
         external_feature_group = feature_group.ExternalFeatureGroup(
@@ -584,14 +583,14 @@ class TestArrowFlightClient:
         mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
+        supported = arrow_flight_client.supports(
             [external_feature_group, mock_feature_group]
         )
 
         # Assert
         assert supported
 
-    def test_supports_mixed_featuregroups_unsupported(self, mocker, backend_fixtures):
+    def test_supports_mixed_featuregroups_unsupported(self):
         # Arrange
         external_feature_group = feature_group.ExternalFeatureGroup(
             storage_connector=self.FakeConnector(), primary_key=[""]
@@ -599,22 +598,20 @@ class TestArrowFlightClient:
         mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
+        supported = arrow_flight_client.supports(
             [external_feature_group, mock_feature_group]
         )
 
         # Assert
         assert not supported
 
-    def test_supports_spine_unsupported(self, mocker, backend_fixtures):
+    def test_supports_spine_unsupported(self):
         # Arrange
         mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
         mock_sping = MagicMock(spec=feature_group.SpineGroup)
 
         # Act
-        supported = arrow_flight_client.get_instance().supports(
-            [mock_feature_group, mock_sping]
-        )
+        supported = arrow_flight_client.supports([mock_feature_group, mock_sping])
 
         # Assert
         assert not supported
