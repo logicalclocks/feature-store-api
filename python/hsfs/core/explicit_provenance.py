@@ -401,7 +401,6 @@ class ProvenanceEncoder(json.JSONEncoder):
         elif isinstance(
             obj,
             (
-                storage_connector.StorageConnector,
                 feature_group.FeatureGroup,
                 feature_group.ExternalFeatureGroup,
                 feature_view.FeatureView,
@@ -413,6 +412,15 @@ class ProvenanceEncoder(json.JSONEncoder):
                 "feature_store_name": obj.feature_store_name,
                 "name": obj.name,
                 "version": obj.version,
+            }
+        elif isinstance(
+            obj,
+            (
+                storage_connector.StorageConnector
+            ),
+        ):
+            return {
+                "name": obj.name,
             }
         else:
             import importlib.util
