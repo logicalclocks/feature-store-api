@@ -309,8 +309,9 @@ class EmbeddingIndex:
             `hsfs.embedding.EmbeddingFeature` object
         """
         feat = self._features.get(name)
-        feat.feature_group = self._feature_group
-        feat.embedding_index = self
+        if feat:
+            feat.feature_group = self._feature_group
+            feat.embedding_index = self
         return feat
 
     def get_embeddings(self):
