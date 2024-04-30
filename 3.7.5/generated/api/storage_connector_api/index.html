@@ -1,0 +1,5058 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Official documentation for Hopsworks and its Feature Store - an open source data-intensive AI platform used for the development and operation of machine learning models at scale.">
+      
+      
+        <meta name="author" content="Logical Clocks">
+      
+      
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/latest/generated/api/storage_connector_api/">
+      
+      <link rel="icon" href="../../../assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
+    
+    
+      
+        <title>Storage Connector - Hopsworks Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.644de097.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.e6a45f82.min.css">
+        
+      
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../css/custom.css">
+    
+      <link rel="stylesheet" href="../../../css/version-select.css">
+    
+      <link rel="stylesheet" href="../../../css/dropdown.css">
+    
+      <link rel="stylesheet" href="../../../css/marctech.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+
+  <script>function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","G-64FEEXPSDN"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){this.value&&gtag("event","search",{search_term:this.value})}),"undefined"!=typeof location$&&location$.subscribe(function(e){gtag("config","G-64FEEXPSDN",{page_path:e.pathname})})})</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-64FEEXPSDN"></script>
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="" data-md-color-accent="teal">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#storage-connector" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-component="outdated" hidden>
+        <aside class="md-banner md-banner--warning">
+          
+            <div class="md-banner__inner md-grid md-typeset">
+              
+You're not viewing the latest version of the documentation.
+<a href="https://docs.hopsworks.ai/latest/">
+    <strong>Click here to go to latest.</strong>
+</a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          
+        </aside>
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Hopsworks Documentation" class="md-header__button md-logo" aria-label="Hopsworks Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/images/hops-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Hopsworks Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Storage Connector
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/logicalclocks/hopsworks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    logicalclocks/hopsworks
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Home
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Getting Started ↗
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Tutorials
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Concepts
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Guides
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Setup and Installation
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://docs.hopsworks.ai/" class="md-tabs__link">
+    Administration
+  </a>
+</li>
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+  
+  
+
+  <!-- Recurse, if the first item has further nested items -->
+  
+    <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+<!-- Main navigation item with nested items -->
+
+  
+  
+
+  <!-- Recurse, if the first item has further nested items -->
+  
+  <li class="md-tabs__item dropdown-api"><button class="dropbtn-api  md-tabs__link md-tabs__link--active"> API </button>
+    <div id="myDropdown" class="dropdown-content-api">
+      <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/latest">Hopsworks API</a>
+      <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/latest">Feature Store API</a>
+      <a id="hsfs_javadoc_link" href="https://docs.hopsworks.ai/feature-store-api/dev/latest">Feature Store JavaDoc</a>
+      <a id="hsml_api_link" href="https://docs.hopsworks.ai/machine-learning-api/latest">MLOps API</a>
+    </div>
+  </li>
+
+  
+
+<!-- Main navigation item -->
+
+
+  <!-- Render item -->
+  
+
+<!-- Main navigation item -->
+
+      
+        <!--
+  Copyright (c) 2016-2022 Martin Donath <martin.donath@squidfunk.com>
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+-->
+
+<!-- Determine class according to state -->
+
+
+
+
+
+<!-- Main navigation item with nested items -->
+
+<li class="md-tabs__item">
+  <a href="https://community.hopsworks.ai/" class="md-tabs__link">
+    Community ↗
+  </a>
+</li>
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Hopsworks Documentation" class="md-nav__button md-logo" aria-label="Hopsworks Documentation" data-md-component="logo">
+      
+  <img src="../../../assets/images/hops-logo.png" alt="logo">
+
+    </a>
+    Hopsworks Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/logicalclocks/hopsworks" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    logicalclocks/hopsworks
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Getting Started ↗
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Tutorials
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Concepts
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Guides
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Setup and Installation
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://docs.hopsworks.ai/" class="md-nav__link">
+        Administration
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" checked>
+      
+      
+      
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8">
+          API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="API" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+    
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1" type="checkbox" id="__nav_8_1" checked>
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1">
+          API Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="API Reference" data-md-level="2">
+        <label class="md-nav__title" for="__nav_8_1">
+          <span class="md-nav__icon md-icon"></span>
+          API Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connection_api/" class="md-nav__link">
+        Connection
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expectation_suite_api/" class="md-nav__link">
+        ExpectationSuite
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_store_api/" class="md-nav__link">
+        FeatureStore
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_group_api/" class="md-nav__link">
+        FeatureGroup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../external_feature_group_api/" class="md-nav__link">
+        ExternalFeatureGroup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../spine_group_api/" class="md-nav__link">
+        SpineGroup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_view_api/" class="md-nav__link">
+        FeatureView
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training_dataset_api/" class="md-nav__link">
+        TrainingDataset
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Storage Connector
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Storage Connector
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#retrieval" class="md-nav__link">
+    Retrieval
+  </a>
+  
+    <nav class="md-nav" aria-label="Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_storage_connector" class="md-nav__link">
+    get_storage_connector
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_online_storage_connector" class="md-nav__link">
+    get_online_storage_connector
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hopsfs" class="md-nav__link">
+    HopsFS
+  </a>
+  
+    <nav class="md-nav" aria-label="HopsFS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jdbc" class="md-nav__link">
+    JDBC
+  </a>
+  
+    <nav class="md-nav" aria-label="JDBC">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_1" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arguments" class="md-nav__link">
+    arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connection_string" class="md-nav__link">
+    connection_string
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_1" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_1" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_1" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_1" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_1" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_1" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_1" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_1" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_1" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_1" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s3" class="md-nav__link">
+    S3
+  </a>
+  
+    <nav class="md-nav" aria-label="S3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_2" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access_key" class="md-nav__link">
+    access_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arguments_1" class="md-nav__link">
+    arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bucket" class="md-nav__link">
+    bucket
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_2" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iam_role" class="md-nav__link">
+    iam_role
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_2" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_2" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path" class="md-nav__link">
+    path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secret_key" class="md-nav__link">
+    secret_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server_encryption_algorithm" class="md-nav__link">
+    server_encryption_algorithm
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server_encryption_key" class="md-nav__link">
+    server_encryption_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#session_token" class="md-nav__link">
+    session_token
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_2" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_2" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepare_spark" class="md-nav__link">
+    prepare_spark
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_2" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_2" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_2" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_2" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_2" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redshift" class="md-nav__link">
+    Redshift
+  </a>
+  
+    <nav class="md-nav" aria-label="Redshift">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_3" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arguments_2" class="md-nav__link">
+    arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auto_create" class="md-nav__link">
+    auto_create
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cluster_identifier" class="md-nav__link">
+    cluster_identifier
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_driver" class="md-nav__link">
+    database_driver
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_endpoint" class="md-nav__link">
+    database_endpoint
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_group" class="md-nav__link">
+    database_group
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_name" class="md-nav__link">
+    database_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_password" class="md-nav__link">
+    database_password
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_port" class="md-nav__link">
+    database_port
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_user_name" class="md-nav__link">
+    database_user_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_3" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expiration" class="md-nav__link">
+    expiration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iam_role_1" class="md-nav__link">
+    iam_role
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_3" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_3" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#table_name" class="md-nav__link">
+    table_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_3" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_3" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_3" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_3" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_3" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_3" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_3" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#azure-data-lake-storage" class="md-nav__link">
+    Azure Data Lake Storage
+  </a>
+  
+    <nav class="md-nav" aria-label="Azure Data Lake Storage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_4" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#account_name" class="md-nav__link">
+    account_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application_id" class="md-nav__link">
+    application_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#container_name" class="md-nav__link">
+    container_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_4" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directory_id" class="md-nav__link">
+    directory_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generation" class="md-nav__link">
+    generation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_4" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_4" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path_1" class="md-nav__link">
+    path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service_credential" class="md-nav__link">
+    service_credential
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_4" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_4" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepare_spark_1" class="md-nav__link">
+    prepare_spark
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_4" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_4" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_4" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_4" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_4" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snowflake" class="md-nav__link">
+    Snowflake
+  </a>
+  
+    <nav class="md-nav" aria-label="Snowflake">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_5" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#account" class="md-nav__link">
+    account
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application" class="md-nav__link">
+    application
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database" class="md-nav__link">
+    database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_5" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_5" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_5" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#password" class="md-nav__link">
+    password
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#role" class="md-nav__link">
+    role
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema" class="md-nav__link">
+    schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#table" class="md-nav__link">
+    table
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token" class="md-nav__link">
+    token
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#url" class="md-nav__link">
+    url
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user" class="md-nav__link">
+    user
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warehouse" class="md-nav__link">
+    warehouse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_5" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_5" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_5" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_5" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#snowflake_connector_options" class="md-nav__link">
+    snowflake_connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_5" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_5" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_5" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#google-cloud-storage" class="md-nav__link">
+    Google Cloud Storage
+  </a>
+  
+    <nav class="md-nav" aria-label="Google Cloud Storage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_6" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#algorithm" class="md-nav__link">
+    algorithm
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bucket_1" class="md-nav__link">
+    bucket
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_6" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encryption_key" class="md-nav__link">
+    encryption_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encryption_key_hash" class="md-nav__link">
+    encryption_key_hash
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_6" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key_path" class="md-nav__link">
+    key_path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_6" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path_2" class="md-nav__link">
+    path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_6" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_6" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepare_spark_2" class="md-nav__link">
+    prepare_spark
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_6" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_6" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_6" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_6" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_6" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bigquery" class="md-nav__link">
+    BigQuery
+  </a>
+  
+    <nav class="md-nav" aria-label="BigQuery">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_7" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arguments_3" class="md-nav__link">
+    arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataset" class="md-nav__link">
+    dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_7" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_7" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key_path_1" class="md-nav__link">
+    key_path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#materialization_dataset" class="md-nav__link">
+    materialization_dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_7" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parent_project" class="md-nav__link">
+    parent_project
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query_project" class="md-nav__link">
+    query_project
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query_table" class="md-nav__link">
+    query_table
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_7" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_7" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_7" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_7" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_7" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_7" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_7" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kafka" class="md-nav__link">
+    Kafka
+  </a>
+  
+    <nav class="md-nav" aria-label="Kafka">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_8" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bootstrap_servers" class="md-nav__link">
+    bootstrap_servers
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_8" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_8" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_8" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options_1" class="md-nav__link">
+    options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security_protocol" class="md-nav__link">
+    security_protocol
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_endpoint_identification_algorithm" class="md-nav__link">
+    ssl_endpoint_identification_algorithm
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_keystore_location" class="md-nav__link">
+    ssl_keystore_location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_truststore_location" class="md-nav__link">
+    ssl_truststore_location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_8" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#confluent_options" class="md-nav__link">
+    confluent_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_8" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kafka_options" class="md-nav__link">
+    kafka_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_8" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_stream" class="md-nav__link">
+    read_stream
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_8" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_8" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_8" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_8" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_api/" class="md-nav__link">
+        Feature
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../query_api/" class="md-nav__link">
+        Query
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transformation_functions_api/" class="md-nav__link">
+        Transformation Functions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validation_report_api/" class="md-nav__link">
+        ValidationReport
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../job/" class="md-nav__link">
+        Job
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../links/" class="md-nav__link">
+        Provenance Links
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1_16" type="checkbox" id="__nav_8_1_16" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1_16">
+          Statistics
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Statistics" data-md-level="3">
+        <label class="md-nav__title" for="__nav_8_1_16">
+          <span class="md-nav__icon md-icon"></span>
+          Statistics
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../statistics_api/" class="md-nav__link">
+        Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../split_statistics_api/" class="md-nav__link">
+        Split Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_descriptive_statistics_api/" class="md-nav__link">
+        Feature descriptive statistics
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1_17" type="checkbox" id="__nav_8_1_17" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1_17">
+          Feature Monitoring
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Feature Monitoring" data-md-level="3">
+        <label class="md-nav__title" for="__nav_8_1_17">
+          <span class="md-nav__icon md-icon"></span>
+          Feature Monitoring
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_config_api/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_result_api/" class="md-nav__link">
+        Result
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_window_config_api/" class="md-nav__link">
+        Window
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../CONTRIBUTING/" class="md-nav__link">
+        Contributing
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://community.hopsworks.ai/" class="md-nav__link">
+        Community ↗
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#retrieval" class="md-nav__link">
+    Retrieval
+  </a>
+  
+    <nav class="md-nav" aria-label="Retrieval">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_storage_connector" class="md-nav__link">
+    get_storage_connector
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_online_storage_connector" class="md-nav__link">
+    get_online_storage_connector
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hopsfs" class="md-nav__link">
+    HopsFS
+  </a>
+  
+    <nav class="md-nav" aria-label="HopsFS">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jdbc" class="md-nav__link">
+    JDBC
+  </a>
+  
+    <nav class="md-nav" aria-label="JDBC">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_1" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arguments" class="md-nav__link">
+    arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connection_string" class="md-nav__link">
+    connection_string
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_1" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_1" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_1" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_1" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_1" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_1" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_1" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_1" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_1" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_1" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#s3" class="md-nav__link">
+    S3
+  </a>
+  
+    <nav class="md-nav" aria-label="S3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_2" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#access_key" class="md-nav__link">
+    access_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arguments_1" class="md-nav__link">
+    arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bucket" class="md-nav__link">
+    bucket
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_2" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iam_role" class="md-nav__link">
+    iam_role
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_2" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_2" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path" class="md-nav__link">
+    path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secret_key" class="md-nav__link">
+    secret_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server_encryption_algorithm" class="md-nav__link">
+    server_encryption_algorithm
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#server_encryption_key" class="md-nav__link">
+    server_encryption_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#session_token" class="md-nav__link">
+    session_token
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_2" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_2" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepare_spark" class="md-nav__link">
+    prepare_spark
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_2" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_2" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_2" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_2" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_2" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redshift" class="md-nav__link">
+    Redshift
+  </a>
+  
+    <nav class="md-nav" aria-label="Redshift">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_3" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arguments_2" class="md-nav__link">
+    arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auto_create" class="md-nav__link">
+    auto_create
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cluster_identifier" class="md-nav__link">
+    cluster_identifier
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_driver" class="md-nav__link">
+    database_driver
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_endpoint" class="md-nav__link">
+    database_endpoint
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_group" class="md-nav__link">
+    database_group
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_name" class="md-nav__link">
+    database_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_password" class="md-nav__link">
+    database_password
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_port" class="md-nav__link">
+    database_port
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database_user_name" class="md-nav__link">
+    database_user_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_3" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expiration" class="md-nav__link">
+    expiration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iam_role_1" class="md-nav__link">
+    iam_role
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_3" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_3" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#table_name" class="md-nav__link">
+    table_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_3" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_3" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_3" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_3" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_3" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_3" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_3" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#azure-data-lake-storage" class="md-nav__link">
+    Azure Data Lake Storage
+  </a>
+  
+    <nav class="md-nav" aria-label="Azure Data Lake Storage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_4" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#account_name" class="md-nav__link">
+    account_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application_id" class="md-nav__link">
+    application_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#container_name" class="md-nav__link">
+    container_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_4" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directory_id" class="md-nav__link">
+    directory_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generation" class="md-nav__link">
+    generation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_4" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_4" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path_1" class="md-nav__link">
+    path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service_credential" class="md-nav__link">
+    service_credential
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_4" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_4" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepare_spark_1" class="md-nav__link">
+    prepare_spark
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_4" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_4" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_4" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_4" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_4" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snowflake" class="md-nav__link">
+    Snowflake
+  </a>
+  
+    <nav class="md-nav" aria-label="Snowflake">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_5" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#account" class="md-nav__link">
+    account
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application" class="md-nav__link">
+    application
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database" class="md-nav__link">
+    database
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_5" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_5" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_5" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#password" class="md-nav__link">
+    password
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#role" class="md-nav__link">
+    role
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schema" class="md-nav__link">
+    schema
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#table" class="md-nav__link">
+    table
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token" class="md-nav__link">
+    token
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#url" class="md-nav__link">
+    url
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user" class="md-nav__link">
+    user
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warehouse" class="md-nav__link">
+    warehouse
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_5" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_5" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_5" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_5" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#snowflake_connector_options" class="md-nav__link">
+    snowflake_connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_5" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_5" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_5" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#google-cloud-storage" class="md-nav__link">
+    Google Cloud Storage
+  </a>
+  
+    <nav class="md-nav" aria-label="Google Cloud Storage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_6" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#algorithm" class="md-nav__link">
+    algorithm
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bucket_1" class="md-nav__link">
+    bucket
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_6" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encryption_key" class="md-nav__link">
+    encryption_key
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encryption_key_hash" class="md-nav__link">
+    encryption_key_hash
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_6" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key_path" class="md-nav__link">
+    key_path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_6" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#path_2" class="md-nav__link">
+    path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_6" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_6" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prepare_spark_2" class="md-nav__link">
+    prepare_spark
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_6" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_6" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_6" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_6" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_6" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bigquery" class="md-nav__link">
+    BigQuery
+  </a>
+  
+    <nav class="md-nav" aria-label="BigQuery">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_7" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arguments_3" class="md-nav__link">
+    arguments
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataset" class="md-nav__link">
+    dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_7" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_7" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key_path_1" class="md-nav__link">
+    key_path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#materialization_dataset" class="md-nav__link">
+    materialization_dataset
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_7" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parent_project" class="md-nav__link">
+    parent_project
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query_project" class="md-nav__link">
+    query_project
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#query_table" class="md-nav__link">
+    query_table
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_7" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_7" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_7" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_7" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_7" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_7" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_7" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kafka" class="md-nav__link">
+    Kafka
+  </a>
+  
+    <nav class="md-nav" aria-label="Kafka">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#properties_8" class="md-nav__link">
+    Properties
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bootstrap_servers" class="md-nav__link">
+    bootstrap_servers
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description_8" class="md-nav__link">
+    description
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id_8" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#name_8" class="md-nav__link">
+    name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options_1" class="md-nav__link">
+    options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security_protocol" class="md-nav__link">
+    security_protocol
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_endpoint_identification_algorithm" class="md-nav__link">
+    ssl_endpoint_identification_algorithm
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_keystore_location" class="md-nav__link">
+    ssl_keystore_location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ssl_truststore_location" class="md-nav__link">
+    ssl_truststore_location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_8" class="md-nav__link">
+    Methods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#confluent_options" class="md-nav__link">
+    confluent_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connector_options_8" class="md-nav__link">
+    connector_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kafka_options" class="md-nav__link">
+    kafka_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_8" class="md-nav__link">
+    read
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read_stream" class="md-nav__link">
+    read_stream
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refetch_8" class="md-nav__link">
+    refetch
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spark_options_8" class="md-nav__link">
+    spark_options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict_8" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_from_response_json_8" class="md-nav__link">
+    update_from_response_json
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+
+
+<h1 id="storage-connector">Storage Connector<a class="headerlink" href="#storage-connector" title="Permanent link">#</a></h1>
+<h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/feature_store.py#L374">[source]</a></span></p>
+<h3 id="get_storage_connector">get_storage_connector<a class="headerlink" href="#get_storage_connector" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_storage_connector</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</code></pre></div>
+<p>Get a previously created storage connector from the feature store.</p>
+<p>Storage connectors encapsulate all information needed for the execution engine
+to read and write to specific storage. This storage can be S3, a JDBC compliant
+database or the distributed filesystem HOPSFS.</p>
+<p>If you want to connect to the online feature store, see the
+<code>get_online_storage_connector</code> method to get the JDBC connector for the Online
+Feature Store.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># connect to the Feature Store</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="n">sc</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_storage_connector</span><span class="p">(</span><span class="s2">&quot;demo_fs_meb10000_Training_Datasets&quot;</span><span class="p">)</span>
+</code></pre></div>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>name</strong> <code>str</code>: Name of the storage connector to retrieve.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>StorageConnector</code>. Storage connector object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/feature_store.py#L444">[source]</a></span></p>
+<h3 id="get_online_storage_connector">get_online_storage_connector<a class="headerlink" href="#get_online_storage_connector" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_online_storage_connector</span><span class="p">()</span>
+</code></pre></div>
+<p>Get the storage connector for the Online Feature Store of the respective
+project's feature store.</p>
+<p>The returned storage connector depends on the project that you are connected to.</p>
+<div class="admonition example">
+<p class="admonition-title">Example</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># connect to the Feature Store</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="n">online_storage_connector</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_online_storage_connector</span><span class="p">()</span>
+</code></pre></div>
+</div>
+<p><strong>Returns</strong></p>
+<p><code>StorageConnector</code>. JDBC storage connector to the Online Feature Store.</p>
+<hr />
+<h2 id="hopsfs">HopsFS<a class="headerlink" href="#hopsfs" title="Permanent link">#</a></h2>
+<h3 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L138">[source]</a></span></p>
+<h3 id="connector_options">connector_options<a class="headerlink" href="#connector_options" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">HopsFSConnector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to an external connector library.
+Not implemented for this connector type.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L102">[source]</a></span></p>
+<h3 id="read">read<a class="headerlink" href="#read" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">HopsFSConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Reads a query or a path into a dataframe using the storage connector.</p>
+<p>Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
+queries are meant for JDBC or databases like Redshift and Snowflake.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>Optional[str]</code>: By default, the storage connector will read the table configured together
+    with the connector, if any. It's possible to overwrite this by passing a SQL
+    query here. Defaults to <code>None</code>.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: When reading from object stores such as S3, HopsFS and ADLS, specify
+    the file format to be read, e.g. <code>csv</code>, <code>parquet</code>.</li>
+<li><strong>options</strong> <code>dict</code>: Any additional key/value options to be passed to the connector.</li>
+<li><strong>path</strong> <code>Optional[str]</code>: Path to be read from within the bucket of the storage connector. Not relevant
+    for JDBC or database based connectors such as Snowflake, JDBC or Redshift.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>DataFrame</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L129">[source]</a></span></p>
+<h3 id="refetch">refetch<a class="headerlink" href="#refetch" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">HopsFSConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L165">[source]</a></span></p>
+<h3 id="spark_options">spark_options<a class="headerlink" href="#spark_options" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">HopsFSConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to Spark, based on the additional
+arguments.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict">to_dict<a class="headerlink" href="#to_dict" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">HopsFSConnector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json">update_from_response_json<a class="headerlink" href="#update_from_response_json" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">HopsFSConnector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="jdbc">JDBC<a class="headerlink" href="#jdbc" title="Permanent link">#</a></h2>
+<h3 id="properties_1">Properties<a class="headerlink" href="#properties_1" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L850">[source]</a></span></p>
+<h3 id="arguments">arguments<a class="headerlink" href="#arguments" title="Permanent link">#</a></h3>
+<p>Additional JDBC arguments. When running hsfs with PySpark/Spark in Hopsworks,
+the driver is automatically provided in the classpath but you need to set the <code>driver</code> argument to
+<code>com.mysql.cj.jdbc.Driver</code> when creating the Storage Connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L845">[source]</a></span></p>
+<h3 id="connection_string">connection_string<a class="headerlink" href="#connection_string" title="Permanent link">#</a></h3>
+<p>JDBC connection string.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description_1">description<a class="headerlink" href="#description_1" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id_1">id<a class="headerlink" href="#id_1" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name_1">name<a class="headerlink" href="#name_1" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<h3 id="methods_1">Methods<a class="headerlink" href="#methods_1" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L138">[source]</a></span></p>
+<h3 id="connector_options_1">connector_options<a class="headerlink" href="#connector_options_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to an external connector library.
+Not implemented for this connector type.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L871">[source]</a></span></p>
+<h3 id="read_1">read<a class="headerlink" href="#read_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Reads a query into a dataframe using the storage connector.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>str</code>: A SQL query to be read.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: Not relevant for JDBC based connectors.</li>
+<li><strong>options</strong> <code>dict</code>: Any additional key/value options to be passed to the JDBC connector.</li>
+<li><strong>path</strong> <code>Optional[str]</code>: Not relevant for JDBC based connectors.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>DataFrame</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L129">[source]</a></span></p>
+<h3 id="refetch_1">refetch<a class="headerlink" href="#refetch_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L857">[source]</a></span></p>
+<h3 id="spark_options_1">spark_options<a class="headerlink" href="#spark_options_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to Spark, based on the additional
+arguments.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict_1">to_dict<a class="headerlink" href="#to_dict_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json_1">update_from_response_json<a class="headerlink" href="#update_from_response_json_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">JdbcConnector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="s3">S3<a class="headerlink" href="#s3" title="Permanent link">#</a></h2>
+<h3 id="properties_2">Properties<a class="headerlink" href="#properties_2" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L209">[source]</a></span></p>
+<h3 id="access_key">access_key<a class="headerlink" href="#access_key" title="Permanent link">#</a></h3>
+<p>Access key.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L249">[source]</a></span></p>
+<h3 id="arguments_1">arguments<a class="headerlink" href="#arguments_1" title="Permanent link">#</a></h3>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L229">[source]</a></span></p>
+<h3 id="bucket">bucket<a class="headerlink" href="#bucket" title="Permanent link">#</a></h3>
+<p>Return the bucket for S3 connectors.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description_2">description<a class="headerlink" href="#description_2" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L239">[source]</a></span></p>
+<h3 id="iam_role">iam_role<a class="headerlink" href="#iam_role" title="Permanent link">#</a></h3>
+<p>IAM role.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id_2">id<a class="headerlink" href="#id_2" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name_2">name<a class="headerlink" href="#name_2" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L244">[source]</a></span></p>
+<h3 id="path">path<a class="headerlink" href="#path" title="Permanent link">#</a></h3>
+<p>If the connector refers to a path (e.g. S3) - return the path of the connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L214">[source]</a></span></p>
+<h3 id="secret_key">secret_key<a class="headerlink" href="#secret_key" title="Permanent link">#</a></h3>
+<p>Secret key.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L219">[source]</a></span></p>
+<h3 id="server_encryption_algorithm">server_encryption_algorithm<a class="headerlink" href="#server_encryption_algorithm" title="Permanent link">#</a></h3>
+<p>Encryption algorithm if server-side S3 bucket encryption is enabled.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L224">[source]</a></span></p>
+<h3 id="server_encryption_key">server_encryption_key<a class="headerlink" href="#server_encryption_key" title="Permanent link">#</a></h3>
+<p>Encryption key if server-side S3 bucket encryption is enabled.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L234">[source]</a></span></p>
+<h3 id="session_token">session_token<a class="headerlink" href="#session_token" title="Permanent link">#</a></h3>
+<p>Session token.</p>
+<hr />
+<h3 id="methods_2">Methods<a class="headerlink" href="#methods_2" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L138">[source]</a></span></p>
+<h3 id="connector_options_2">connector_options<a class="headerlink" href="#connector_options_2" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">S3Connector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to an external connector library.
+Not implemented for this connector type.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L259">[source]</a></span></p>
+<h3 id="prepare_spark">prepare_spark<a class="headerlink" href="#prepare_spark" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">S3Connector</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Prepare Spark to use this Storage Connector.</p>
+<div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">()</span>
+
+<span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;s3a://[bucket]/path&quot;</span><span class="p">)</span>
+
+<span class="c1"># or</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">conn</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">(</span><span class="s2">&quot;s3a://[bucket]/path&quot;</span><span class="p">))</span>
+</code></pre></div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>path</strong> <code>Optional[str]</code>: Path to prepare for reading from cloud storage. Defaults to <code>None</code>.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L276">[source]</a></span></p>
+<h3 id="read_2">read<a class="headerlink" href="#read_2" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">S3Connector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Reads a query or a path into a dataframe using the storage connector.</p>
+<p>Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
+queries are meant for JDBC or databases like Redshift and Snowflake.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>Optional[str]</code>: Not relevant for S3 connectors.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: The file format of the files to be read, e.g. <code>csv</code>, <code>parquet</code>.</li>
+<li><strong>options</strong> <code>dict</code>: Any additional key/value options to be passed to the S3 connector.</li>
+<li><strong>path</strong> <code>str</code>: Path within the bucket to be read.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>DataFrame</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L129">[source]</a></span></p>
+<h3 id="refetch_2">refetch<a class="headerlink" href="#refetch_2" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">S3Connector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L253">[source]</a></span></p>
+<h3 id="spark_options_2">spark_options<a class="headerlink" href="#spark_options_2" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">S3Connector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to Spark, based on the additional
+arguments.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict_2">to_dict<a class="headerlink" href="#to_dict_2" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">S3Connector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json_2">update_from_response_json<a class="headerlink" href="#update_from_response_json_2" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">S3Connector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="redshift">Redshift<a class="headerlink" href="#redshift" title="Permanent link">#</a></h2>
+<h3 id="properties_3">Properties<a class="headerlink" href="#properties_3" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L424">[source]</a></span></p>
+<h3 id="arguments_2">arguments<a class="headerlink" href="#arguments_2" title="Permanent link">#</a></h3>
+<p>Additional JDBC, REDSHIFT, or Snowflake arguments.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L399">[source]</a></span></p>
+<h3 id="auto_create">auto_create<a class="headerlink" href="#auto_create" title="Permanent link">#</a></h3>
+<p>Database username for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L364">[source]</a></span></p>
+<h3 id="cluster_identifier">cluster_identifier<a class="headerlink" href="#cluster_identifier" title="Permanent link">#</a></h3>
+<p>Cluster identifier for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L369">[source]</a></span></p>
+<h3 id="database_driver">database_driver<a class="headerlink" href="#database_driver" title="Permanent link">#</a></h3>
+<p>Database endpoint for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L374">[source]</a></span></p>
+<h3 id="database_endpoint">database_endpoint<a class="headerlink" href="#database_endpoint" title="Permanent link">#</a></h3>
+<p>Database endpoint for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L404">[source]</a></span></p>
+<h3 id="database_group">database_group<a class="headerlink" href="#database_group" title="Permanent link">#</a></h3>
+<p>Database username for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L379">[source]</a></span></p>
+<h3 id="database_name">database_name<a class="headerlink" href="#database_name" title="Permanent link">#</a></h3>
+<p>Database name for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L409">[source]</a></span></p>
+<h3 id="database_password">database_password<a class="headerlink" href="#database_password" title="Permanent link">#</a></h3>
+<p>Database password for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L384">[source]</a></span></p>
+<h3 id="database_port">database_port<a class="headerlink" href="#database_port" title="Permanent link">#</a></h3>
+<p>Database port for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L394">[source]</a></span></p>
+<h3 id="database_user_name">database_user_name<a class="headerlink" href="#database_user_name" title="Permanent link">#</a></h3>
+<p>Database username for redshift cluster.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description_3">description<a class="headerlink" href="#description_3" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L419">[source]</a></span></p>
+<h3 id="expiration">expiration<a class="headerlink" href="#expiration" title="Permanent link">#</a></h3>
+<p>Cluster temporary credential expiration time.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L414">[source]</a></span></p>
+<h3 id="iam_role_1">iam_role<a class="headerlink" href="#iam_role_1" title="Permanent link">#</a></h3>
+<p>IAM role.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id_3">id<a class="headerlink" href="#id_3" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name_3">name<a class="headerlink" href="#name_3" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L389">[source]</a></span></p>
+<h3 id="table_name">table_name<a class="headerlink" href="#table_name" title="Permanent link">#</a></h3>
+<p>Table name for redshift cluster.</p>
+<hr />
+<h3 id="methods_3">Methods<a class="headerlink" href="#methods_3" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L138">[source]</a></span></p>
+<h3 id="connector_options_3">connector_options<a class="headerlink" href="#connector_options_3" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to an external connector library.
+Not implemented for this connector type.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L460">[source]</a></span></p>
+<h3 id="read_3">read<a class="headerlink" href="#read_3" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Reads a table or query into a dataframe using the storage connector.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>Optional[str]</code>: By default, the storage connector will read the table configured together
+    with the connector, if any. It's possible to overwrite this by passing a SQL
+    query here. Defaults to <code>None</code>.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: Not relevant for JDBC based connectors such as Redshift.</li>
+<li><strong>options</strong> <code>dict</code>: Any additional key/value options to be passed to the JDBC connector.</li>
+<li><strong>path</strong> <code>Optional[str]</code>: Not relevant for JDBC based connectors such as Redshift.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>DataFrame</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L494">[source]</a></span></p>
+<h3 id="refetch_3">refetch<a class="headerlink" href="#refetch_3" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector in order to retrieve updated temporary credentials.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L433">[source]</a></span></p>
+<h3 id="spark_options_3">spark_options<a class="headerlink" href="#spark_options_3" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to Spark, based on the additional
+arguments.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict_3">to_dict<a class="headerlink" href="#to_dict_3" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json_3">update_from_response_json<a class="headerlink" href="#update_from_response_json_3" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">RedshiftConnector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="azure-data-lake-storage">Azure Data Lake Storage<a class="headerlink" href="#azure-data-lake-storage" title="Permanent link">#</a></h2>
+<h3 id="properties_4">Properties<a class="headerlink" href="#properties_4" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L551">[source]</a></span></p>
+<h3 id="account_name">account_name<a class="headerlink" href="#account_name" title="Permanent link">#</a></h3>
+<p>Account name of the ADLS storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L546">[source]</a></span></p>
+<h3 id="application_id">application_id<a class="headerlink" href="#application_id" title="Permanent link">#</a></h3>
+<p>Application ID of the ADLS storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L556">[source]</a></span></p>
+<h3 id="container_name">container_name<a class="headerlink" href="#container_name" title="Permanent link">#</a></h3>
+<p>Container name of the ADLS storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description_4">description<a class="headerlink" href="#description_4" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L541">[source]</a></span></p>
+<h3 id="directory_id">directory_id<a class="headerlink" href="#directory_id" title="Permanent link">#</a></h3>
+<p>Directory ID of the ADLS storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L536">[source]</a></span></p>
+<h3 id="generation">generation<a class="headerlink" href="#generation" title="Permanent link">#</a></h3>
+<p>Generation of the ADLS storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id_4">id<a class="headerlink" href="#id_4" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name_4">name<a class="headerlink" href="#name_4" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L566">[source]</a></span></p>
+<h3 id="path_1">path<a class="headerlink" href="#path_1" title="Permanent link">#</a></h3>
+<p>If the connector refers to a path (e.g. ADLS) - return the path of the connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L561">[source]</a></span></p>
+<h3 id="service_credential">service_credential<a class="headerlink" href="#service_credential" title="Permanent link">#</a></h3>
+<p>Service credential of the ADLS storage connector</p>
+<hr />
+<h3 id="methods_4">Methods<a class="headerlink" href="#methods_4" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L138">[source]</a></span></p>
+<h3 id="connector_options_4">connector_options<a class="headerlink" href="#connector_options_4" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to an external connector library.
+Not implemented for this connector type.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L582">[source]</a></span></p>
+<h3 id="prepare_spark_1">prepare_spark<a class="headerlink" href="#prepare_spark_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Prepare Spark to use this Storage Connector.</p>
+<div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">()</span>
+
+<span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;abfss://[container-name]@[account_name].dfs.core.windows.net/[path]&quot;</span><span class="p">)</span>
+
+<span class="c1"># or</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">conn</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">(</span><span class="s2">&quot;abfss://[container-name]@[account_name].dfs.core.windows.net/[path]&quot;</span><span class="p">))</span>
+</code></pre></div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>path</strong> <code>Optional[str]</code>: Path to prepare for reading from cloud storage. Defaults to <code>None</code>.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L602">[source]</a></span></p>
+<h3 id="read_4">read<a class="headerlink" href="#read_4" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Reads a path into a dataframe using the storage connector.
+<strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>Optional[str]</code>: Not relevant for ADLS connectors.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: The file format of the files to be read, e.g. <code>csv</code>, <code>parquet</code>.</li>
+<li><strong>options</strong> <code>dict</code>: Any additional key/value options to be passed to the ADLS connector.</li>
+<li><strong>path</strong> <code>str</code>: Path within the bucket to be read. For example, path=<code>path</code> will read directly from the container specified on connector by constructing the URI as 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]'.
+If no path is specified default container path will be used from connector.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>DataFrame</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L129">[source]</a></span></p>
+<h3 id="refetch_4">refetch<a class="headerlink" href="#refetch_4" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L576">[source]</a></span></p>
+<h3 id="spark_options_4">spark_options<a class="headerlink" href="#spark_options_4" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to Spark, based on the additional
+arguments.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict_4">to_dict<a class="headerlink" href="#to_dict_4" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json_4">update_from_response_json<a class="headerlink" href="#update_from_response_json_4" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">AdlsConnector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="snowflake">Snowflake<a class="headerlink" href="#snowflake" title="Permanent link">#</a></h2>
+<h3 id="properties_5">Properties<a class="headerlink" href="#properties_5" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L719">[source]</a></span></p>
+<h3 id="account">account<a class="headerlink" href="#account" title="Permanent link">#</a></h3>
+<p>Account of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L724">[source]</a></span></p>
+<h3 id="application">application<a class="headerlink" href="#application" title="Permanent link">#</a></h3>
+<p>Application of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L684">[source]</a></span></p>
+<h3 id="database">database<a class="headerlink" href="#database" title="Permanent link">#</a></h3>
+<p>Database of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description_5">description<a class="headerlink" href="#description_5" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id_5">id<a class="headerlink" href="#id_5" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name_5">name<a class="headerlink" href="#name_5" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L729">[source]</a></span></p>
+<h3 id="options">options<a class="headerlink" href="#options" title="Permanent link">#</a></h3>
+<p>Additional options for the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L694">[source]</a></span></p>
+<h3 id="password">password<a class="headerlink" href="#password" title="Permanent link">#</a></h3>
+<p>Password of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L714">[source]</a></span></p>
+<h3 id="role">role<a class="headerlink" href="#role" title="Permanent link">#</a></h3>
+<p>Role of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L704">[source]</a></span></p>
+<h3 id="schema">schema<a class="headerlink" href="#schema" title="Permanent link">#</a></h3>
+<p>Schema of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L709">[source]</a></span></p>
+<h3 id="table">table<a class="headerlink" href="#table" title="Permanent link">#</a></h3>
+<p>Table of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L699">[source]</a></span></p>
+<h3 id="token">token<a class="headerlink" href="#token" title="Permanent link">#</a></h3>
+<p>OAuth token of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L674">[source]</a></span></p>
+<h3 id="url">url<a class="headerlink" href="#url" title="Permanent link">#</a></h3>
+<p>URL of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L689">[source]</a></span></p>
+<h3 id="user">user<a class="headerlink" href="#user" title="Permanent link">#</a></h3>
+<p>User of the Snowflake storage connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L679">[source]</a></span></p>
+<h3 id="warehouse">warehouse<a class="headerlink" href="#warehouse" title="Permanent link">#</a></h3>
+<p>Warehouse of the Snowflake storage connector</p>
+<hr />
+<h3 id="methods_5">Methods<a class="headerlink" href="#methods_5" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L738">[source]</a></span></p>
+<h3 id="connector_options_5">connector_options<a class="headerlink" href="#connector_options_5" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>In order to use the <code>snowflake.connector</code> Python library, this method
+prepares a Python dictionary with the needed arguments for you to connect to
+a Snowflake database.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">snowflake.connector</span>
+
+<span class="n">sc</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_storage_connector</span><span class="p">(</span><span class="s2">&quot;snowflake_conn&quot;</span><span class="p">)</span>
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">snowflake</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">**</span><span class="n">sc</span><span class="o">.</span><span class="n">connector_options</span><span class="p">())</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L791">[source]</a></span></p>
+<h3 id="read_5">read<a class="headerlink" href="#read_5" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Reads a table or query into a dataframe using the storage connector.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>Optional[str]</code>: By default, the storage connector will read the table configured together
+    with the connector, if any. It's possible to overwrite this by passing a SQL
+    query here. Defaults to <code>None</code>.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: Not relevant for Snowflake connectors.</li>
+<li><strong>options</strong> <code>dict</code>: Any additional key/value options to be passed to the engine.</li>
+<li><strong>path</strong> <code>Optional[str]</code>: Not relevant for Snowflake connectors.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>DataFrame</code>.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L129">[source]</a></span></p>
+<h3 id="refetch_5">refetch<a class="headerlink" href="#refetch_5" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L734">[source]</a></span></p>
+<h3 id="snowflake_connector_options">snowflake_connector_options<a class="headerlink" href="#snowflake_connector_options" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">snowflake_connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Alias for <code>connector_options</code></p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L766">[source]</a></span></p>
+<h3 id="spark_options_5">spark_options<a class="headerlink" href="#spark_options_5" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to Spark, based on the additional
+arguments.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict_5">to_dict<a class="headerlink" href="#to_dict_5" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json_5">update_from_response_json<a class="headerlink" href="#update_from_response_json_5" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">SnowflakeConnector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="google-cloud-storage">Google Cloud Storage<a class="headerlink" href="#google-cloud-storage" title="Permanent link">#</a></h2>
+<p>This storage connector provides integration to Google Cloud Storage (GCS).
+Once you create a connector in FeatureStore, you can transact data from a GCS bucket into a spark dataframe
+by calling the <code>read</code> API.</p>
+<p>Authentication to GCP is handled by uploading the <code>JSON keyfile for service account</code> to the Hopsworks Project. For more information
+on service accounts and creating keyfile in GCP, read <a href="https://cloud.google.com/docs/authentication/production#create_service_account" title="creating service account keyfile">Google Cloud documentation.</a></p>
+<p>The connector also supports the optional encryption method <code>Customer Supplied Encryption Key</code> by Google.
+The encryption details are stored as <code>Secrets</code> in the FeatureStore for keeping it secure.
+Read more about encryption on <a href="https://cloud.google.com/storage/docs/encryption#customer-supplied_encryption_keys">Google Documentation.</a></p>
+<p>The storage connector uses the Google <code>gcs-connector-hadoop</code> behind the scenes. For more information, check out <a href="https://github.com/GoogleCloudDataproc/hadoop-connectors/tree/master/gcs#google-cloud-storage-connector-for-spark-and-hadoop" title="google-cloud-storage-connector-for-spark-and-hadoop">Google Cloud Storage Connector for Spark and Hadoop</a></p>
+<h3 id="properties_6">Properties<a class="headerlink" href="#properties_6" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1241">[source]</a></span></p>
+<h3 id="algorithm">algorithm<a class="headerlink" href="#algorithm" title="Permanent link">#</a></h3>
+<p>Encryption Algorithm</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1261">[source]</a></span></p>
+<h3 id="bucket_1">bucket<a class="headerlink" href="#bucket_1" title="Permanent link">#</a></h3>
+<p>GCS Bucket</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description_6">description<a class="headerlink" href="#description_6" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1246">[source]</a></span></p>
+<h3 id="encryption_key">encryption_key<a class="headerlink" href="#encryption_key" title="Permanent link">#</a></h3>
+<p>Encryption Key</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1251">[source]</a></span></p>
+<h3 id="encryption_key_hash">encryption_key_hash<a class="headerlink" href="#encryption_key_hash" title="Permanent link">#</a></h3>
+<p>Encryption Key Hash</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id_6">id<a class="headerlink" href="#id_6" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1236">[source]</a></span></p>
+<h3 id="key_path">key_path<a class="headerlink" href="#key_path" title="Permanent link">#</a></h3>
+<p>JSON keyfile for service account</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name_6">name<a class="headerlink" href="#name_6" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1256">[source]</a></span></p>
+<h3 id="path_2">path<a class="headerlink" href="#path_2" title="Permanent link">#</a></h3>
+<p>the path of the connector along with gs file system prefixed</p>
+<hr />
+<h3 id="methods_6">Methods<a class="headerlink" href="#methods_6" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L138">[source]</a></span></p>
+<h3 id="connector_options_6">connector_options<a class="headerlink" href="#connector_options_6" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to an external connector library.
+Not implemented for this connector type.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1328">[source]</a></span></p>
+<h3 id="prepare_spark_2">prepare_spark<a class="headerlink" href="#prepare_spark_2" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Prepare Spark to use this Storage Connector.</p>
+<div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">()</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;gs://bucket/path&quot;</span><span class="p">)</span>
+<span class="c1"># or</span>
+<span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">conn</span><span class="o">.</span><span class="n">prepare_spark</span><span class="p">(</span><span class="s2">&quot;gs://bucket/path&quot;</span><span class="p">))</span>
+</code></pre></div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>path</strong> <code>Optional[str]</code>: Path to prepare for reading from Google cloud storage. Defaults to <code>None</code>.</li>
+</ul>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1278">[source]</a></span></p>
+<h3 id="read_6">read<a class="headerlink" href="#read_6" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Reads GCS path into a dataframe using the storage connector.</p>
+<p>To read directly from the default bucket, you can omit the path argument:
+<div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">data_format</span><span class="o">=</span><span class="s1">&#39;spark_formats&#39;</span><span class="p">)</span>
+</code></pre></div>
+Or to read objects from default bucket provide the object path without gsUtil URI schema. For example,
+following will read from a path gs://bucket_on_connector/Path/object :
+<div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">data_format</span><span class="o">=</span><span class="s1">&#39;spark_formats&#39;</span><span class="p">,</span> <span class="n">paths</span><span class="o">=</span><span class="s1">&#39;Path/object&#39;</span><span class="p">)</span>
+</code></pre></div>
+Or to read with full gsUtil URI path,
+<div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">data_format</span><span class="o">=</span><span class="s1">&#39;spark_formats&#39;</span><span class="p">,</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;gs://BUCKET/DATA&#39;</span><span class="p">)</span>
+</code></pre></div>
+<strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>Optional[str]</code>: Not relevant for GCS connectors.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: Spark data format. Defaults to <code>None</code>.</li>
+<li><strong>options</strong> <code>dict</code>: Spark options. Defaults to <code>None</code>.</li>
+<li><strong>path</strong> <code>str</code>: GCS path. Defaults to <code>None</code>.</li>
+</ul>
+<p><strong>Raises</strong></p>
+<ul>
+<li><strong><code>ValueError</code></strong>: Malformed arguments.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>Dataframe</code>: A Spark dataframe.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L129">[source]</a></span></p>
+<h3 id="refetch_6">refetch<a class="headerlink" href="#refetch_6" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1272">[source]</a></span></p>
+<h3 id="spark_options_6">spark_options<a class="headerlink" href="#spark_options_6" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to Spark, based on the additional
+arguments.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict_6">to_dict<a class="headerlink" href="#to_dict_6" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json_6">update_from_response_json<a class="headerlink" href="#update_from_response_json_6" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">GcsConnector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="bigquery">BigQuery<a class="headerlink" href="#bigquery" title="Permanent link">#</a></h2>
+<p>The BigQuery storage connector provides integration to Google Cloud BigQuery.
+You can use it to run bigquery on your GCP cluster and load results into spark dataframe by calling the <code>read</code> API.</p>
+<p>Authentication to GCP is handled by uploading the <code>JSON keyfile for service account</code> to the Hopsworks Project. For more information
+on service accounts and creating keyfile in GCP, read <a href="https://cloud.google.com/docs/authentication/production#create_service_account" title="creating service account keyfile">Google Cloud documentation.</a></p>
+<p>The storage connector uses the Google <code>spark-bigquery-connector</code> behind the scenes.
+To read more about the spark connector, like the spark options or usage, check <a href="https://github.com/GoogleCloudDataproc/spark-bigquery-connector#usage" title="github.com/GoogleCloudDataproc/spark-bigquery-connector">Apache Spark SQL connector for Google BigQuery.</a></p>
+<h3 id="properties_7">Properties<a class="headerlink" href="#properties_7" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1412">[source]</a></span></p>
+<h3 id="arguments_3">arguments<a class="headerlink" href="#arguments_3" title="Permanent link">#</a></h3>
+<p>Additional spark options</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1391">[source]</a></span></p>
+<h3 id="dataset">dataset<a class="headerlink" href="#dataset" title="Permanent link">#</a></h3>
+<p>BigQuery dataset (The dataset containing the table)</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description_7">description<a class="headerlink" href="#description_7" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id_7">id<a class="headerlink" href="#id_7" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1381">[source]</a></span></p>
+<h3 id="key_path_1">key_path<a class="headerlink" href="#key_path_1" title="Permanent link">#</a></h3>
+<p>JSON keyfile for service account</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1406">[source]</a></span></p>
+<h3 id="materialization_dataset">materialization_dataset<a class="headerlink" href="#materialization_dataset" title="Permanent link">#</a></h3>
+<p>BigQuery materialization dataset (The dataset where the materialized view is going to be created,
+used in case of query)</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name_7">name<a class="headerlink" href="#name_7" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1386">[source]</a></span></p>
+<h3 id="parent_project">parent_project<a class="headerlink" href="#parent_project" title="Permanent link">#</a></h3>
+<p>BigQuery parent project (Google Cloud Project ID of the table to bill for the export)</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1401">[source]</a></span></p>
+<h3 id="query_project">query_project<a class="headerlink" href="#query_project" title="Permanent link">#</a></h3>
+<p>BigQuery project (The Google Cloud Project ID of the table)</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1396">[source]</a></span></p>
+<h3 id="query_table">query_table<a class="headerlink" href="#query_table" title="Permanent link">#</a></h3>
+<p>BigQuery table name</p>
+<hr />
+<h3 id="methods_7">Methods<a class="headerlink" href="#methods_7" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1417">[source]</a></span></p>
+<h3 id="connector_options_7">connector_options<a class="headerlink" href="#connector_options_7" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">BigQueryConnector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return options to be passed to an external BigQuery connector library</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1450">[source]</a></span></p>
+<h3 id="read_7">read<a class="headerlink" href="#read_7" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">BigQueryConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Reads results from BigQuery into a spark dataframe using the storage connector.</p>
+<p>Reading from bigquery is done via either specifying the BigQuery table or BigQuery query.
+  For example, to read from a BigQuery table, set the BigQuery project, dataset and table on storage connector
+  and read directly from the corresponding path.
+    <div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</code></pre></div>
+  OR, to read results from a BigQuery query, set <code>Materialization Dataset</code> on storage connector,
+   and pass your SQL to <code>query</code> argument.
+    <div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="s1">&#39;SQL&#39;</span><span class="p">)</span>
+</code></pre></div>
+  Optionally, passing <code>query</code> argument will take priority at runtime if the table options were also set
+  on the storage connector. This allows user to run from both a query or table with same connector, assuming
+  all fields were set.
+  Also, user can set the <code>path</code> argument to a bigquery table path to read at runtime,
+   if table options were not set initially while creating the connector.
+    <div class="highlight"><pre><span></span><code><span class="n">conn</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;project.dataset.table&#39;</span><span class="p">)</span>
+</code></pre></div></p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>query</strong> <code>Optional[str]</code>: BigQuery query. Defaults to <code>None</code>.</li>
+<li><strong>data_format</strong> <code>Optional[str]</code>: Spark data format. Defaults to <code>None</code>.</li>
+<li><strong>options</strong> <code>dict</code>: Spark options. Defaults to <code>None</code>.</li>
+<li><strong>path</strong> <code>Optional[str]</code>: BigQuery table path. Defaults to <code>None</code>.</li>
+</ul>
+<p><strong>Raises</strong></p>
+<ul>
+<li><strong><code>ValueError</code></strong>: Malformed arguments.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>Dataframe</code>: A Spark dataframe.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L129">[source]</a></span></p>
+<h3 id="refetch_7">refetch<a class="headerlink" href="#refetch_7" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">BigQueryConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1427">[source]</a></span></p>
+<h3 id="spark_options_7">spark_options<a class="headerlink" href="#spark_options_7" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">BigQueryConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return spark options to be set for BigQuery spark connector</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict_7">to_dict<a class="headerlink" href="#to_dict_7" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">BigQueryConnector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json_7">update_from_response_json<a class="headerlink" href="#update_from_response_json_7" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">BigQueryConnector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<h2 id="kafka">Kafka<a class="headerlink" href="#kafka" title="Permanent link">#</a></h2>
+<h3 id="properties_8">Properties<a class="headerlink" href="#properties_8" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L949">[source]</a></span></p>
+<h3 id="bootstrap_servers">bootstrap_servers<a class="headerlink" href="#bootstrap_servers" title="Permanent link">#</a></h3>
+<p>Bootstrap servers string.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L93">[source]</a></span></p>
+<h3 id="description_8">description<a class="headerlink" href="#description_8" title="Permanent link">#</a></h3>
+<p>User provided description of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L83">[source]</a></span></p>
+<h3 id="id_8">id<a class="headerlink" href="#id_8" title="Permanent link">#</a></h3>
+<p>Id of the storage connector uniquely identifying it in the Feature store.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L88">[source]</a></span></p>
+<h3 id="name_8">name<a class="headerlink" href="#name_8" title="Permanent link">#</a></h3>
+<p>Name of the storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L974">[source]</a></span></p>
+<h3 id="options_1">options<a class="headerlink" href="#options_1" title="Permanent link">#</a></h3>
+<p>Bootstrap servers string.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L954">[source]</a></span></p>
+<h3 id="security_protocol">security_protocol<a class="headerlink" href="#security_protocol" title="Permanent link">#</a></h3>
+<p>Bootstrap servers string.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L969">[source]</a></span></p>
+<h3 id="ssl_endpoint_identification_algorithm">ssl_endpoint_identification_algorithm<a class="headerlink" href="#ssl_endpoint_identification_algorithm" title="Permanent link">#</a></h3>
+<p>Bootstrap servers string.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L964">[source]</a></span></p>
+<h3 id="ssl_keystore_location">ssl_keystore_location<a class="headerlink" href="#ssl_keystore_location" title="Permanent link">#</a></h3>
+<p>Bootstrap servers string.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L959">[source]</a></span></p>
+<h3 id="ssl_truststore_location">ssl_truststore_location<a class="headerlink" href="#ssl_truststore_location" title="Permanent link">#</a></h3>
+<p>Bootstrap servers string.</p>
+<hr />
+<h3 id="methods_8">Methods<a class="headerlink" href="#methods_8" title="Permanent link">#</a></h3>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1034">[source]</a></span></p>
+<h3 id="confluent_options">confluent_options<a class="headerlink" href="#confluent_options" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">confluent_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to confluent_kafka, based on the provided apache spark configuration.
+Right now only producer values with Importance &gt;= medium are implemented.
+https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L138">[source]</a></span></p>
+<h3 id="connector_options_8">connector_options<a class="headerlink" href="#connector_options_8" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">connector_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to an external connector library.
+Not implemented for this connector type.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L979">[source]</a></span></p>
+<h3 id="kafka_options">kafka_options<a class="headerlink" href="#kafka_options" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">kafka_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to kafka, based on the additional arguments.
+https://kafka.apache.org/documentation/</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1139">[source]</a></span></p>
+<h3 id="read_8">read<a class="headerlink" href="#read_8" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{},</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>NOT SUPPORTED.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1151">[source]</a></span></p>
+<h3 id="read_stream">read_stream<a class="headerlink" href="#read_stream" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">read_stream</span><span class="p">(</span>
+    <span class="n">topic</span><span class="p">,</span>
+    <span class="n">topic_pattern</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">message_format</span><span class="o">=</span><span class="s2">&quot;avro&quot;</span><span class="p">,</span>
+    <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">include_metadata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Reads a Kafka stream from a topic or multiple topics into a Dataframe.</p>
+<div class="admonition warning">
+<p class="admonition-title">Engine Support</p>
+<p><strong>Spark only</strong></p>
+<p>Reading from data streams using Pandas/Python as engine is currently not supported.
+Python/Pandas has no notion of streaming.</p>
+</div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>topic</strong> <code>str</code>: Name or pattern of the topic(s) to subscribe to.</li>
+<li><strong>topic_pattern</strong> <code>bool</code>: Flag to indicate if <code>topic</code> string is a pattern.
+    Defaults to <code>False</code>.</li>
+<li><strong>message_format</strong> <code>str</code>: The format of the messages to use for decoding.
+    Can be <code>"avro"</code> or <code>"json"</code>. Defaults to <code>"avro"</code>.</li>
+<li><strong>schema</strong> <code>Optional[str]</code>: Optional schema, to use for decoding, can be an Avro schema string for
+    <code>"avro"</code> message format, or for JSON encoding a Spark StructType schema,
+    or a DDL formatted string. Defaults to <code>None</code>.</li>
+<li><strong>options</strong> <code>dict</code>: Additional options as key/value string pairs to be passed to Spark.
+    Defaults to <code>{}</code>.</li>
+<li><strong>include_metadata</strong> <code>bool</code>: Indicate whether to return additional metadata fields from
+    messages in the stream. Otherwise, only the decoded value fields are
+    returned. Defaults to <code>False</code>.</li>
+</ul>
+<p><strong>Raises</strong></p>
+<ul>
+<li><strong><code>ValueError</code></strong>: Malformed arguments.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p><code>StreamingDataframe</code>: A Spark streaming dataframe.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L129">[source]</a></span></p>
+<h3 id="refetch_8">refetch<a class="headerlink" href="#refetch_8" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">refetch</span><span class="p">()</span>
+</code></pre></div>
+<p>Refetch storage connector.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L1128">[source]</a></span></p>
+<h3 id="spark_options_8">spark_options<a class="headerlink" href="#spark_options_8" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">spark_options</span><span class="p">()</span>
+</code></pre></div>
+<p>Return prepared options to be passed to Spark, based on the additional arguments.
+This is done by just adding 'kafka.' prefix to kafka_options.
+https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#kafka-specific-configurations</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L70">[source]</a></span></p>
+<h3 id="to_dict_8">to_dict<a class="headerlink" href="#to_dict_8" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/5291ca5fbac525622308690dc024369b805b3795/python/hsfs/storage_connector.py#L60">[source]</a></span></p>
+<h3 id="update_from_response_json_8">update_from_response_json<a class="headerlink" href="#update_from_response_json_8" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">KafkaConnector</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="../training_dataset_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: TrainingDataset" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              TrainingDataset
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../feature_api/" class="md-footer__link md-footer__link--next" aria-label="Next: Feature" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Feature
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/logicalclocks" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://github.com/logicalclocks/hopsworks" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://community.hopsworks.ai/" target="_blank" rel="noopener" title="community.hopsworks.ai" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M225.9 32C103.3 32 0 130.5 0 252.1 0 256 .1 480 .1 480l225.8-.2c122.7 0 222.1-102.3 222.1-223.9C448 134.3 348.6 32 225.9 32zM224 384c-19.4 0-37.9-4.3-54.4-12.1L88.5 392l22.9-75c-9.8-18.1-15.4-38.9-15.4-61 0-70.7 57.3-128 128-128s128 57.3 128 128-57.3 128-128 128z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/company/logicalclocks/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"default": "latest"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.c44cc438.min.js"></script>
+      
+        <script src="../../../js/version-select.js"></script>
+      
+        <script src="../../../js/inject-api-links.js"></script>
+      
+    
+  </body>
+</html>
