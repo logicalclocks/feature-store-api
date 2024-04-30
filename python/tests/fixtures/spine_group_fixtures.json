@@ -1,0 +1,58 @@
+{
+    "get": {
+        "response": {
+            "type": "onDemandFeaturegroupDTO",
+            "spine": true,
+            "created": "2022-08-16T07:19:12Z",
+            "creator": {
+                "email": "admin@hopsworks.ai",
+                "firstName": "Admin",
+                "lastName": "Admin",
+                "maxNumProjects": 0,
+                "numActiveProjects": 0,
+                "numRemainingProjects": 0,
+                "status": 0,
+                "testUser": false,
+                "tos": false,
+                "toursState": 0,
+                "twoFactor": false
+            },
+            "description": "test description",
+            "featurestoreId": 67,
+            "featurestoreName": "test_project_featurestore",
+            "id": 14,
+            "name": "spine_fg_test",
+            "version": 1,
+            "features": [
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 14,
+                    "hudiPrecombineKey": false,
+                    "name": "intt",
+                    "partition": false,
+                    "primary": true,
+                    "type": "int"
+                },
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 14,
+                    "hudiPrecombineKey": false,
+                    "name": "stringt",
+                    "partition": false,
+                    "primary": false,
+                    "type": "string"
+                },
+                {
+                    "defaultValue": null,
+                    "featureGroupId": 14,
+                    "hudiPrecombineKey": false,
+                    "name": "datet",
+                    "partition": false,
+                    "primary": false,
+                    "type": "date"
+                }
+            ],
+            "eventTime": "datet"
+        }
+    }
+}
