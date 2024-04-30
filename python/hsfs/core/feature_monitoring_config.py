@@ -13,13 +13,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 import humps
 from enum import Enum
 from datetime import datetime, date
 from typing import Any, Dict, List, Optional, Union
-from hsfs.util import FeatureStoreEncoder
+from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 
 from hsfs.core import monitoring_window_config as mwc
@@ -205,7 +206,7 @@ class FeatureMonitoringConfig:
         return the_dict
 
     def json(self) -> str:
-        return json.dumps(self, cls=FeatureStoreEncoder)
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def __str__(self):
         return self.json()

@@ -1065,7 +1065,27 @@ class TestPython:
             == "The ingested dataframe contains upper case letters in feature names: `['Col1']`. Feature names are sanitized to lower case in the feature store."
         )
 
-    def test_parse_schema_feature_group(self, mocker):
+    def test_convert_to_default_dataframe_pandas_with_spaces(self, mocker):
+        # Arrange
+        mock_warnings = mocker.patch("warnings.warn")
+
+        python_engine = python.Engine()
+
+        d = {"col 1": [1, 2], "co 2 co": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result = python_engine.convert_to_default_dataframe(dataframe=df)
+
+        # Assert
+        assert result.columns.values.tolist() == ["col_1", "co_2_co"]
+        assert (
+            mock_warnings.call_args[0][0]
+            == "The ingested dataframe contains feature names with spaces: `['col 1', 'co 2 co']`. "
+            "Feature names are sanitized to use underscore '_' in the feature store."
+        )
+
+    def test_parse_schema_feature_group_pandas(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
 

@@ -17,7 +17,7 @@
 import json
 import humps
 from typing import List, Optional, Union
-from hsfs.util import FeatureStoreEncoder
+from hsfs import util
 from enum import Enum
 
 from hsfs.core import monitoring_window_config_engine
@@ -176,7 +176,7 @@ class MonitoringWindowConfig:
         return the_dict
 
     def json(self) -> str:
-        return json.dumps(self, cls=FeatureStoreEncoder)
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def __str__(self):
         return self.json()

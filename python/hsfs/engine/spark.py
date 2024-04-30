@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import os
 import shutil
@@ -75,7 +76,7 @@ except ImportError:
     pass
 
 from hsfs import feature, training_dataset_feature, client, util
-from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
+from hsfs import feature_group as fg_mod
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.client import hopsworks
@@ -154,7 +155,7 @@ class Engine:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
     def register_external_temporary_table(self, external_fg, alias):
-        if not isinstance(external_fg, SpineGroup):
+        if not isinstance(external_fg, fg_mod.SpineGroup):
             external_dataset = external_fg.storage_connector.read(
                 external_fg.query,
                 external_fg.data_format,
@@ -259,6 +260,7 @@ class Engine:
             upper_case_features = [
                 c for c in dataframe.columns if any(re.finditer("[A-Z]", c))
             ]
+            space_features = [c for c in dataframe.columns if " " in c]
             if len(upper_case_features) > 0:
                 warnings.warn(
                     "The ingested dataframe contains upper case letters in feature names: `{}`. "
@@ -267,9 +269,18 @@ class Engine:
                     ),
                     util.FeatureGroupWarning,
                 )
+            if len(space_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains feature names with spaces: `{}`. "
+                    "Feature names are sanitized to use underscore '_' in the feature store.".format(
+                        space_features
+                    ),
+                    util.FeatureGroupWarning,
+                    stacklevel=1,
+                )
 
             lowercase_dataframe = dataframe.select(
-                [col(x).alias(x.lower()) for x in dataframe.columns]
+                [col(x).alias(util.autofix_feature_name(x)) for x in dataframe.columns]
             )
             # for streaming dataframes this will be handled in DeltaStreamerTransformer.java class
             if not lowercase_dataframe.isStreaming:
@@ -304,7 +315,7 @@ class Engine:
     ):
         try:
             if (
-                isinstance(feature_group, ExternalFeatureGroup)
+                isinstance(feature_group, fg_mod.ExternalFeatureGroup)
                 and feature_group.online_enabled
             ) or feature_group.stream:
                 self._save_online_dataframe(
@@ -915,13 +926,13 @@ class Engine:
         features = []
         using_hudi = time_travel_format == "HUDI"
         for feat in dataframe.schema:
-            name = feat.name.lower()
+            name = util.autofix_feature_name(feat.name)
             try:
                 converted_type = Engine.convert_spark_type_to_offline_type(
                     feat.dataType, using_hudi
                 )
             except ValueError as e:
-                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+                raise FeatureStoreException(f"Feature '{feat.name}': {str(e)}") from e
             features.append(
                 feature.Feature(
                     name, converted_type, feat.metadata.get("description", None)
@@ -932,7 +943,7 @@ class Engine:
     def parse_schema_training_dataset(self, dataframe):
         return [
             training_dataset_feature.TrainingDatasetFeature(
-                feat.name.lower(), feat.dataType.simpleString()
+                util.autofix_feature_name(feat.name), feat.dataType.simpleString()
             )
             for feat in dataframe.schema
         ]

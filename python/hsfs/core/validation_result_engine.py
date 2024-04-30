@@ -13,11 +13,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from typing import Union, List, Dict
 from hsfs.core import validation_result_api
 from datetime import datetime, date
-from hsfs.util import convert_event_time_to_timestamp
+from hsfs import util
 
 from hsfs.ge_validation_result import ValidationResult
 from great_expectations.core import ExpectationValidationResult
@@ -108,9 +109,9 @@ class ValidationResultEngine:
         query_params["filter_by"].extend(ingestion_filters)
 
         if start_validation_time and end_validation_time:
-            if convert_event_time_to_timestamp(
+            if util.convert_event_time_to_timestamp(
                 start_validation_time
-            ) > convert_event_time_to_timestamp(end_validation_time):
+            ) > util.convert_event_time_to_timestamp(end_validation_time):
                 raise ValueError(
                     f"start_validation_time : {start_validation_time} is posterior to end_validation_time : {end_validation_time}"
                 )
@@ -118,12 +119,12 @@ class ValidationResultEngine:
         if start_validation_time:
             query_params["filter_by"].append(
                 "validation_time_gte:"
-                + str(convert_event_time_to_timestamp(start_validation_time))
+                + str(util.convert_event_time_to_timestamp(start_validation_time))
             )
         if end_validation_time:
             query_params["filter_by"].append(
                 "validation_time_lte:"
-                + str(convert_event_time_to_timestamp(end_validation_time))
+                + str(util.convert_event_time_to_timestamp(end_validation_time))
             )
 
         return query_params

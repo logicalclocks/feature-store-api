@@ -13,9 +13,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import re
 import json
+from typing import Union
 import pandas as pd
 import numpy as np
 import time
@@ -28,6 +30,7 @@ from urllib.parse import urljoin, urlparse
 from sqlalchemy import create_engine
 
 from hsfs import client, feature
+from hsfs import feature_group as fg_mod
 from hsfs.client import exceptions
 from hsfs.core import variable_api
 from aiomysql.sa import create_engine as async_create_engine
@@ -63,7 +66,18 @@ def parse_features(feature_names):
         return []
 
 
-def feature_group_name(feature_group):
+def autofix_feature_name(name: str) -> str:
+    # replace spaces with underscores and enforce lower case
+    return name.lower().replace(" ", "_")
+
+
+def feature_group_name(
+    feature_group: Union[
+        fg_mod.FeatureGroup,
+        fg_mod.ExternalFeatureGroup,
+        fg_mod.SpineGroup,
+    ],
+) -> str:
     return feature_group.name + "_" + str(feature_group.version)
 
 

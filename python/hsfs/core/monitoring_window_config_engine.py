@@ -23,7 +23,7 @@ from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistic
 from hsfs.core import statistics_engine
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.client.exceptions import RestAPIError
-from hsfs.util import convert_event_time_to_timestamp
+from hsfs import util
 
 
 class MonitoringWindowConfigEngine:
@@ -429,4 +429,4 @@ class MonitoringWindowConfigEngine:
         Returns:
             datetime: Rounded and converted event time.
         """
-        return convert_event_time_to_timestamp(event_time)
+        return util.convert_event_time_to_timestamp(event_time)
