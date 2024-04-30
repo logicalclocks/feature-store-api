@@ -24,9 +24,9 @@ from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf
 
 class FeatureGroupApi:
     BACKEND_FG_STREAM = "streamFeatureGroupDTO"
-    BACKEND_FG_BATCH = "cachedFeatureGroupDTO"
-    BACKEND_FG_EXTERNAL = "onDemandFeatureGroupDTO"
-    BACKEND_FG_SPINE = "onDemandFeatureGroupDTO"
+    BACKEND_FG_BATCH = "cachedFeaturegroupDTO"
+    BACKEND_FG_EXTERNAL = "onDemandFeaturegroupDTO"
+    BACKEND_FG_SPINE = "onDemandFeaturegroupDTO"
 
     def save(
         self,
