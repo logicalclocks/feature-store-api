@@ -3447,6 +3447,7 @@ class TestSpark:
                     "batch_data": "SparkDataFrame",
                     "data_asset_name": "<YOUR_MEANGINGFUL_NAME>",
                 },
+                "checkpoint_name": None,
                 "expectation_suite_name": "es_name",
                 "great_expectations_version": "0.18.12",
                 "run_id": {"run_name": "test_run_id", "run_time": mocker.ANY},
