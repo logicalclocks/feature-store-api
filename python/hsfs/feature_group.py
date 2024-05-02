@@ -533,13 +533,13 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_storage_connector_provenance(self)
     
-    def get_storage_connectors(self):
+    def get_storage_connector(self):
         """Get the storage connectors using this feature group, based on explicit
         provenance. Only the accessible storage connectors are returned.
         For more items use the base method - get_storage_connector_provenance
 
         # Returns
-            `List[StorageConnector]: List of storage connectors.
+            `StorageConnector: Storage connector.
         """
         storage_connector_provenance = self.get_storage_connector_provenance()
 
@@ -547,7 +547,7 @@ class FeatureGroupBase:
             _logger.info("There is a deleted or inaccessible storage connector. For more details access `get_storage_connector_provenance`")
 
         if storage_connector_provenance.accessible:
-            return storage_connector_provenance.accessible
+            return storage_connector_provenance.accessible[0]
         else:
             return None
 
