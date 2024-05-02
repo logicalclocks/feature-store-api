@@ -59,6 +59,12 @@ _logger = logging.getLogger(__name__)
 
 
 class VectorServer:
+    DEFAULT_ONLINE_STORE_REST_CLIENT = "rest"
+    DEFAULT_ONLINE_STORE_SQL_CLIENT = "sql"
+    DEFAULT_ONLINE_STORE_CLIENT_KEY = "default_online_store_client"
+    ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY = "config_online_store_rest_client"
+    RESET_ONLINE_REST_CLIENT_OPTIONS_KEY = "reset_online_store_rest_client"
+
     def __init__(
         self,
         feature_store_id: int,
