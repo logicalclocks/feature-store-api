@@ -534,8 +534,8 @@ class FeatureGroupBase:
         return self._feature_group_engine.get_storage_connector_provenance(self)
     
     def get_storage_connector(self):
-        """Get the storage connectors using this feature group, based on explicit
-        provenance. Only the accessible storage connectors are returned.
+        """Get the storage connector using this feature group, based on explicit
+        provenance. Only the accessible storage connector is returned.
         For more items use the base method - get_storage_connector_provenance
 
         # Returns
