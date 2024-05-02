@@ -61,6 +61,7 @@ FIXTURES = [
     "user",
     "validation_report",
     "serving_keys",
+    "spine_group",
 ]
 
 backend_fixtures_json = {}

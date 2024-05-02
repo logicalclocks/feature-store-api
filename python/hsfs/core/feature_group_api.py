@@ -24,9 +24,9 @@ from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf
 
 class FeatureGroupApi:
     BACKEND_FG_STREAM = "streamFeatureGroupDTO"
-    BACKEND_FG_BATCH = "cachedFeatureGroupDTO"
-    BACKEND_FG_EXTERNAL = "onDemandFeatureGroupDTO"
-    BACKEND_FG_SPINE = "onDemandFeatureGroupDTO"
+    BACKEND_FG_BATCH = "cachedFeaturegroupDTO"
+    BACKEND_FG_EXTERNAL = "onDemandFeaturegroupDTO"
+    BACKEND_FG_SPINE = "onDemandFeaturegroupDTO"
 
     def save(
         self,
@@ -104,7 +104,7 @@ class FeatureGroupApi:
             ):
                 fg_objs.append(fg_mod.FeatureGroup.from_response_json(fg_json))
             elif fg_json["type"] == FeatureGroupApi.BACKEND_FG_EXTERNAL:
-                if fg_json["spine"]:
+                if fg_json.get("spine", False):
                     fg_objs.append(fg_mod.SpineGroup.from_response_json(fg_json))
                 else:
                     fg_objs.append(
@@ -122,6 +122,7 @@ class FeatureGroupApi:
                     + str(list_of_types)
                 )
 
+        print(fg_objs)
         if version is not None:
             return fg_objs[0]
         else:

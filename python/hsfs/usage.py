@@ -113,8 +113,12 @@ class MethodCounter:
         return m.__module__ + m.__name__
 
 
-logging.basicConfig(stream=sys.__stdout__)
 _logger = logging.getLogger(__name__)
+_handler = logging.StreamHandler(stream=sys.stdout)
+_handler.setFormatter(
+    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+)
+_logger.addHandler(_handler)
 _logger.setLevel(logging.INFO)
 _conn = http.client.HTTPSConnection("usage.hops.works")
 _num_executor = os.environ.get("NUM_HOPSWORKS_USAGE_EXECUTORS", default="2")
