@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import base64
+import logging
 import os
 import re
 import warnings
@@ -28,6 +29,9 @@ import pandas as pd
 import polars as pl
 from hsfs import client, engine
 from hsfs.core import storage_connector_api
+
+
+_logger = logging.getLogger(__name__)
 
 
 class StorageConnector(ABC):
@@ -179,6 +183,40 @@ class StorageConnector(ABC):
         Not implemented for this connector type.
         """
         return {}
+
+    def get_feature_groups_provenance(self):
+        """Get the generated feature groups using this storage connector, based on explicit
+        provenance. These feature groups can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature group links, so deleted
+        will always be empty.
+        For inaccessible feature groups, only a minimal information is returned.
+
+        # Returns
+            `ExplicitProvenance.Links`: the feature groups generated using this
+            storage connector
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+        """
+        return self._storage_connector_api.get_feature_groups_provenance(self)
+    
+    def get_feature_groups(self):
+        """Get the feature groups using this storage connector, based on explicit
+        provenance. Only the accessible feature groups are returned.
+        For more items use the base method - get_feature_groups_provenance
+
+        # Returns
+            `List[FeatureGroup]: List of feature groups.
+        """
+        feature_groups_provenance = self.get_feature_groups_provenance()
+
+        if feature_groups_provenance.inaccessible or feature_groups_provenance.deleted:
+            _logger.info("There are deleted or inaccessible feature groups. For more details access `get_feature_groups_provenance`")
+
+        if feature_groups_provenance.accessible:
+            return feature_groups_provenance.accessible
+        else:
+            return None
 
 
 class HopsFSConnector(StorageConnector):

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import time
 import warnings
 from datetime import date, datetime
@@ -75,6 +76,9 @@ from hsfs.ge_validation_result import ValidationResult
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
+
+
+_logger = logging.getLogger(__name__)
 
 
 @typechecked
@@ -512,6 +516,40 @@ class FeatureGroupBase:
             `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
+    
+    def get_storage_connector_provenance(self):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are storage connectors. These storage connector can be accessible,
+        deleted or inaccessible.
+        For deleted and inaccessible storage connector, only a minimal information is
+        returned.
+
+        # Returns
+            `ExplicitProvenance.Links`: the storage connector used to generated this
+            feature group
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+        """
+        return self._feature_group_engine.get_storage_connector_provenance(self)
+    
+    def get_storage_connector(self):
+        """Get the storage connector using this feature group, based on explicit
+        provenance. Only the accessible storage connector is returned.
+        For more items use the base method - get_storage_connector_provenance
+
+        # Returns
+            `StorageConnector: Storage connector.
+        """
+        storage_connector_provenance = self.get_storage_connector_provenance()
+
+        if storage_connector_provenance.inaccessible or storage_connector_provenance.deleted:
+            _logger.info("The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`")
+
+        if storage_connector_provenance.accessible:
+            return storage_connector_provenance.accessible[0]
+        else:
+            return None
 
     def get_generated_feature_views(self) -> explicit_provenance.Links:
         """Get the generated feature view using this feature group, based on explicit
