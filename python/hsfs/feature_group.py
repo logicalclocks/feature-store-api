@@ -544,7 +544,7 @@ class FeatureGroupBase:
         storage_connector_provenance = self.get_storage_connector_provenance()
 
         if storage_connector_provenance.inaccessible or storage_connector_provenance.deleted:
-            _logger.info("Explicit feature group provenance links to inaccessible or deleted storage connectors")
+            _logger.info("There is a deleted or inaccessible storage connector. For more details access `get_storage_connector_provenance`")
 
         if storage_connector_provenance.accessible:
             return storage_connector_provenance.accessible
