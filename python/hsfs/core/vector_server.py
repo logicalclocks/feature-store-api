@@ -103,7 +103,11 @@ class VectorServer:
         )
         self._transformation_functions = None
         self._online_store_sql_client = None
+
         self._online_store_rest_client_engine = None
+        self._init_online_store_rest_client: Optional[bool] = None
+        self._init_online_store_sql_client: Optional[bool] = None
+        self._default_online_store_client = None
 
         self.set_return_feature_value_handlers(features=self._features)
 
@@ -113,7 +117,15 @@ class VectorServer:
         external: Optional[bool] = None,
         inference_helper_columns: bool = False,
         options: Optional[Dict[str, Any]] = None,
+        init_online_store_sql_client: Optional[bool] = None,
+        init_online_store_rest_client: bool = False,
     ):
+        self._set_default_online_store_client(
+            init_online_store_rest_client=init_online_store_rest_client,
+            init_online_store_sql_client=init_online_store_sql_client,
+            options=options,
+        )
+
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
         # `init_prepared_statement` should be the last because other initialisations
@@ -128,14 +140,18 @@ class VectorServer:
             )
         self.set_return_feature_value_handlers(features=entity.features)
 
-        self.setup_online_store_rest_client_and_engine(entity=entity, options=options)
+        if self._init_online_store_rest_client:
+            self.setup_online_store_rest_client_and_engine(
+                entity=entity, options=options
+            )
 
-        self.setup_online_store_sql_client(
-            entity=entity,
-            external=external,
-            inference_helper_columns=inference_helper_columns,
-            options=options,
-        )
+        if self._init_online_store_sql_client:
+            self.setup_online_store_sql_client(
+                entity=entity,
+                external=external,
+                inference_helper_columns=inference_helper_columns,
+                options=options,
+            )
 
     def init_batch_scoring(
         self,
@@ -213,14 +229,30 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: Optional[Dict[str, Any]] = None,
         allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = {}
 
-        # get result row
-        _logger.info("get_feature_vector Online SQL client")
-        serving_vector = self.online_store_sql_client.get_single_feature_vector(entry)
+        online_client_choice = self.which_client_and_ensure_initialised(
+            force_rest_client=force_rest_client, force_sql_client=force_sql_client
+        )
+
+        if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+            _logger.info("get_feature_vector Online REST client")
+            serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
+                entry,
+                return_type=self.online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            )
+        else:
+            # get result row
+            _logger.info("get_feature_vector Online SQL client")
+            serving_vector = self.online_store_sql_client.get_single_feature_vector(
+                entry
+            )
+
         # Deserialize complex features
         _logger.debug("Deserializing complex features")
         serving_vector = self.deserialize_complex_features(serving_vector)
@@ -248,14 +280,29 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: List[Dict[str, Any]] = None,
         allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], List[Dict[str, Any]]]:
+        """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = []
-        """Assembles serving vector from online feature store."""
-        _logger.info("get_feature_vectors through SQL client")
-        batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
-            entries
+
+        online_client_choice = self.which_client_and_ensure_initialised(
+            force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
+        if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+            _logger.info("get_batch_feature_vector Online REST client")
+            batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
+                entries=entries,
+                return_type=self.online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            )
+        else:
+            # get result row
+            _logger.info("get_batch_feature_vectors through SQL client")
+            batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
+                entries
+            )
+
         # Deserialize complex features
         _logger.debug("Deserializing complex features")
         batch_results = list(
@@ -381,6 +428,81 @@ class VectorServer:
         return self.handle_feature_vector_return_type(
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
+
+    def which_client_and_ensure_initialised(
+        self, force_rest_client: bool, force_sql_client: bool
+    ) -> str:
+        """Check if the requested client is initialised as well as deciding which client to use based on default.
+
+        # Arguments:
+            force_rest_client: bool. user specified override to use rest_client.
+            force_sql_client: bool. user specified override to use sql_client.
+
+        # Returns:
+            An enum specifying the client to be used.
+        """
+        if force_rest_client and force_sql_client:
+            raise ValueError(
+                "force_rest_client and force_sql_client cannot be used at the same time."
+            )
+
+        # No override, use default client
+        if not force_rest_client and not force_sql_client:
+            return self.default_online_store_client
+
+        if (
+            self._init_online_store_rest_client is False
+            and self._init_online_store_sql_client is False
+        ):
+            raise ValueError(
+                "No client is initialised. Call `init_serving` with init_online_store_sql_client or init_online_store_rest_client set to True before using it."
+            )
+        if force_sql_client and (self._init_online_store_sql_client is False):
+            raise ValueError(
+                "SQL Client is not initialised. Call `init_serving` with init_online_store_sql_client set to True before using it."
+            )
+        elif force_sql_client:
+            return self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+
+        if force_rest_client and (self._init_online_store_rest_client is False):
+            raise ValueError(
+                "RonDB Rest Client is not initialised. Call `init_serving` with init_online_store_rest_client set to True before using it."
+            )
+        elif force_rest_client:
+            return self.DEFAULT_ONLINE_STORE_REST_CLIENT
+
+    def _set_default_online_store_client(
+        self,
+        init_online_store_rest_client: bool,
+        init_online_store_sql_client: bool,
+        options: dict,
+    ):
+        if (
+            init_online_store_rest_client is False
+            and init_online_store_sql_client is False
+        ):
+            raise ValueError(
+                "At least one of the clients should be initialised. Set init_online_store_sql_client or init_online_store_rest_client to True."
+            )
+        self._init_online_store_rest_client = init_online_store_rest_client
+        self._init_online_store_sql_client = init_online_store_sql_client
+
+        if (
+            init_online_store_rest_client is True
+            and init_online_store_sql_client is True
+        ):
+            # Defaults to SQL as client for legacy reasons mainly.
+            self.default_online_store_client = (
+                options.get(
+                    "default_online_store_client", self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+                )
+                if isinstance(options, dict)
+                else self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+            )
+        elif init_online_store_rest_client is True:
+            self.default_online_store_client = self.DEFAULT_ONLINE_STORE_REST_CLIENT
+        else:
+            self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
     def build_complex_feature_decoders(
         self, complex_feature_schemas: Dict[str, Schema]
@@ -663,3 +785,39 @@ class VectorServer:
         self,
     ) -> transformation_function_engine.TransformationFunctionEngine:
         return self._transformation_function_engine
+
+    @property
+    def default_online_store_client(self) -> str:
+        return self._default_online_store_client
+
+    @default_online_store_client.setter
+    def default_online_store_client(self, default_online_store_client: str):
+        if default_online_store_client not in [
+            self.DEFAULT_ONLINE_STORE_REST_CLIENT,
+            self.DEFAULT_ONLINE_STORE_SQL_CLIENT,
+        ]:
+            raise ValueError(
+                f"Default Online Feature Store Client should be one of {self.DEFAULT_ONLINE_STORE_REST_CLIENT} or {self.DEFAULT_ONLINE_STORE_SQL_CLIENT}."
+            )
+
+        if (
+            default_online_store_client == self.DEFAULT_ONLINE_STORE_REST_CLIENT
+            and self._init_online_store_rest_client is False
+        ):
+            raise ValueError(
+                f"Default Online Store cCient is set to {self.DEFAULT_ONLINE_STORE_REST_CLIENT} but Online Store REST client"
+                + " is not initialised. Call `init_serving` with init_client set to True before using it."
+            )
+        elif (
+            default_online_store_client == self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+            and self._init_online_store_sql_client is False
+        ):
+            raise ValueError(
+                f"Default online client is set to {self.DEFAULT_ONLINE_STORE_SQL_CLIENT} but Online Store SQL client"
+                + " is not initialised. Call `init_serving` with init_online_store_sql_client set to True before using it."
+            )
+
+        _logger.info(
+            f"Default Online Store Client is set to {default_online_store_client}."
+        )
+        self._default_online_store_client = default_online_store_client

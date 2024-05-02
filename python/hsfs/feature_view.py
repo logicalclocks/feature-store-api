@@ -19,7 +19,7 @@ import copy
 import json
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
 
 import humps
 import numpy as np
@@ -246,6 +246,8 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
+        init_online_store_sql_client: Optional[bool] = None,
+        init_online_store_rest_client: bool = False,
     ) -> None:
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
@@ -310,6 +312,8 @@ class FeatureView:
             external=external,
             inference_helper_columns=True,
             options=options,
+            init_online_store_sql_client=init_online_store_sql_client,
+            init_online_store_rest_client=init_online_store_rest_client,
         )
 
         self._prefix_serving_key_map = dict(
@@ -412,8 +416,10 @@ class FeatureView:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = None,
         external: Optional[bool] = None,
-        return_type: Optional[str] = "list",
-        allow_missing: Optional[bool] = False,
+        return_type: Literal["list", "polars", "numpy", "pandas"] = "list",
+        allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -500,7 +506,12 @@ class FeatureView:
         if self._vector_db_client:
             passed_features = self._update_with_vector_db_result(entry, passed_features)
         return self._vector_server.get_feature_vector(
-            entry, return_type, passed_features, allow_missing
+            entry,
+            return_type,
+            passed_features,
+            allow_missing,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_feature_vectors(
@@ -508,8 +519,10 @@ class FeatureView:
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         external: Optional[bool] = None,
-        return_type: Optional[str] = "list",
-        allow_missing: Optional[bool] = False,
+        return_type: Literal["list", "polars", "numpy", "pandas"] = "list",
+        allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -600,7 +613,12 @@ class FeatureView:
                 )
             )
         return self._vector_server.get_feature_vectors(
-            entry, return_type, updated_passed_feature, allow_missing
+            entry,
+            return_type,
+            updated_passed_feature,
+            allow_missing,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_inference_helper(
