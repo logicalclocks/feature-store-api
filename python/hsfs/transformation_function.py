@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import json
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import humps
 from hsfs import util
@@ -27,22 +27,31 @@ from hsfs.hopsworks_udf import HopsworksUdf
 
 @typechecked
 class TransformationFunction:
+    """
+    Main DTO class for transformation functions.
+
+    Attributes
+    ----------
+        id (int) : Id of transformation function.
+        version (int) : Version of transformation function.
+        hopsworks_udf (HopsworksUdf): Meta data class for user defined functions.
+    """
+
     def __init__(
         self,
         featurestore_id: int,
         hopsworks_udf: HopsworksUdf,
         version: Optional[int] = None,
         id: Optional[int] = None,
-        # TODO : Check if the below are actually needed
         type=None,
         items=None,
         count=None,
         href=None,
         **kwargs,
     ):
-        self._id = id
-        self._featurestore_id = featurestore_id
-        self._version = version
+        self._id: int = id
+        self._featurestore_id: int = featurestore_id
+        self._version: int = version
 
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(
@@ -51,25 +60,26 @@ class TransformationFunction:
         )
         if not isinstance(hopsworks_udf, HopsworksUdf):
             raise FeatureStoreException(
-                "Use hopsworks_udf decorator when creating the feature view."
+                "Please use the hopsworks_udf decorator when defining transformation functions."
             )
-        self._hopsworks_udf = hopsworks_udf
-        self._feature_group_feature_name: Optional[str] = None
-        self._feature_group_id: Optional[int] = None
 
-    def save(self):
+        self._hopsworks_udf: HopsworksUdf = hopsworks_udf
+
+    def save(self) -> None:
         """Persist transformation function in backend.
 
         !!! example
             ```python
+            # import hopsworks udf decorator
+            from hsfs.hopsworks_udf import HopsworksUdf
             # define function
+            @hopsworks_udf(int)
             def plus_one(value):
                 return value + 1
 
             # create transformation function
             plus_one_meta = fs.create_transformation_function(
                     transformation_function=plus_one,
-                    output_type=int,
                     version=1
                 )
 
@@ -79,19 +89,21 @@ class TransformationFunction:
         """
         self._transformation_function_engine.save(self)
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete transformation function from backend.
 
         !!! example
             ```python
+            # import hopsworks udf decorator
+            from hsfs.hopsworks_udf import HopsworksUdf
             # define function
+            @hopsworks_udf(int)
             def plus_one(value):
                 return value + 1
 
             # create transformation function
             plus_one_meta = fs.create_transformation_function(
                     transformation_function=plus_one,
-                    output_type=int,
                     version=1
                 )
             # persist transformation function in backend
@@ -106,15 +118,32 @@ class TransformationFunction:
         """
         self._transformation_function_engine.delete(self)
 
-    def __call__(self, *args: List[str]):
-        self._hopsworks_udf = self._hopsworks_udf(*args)
+    def __call__(self, *features: List[str]) -> TransformationFunction:
+        """
+        Update the feature to be using in the transformation function
+
+        # Arguments
+            features: Name of features to be passed to the User Defined function
+        # Returns
+            `HopsworksUdf`: Meta data class for the user defined function.
+        # Raises
+            `FeatureStoreException: If the provided number of features do not match the number of arguments in the defined UDF or if the provided feature names are not strings.
+        """
+        self._hopsworks_udf = self._hopsworks_udf(*features)
         return self
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> TransformationFunction:
+        """
+        Function that deserializes json obtained from the java backend.
+
+        # Arguments
+            json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
+        # Returns
+            `TransformationFunction`: Json deserialized class object.
+        """
         json_decamelized = humps.decamelize(json_dict)
-        print(json_decamelized)
-        # TODO : Clean this up.
+
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
                 return []
@@ -131,15 +160,37 @@ class TransformationFunction:
                 )
             return cls(**json_decamelized)
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(
+        self, json_dict: Dict[str, Any]
+    ) -> TransformationFunction:
+        """
+        Function that updates class based on the response obtained from the java backend.
+
+        # Arguments
+            json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
+        # Returns
+            `TransformationFunction`: Json deserialized class object.
+        """
         json_decamelized = humps.decamelize(json_dict)
         self.__init__(**json_decamelized)
         return self
 
-    def json(self):
+    def json(self) -> str:
+        """
+        Json serialize object.
+
+        # Returns
+            `str`: Json serialized object.
+        """
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert class into a dictionary for json serialization.
+
+        # Returns
+            `Dict`: Dictionary that contains all data required to json serialize the object.
+        """
         return {
             "id": self._id,
             "version": self._version,
@@ -153,17 +204,19 @@ class TransformationFunction:
         return self._id
 
     @id.setter
-    def id(self, id: int):
+    def id(self, id: int) -> None:
         self._id = id
 
     @property
     def version(self) -> int:
+        """Version of the transformation function."""
         return self._version
+
+    @version.setter
+    def version(self, version: int) -> None:
+        self._version = version
 
     @property
     def hopsworks_udf(self) -> HopsworksUdf:
+        """Meta data class for the user defined transformation function."""
         return self._hopsworks_udf
-
-    @version.setter
-    def version(self, version: int):
-        self._version = version

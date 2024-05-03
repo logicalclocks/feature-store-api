@@ -1,16 +1,54 @@
 {
-  "get": {
+  "get_one_argument_no_statistics_function": {
     "response": {
-      "featurestore_id": 11,
-      "transformation_fn": null,
-      "version": 1,
-      "name": "test_name",
-      "source_code_content": "test_source_code_content",
-      "builtin_source_code": "test_builtin_source_code",
-      "output_type": "float",
-      "id": 43,
-      "type": "transformationFunctionTDO",
-      "href": "test_href"
+      "id" : 1,
+      "version": 2,
+      "featurestoreId": 11,
+      "hopsworksUdf":{
+        "sourceCode": "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
+        "name": "add_one_fs",
+        "outputTypes":"double",
+        "transformationFeatures":"col1"
+      }
+    }
+  },
+  "get_one_argument_with_statistics_function": {
+    "response": {
+      "id" : 1,
+      "version": 2,
+      "featurestoreId": 11,
+      "hopsworksUdf":{
+        "sourceCode": "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n",
+        "name": "add_mean_fs",
+        "outputTypes":"double",
+        "transformationFeatures":"data"
+      }
+    }
+  },
+  "get_multiple_argument_with_statistics_function": {
+    "response": {
+      "id" : 1,
+      "version": 2,
+      "featurestoreId": 11,
+      "hopsworksUdf":{
+        "sourceCode": "\n@hopsworks_udf(str)\ndef test_func(data1 : pd.Series, statistics_data1, data2, statistics_data2, data3):\n    return data1 + statistics_data1.mean\n",
+        "name": "test_func",
+        "outputTypes":"string",
+        "transformationFeatures":"feature1, feature2, feature3"
+      }
+    }
+  },
+  "get_multiple_return_type_functions": {
+    "response": {
+      "id" : 1,
+      "version": 2,
+      "featurestoreId": 11,
+      "hopsworksUdf":{
+        "sourceCode": "\n@hopsworks_udf(str, float)\ndef test_func(data1 : pd.Series, statistics_data1, data2, statistics_data2, data3):\n    return pd.DataFrame('col1': ['a', 'b'], 'col2':[1,2])\n",
+        "name": "test_func",
+        "outputTypes":"string, double",
+        "transformationFeatures":"feature1, feature2, feature3"
+      }
     }
   },
   "get_basic_info": {
@@ -23,16 +61,26 @@
       "count": 1,
       "items": [
         {
-          "featurestore_id": 11,
-          "transformation_fn": null,
+          "id" : 1,
+          "version": 2,
+          "featurestoreId": 11,
+          "hopsworksUdf":{
+            "sourceCode": "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n",
+            "name": "add_mean_fs",
+            "outputTypes":"double",
+            "transformationFeatures":"data"
+          }
+        },
+        {
+          "id" : 2,
           "version": 1,
-          "name": "test_name",
-          "source_code_content": "test_source_code_content",
-          "builtin_source_code": "test_builtin_source_code",
-          "output_type": "float",
-          "id": 43,
-          "type": "transformationFunctionTDO",
-          "href": "test_href"
+          "featurestoreId": 11,
+          "hopsworksUdf":{
+            "sourceCode": "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
+            "name": "add_one_fs",
+            "outputTypes":"double",
+            "transformationFeatures":"col1"
+          }
         }
       ]
     }
