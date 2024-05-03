@@ -81,13 +81,28 @@ class FeatureViewApi:
             data=feature_view_obj.json(),
         )
 
-    def get_by_name(self, name: str) -> feature_view.FeatureView:
+    def get_by_name(self, name: str) -> List[feature_view.FeatureView]:
+        """
+        Get a feature view from the backend using its name.
+
+        # Arguments
+            name `str`: Name of the feature view.
+
+        # Returns
+            `List[FeatureView]`: A list that contains all version of the feature view.
+
+        # Raises
+            `RestAPIError`: If the feature view cannot be found from the backend.
+            `ValueError`: If the feature group associated with the feature view cannot be found.
+        """
         path = self._base_path + [name]
         try:
             return [
                 feature_view.FeatureView.from_response_json(fv)
                 for fv in self._client._send_request(
-                    self._GET, path, {"expand": ["query", "features"]}
+                    self._GET,
+                    path,
+                    {"expand": ["query", "features", "transformationfunctions"]},
                 )["items"]
             ]
         except RestAPIError as e:
@@ -101,6 +116,20 @@ class FeatureViewApi:
                 raise e
 
     def get_by_name_version(self, name: str, version: int) -> feature_view.FeatureView:
+        """
+        Get a feature view form the backend using both name and version
+
+        # Arguments
+            name `str`: Name of feature view.
+            version `version`: Version of the feature view.
+
+        # Returns
+            `FeatureView`
+
+        # Raises
+            `RestAPIError`: If the feature view cannot be found from the backend.
+            `ValueError`: If the feature group associated with the feature view cannot be found.
+        """
         path = self._base_path + [name, self._VERSION, version]
         try:
             return feature_view.FeatureView.from_response_json(
@@ -187,10 +216,21 @@ class FeatureViewApi:
 
     def get_attached_transformation_fn(
         self, name: str, version: int
-    ) -> Union[
-        "transformation_function.TransformationFunction",
-        List["transformation_function.TransformationFunction"],
-    ]:
+    ) -> List["transformation_function.TransformationFunction"]:
+        """
+        Get transformation functions attached to a feature view form the backend
+
+        # Arguments
+            name `str`: Name of feature view.
+            version `ìnt`: Version of feature view.
+
+        # Returns
+            `List[TransformationFunction]` : List of transformation functions attached to the feature view.
+
+        # Raises
+            `RestAPIError`: If the feature view cannot be found from the backend.
+            `ValueError`: If the feature group associated with the feature view cannot be found.
+        """
         path = self._base_path + [name, self._VERSION, version, self._TRANSFORMATION]
         return transformation_function.TransformationFunction.from_response_json(
             self._client._send_request("GET", path)
