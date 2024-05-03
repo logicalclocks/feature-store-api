@@ -123,7 +123,6 @@ class FeatureGroupApi:
                     + str(list_of_types)
                 )
 
-        print(fg_objs)
         if version is not None:
             return fg_objs[0]
         else:
