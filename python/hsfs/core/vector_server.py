@@ -680,6 +680,14 @@ class VectorServer:
             self.per_serving_key_features = self.build_per_serving_key_features(
                 self.serving_keys, self._features
             )
+
+        for sk_name, fetched_features in self.per_serving_key_features.items():
+            # if not present and all corresponding features are not passed via passed_features
+            if sk_name not in entry.keys() and not fetched_features.issubset(
+                set(passed_features.keys())
+            ):
+                return list(fetched_features.difference(passed_features.keys()))
+
         raise NotImplementedError(
             "This method is not implemented for the current version of the Vector Server."
         )
@@ -688,7 +696,7 @@ class VectorServer:
         self,
         serving_keys: List[sk_mod.ServingKey],
         features: List[tdf_mod.TrainingDatasetFeature],
-    ) -> Dict[str, List[str]]:
+    ) -> Dict[str, set[str]]:
         """Build a dictionary of feature names which will be fetched per serving key."""
         raise NotImplementedError(
             "This method is not implemented for the current version of the Vector Server."
