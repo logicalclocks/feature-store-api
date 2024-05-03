@@ -122,7 +122,6 @@ class FeatureGroupApi:
                     + str(list_of_types)
                 )
 
-        print(fg_objs)
         if version is not None:
             return fg_objs[0]
         else:
@@ -369,7 +368,7 @@ class FeatureGroupApi:
             explicit_provenance.Links.Direction.UPSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
-    
+
     def get_storage_connector_provenance(self, feature_group_instance):
         """Get the parents of this feature group, based on explicit provenance.
         Parents are storage connectors. These storage connector can be accessible,
