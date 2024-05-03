@@ -59,7 +59,7 @@ class VectorDbClient:
                 for feat in fg.embedding_index.get_embeddings():
                     for fgf in fg.features:
                         if fgf.name == feat.name and fgf.feature_group_id == fg.id:
-                            self._embedding_features[fgf] = fgf
+                            self._embedding_features[fgf] = feat
         for q in [self._query] + [j.query for j in self._query.joins]:
             fg = q._left_feature_group
             if fg.embedding_index:
