@@ -105,7 +105,6 @@ class VectorDbClient:
     def find_neighbors(
         self,
         embedding,
-        schema,
         feature: Feature = None,
         index_name=None,
         k=10,
@@ -191,7 +190,7 @@ class VectorDbClient:
         return [
             (
                 1 / item["_score"] - 1,
-                self._convert_to_pandas_type(schema, self._rewrite_result_key(
+                self._convert_to_pandas_type(embedding_feature.feature_group.features, self._rewrite_result_key(
                     item["_source"],
                     self._fg_vdb_col_td_col_map[embedding_feature.feature_group.id],
                 )),
