@@ -27,9 +27,10 @@ import humps
 from hsfs import engine, util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.decorators import typechecked
 
 
-def hopsworks_udf(output_type: Union[List[type], type]):
+def hopsworks_udf(output_type: Union[List[type], type]) -> "HopsworksUdf":
     """
     Create an User Defined Function that can be and used within the Hopsworks Feature Store.
 
@@ -58,8 +59,8 @@ def hopsworks_udf(output_type: Union[List[type], type]):
         `hsfs.client.exceptions.FeatureStoreException` : If unable to create UDF.
     """
 
-    def wrapper(func: Callable):
-        udf = HopsworksUdf(func=func, output_type=output_type)
+    def wrapper(func: Callable) -> HopsworksUdf:
+        udf = HopsworksUdf(func=func, output_types=output_type)
         return udf
 
     return wrapper
@@ -81,13 +82,14 @@ class TransformationFeature:
     feature_name: str
     statistic_argument_name: Optional[str]
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "feature_name": self.feature_name,
             "statistic_argument_name": self.statistic_argument_name,
         }
 
 
+@typechecked
 class HopsworksUdf:
     """
     Meta data for user defined functions.
@@ -120,12 +122,12 @@ class HopsworksUdf:
     def __init__(
         self,
         func: Union[Callable, str],
-        output_type: Union[List[type], type, List[str], str],
+        output_types: Union[List[type], type, List[str], str],
         name: Optional[str] = None,
         transformation_features: Optional[List[TransformationFeature]] = None,
     ):
-        self._output_type: List[str] = HopsworksUdf._validate_and_convert_output_types(
-            output_type
+        self._output_types: List[str] = HopsworksUdf._validate_and_convert_output_types(
+            output_types
         )
 
         self._function_name: str = func.__name__ if name is None else name
@@ -253,6 +255,7 @@ class HopsworksUdf:
                 HopsworksUdf._get_module_path(udf_function.__module__)
             )
         except AttributeError:
+            module_imports = [""]
             warnings.warn(
                 "Passed UDF defined in a Jupyter notebook. Cannot extract import dependencies from a notebook. Please make sure to import all dependencies for the UDF inside the function.",
                 stacklevel=2,
@@ -445,6 +448,8 @@ class HopsworksUdf:
             features: Name of features to be passed to the User Defined function
         # Returns
             `HopsworksUdf`: Meta data class for the user defined function.
+        # Raises
+            `FeatureStoreException: If the provided number of features do not match the number of arguments in the defined UDF or if the provided feature names are not strings.
         """
 
         if len(features) != len(self.transformation_features):
@@ -533,18 +538,17 @@ class HopsworksUdf:
         json_decamelized = humps.decamelize(json_dict)
         function_source_code = json_decamelized["source_code"]
         function_name = json_decamelized["name"]
-        return_type = json_decamelized["output_types"].split(",")
-        transformation_features = json_decamelized["transformation_features"].split(",")
+        output_types = [
+            output_type.strip()
+            for output_type in json_decamelized["output_types"].split(",")
+        ]
+        transformation_features = [
+            feature.strip()
+            for feature in json_decamelized["transformation_features"].split(",")
+        ]
 
         hopsworks_udf = cls(
-            func=function_source_code,
-            return_type=[
-                cls.STRING_PYTHON_TYPES_MAPPING[python_type]
-                for python_type in return_type
-            ]
-            if isinstance(return_type, List)
-            else cls.STRING_PYTHON_TYPES_MAPPING[return_type],
-            name=function_name,
+            func=function_source_code, output_types=output_types, name=function_name
         )
 
         # Set transformation features if already set.
@@ -556,7 +560,7 @@ class HopsworksUdf:
     @property
     def output_types(self) -> List[str]:
         """Get the output types of the UDF"""
-        return self._output_type
+        return self._output_types
 
     @property
     def function_name(self) -> str:
