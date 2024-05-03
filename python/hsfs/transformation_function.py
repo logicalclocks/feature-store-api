@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import humps
 from hsfs import util
@@ -66,7 +66,7 @@ class TransformationFunction:
         self._hopsworks_udf: HopsworksUdf = hopsworks_udf
 
     def save(self) -> None:
-        """Persist transformation function in backend.
+        """Save a transformation function into the backend.
 
         !!! example
             ```python
@@ -123,7 +123,7 @@ class TransformationFunction:
         Update the feature to be using in the transformation function
 
         # Arguments
-            features: Name of features to be passed to the User Defined function
+            features: `List[str]`. Name of features to be passed to the User Defined function
         # Returns
             `HopsworksUdf`: Meta data class for the user defined function.
         # Raises
@@ -133,7 +133,9 @@ class TransformationFunction:
         return self
 
     @classmethod
-    def from_response_json(cls, json_dict: Dict[str, Any]) -> TransformationFunction:
+    def from_response_json(
+        cls, json_dict: Dict[str, Any]
+    ) -> Union[TransformationFunction, List[TransformationFunction]]:
         """
         Function that deserializes json obtained from the java backend.
 
