@@ -22,9 +22,6 @@ from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 import avro.io
-import hsfs
-import hsfs.client
-import hsfs.training_dataset_feature
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -35,6 +32,12 @@ from hsfs import (
     training_dataset,
 )
 from hsfs import (
+    serving_key as sk_mod,
+)
+from hsfs import (
+    training_dataset_feature as tdf_mod,
+)
+from hsfs import (
     transformation_function_attached as tfa_mod,
 )
 from hsfs.core import (
@@ -42,7 +45,7 @@ from hsfs.core import (
     online_store_sql_client,
 )
 from hsfs.core import (
-    transformation_function_engine as tfe_mod,
+    transformation_function_engine as tf_engine_mod,
 )
 
 
@@ -67,11 +70,9 @@ class VectorServer:
     def __init__(
         self,
         feature_store_id: int,
-        features: Optional[
-            List[hsfs.training_dataset_feature.TrainingDatasetFeature]
-        ] = None,
+        features: Optional[List[tdf_mod.TrainingDatasetFeature]] = None,
         training_dataset_version: Optional[int] = None,
-        serving_keys: Optional[List[hsfs.serving_key.ServingKey]] = None,
+        serving_keys: Optional[List[sk_mod.ServingKey]] = None,
         skip_fg_ids: Optional[Set[int]] = None,
         feature_store_name: Optional[str] = None,
         feature_view_name: Optional[str] = None,
@@ -103,8 +104,8 @@ class VectorServer:
         self._serving_keys = serving_keys or []
         self._required_serving_keys = []
 
-        self._transformation_function_engine = tfe_mod.TransformationFunctionEngine(
-            feature_store_id
+        self._transformation_function_engine = (
+            tf_engine_mod.TransformationFunctionEngine(feature_store_id)
         )
         self._transformation_functions = None
         self._online_store_sql_client = None
@@ -415,15 +416,6 @@ class VectorServer:
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
 
-    def identify_missing_features_pre_fetch(
-        self, entry: Dict[str, Any], passed_features: Dict[str, Any]
-    ) -> List[str]:
-        """Identify feature which will be missing in the feature vector and which are not passed.
-
-        Each serving key, value (or composite keys) need not be present in entry mapping. Missing key, value
-        lead to only fetching a subset of the feature values in the query. The missing values can be filled
-        via the `passed_feature` args. Should the  ."""
-
     def which_client_and_ensure_initialised(
         self, force_rest_client: bool, force_sql_client: bool
     ) -> str:
@@ -558,7 +550,7 @@ class VectorServer:
             )
 
     def set_return_feature_value_handlers(
-        self, features: List[hsfs.training_dataset_feature.TrainingDatasetFeature]
+        self, features: List[tdf_mod.TrainingDatasetFeature]
     ) -> List[Callable]:
         """Build a dictionary of functions to convert/deserialize/transform the feature values returned from RonDB Server.
 
@@ -670,6 +662,38 @@ class VectorServer:
             self._ordered_feature_names,
         )
 
+    def identify_missing_features_pre_fetch(
+        self, entry: Dict[str, Any], passed_features: Dict[str, Any]
+    ) -> List[str]:
+        """Identify feature which will be missing in the fetched feature vector and which are not passed.
+
+        Each serving key, value (or composite keys) need not be present in entry mapping. Missing key, value
+        lead to only fetching a subset of the feature values in the query. The missing values can be filled
+        via the `passed_feature` args. If `allow_missing` is set to false, then an exception should be thrown
+        to match the behaviour of the sql client prior to 3.7.
+
+        Limitation:
+        - The method does not check whether serving keys correspond to existing rows in the online feature store.
+        - The method does not check whether the passed features names and data types correspond to the query schema.
+        """
+        if not hasattr(self, "per_serving_key_features"):
+            self.per_serving_key_features = self.build_per_serving_key_features(
+                self.serving_keys, self._features
+            )
+        raise NotImplementedError(
+            "This method is not implemented for the current version of the Vector Server."
+        )
+
+    def build_per_serving_key_features(
+        self,
+        serving_keys: List[sk_mod.ServingKey],
+        features: List[tdf_mod.TrainingDatasetFeature],
+    ) -> Dict[str, List[str]]:
+        """Build a dictionary of feature names which will be fetched per serving key."""
+        raise NotImplementedError(
+            "This method is not implemented for the current version of the Vector Server."
+        )
+
     def get_complex_feature_schemas(self) -> Dict[str, avro.io.DatumReader]:
         return {
             f.name: avro.io.DatumReader(
@@ -736,11 +760,11 @@ class VectorServer:
         return self._online_store_rest_client_engine
 
     @property
-    def serving_keys(self) -> List[hsfs.serving_key.ServingKey]:
+    def serving_keys(self) -> List[sk_mod.ServingKey]:
         return self._serving_keys
 
     @serving_keys.setter
-    def serving_keys(self, serving_vector_keys: List[hsfs.serving_key.ServingKey]):
+    def serving_keys(self, serving_vector_keys: List[sk_mod.ServingKey]):
         self._serving_keys = serving_vector_keys
 
     @property
@@ -782,7 +806,7 @@ class VectorServer:
     @property
     def transformation_function_engine(
         self,
-    ) -> transformation_function_engine.TransformationFunctionEngine:
+    ) -> tf_engine_mod.TransformationFunctionEngine:
         return self._transformation_function_engine
 
     @property
