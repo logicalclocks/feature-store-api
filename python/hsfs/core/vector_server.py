@@ -15,7 +15,6 @@
 #
 from __future__ import annotations
 
-import io
 import logging
 from base64 import b64decode
 from datetime import datetime, timezone
@@ -239,42 +238,34 @@ class VectorServer:
         force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
-        if passed_features is None:
-            passed_features = {}
-
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
-
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
-            _logger.info("get_feature_vector Online REST client")
+            _logger.debug("get_feature_vector Online REST client")
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
                 entry,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
             # get result row
-            _logger.info("get_feature_vector Online SQL client")
+            _logger.debug("get_feature_vector Online SQL client")
             serving_vector = self.online_store_sql_client.get_single_feature_vector(
                 entry
             )
 
-        # Deserialize complex features
-        _logger.debug("Deserializing complex features")
-        serving_vector = self.deserialize_complex_features(serving_vector)
-
-        # Add the passed features
-        _logger.debug("Updating with passed features")
-        serving_vector.update(passed_features)
-
-        # apply transformation functions
-        _logger.debug("Applying transformation functions")
-        result_dict = self._apply_transformation(serving_vector)
+        if passed_features is not None:
+            _logger.debug("Updating with passed features")
+            serving_vector.update(passed_features)
 
         _logger.debug(
-            "Converting to row vectors to list, optionally filling missing values"
+            "Converting to row dict to list, optionally filling missing values"
         )
-        vector = self._generate_vector(result_dict, allow_missing)
+        vector = self._generate_vector(
+            serving_vector,
+            online_client_choice=online_client_choice,
+            fill_na=allow_missing,
+        )
 
         return self.handle_feature_vector_return_type(
             vector, batch=False, inference_helper=False, return_type=return_type
@@ -297,51 +288,43 @@ class VectorServer:
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
-            _logger.info("get_batch_feature_vector Online REST client")
+            _logger.debug("get_batch_feature_vector Online REST client")
             batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
                 entries=entries,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
             # get result row
-            _logger.info("get_batch_feature_vectors through SQL client")
+            _logger.debug("get_batch_feature_vectors through SQL client")
             batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
                 entries
             )
 
-        # Deserialize complex features
-        _logger.debug("Deserializing complex features")
-        batch_results = list(
-            map(
-                lambda row_dict: self.deserialize_complex_features(row_dict),
-                batch_results,
-            )
-        )
-
         # apply passed features to each batch result
         _logger.debug("Updating with passed features")
         for vector_index, pf in enumerate(passed_features):
+            # Rest client handles pk errors in batch request by returning None values
+            if batch_results is None:
+                batch_results = pf
             batch_results[vector_index].update(pf)
-
-        # apply transformation functions
-        _logger.debug("Applying transformation functions")
-        batch_transformed = list(
-            map(
-                lambda results_dict: self._apply_transformation(results_dict),
-                batch_results,
-            )
-        )
 
         # get vectors
         _logger.debug(
-            "Converting to row vectors to list, optionally filling missing values"
+            "Converting to row vectors to list, applies deserialization and transformation function."
+            "If optionally filling missing values"
         )
         vectors = []
-        for result in batch_transformed:
+        for result in batch_results:
             # for backward compatibility, before 3.4, if result is empty,
             # instead of throwing error, it skips the result
             if len(result) != 0 or allow_missing:
-                vectors.append(self._generate_vector(result, fill_na=allow_missing))
+                vectors.append(
+                    self._generate_vector(
+                        result,
+                        online_client_choice=online_client_choice,
+                        fill_na=allow_missing,
+                    )
+                )
 
         return self.handle_feature_vector_return_type(
             vectors, batch=True, inference_helper=False, return_type=return_type
@@ -364,7 +347,7 @@ class VectorServer:
         if return_type.lower() == "list" and not inference_helper:
             _logger.debug("Returning feature vector as value list")
             return feature_vectorz
-        elif return_type.lower() == "dict":
+        elif return_type.lower() == "dict" and inference_helper:
             _logger.debug("Returning feature vector as dictionary")
             return {
                 self._feature_vector_col_name[i]: feature_vectorz[i]
@@ -390,7 +373,7 @@ class VectorServer:
             )
         else:
             raise ValueError(
-                f"""Unknown return type. Supported return types are {"'list', " if not inference_helper else ""}'dict', 'polars', 'pandas' and 'numpy'"""
+                f"""Unknown return type. Supported return types are {"'dict', " if inference_helper else "'list'"}, 'polars', 'pandas' and 'numpy'"""
             )
 
     def get_inference_helper(
@@ -416,10 +399,8 @@ class VectorServer:
         batch_results = self.online_store_sql_client.get_batch_inference_helper_vectors(
             entries
         )
-
         # drop serving and primary key names from the result dict
         drop_list = self.serving_keys + list(feature_view_object.primary_keys)
-
         _ = list(
             map(
                 lambda results_dict: [
@@ -430,7 +411,6 @@ class VectorServer:
                 batch_results,
             )
         )
-
         return self.handle_feature_vector_return_type(
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
@@ -677,7 +657,8 @@ class VectorServer:
                     or feature_value
                 )
         _logger.debug(
-            f"Ordered feature names, skipping label or training helper columns: {self._ordered_feature_names}"
+            "Ordered feature names, skipping label or training helper columns: %s",
+            self._ordered_feature_names,
         )
 
     def get_complex_feature_schemas(self) -> Dict[str, avro.io.DatumReader]:
@@ -693,18 +674,24 @@ class VectorServer:
             if f.is_complex()
         }
 
-    def deserialize_complex_features(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
-        for feature_name, schema in self._complex_features.items():
-            if feature_name in row_dict:
-                bytes_reader = io.BytesIO(row_dict[feature_name])
-                decoder = avro.io.BinaryDecoder(bytes_reader)
-                row_dict[feature_name] = schema.read(decoder)
-        return row_dict
+    def _generate_vector(
+        self,
+        result_dict: Optional[Dict[str, Any]],
+        online_client_choice: str,
+        fill_na: bool = False,
+    ) -> List[Any]:
+        # Errors in batch requests are returned as None values
+        if result_dict is None:
+            return [None for _ in range(len(self._feature_vector_col_name))]
 
-    def _generate_vector(self, result_dict: Dict[str, Any], fill_na: bool = False):
         feature_values = []
         for feature_name in self._feature_vector_col_name:
-            if feature_name not in result_dict:
+            # Detects columns which were neither passed nor fetched from sql client
+            # Only works for sql client as rest client returns missing as None
+            if (
+                online_client_choice is self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+                and feature_name not in result_dict
+            ):
                 if fill_na:
                     feature_values.append(None)
                 else:
@@ -717,18 +704,15 @@ class VectorServer:
                         f"2. Required entries [{', '.join(self.required_serving_keys)}] or "
                         f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
                     )
+            elif result_dict[feature_name] is None:
+                feature_values.append(None)
             else:
-                feature_values.append(result_dict[feature_name])
+                feature_values.append(
+                    self._return_feature_value_handlers[feature_name](
+                        result_dict[feature_name]
+                    )
+                )
         return feature_values
-
-    def _apply_transformation(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
-        for feature_name in self._transformation_functions:
-            if feature_name in row_dict:
-                transformation_fn = self._transformation_functions[
-                    feature_name
-                ].transformation_fn
-                row_dict[feature_name] = transformation_fn(row_dict[feature_name])
-        return row_dict
 
     @property
     def online_store_sql_client(
