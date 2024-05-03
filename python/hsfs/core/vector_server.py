@@ -415,6 +415,15 @@ class VectorServer:
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
 
+    def identify_missing_features_pre_fetch(
+        self, entry: Dict[str, Any], passed_features: Dict[str, Any]
+    ) -> List[str]:
+        """Identify feature which will be missing in the feature vector and which are not passed.
+
+        Each serving key, value (or composite keys) need not be present in entry mapping. Missing key, value
+        lead to only fetching a subset of the feature values in the query. The missing values can be filled
+        via the `passed_feature` args. Should the  ."""
+
     def which_client_and_ensure_initialised(
         self, force_rest_client: bool, force_sql_client: bool
     ) -> str:
