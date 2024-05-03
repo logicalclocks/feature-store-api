@@ -15,6 +15,9 @@
 #
 
 
+import pytest
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.hopsworks_udf import hopsworks_udf
 from hsfs.transformation_function import TransformationFunction
 
 
@@ -168,18 +171,29 @@ class TestTransformationFunction:
             == "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
         )
 
+    def test_transformation_function_definition_no_hopworks_udf(self):
+        def test(col1):
+            return col1 + 1
 
-"""
-    def test_from_response_json_basic_info(self, mocker, backend_fixtures):
-        # Arrange
-        json = backend_fixtures["transformation_function"]["get_basic_info"]["response"]
+        with pytest.raises(FeatureStoreException) as exception:
+            TransformationFunction(
+                featurestore_id=10,
+                hopsworks_udf=test,
+            )
 
-        # Act
-        tf = TransformationFunction.from_response_json(json)
+        assert (
+            str(exception.value)
+            == "Please use the hopsworks_udf decorator when defining transformation functions."
+        )
 
-        # Assert
-        assert tf.id is None
-        assert tf._featurestore_id == 11
-        assert tf.version is None
-        assert tf.hopsworks_udf is None
-"""
+    def test_transformation_function_definition_with_hopworks_udf(self):
+        @hopsworks_udf(int)
+        def test2(col1):
+            return col1 + 1
+
+        tf = TransformationFunction(
+            featurestore_id=10,
+            hopsworks_udf=test2,
+        )
+
+        assert tf.hopsworks_udf == test2

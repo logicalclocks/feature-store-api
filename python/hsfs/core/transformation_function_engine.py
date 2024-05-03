@@ -15,12 +15,19 @@
 #
 from __future__ import annotations
 
-import datetime
-from functools import partial
-from typing import Dict, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Union
 
-import hsfs
-import numpy
+from hsfs import training_dataset
+from hsfs.core import statistics_api, transformation_function_api
+
+
+if TYPE_CHECKING:
+    import pandas as pd
+    import polars as pl
+    import pyspark.sql as ps
+    from hsfs.feature_view import FeatureView
+    from hsfs.statistics import Statistics
+    from hsfs.transformation_function import TransformationFunction
 
 from hsfs import (
     feature_view,
@@ -53,27 +60,58 @@ class TransformationFunctionEngine:
 
     def __init__(self, feature_store_id: int):
         self._feature_store_id = feature_store_id
-        self._transformation_function_api = (
-            transformation_function_api.TransformationFunctionApi(feature_store_id)
+        self._transformation_function_api: transformation_function_api.TransformationFunctionApi = transformation_function_api.TransformationFunctionApi(
+            feature_store_id
         )
-        self._statistics_api = statistics_api.StatisticsApi(
-            feature_store_id, training_dataset.TrainingDataset.ENTITY_TYPE
+        self._statistics_api: statistics_api.StatisticsApi = (
+            statistics_api.StatisticsApi(
+                feature_store_id, training_dataset.TrainingDataset.ENTITY_TYPE
+            )
         )
         self._feature_view_api: Optional["feature_view_api.FeatureViewApi"] = None
         self._statistics_engine: Optional["statistics_engine.StatisticsEngine"] = None
 
-    def save(self, transformation_fn_instance: TransformationFunction):
+    def save(
+        self, transformation_fn_instance: TransformationFunction
+    ) -> TransformationFunction:
+        """
+        Save a transformation function into the feature store.
+
+        # Argument
+            transformation_fn_instance `TransformationFunction`: The transformation function to be saved into the feature store.
+        """
         self._transformation_function_api.register_transformation_fn(
             transformation_fn_instance
         )
 
-    def get_transformation_fn(self, name, version=None):
+    def get_transformation_fn(
+        self, name: str, version: Optional[int] = None
+    ) -> Union[TransformationFunction, List[TransformationFunction]]:
+        """
+        Retrieve a transformation function from the feature store.
+
+        If only the name of the transformation function is provided then all the versions of the transformation functions are returned as a list.
+        If both name and version are not provided then all transformation functions saved in the feature view is returned.
+
+        # Argument
+            name ` Optional[str]`: The name of the transformation function to be retrieved.
+            version `Optional[int]`: The version of the transformation function to be retrieved.
+        # Returns
+            `Union[TransformationFunction, List[TransformationFunction]]` : A transformation function if name and version is provided. A list of transformation functions if only name is provided.
+        """
+
         transformation_fn_instances = (
             self._transformation_function_api.get_transformation_fn(name, version)
         )
-        return transformation_fn_instances[0]
+        return transformation_fn_instances
 
-    def get_transformation_fns(self):
+    def get_transformation_fns(self) -> List[TransformationFunction]:
+        """
+        Get all the transformation functions in the feature store
+
+        # Returns
+            `List[TransformationFunction]` : A list of transformation functions.
+        """
         transformation_fn_instances = (
             self._transformation_function_api.get_transformation_fn(
                 name=None, version=None
@@ -86,89 +124,71 @@ class TransformationFunctionEngine:
             transformation_fns.append(transformation_fn_instance)
         return transformation_fns
 
-    def delete(self, transformation_function_instance):
+    def delete(self, transformation_function_instance: TransformationFunction) -> None:
+        """
+        Delete a transformation function from the feature store.
+
+        # Arguments
+            transformation_function_instance `TransformationFunction`: The transformation function to be removed from the feature store.
+        """
         self._transformation_function_api.delete(transformation_function_instance)
 
-    def get_td_transformation_fn(self, training_dataset):
-        attached_transformation_fns = (
-            self._transformation_function_api.get_td_transformation_fn(training_dataset)
-        )
-        transformation_fn_dict = {}
-        for attached_transformation_fn in attached_transformation_fns:
-            transformation_fn_dict[attached_transformation_fn.name] = (
-                attached_transformation_fn.transformation_function
-            )
-        return transformation_fn_dict
-
-    @staticmethod
-    def infer_spark_type(output_type):
-        # TODO : Move to hopsworks_udf
-        if not output_type:
-            return "STRING"  # STRING is default type for spark udfs
-
-        if isinstance(output_type, str):
-            if output_type.endswith("Type()"):
-                return util.translate_legacy_spark_type(output_type)
-            output_type = output_type.lower()
-
-        if output_type in (str, "str", "string"):
-            return "STRING"
-        elif output_type in (bytes, "binary"):
-            return "BINARY"
-        elif output_type in (numpy.int8, "int8", "byte", "tinyint"):
-            return "BYTE"
-        elif output_type in (numpy.int16, "int16", "short", "smallint"):
-            return "SHORT"
-        elif output_type in (int, "int", "integer", numpy.int32):
-            return "INT"
-        elif output_type in (numpy.int64, "int64", "long", "bigint"):
-            return "LONG"
-        elif output_type in (float, "float"):
-            return "FLOAT"
-        elif output_type in (numpy.float64, "float64", "double"):
-            return "DOUBLE"
-        elif output_type in (
-            datetime.datetime,
-            numpy.datetime64,
-            "datetime",
-            "timestamp",
-        ):
-            return "TIMESTAMP"
-        elif output_type in (datetime.date, "date"):
-            return "DATE"
-        elif output_type in (bool, "boolean", "bool"):
-            return "BOOLEAN"
-        else:
-            raise TypeError("Not supported type %s." % output_type)
-
-    # TODO : about statistics computation and fetching.
-
-    # TODO : Think about what to do with label encoder features.
     @staticmethod
     def compute_transformation_fn_statistics(
-        training_dataset_obj,
-        builtin_tffn_features,
-        label_encoder_features,
-        feature_dataframe,
-        feature_view_obj,
-    ) -> statistics.Statistics:
+        training_dataset_obj: training_dataset.TrainingDataset,
+        statistics_features: List[str],
+        label_encoder_features: List[str],
+        feature_dataframe: Union[pd.DataFrame, pl.DataFrame, ps.DataFrame],
+        feature_view_obj: FeatureView,
+    ) -> Statistics:
+        """
+        Compute the statistics required for a training dataset object.
+
+        # Arguments
+            training_dataset_obj `TrainingDataset`: The training dataset for which the statistics is to be computed.
+            statistics_features `List[str]`: The list of features for which the statistics should be computed.
+            label_encoder_features `List[str]`: Features used for label encoding.
+            feature_dataframe `Union[pd.DataFrame, pl.DataFrame, ps.DataFrame]`: The dataframe that contains the data for which the statistics must be computed.
+            feature_view_obj `FeatureView`: The feature view in which the training data is being created.
+        # Returns
+            `Statistics` : The statistics object that contains the statistics for each features.
+        """
         return training_dataset_obj._statistics_engine.compute_transformation_fn_statistics(
             td_metadata_instance=training_dataset_obj,
-            columns=builtin_tffn_features,  # excluding label encoded features
+            columns=statistics_features,
             label_encoder_features=label_encoder_features,  # label encoded features only
             feature_dataframe=feature_dataframe,
             feature_view_obj=feature_view_obj,
         )
 
     @staticmethod
-    def add_feature_statistics(training_dataset, feature_view_obj, dataset):
-        # TODO : Optimize this code portion check which i better computing all transformation feature statistics together or one by one.
-        statistics_features = set()
+    def compute_and_set_feature_statistics(
+        training_dataset: training_dataset.TrainingDataset,
+        feature_view_obj: FeatureView,
+        dataset: Union[
+            Dict[str, Union[pd.DataFrame, pl.DataFrame, ps.DataFrame]],
+            Union[pd.DataFrame, pl.DataFrame, ps.DataFrame],
+        ],
+    ) -> None:
+        """
+        Function that computes and sets the statistics required for the UDF used for transformation.
+
+        The function assigns the statistics computed to hopsworks UDF object so that the statistics can be used when UDF is executed.
+
+        # Argument
+            training_dataset_obj `TrainingDataset`: The training dataset for which the statistics is to be computed.
+            feature_view `FeatureView`: The feature view in which the training data is being created.
+            dataset `Union[Dict[str,  Union[pd.DataFrame, pl.DataFrame, ps.DataFrame]],  Union[pd.DataFrame, pl.DataFrame, ps.DataFrame]]`: A dataframe that conqtains the training data or a dictionary that contains both the training and test data.
+        """
+        statistics_features: Set[str] = set()
+
+        # Finding the features for which statistics is required
         for transformation_function in feature_view_obj.transformation_functions:
             statistics_features.update(
                 transformation_function.hopsworks_udf.statistics_features
             )
 
+        # compute statistics on training data
         if training_dataset.splits:
             # compute statistics before transformations are applied
             stats = TransformationFunctionEngine.compute_transformation_fn_statistics(
@@ -179,7 +199,6 @@ class TransformationFunctionEngine:
                 feature_view_obj,
             )
         else:
-            # compute statistics before transformations are applied
             stats = TransformationFunctionEngine.compute_transformation_fn_statistics(
                 training_dataset,
                 list(statistics_features),
@@ -187,6 +206,8 @@ class TransformationFunctionEngine:
                 dataset,
                 feature_view_obj,
             )
+
+        # Set statistics computed in the hopsworks UDF
         for transformation_function in feature_view_obj.transformation_functions:
             transformation_function.hopsworks_udf.transformation_statistics = (
                 stats.feature_descriptive_statistics
