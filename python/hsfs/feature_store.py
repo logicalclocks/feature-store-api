@@ -1472,7 +1472,7 @@ class FeatureStore:
                 return value + 1
 
             # construct list of "transformation functions" on features
-            transformation_functions = {plus_one("feature1"), plus_one("feature1"))}
+            transformation_functions = [plus_one("feature1"), plus_one("feature1"))]
 
             feature_view = fs.create_feature_view(
                 name='air_quality_fv',
