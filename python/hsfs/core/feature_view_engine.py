@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from hsfs import (
     client,
@@ -37,9 +37,13 @@ from hsfs.core import (
     statistics_engine,
     tags_api,
     training_dataset_engine,
-    transformation_function_engine,
 )
 from hsfs.training_dataset_split import TrainingDatasetSplit
+
+
+if TYPE_CHECKING:
+    from hsfs.feature_view import FeatureView
+    from hsfs.transformation_function import TransformationFunction
 
 
 class FeatureViewEngine:
@@ -53,11 +57,6 @@ class FeatureViewEngine:
 
         self._feature_view_api = feature_view_api.FeatureViewApi(feature_store_id)
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(
-                feature_store_id
-            )
-        )
         self._td_code_engine = code_engine.CodeEngine(
             feature_store_id, self._TRAINING_DATA_API_PATH
         )
@@ -69,7 +68,16 @@ class FeatureViewEngine:
         )
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
 
-    def save(self, feature_view_obj):
+    def save(self, feature_view_obj: FeatureView) -> FeatureView:
+        """
+        Save a feature view to the backend.
+
+        # Arguments
+            feature_view_obj `FeatureView` : The feature view object to be saved.
+
+        # Returns
+            `FeatureView` : Updated feature view that has the ID used to save in the backend.
+        """
         if feature_view_obj.query.is_time_travel():
             warnings.warn(
                 "`as_of` argument in the `Query` will be ignored because"
@@ -120,8 +128,6 @@ class FeatureViewEngine:
                     )
                 )
 
-        # TODO : Remove this code portion attaches a transfromation function to a feature. This is not possible with the current implementation
-
         updated_fv = self._feature_view_api.post(feature_view_obj)
         print(
             "Feature view created successfully, explore it at \n"
@@ -129,11 +135,38 @@ class FeatureViewEngine:
         )
         return updated_fv
 
-    def update(self, feature_view_obj):
+    def update(self, feature_view_obj: FeatureView) -> FeatureView:
+        """
+        Update the feature view object saved in the backend
+
+        # Arguments
+            feature_view_obj `FeatureView` : The feature view object to be saved.
+
+        # Returns
+            `FeatureView` : Updated feature view that has the ID used to save in the backend.
+        """
         self._feature_view_api.update(feature_view_obj)
         return feature_view_obj
 
-    def get(self, name, version=None):
+    def get(
+        self, name: str, version: int = None
+    ) -> Union[FeatureView, List[FeatureView]]:
+        """
+        Get a feature view form the backend using name or using name and version.
+
+        If version is not provided then a List of feature views containing all of its versions is returned.
+
+        # Arguments
+            name `str`: Name of feature view.
+            version `version`: Version of the feature view.
+
+        # Returns
+            `Union[FeatureView, List[FeatureView]]`
+
+        # Raises
+            `RestAPIError`: If the feature view cannot be found from the backend.
+            `ValueError`: If the feature group associated with the feature view cannot be found.
+        """
         if version:
             fv = self._feature_view_api.get_by_name_version(name, version)
         else:
@@ -231,6 +264,28 @@ class FeatureViewEngine:
         if fs_query.pit_query is not None:
             return fs_query.pit_query
         return fs_query.query
+
+    def get_attached_transformation_fn(
+        self, name: str, version: int
+    ) -> List[TransformationFunction]:
+        """
+        Get transformation functions attached to a feature view form the backend
+
+        # Arguments
+            name `str`: Name of feature view.
+            version `ìnt`: Version of feature view.
+
+        # Returns
+            `List[TransformationFunction]` : List of transformation functions attached to the feature view.
+
+        # Raises
+            `RestAPIError`: If the feature view cannot be found from the backend.
+            `ValueError`: If the feature group associated with the feature view cannot be found.
+        """
+        transformation_functions = (
+            self._feature_view_api.get_attached_transformation_fn(name, version)
+        )
+        return transformation_functions
 
     def create_training_dataset(
         self,
