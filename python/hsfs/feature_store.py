@@ -21,7 +21,6 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
 
 import humps
-import numpy
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -1292,35 +1291,20 @@ class FeatureStore:
     def create_transformation_function(
         self,
         transformation_function: callable,
-        output_type: Union[
-            str,
-            bytes,
-            int,
-            numpy.int8,
-            numpy.int16,
-            numpy.int32,
-            numpy.int64,
-            float,
-            numpy.float64,
-            datetime.datetime,
-            numpy.datetime64,
-            datetime.date,
-            bool,
-        ],
         version: Optional[int] = None,
     ) -> TransformationFunction:
         """Create a transformation function metadata object.
 
         !!! example
             ```python
-            # define function
+            # define the transformation function as a Hopsworks's UDF
+            @hopsworks_udf(int)
             def plus_one(value):
                 return value + 1
 
             # create transformation function
             plus_one_meta = fs.create_transformation_function(
                     transformation_function=plus_one,
-                    output_type=int,
                     version=1
                 )
 
@@ -1334,8 +1318,7 @@ class FeatureStore:
             call the `save()` method of the transformation function metadata object.
 
         # Arguments
-            transformation_function: callable object.
-            output_type: python or numpy output type that will be inferred as pyspark.sql.types type.
+            transformation_function: Hopsworks UDF.
 
         # Returns:
             `TransformationFunction`: The TransformationFunction metadata object.
@@ -1343,7 +1326,6 @@ class FeatureStore:
         return TransformationFunction(
             featurestore_id=self._id,
             transformation_fn=transformation_function,
-            output_type=output_type,
             version=version,
         )
 
@@ -1401,9 +1383,7 @@ class FeatureStore:
                 name='feature_view_name',
                 query=query,
                 labels=["target_column"],
-                transformation_functions={
-                    "column_to_transform": min_max_scaler
-                }
+                transformation_functions=[min_max_scaler("feature1")]
             )
             ```
 
@@ -1430,12 +1410,12 @@ class FeatureStore:
                 name='transactions_view',
                 query=query,
                 labels=["fraud_label"],
-                transformation_functions = {
-                    "category_column": label_encoder,
-                    "weight": robust_scaler,
-                    "age": min_max_scaler,
-                    "salary": standard_scaler
-                }
+                transformation_functions = [
+                    label_encoder("category_column"),
+                    robust_scaler("weight"),
+                    min_max_scaler("age"),
+                    standard_scaler("salary")
+                ]
             )
             ```
 
@@ -1496,11 +1476,13 @@ class FeatureStore:
             # construct the query
             query = fg1.select_all().join(fg2.select_all())
 
-            # get the transformation functions
-            standard_scaler = fs.get_transformation_function(name='standard_scaler')
+            # define the transformation function as a Hopsworks's UDF
+            @hopsworks_udf(int)
+            def plus_one(value):
+                return value + 1
 
-            # construct dictionary of "feature - transformation function" pairs
-            transformation_functions = {col_name: standard_scaler for col_name in df.columns}
+            # construct list of "transformation functions" on features
+            transformation_functions = {plus_one("feature1"), plus_one("feature1"))}
 
             feature_view = fs.create_feature_view(
                 name='air_quality_fv',
@@ -1518,7 +1500,7 @@ class FeatureStore:
             # define query object
             query = ...
 
-            # define dictionary with column names and transformation functions pairs
+            # define list of transformation functions
             mapping_transformers = ...
 
             # create feature view
@@ -1564,12 +1546,8 @@ class FeatureStore:
                 Training helper columns can be optionally fetched with training data. For more details see
                 documentation for feature view's get training data methods.  Defaults to `[], no training helper
                 columns.
-            transformation_functions: A dictionary mapping tansformation functions to
-                to the features they should be applied to before writing out the
-                vector and at inference time. Defaults to `{}`, no
-                transformations.
+            transformation_functions: A list of Hopsworks UDF's. Defaults to `None`, no transformations.
             logging_enabled: If true, enable feature logging for the feature view.
-
         # Returns:
             `FeatureView`: The feature view metadata object.
         """
@@ -1669,7 +1647,7 @@ class FeatureStore:
                     labels=labels or [],
                     inference_helper_columns=inference_helper_columns or [],
                     training_helper_columns=training_helper_columns or [],
-                    transformation_functions=transformation_functions or {},
+                    transformation_functions=transformation_functions or [],
                     logging_enabled=logging_enabled,
                 )
             else:
