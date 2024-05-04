@@ -51,14 +51,9 @@
       }
     }
   },
-  "get_basic_info": {
-    "response": {
-      "featurestore_id": 11
-    }
-  },
   "get_list": {
     "response": {
-      "count": 1,
+      "count": 2,
       "items": [
         {
           "id" : 1,
