@@ -159,9 +159,7 @@
       "id": 11,
       "version": 1,
       "description": "test_description",
-      "transformation_functions": {
-        "featurestore_id": 5
-      },
+      "transformation_functions": {},
       "features": [
         {
           "name": "intt",

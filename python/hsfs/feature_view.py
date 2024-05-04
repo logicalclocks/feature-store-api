@@ -123,19 +123,14 @@ class FeatureView:
             training_helper_columns if training_helper_columns else []
         )
 
-        # TODO : Clean this up
-        if transformation_functions:
-            for i, transformation_function in enumerate(transformation_functions):
-                if not isinstance(transformation_function, TransformationFunction):
-                    transformation_functions[i] = TransformationFunction(
-                        self.featurestore_id,
-                        hopsworks_udf=transformation_function,
-                        version=1,
-                    )
-
-        self._transformation_functions: List[TransformationFunction] = (
-            transformation_functions
-        )
+        self._transformation_functions: List[TransformationFunction] = [
+            TransformationFunction(
+                self.featurestore_id, hopsworks_udf=transformation_function, version=1
+            )
+            if not isinstance(transformation_function, TransformationFunction)
+            else transformation_function
+            for transformation_function in transformation_functions
+        ]
 
         self._features = []
         self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
@@ -3396,6 +3391,14 @@ class FeatureView:
 
     @classmethod
     def from_response_json(cls, json_dict: Dict[str, Any]) -> "FeatureView":
+        """
+        Function that constructs the class object from its json serialization.
+
+        # Arguments
+            json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
+        # Returns
+            `TransformationFunction`: Json deserialized class object.
+        """
         json_decamelized = humps.decamelize(json_dict)
 
         serving_keys = json_decamelized.get("serving_keys", None)
@@ -3403,6 +3406,7 @@ class FeatureView:
             serving_keys = [
                 skm.ServingKey.from_response_json(sk) for sk in serving_keys
             ]
+        transformation_functions = json_decamelized.get("transformation_functions", {})
         fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
@@ -3412,12 +3416,11 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
-            transformation_functions=[
-                TransformationFunction.from_response_json(transformation)
-                for transformation in json_decamelized.get(
-                    "transformation_functions", []
-                )
-            ],
+            transformation_functions=TransformationFunction.from_response_json(
+                transformation_functions
+            )
+            if transformation_functions
+            else [],
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3439,6 +3442,14 @@ class FeatureView:
         return fv
 
     def update_from_response_json(self, json_dict: Dict[str, Any]) -> "FeatureView":
+        """
+        Function that updates the class object from its json serialization.
+
+        # Arguments
+            json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
+        # Returns
+            `TransformationFunction`: Json deserialized class object.
+        """
         other = self.from_response_json(json_dict)
         for key in [
             "name",
@@ -3480,9 +3491,21 @@ class FeatureView:
         )
 
     def json(self) -> str:
+        """
+        Convert class into its json serialized form.
+
+        # Returns
+            `str`: Json serialized object.
+        """
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert class into a dictionary.
+
+        # Returns
+            `Dict`: Dictionary that contains all data required to json serialize the object.
+        """
         return {
             "featurestoreId": self._featurestore_id,
             "name": self._name,

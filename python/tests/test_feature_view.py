@@ -15,9 +15,10 @@
 #
 import warnings
 
-from hsfs import feature_view, training_dataset_feature, transformation_function
+from hsfs import feature_view, training_dataset_feature
 from hsfs.constructor import fs_query, query
 from hsfs.feature_store import FeatureStore
+from hsfs.hopsworks_udf import hopsworks_udf
 
 
 class TestFeatureView:
@@ -32,7 +33,6 @@ class TestFeatureView:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.feature_store_api.FeatureStoreApi.get")
         json = backend_fixtures["feature_view"]["get"]["response"]
-
         # Act
         fv = feature_view.FeatureView.from_response_json(json)
 
@@ -44,7 +44,7 @@ class TestFeatureView:
         assert fv.version == 1
         assert fv.description == "test_description"
         assert fv.labels == ["intt"]
-        assert fv.transformation_functions == {}
+        assert fv.transformation_functions == []
         assert len(fv.schema) == 2
         assert isinstance(fv.schema[0], training_dataset_feature.TrainingDatasetFeature)
 
@@ -65,9 +65,49 @@ class TestFeatureView:
         assert fv.version is None
         assert fv.description is None
         assert fv.labels == []
-        assert fv.transformation_functions == {}
+        assert fv.transformation_functions == []
         assert len(fv.schema) == 0
         assert fv.query._left_feature_group.deprecated is False
+
+    def test_from_response_json_transformation_function(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch.object(
+            FeatureStore,
+            "project_id",
+            return_value=99,
+        )
+        mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.core.feature_store_api.FeatureStoreApi.get")
+        json = backend_fixtures["feature_view"]["get_transformations"]["response"]
+        # Act
+        fv = feature_view.FeatureView.from_response_json(json)
+
+        # Assert
+        assert fv.name == "test_name"
+        assert fv.id == 11
+        assert isinstance(fv.query, query.Query)
+        assert fv.featurestore_id == 5
+        assert fv.version == 1
+        assert fv.description == "test_description"
+        assert fv.labels == ["intt"]
+        assert len(fv.transformation_functions) == 2
+        assert (
+            fv.transformation_functions[0].hopsworks_udf.function_name == "add_mean_fs"
+        )
+        assert (
+            fv.transformation_functions[1].hopsworks_udf.function_name == "add_one_fs"
+        )
+        assert (
+            fv.transformation_functions[0].hopsworks_udf._function_source
+            == "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n"
+        )
+        assert (
+            fv.transformation_functions[1].hopsworks_udf._function_source
+            == "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
+        )
+        assert len(fv.schema) == 2
+        assert isinstance(fv.schema[0], training_dataset_feature.TrainingDatasetFeature)
 
     def test_from_response_json_basic_info_deprecated(self, mocker, backend_fixtures):
         # Arrange
@@ -87,7 +127,7 @@ class TestFeatureView:
         assert fv.version is None
         assert fv.description is None
         assert fv.labels == []
-        assert fv.transformation_functions == {}
+        assert fv.transformation_functions == []
         assert len(fv.schema) == 0
         assert fv.query._left_feature_group.deprecated is True
         assert len(warning_record) == 1
@@ -104,31 +144,18 @@ class TestFeatureView:
         # Act
         q = fs_query.FsQuery.from_response_json(json)
 
-        def testFunction():
-            print("Test")
-
-        tf = transformation_function.TransformationFunction(
-            feature_store_id,
-            transformation_fn=testFunction,
-            builtin_source_code="",
-            output_type="str",
-        )
-
-        transformation_fn_dict = dict()
-        transformation_fn_dict["tf_name"] = tf
-        transformation_fn_dict["tf1_name"] = tf
+        @hopsworks_udf(int)
+        def test(col1):
+            return col1 + 1
 
         fv = feature_view.FeatureView(
             featurestore_id=feature_store_id,
             name="test_fv",
             version=1,
             query=q,
-            transformation_functions=transformation_fn_dict,
+            transformation_functions=[test("data1"), test("data2")],
         )
 
-        updated_transformation_fn_dict = fv.transformation_functions
+        transformation_functions = fv.transformation_functions
 
-        assert (
-            updated_transformation_fn_dict["tf_name"]
-            != updated_transformation_fn_dict["tf1_name"]
-        )
+        assert transformation_functions[0] != transformation_functions[1]
