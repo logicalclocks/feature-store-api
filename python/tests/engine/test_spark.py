@@ -23,6 +23,7 @@ from hsfs import (
     expectation_suite,
     feature,
     feature_group,
+    feature_view,
     storage_connector,
     training_dataset,
     training_dataset_feature,
@@ -33,6 +34,7 @@ from hsfs.client import exceptions
 from hsfs.constructor import hudi_feature_group_alias, query
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
+from hsfs.hopsworks_udf import hopsworks_udf
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from pyspark.sql import DataFrame
 from pyspark.sql.types import (
@@ -1729,9 +1731,6 @@ class TestSpark:
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
-        )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_single"
         )
@@ -1806,7 +1805,24 @@ class TestSpark:
             statistics_config=None,
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
             extra_filter=None,
-            transformation_functions={},
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
+            featurestore_id=99,
+            transformation_functions=[],
         )
 
         # Act
@@ -1816,7 +1832,7 @@ class TestSpark:
             user_write_options={},
             save_mode=training_dataset_engine.TrainingDatasetEngine.OVERWRITE,
             read_options={},
-            feature_view_obj=None,
+            feature_view_obj=fv,
             to_df=True,
         )
 
@@ -1846,6 +1862,24 @@ class TestSpark:
         query_df = spark_engine._spark_session.createDataFrame(df)
         mock_query_read.side_effect = [query_df]
 
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
+            featurestore_id=99,
+            transformation_functions=[],
+        )
+
         td = training_dataset.TrainingDataset(
             name="test",
             version=None,
@@ -1865,7 +1899,6 @@ class TestSpark:
             training_dataset_type=training_dataset.TrainingDataset.IN_MEMORY,
             extra_filter=None,
             seed=1,
-            transformation_functions={},
         )
 
         # Act
@@ -1875,7 +1908,7 @@ class TestSpark:
             user_write_options={},
             save_mode=training_dataset_engine.TrainingDatasetEngine.OVERWRITE,
             read_options={},
-            feature_view_obj=None,
+            feature_view_obj=fv,
             to_df=True,
         )
 
@@ -1897,9 +1930,6 @@ class TestSpark:
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
-        )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_single"
         )
@@ -1909,6 +1939,24 @@ class TestSpark:
         )
 
         spark_engine = spark.Engine()
+
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
+            featurestore_id=99,
+            transformation_functions=[],
+        )
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -1927,7 +1975,7 @@ class TestSpark:
             user_write_options=None,
             save_mode=None,
             read_options=None,
-            feature_view_obj=None,
+            feature_view_obj=fv,
             to_df=None,
         )
 
@@ -1948,9 +1996,6 @@ class TestSpark:
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
-        )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_single"
         )
@@ -1960,6 +2005,24 @@ class TestSpark:
         )
 
         spark_engine = spark.Engine()
+
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
+            featurestore_id=99,
+            transformation_functions=[],
+        )
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -1979,7 +2042,7 @@ class TestSpark:
             user_write_options=None,
             save_mode=None,
             read_options=None,
-            feature_view_obj=None,
+            feature_view_obj=fv,
             to_df=None,
         )
 
@@ -2000,9 +2063,6 @@ class TestSpark:
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
-        )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_single"
         )
@@ -2012,6 +2072,24 @@ class TestSpark:
         )
 
         spark_engine = spark.Engine()
+
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
+            featurestore_id=99,
+            transformation_functions=[],
+        )
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -2034,7 +2112,7 @@ class TestSpark:
             user_write_options=None,
             save_mode=None,
             read_options=None,
-            feature_view_obj=None,
+            feature_view_obj=fv,
             to_df=None,
         )
 
@@ -2056,9 +2134,6 @@ class TestSpark:
         mock_spark_engine_convert_to_default_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.convert_to_default_dataframe"
         )
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
-        )
         mock_spark_engine_write_training_dataset_single = mocker.patch(
             "hsfs.engine.spark.Engine._write_training_dataset_single"
         )
@@ -2068,6 +2143,24 @@ class TestSpark:
         )
 
         spark_engine = spark.Engine()
+
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
+            featurestore_id=99,
+            transformation_functions=[],
+        )
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -2091,7 +2184,7 @@ class TestSpark:
             user_write_options=None,
             save_mode=None,
             read_options=None,
-            feature_view_obj=None,
+            feature_view_obj=fv,
             to_df=None,
         )
 
@@ -2575,19 +2668,14 @@ class TestSpark:
 
         spark_engine = spark.Engine()
 
-        def plus_one(a) -> int:
-            return a + 1
+        @hopsworks_udf(int)
+        def plus_one(col1):
+            return col1 + 1
 
         tf = transformation_function.TransformationFunction(
             featurestore_id=99,
-            transformation_fn=plus_one,
-            builtin_source_code="",
-            output_type="int",
+            hopsworks_udf=plus_one,
         )
-
-        transformation_fn_dict = dict()
-
-        transformation_fn_dict["col_0"] = tf
 
         f = training_dataset_feature.TrainingDatasetFeature(
             name="col_0", type=IntegerType(), index=0
@@ -2603,7 +2691,6 @@ class TestSpark:
             data_format="CSV",
             featurestore_id=99,
             splits={},
-            transformation_functions=transformation_fn_dict,
             features=features,
         )
 
@@ -2614,6 +2701,7 @@ class TestSpark:
             write_options=None,
             save_mode=None,
             to_df=False,
+            transformation_functions=[tf("col_0")],
         )
 
         # Assert
@@ -2629,14 +2717,13 @@ class TestSpark:
 
         spark_engine = spark.Engine()
 
-        def plus_one(a) -> int:
-            return a + 1
+        @hopsworks_udf(int)
+        def plus_one(col1):
+            return col1 + 1
 
         tf = transformation_function.TransformationFunction(
             featurestore_id=99,
-            transformation_fn=plus_one,
-            builtin_source_code="",
-            output_type="int",
+            hopsworks_udf=plus_one,
         )
 
         transformation_fn_dict = dict()
@@ -2668,6 +2755,7 @@ class TestSpark:
             write_options=None,
             save_mode=None,
             to_df=True,
+            transformation_functions=[tf("col_0")],
         )
 
         # Assert
@@ -4234,42 +4322,40 @@ class TestSpark:
         assert mock_spark_engine_save_dataframe.call_count == 1
         assert mock_spark_table.call_count == 1
 
-    def test_apply_transformation_function(self, mocker):
+    def test_apply_transformation_function_single_output(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-
+        engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        def plus_one(a) -> int:
-            return a + 1
+        @hopsworks_udf(int)
+        def plus_one(col1):
+            return col1 + 1
 
         tf = transformation_function.TransformationFunction(
-            featurestore_id=99,
-            transformation_fn=plus_one,
-            builtin_source_code="",
-            output_type="long",
+            99,
+            hopsworks_udf=plus_one,
         )
 
-        transformation_fn_dict = dict()
-
-        transformation_fn_dict["col_0"] = tf
-
-        f = training_dataset_feature.TrainingDatasetFeature(
-            name="col_0", type=IntegerType(), index=0
-        )
-        f1 = training_dataset_feature.TrainingDatasetFeature(
-            name="col_1", type=StringType(), index=1
-        )
-        features = [f, f1]
-
-        td = training_dataset.TrainingDataset(
-            name="test",
+        f = feature.Feature(name="col_0", type=IntegerType(), index=0)
+        f1 = feature.Feature(name="col_1", type=StringType(), index=1)
+        f2 = feature.Feature(name="col_2", type=BooleanType(), index=1)
+        features = [f, f1, f2]
+        fg1 = feature_group.FeatureGroup(
+            name="test1",
             version=1,
-            data_format="CSV",
             featurestore_id=99,
-            splits={},
+            primary_key=[],
+            partition_key=[],
             features=features,
-            transformation_functions=transformation_fn_dict,
+            id=11,
+            stream=False,
+        )
+        fv = feature_view.FeatureView(
+            name="test",
+            featurestore_id=99,
+            query=fg1.select_all(),
+            transformation_functions=[tf("col_0")],
         )
 
         d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "col_2": [True, False]}
@@ -4279,9 +4365,9 @@ class TestSpark:
 
         expected_df = pd.DataFrame(
             data={
-                "col_0": [2, 3],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "plus_one_col_0_": [2, 3],
             }
         )  # todo why it doesnt return int?
 
@@ -4289,10 +4375,130 @@ class TestSpark:
 
         # Act
         result = spark_engine._apply_transformation_function(
-            transformation_functions=td.transformation_functions,
+            transformation_functions=fv.transformation_functions,
             dataset=spark_df,
         )
+        # Assert
+        assert result.schema == expected_spark_df.schema
+        assert result.collect() == expected_spark_df.collect()
 
+    def test_apply_transformation_function_multiple_output(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        engine._engine_type = "spark"
+        spark_engine = spark.Engine()
+
+        @hopsworks_udf([int, int])
+        def plus_two(col1):
+            return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col1 + 2})
+
+        tf = transformation_function.TransformationFunction(
+            99,
+            hopsworks_udf=plus_two,
+        )
+
+        f = feature.Feature(name="col_0", type=IntegerType(), index=0)
+        f1 = feature.Feature(name="col_1", type=StringType(), index=1)
+        f2 = feature.Feature(name="col_2", type=BooleanType(), index=1)
+        features = [f, f1, f2]
+        fg1 = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=features,
+            id=11,
+            stream=False,
+        )
+        fv = feature_view.FeatureView(
+            name="test",
+            featurestore_id=99,
+            query=fg1.select_all(),
+            transformation_functions=[tf("col_0")],
+        )
+
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "col_2": [True, False]}
+        df = pd.DataFrame(data=d)
+
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+
+        expected_df = pd.DataFrame(
+            data={
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+                "plus_two_col_0_0": [2, 3],
+                "plus_two_col_0_1": [3, 4],
+            }
+        )  # todo why it doesnt return int?
+
+        expected_spark_df = spark_engine._spark_session.createDataFrame(expected_df)
+
+        # Act
+        result = spark_engine._apply_transformation_function(
+            transformation_functions=fv.transformation_functions,
+            dataset=spark_df,
+        )
+        # Assert
+        assert result.schema == expected_spark_df.schema
+        assert result.collect() == expected_spark_df.collect()
+
+    def test_apply_transformation_function_multiple_input_output(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        engine._engine_type = "spark"
+        spark_engine = spark.Engine()
+
+        @hopsworks_udf([int, int])
+        def test(col1, col2):
+            return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
+
+        tf = transformation_function.TransformationFunction(
+            99,
+            hopsworks_udf=test,
+        )
+
+        f = feature.Feature(name="col_0", type=IntegerType(), index=0)
+        f1 = feature.Feature(name="col_1", type=StringType(), index=1)
+        f2 = feature.Feature(name="col_2", type=IntegerType(), index=1)
+        features = [f, f1, f2]
+        fg1 = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=features,
+            id=11,
+            stream=False,
+        )
+        fv = feature_view.FeatureView(
+            name="test",
+            featurestore_id=99,
+            query=fg1.select_all(),
+            transformation_functions=[tf("col_0", "col_2")],
+        )
+
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "col_2": [10, 11]}
+        df = pd.DataFrame(data=d)
+
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+
+        expected_df = pd.DataFrame(
+            data={
+                "col_1": ["test_1", "test_2"],
+                "test_col_0-col_2_0": [2, 3],
+                "test_col_0-col_2_1": [12, 13],
+            }
+        )  # todo why it doesnt return int?
+
+        expected_spark_df = spark_engine._spark_session.createDataFrame(expected_df)
+
+        # Act
+        result = spark_engine._apply_transformation_function(
+            transformation_functions=fv.transformation_functions,
+            dataset=spark_df,
+        )
         # Assert
         assert result.schema == expected_spark_df.schema
         assert result.collect() == expected_spark_df.collect()

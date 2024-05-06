@@ -25,7 +25,7 @@ from packaging.version import Version
 try:
     import pandas as pd
 
-    if Version(pd.__version__) > Version(2.0):
+    if Version(pd.__version__) > Version("2.0"):
         os.environ["USE_PYARROW_EXTENSION"] = "1"
 except ImportError:
     pass  # Empty except block because environment variable "USE_PYARROW_EXTENSION" need not be set if pyarrow cannot be imported or if pandas version is less than 2.0

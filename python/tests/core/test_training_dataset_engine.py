@@ -23,6 +23,7 @@ from hsfs import (
 )
 from hsfs.constructor import query
 from hsfs.core import training_dataset_engine
+from hsfs.hopsworks_udf import hopsworks_udf
 
 
 class TestTrainingDatasetEngine:
@@ -112,19 +113,17 @@ class TestTrainingDatasetEngine:
 
         mocker.patch("hsfs.client.get_instance")
         mocker.patch(
-            "hsfs.transformation_function.TransformationFunction._extract_source_code"
-        )
-        mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
+        @hopsworks_udf(int)
         def plus_one(a):
             return a + 1
 
         tf = transformation_function.TransformationFunction(
-            1, plus_one, 1, "plus_one", output_type=str
+            hopsworks_udf=plus_one, featurestore_id=99
         )
 
         td = training_dataset.TrainingDataset(
