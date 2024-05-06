@@ -179,7 +179,7 @@ class Query:
                 stacklevel=1,
             )
         self._check_read_supported(online)
-        if self._left_feature_group.embedding_index:
+        if online and self._left_feature_group.embedding_index:
             return engine.get_instance().read_vector_db(
                 self._left_feature_group, dataframe_type=dataframe_type
             )
@@ -228,7 +228,7 @@ class Query:
         """
         self._check_read_supported(online)
         read_options = {}
-        if self._left_feature_group.embedding_index:
+        if online and self._left_feature_group.embedding_index:
             return engine.get_instance().read_vector_db(
                 self._left_feature_group, n
             )
