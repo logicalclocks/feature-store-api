@@ -19,7 +19,16 @@ import os
 import warnings
 
 import nest_asyncio
+from packaging.version import Version
 
+
+try:
+    import pandas as pd
+
+    if Version(pd.__version__) > Version(2.0):
+        os.environ["USE_PYARROW_EXTENSION"] = "1"
+except ImportError:
+    pass  # Empty except block because environment variable "USE_PYARROW_EXTENSION" need not be set if pyarrow cannot be imported or if pandas version is less than 2.0
 
 # Setting polars skip cpu flag to suppress CPU false positive warning messages printed while importing hsfs
 os.environ["POLARS_SKIP_CPU_CHECK"] = "1"

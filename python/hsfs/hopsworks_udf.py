@@ -473,6 +473,7 @@ class HopsworksUdf:
                 self._transformation_features, features
             )
         ]
+        udf.output_column_names = udf._get_output_column_names()
         return udf
 
     def get_udf(self) -> Callable:
@@ -497,7 +498,7 @@ class HopsworksUdf:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        Convert class into a dictionary for json serialization.
+        Convert class into a dictionary.
 
         # Returns
             `Dict`: Dictionary that contains all data required to json serialize the object.
@@ -515,7 +516,7 @@ class HopsworksUdf:
 
     def json(self) -> str:
         """
-        Json serialize object.
+        Convert class into its json serialized form.
 
         # Returns
             `str`: Json serialized object.
@@ -527,7 +528,7 @@ class HopsworksUdf:
         cls: "HopsworksUdf", json_dict: Dict[str, Any]
     ) -> "HopsworksUdf":
         """
-        Function that deserializes json obtained from the java backend.
+        Function that constructs the class object from its json serialization.
 
         # Arguments
             json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.

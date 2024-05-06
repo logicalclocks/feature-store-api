@@ -395,7 +395,12 @@ class FeatureViewEngine:
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
-                td_updated, feature_view_obj, query, read_options, dataframe_type
+                td_updated,
+                feature_view_obj,
+                query,
+                read_options,
+                dataframe_type,
+                training_dataset_version,
             )
             self.compute_training_dataset_statistics(
                 feature_view_obj, td_updated, split_df
@@ -720,7 +725,6 @@ class FeatureViewEngine:
         )
         # schema and transformation functions need to be set for writing training data or feature serving
         td.schema = feature_view_obj.schema
-        td.transformation_functions = feature_view_obj.transformation_functions
         return td
 
     def _get_training_datasets_metadata(self, feature_view_obj):
@@ -730,7 +734,6 @@ class FeatureViewEngine:
         # schema and transformation functions need to be set for writing training data or feature serving
         for td in tds:
             td.schema = feature_view_obj.schema
-            td.transformation_functions = feature_view_obj.transformation_functions
         return tds
 
     def get_training_datasets(self, feature_view_obj):
