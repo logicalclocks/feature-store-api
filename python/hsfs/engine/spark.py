@@ -157,8 +157,7 @@ class Engine:
         feature_names = [f.name for f in feature_group.features]
         dataframe_type = dataframe_type.lower()
         if dataframe_type in ["default", "spark"]:
-            rdd = self._spark_session.sparkContext.parallelize(results)
-            return rdd.toDF(*feature_names)
+            return self._spark_session.createDataFrame(results, feature_names)
         else:
             df = pd.DataFrame(results, columns=feature_names, index=None)
             return self._return_dataframe_type(df, dataframe_type)
