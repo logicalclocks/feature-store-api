@@ -156,7 +156,8 @@ class TestUtil:
                 EmbeddingFeature("feature2", 3),
                 EmbeddingFeature("feature3", 3),
                 EmbeddingFeature("feature4", 3),
-        ])
+            ]
+        )
         # Define a schema with valid feature types
         schema = [
             Feature(name="feature1", type="array<int>"),
@@ -172,11 +173,12 @@ class TestUtil:
             features=[
                 EmbeddingFeature("feature1", 3),
                 EmbeddingFeature("feature2", 3),
-        ])
+            ]
+        )
         # Define a schema with an invalid feature type
         schema = [
             Feature(name="feature1", type="array<int>"),
-            Feature(name="feature2", type="array<string>"), # Invalid type
+            Feature(name="feature2", type="array<string>"),  # Invalid type
         ]
         # Call the method and expect a FeatureStoreException
         with pytest.raises(FeatureStoreException):
@@ -197,7 +199,8 @@ class TestUtil:
             features=[
                 EmbeddingFeature("feature1", 3),
                 EmbeddingFeature("feature2", 3),
-        ])
+            ]
+        )
         # Define an empty schema
         schema = []
         # Call the method with an empty schema

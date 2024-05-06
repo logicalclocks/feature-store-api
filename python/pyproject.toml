@@ -1,3 +1,118 @@
+[project]
+name = "hsfs"
+dynamic = ["version"]
+requires-python = ">=3.8,<=3.12"
+readme = "README.md"
+description = "HSFS Python SDK to interact with Hopsworks Feature Store"
+keywords = [
+    "Hopsworks",
+    "Feature Store",
+    "hsfs",
+    "Spark",
+    "Machine Learning",
+    "MLOps",
+    "DataOps",
+]
+authors = [{ name = "Hopsworks AB", email = "robin@hopsworks.ai" }]
+license = { text = "Apache-2.0" }
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Topic :: Utilities",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Developers",
+]
+
+dependencies = [
+    "pyhumps==1.6.1",
+    "requests",
+    "furl",
+    "boto3",
+    "pandas<2.2.0",
+    "numpy<2",
+    "pyjks",
+    "mock",
+    "avro==1.11.3",
+    "sqlalchemy",
+    "PyMySQL[rsa]",
+    "great_expectations==0.18.12",
+    "tzlocal",
+    "fsspec",
+    "retrying",
+    "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql",
+    "polars>=0.20.18,<=0.21.0",
+    "opensearch-py>=1.1.0,<=2.4.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.4",
+    "pytest-mock==3.12.0",
+    "ruff",
+    "pyspark==3.1.1",
+    "moto[s3]==5.0.0",
+    "typeguard==4.2.1",
+]
+dev-pandas1 = [
+    "pytest==7.4.4",
+    "pytest-mock==3.12.0",
+    "ruff",
+    "pyspark==3.1.1",
+    "moto[s3]==5.0.0",
+    "pandas<=1.5.3",
+    "sqlalchemy<=1.4.48",
+]
+docs = [
+    "mkdocs==1.5.3",
+    "mkdocs-material==9.5.17",
+    "mike==2.0.0",
+    "sphinx==7.2.6",
+    "keras_autodoc @ git+https://git@github.com/logicalclocks/keras-autodoc",
+    "markdown-include==0.8.1",
+    "mkdocs-jupyter==0.24.3",
+    "markdown==3.6",
+    "pymdown-extensions==10.7.1",
+    "mkdocs-macros-plugin==1.0.4",
+    "mkdocs-minify-plugin>=0.2.0",
+]
+hive = [
+    "pyhopshive[thrift]",
+    "pyarrow>=10.0",
+    "confluent-kafka<=2.3.0",
+    "fastavro>=1.4.11,<=1.8.4",
+]
+python = [
+    "pyhopshive[thrift]",
+    "pyarrow>=10.0",
+    "confluent-kafka<=2.3.0",
+    "fastavro>=1.4.11,<=1.8.4",
+    "tqdm",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+include = ["../Readme.md", "../LICENSE", "hsfs"]
+
+[tool.setuptools.dynamic]
+version = { attr = "hsfs.version.__version__" }
+
+[project.urls]
+Documentation = "https://docs.hopsworks.ai/latest"
+Repository = "https://github.com/logicalclocks/feature-store-api"
+Homepage = "https://www.hopsworks.ai"
+Community = "https://community.hopsworks.ai"
+
+
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
@@ -39,7 +154,7 @@ target-version = "py38"
 
 [tool.ruff.lint]
 # 1. Enable flake8-bugbear (`B`) rules, in addition to the defaults.
-select = ["E4", "E7", "E9", "F", "B", "I"]#, "ANN"]
+select = ["E4", "E7", "E9", "F", "B", "I", "W"] #, "ANN"]
 ignore = [
     "B905",   # zip has no strict kwarg until Python 3.10
     "ANN101", # Missing type annotation for self in method
@@ -47,6 +162,7 @@ ignore = [
     "ANN003", # Missing type annotation for **kwarg in function
     "ANN002", # Missing type annotation for *args in function
     "ANN401", # Allow Any in type annotations
+    "W505",   # Doc line too long
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.

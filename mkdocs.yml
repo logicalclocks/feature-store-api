@@ -45,6 +45,7 @@ nav:
           - EmbeddingIndex: generated/api/embedding_index_api.md
           - EmbeddingFeature: generated/api/embedding_feature_api.md
           - SimilarityFunctionType: generated/api/similarity_function_type_api.md
+    # Added to allow navigation using the side drawer
     - Hopsworks API: https://docs.hopsworks.ai/hopsworks-api/latest/
     - MLOps API: https://docs.hopsworks.ai/machine-learning-api/latest/
     - Feature Store JavaDoc: https://docs.hopsworks.ai/feature-store-javadoc/latest/
