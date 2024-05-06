@@ -181,7 +181,7 @@ class Query:
         self._check_read_supported(online)
         if self._left_feature_group.embedding_index:
             return engine.get_instance().read_vector_db(
-                self._left_feature_group
+                self._left_feature_group, dataframe_type=dataframe_type
             )
 
         if not read_options:

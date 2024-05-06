@@ -531,9 +531,7 @@ class Engine:
         results = VectorDbClient.read_feature_group(feature_group, n)
         feature_names = [f.name for f in feature_group.features]
         if dataframe_type == "polars":
-            df = pl.DataFrame(results)
-            # Rename columns to match feature names
-            df = df.with_column_names(feature_names)
+            df = pl.DataFrame(results, schema=feature_names)
         else:
             df = pd.DataFrame(results, columns=feature_names, index=None)
         return self._return_dataframe_type(df, dataframe_type)
