@@ -23,12 +23,12 @@ import pyarrow as pa
 import pytest
 from confluent_kafka.admin import PartitionMetadata, TopicMetadata
 from hsfs import (
+    engine,
     feature,
     feature_group,
     feature_view,
     storage_connector,
     training_dataset,
-    transformation_function,
     util,
 )
 from hsfs.client import exceptions
@@ -36,8 +36,12 @@ from hsfs.constructor import query
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
 from hsfs.core import inode, job
 from hsfs.engine import python
+from hsfs.hopsworks_udf import hopsworks_udf
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from polars.testing import assert_frame_equal as polars_assert_frame_equal
+
+
+engine._engine_type = "python"
 
 
 class TestPython:
@@ -2423,7 +2427,7 @@ class TestPython:
         result_df, result_df_split = python_engine.split_labels(
             df=df, dataframe_type="polars", labels="col1"
         )
-        print(type(result_df_split))
+
         # Assert
         assert isinstance(result_df, pl.DataFrame) or isinstance(
             result_df, pl.dataframe.frame.DataFrame
@@ -3233,41 +3237,39 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        def plus_one(a):
-            return a + 1
+        @hopsworks_udf(int)
+        def plus_one(col1):
+            return col1 + 1
 
-        tf = transformation_function.TransformationFunction(
-            99,
-            transformation_fn=plus_one,
-            builtin_source_code="",
-            output_type="int",
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
         )
 
-        transformation_fn_dict = dict()
-
-        transformation_fn_dict["tf_name"] = tf
-
-        td = training_dataset.TrainingDataset(
-            name="test",
-            version=1,
-            data_format="CSV",
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
             featurestore_id=99,
-            splits={},
-            id=10,
-            transformation_functions=transformation_fn_dict,
+            transformation_functions=[plus_one("tf_name")],
         )
 
         df = pd.DataFrame(data={"tf_name": [1, 2]})
 
         # Act
         result = python_engine._apply_transformation_function(
-            transformation_functions=td.transformation_functions, dataset=df
+            transformation_functions=fv.transformation_functions, dataset=df
         )
 
         # Assert
-        assert len(result["tf_name"]) == 2
-        assert result["tf_name"][0] == 2
-        assert result["tf_name"][1] == 3
+        assert len(result["plus_one_tf_name_"]) == 2
+        assert result["plus_one_tf_name_"][0] == 2
+        assert result["plus_one_tf_name_"][1] == 3
 
     def test_apply_transformation_function_polars(self, mocker):
         # Arrange
@@ -3275,41 +3277,39 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        def plus_one(a):
-            return a + 1
+        @hopsworks_udf(int)
+        def plus_one(col1):
+            return col1 + 1
 
-        tf = transformation_function.TransformationFunction(
-            99,
-            transformation_fn=plus_one,
-            builtin_source_code="",
-            output_type="int",
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
         )
 
-        transformation_fn_dict = dict()
-
-        transformation_fn_dict["tf_name"] = tf
-
-        td = training_dataset.TrainingDataset(
-            name="test",
-            version=1,
-            data_format="CSV",
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
             featurestore_id=99,
-            splits={},
-            id=10,
-            transformation_functions=transformation_fn_dict,
+            transformation_functions=[plus_one("tf_name")],
         )
 
         df = pl.DataFrame(data={"tf_name": [1, 2]})
 
         # Act
         result = python_engine._apply_transformation_function(
-            transformation_functions=td.transformation_functions, dataset=df
+            transformation_functions=fv.transformation_functions, dataset=df
         )
 
         # Assert
-        assert len(result["tf_name"]) == 2
-        assert result["tf_name"][0] == 2
-        assert result["tf_name"][1] == 3
+        assert len(result["plus_one_tf_name_"]) == 2
+        assert result["plus_one_tf_name_"][0] == 2
+        assert result["plus_one_tf_name_"][1] == 3
 
     def test_get_unique_values(self):
         # Arrange
