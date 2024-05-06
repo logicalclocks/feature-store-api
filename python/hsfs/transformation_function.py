@@ -137,7 +137,7 @@ class TransformationFunction:
         cls, json_dict: Dict[str, Any]
     ) -> Union[TransformationFunction, List[TransformationFunction]]:
         """
-        Function that deserializes json obtained from the java backend.
+        Function that constructs the class object from its json serialization.
 
         # Arguments
             json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
@@ -166,7 +166,7 @@ class TransformationFunction:
         self, json_dict: Dict[str, Any]
     ) -> TransformationFunction:
         """
-        Function that updates class based on the response obtained from the java backend.
+        Function that updates the class object from its json serialization.
 
         # Arguments
             json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
@@ -179,7 +179,7 @@ class TransformationFunction:
 
     def json(self) -> str:
         """
-        Json serialize object.
+        Convert class into its json serialized form.
 
         # Returns
             `str`: Json serialized object.
@@ -188,7 +188,7 @@ class TransformationFunction:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        Convert class into a dictionary for json serialization.
+        Convert class into a dictionary.
 
         # Returns
             `Dict`: Dictionary that contains all data required to json serialize the object.
