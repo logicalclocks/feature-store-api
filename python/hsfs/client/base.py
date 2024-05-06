@@ -18,7 +18,8 @@ from __future__ import annotations
 import base64
 import os
 import textwrap
-from abc import ABC, abstractmethod
+import time
+from abc import ABC
 from pathlib import Path
 
 import furl
@@ -40,15 +41,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class Client(ABC):
     TOKEN_FILE = "token.jwt"
+    TOKEN_EXPIRED_RETRY_INTERVAL = 0.6
+    TOKEN_EXPIRED_MAX_RETRIES = 10
+
     APIKEY_FILE = "api.key"
     REST_ENDPOINT = "REST_ENDPOINT"
     DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV = "DEFAULT_DATABRICKS_ROOT_VIRTUALENV_ENV"
     HOPSWORKS_PUBLIC_HOST = "HOPSWORKS_PUBLIC_HOST"
-
-    @abstractmethod
-    def __init__(self):
-        """To be implemented by clients."""
-        pass
 
     def _get_verify(self, verify, trust_store_path):
         """Get verification method for sending HTTP requests to Hopsworks.
@@ -170,11 +169,9 @@ class Client(ABC):
 
         if response.status_code == 401 and self.REST_ENDPOINT in os.environ:
             # refresh token and retry request - only on hopsworks
-            self._auth = auth.BearerAuth(self._read_jwt())
-            # Update request with the new token
-            request.auth = self._auth
-            prepped = self._session.prepare_request(request)
-            response = self._session.send(prepped, verify=self._verify, stream=stream)
+            response = self._retry_token_expired(
+                request, stream, self.TOKEN_EXPIRED_RETRY_INTERVAL, 1
+            )
 
         if response.status_code // 100 != 2:
             raise exceptions.RestAPIError(url, response)
@@ -186,6 +183,27 @@ class Client(ABC):
             if len(response.content) == 0:
                 return None
             return response.json()
+
+    def _retry_token_expired(self, request, stream, wait, retries):
+        """Refresh the JWT token and retry the request. Only on Hopsworks.
+        As the token might take a while to get refreshed. Keep trying
+        """
+        # Sleep the waited time before re-issuing the request
+        time.sleep(wait)
+
+        self._auth = auth.BearerAuth(self._read_jwt())
+        # Update request with the new token
+        request.auth = self._auth
+        prepped = self._session.prepare_request(request)
+        response = self._session.send(prepped, verify=self._verify, stream=stream)
+
+        if response.status_code == 401 and retries < self.TOKEN_EXPIRED_MAX_RETRIES:
+            # Try again.
+            return self._retry_token_expired(request, stream, wait * 2, retries + 1)
+        else:
+            # If the number of retries have expired, the _send_request method
+            # will throw an exception to the user as part of the status_code validation.
+            return response
 
     def _close(self):
         """Closes a client. Can be implemented for clean up purposes, not mandatory."""
