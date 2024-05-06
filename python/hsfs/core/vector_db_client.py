@@ -59,7 +59,7 @@ class VectorDbClient:
                 for feat in fg.embedding_index.get_embeddings():
                     for fgf in fg.features:
                         if fgf.name == feat.name and fgf.feature_group_id == fg.id:
-                            self._embedding_features[fgf] = fgf
+                            self._embedding_features[fgf] = feat
         for q in [self._query] + [j.query for j in self._query.joins]:
             fg = q._left_feature_group
             if fg.embedding_index:
@@ -105,7 +105,6 @@ class VectorDbClient:
     def find_neighbors(
         self,
         embedding,
-        schema,
         feature: Feature = None,
         index_name=None,
         k=10,
@@ -191,7 +190,7 @@ class VectorDbClient:
         return [
             (
                 1 / item["_score"] - 1,
-                self._convert_to_pandas_type(schema, self._rewrite_result_key(
+                self._convert_to_pandas_type(embedding_feature.feature_group.features, self._rewrite_result_key(
                     item["_source"],
                     self._fg_vdb_col_td_col_map[embedding_feature.feature_group.id],
                 )),

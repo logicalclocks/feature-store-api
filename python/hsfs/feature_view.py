@@ -802,12 +802,14 @@ class FeatureView:
         if len(results) == 0:
             return []
 
-        passed_features = [result[1] for result in results]
-        return self.get_feature_vectors(
+        td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
+
+        return self._vector_server.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
-            passed_features=passed_features,
-            external=external,
-            allow_missing=True,
+            return_type="list",
+            vector_db_features=[res[1] for res in results],
+            td_embedding_feature_names=td_embedding_feature_names,
+            allow_missing=True
         )
 
     def _extract_primary_key(self, result_key: Dict[str, str]) -> Dict[str, str]:
@@ -817,7 +819,7 @@ class FeatureView:
                 primary_key_map[sk.required_serving_key] = result_key[prefix_sk]
             elif sk.feature_name in result_key:  # fall back to use raw feature name
                 primary_key_map[sk.required_serving_key] = result_key[sk.feature_name]
-        if len(self._vector_server.required_serving_keys) > len(primary_key_map):
+        if len(set(self._vector_server.required_serving_keys)) > len(primary_key_map):
             raise FeatureStoreException(
                 f"Failed to get feature vector because required primary key [{', '.join([k for k in set([sk.required_serving_key for sk in self._prefix_serving_key_map.values()]) - primary_key_map.keys()])}] are not present in vector db."
                 "If the join of the embedding feature group in the query does not have a prefix,"
