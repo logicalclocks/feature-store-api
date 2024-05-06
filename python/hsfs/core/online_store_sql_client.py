@@ -465,7 +465,9 @@ class OnlineStoreSqlClient:
         )
 
     @staticmethod
-    def _get_result_key(primary_keys: str, result_dict: Dict[str, str]) -> Tuple[str]:
+    def _get_result_key(
+        primary_keys: List[str], result_dict: Dict[str, str]
+    ) -> Tuple[str]:
         _logger.debug(f"Get result key {primary_keys} from result dict {result_dict}")
         result_key = []
         for pk in primary_keys:

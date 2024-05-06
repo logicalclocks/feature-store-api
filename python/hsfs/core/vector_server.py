@@ -86,8 +86,6 @@ class VectorServer:
             online_store_sql_client.OnlineStoreSqlClient
         ] = None
 
-
-
     def init_serving(
         self,
         entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
@@ -168,7 +166,9 @@ class VectorServer:
             serving_vector.update(vector_db_features)
         # Deserialize complex features
         _logger.debug("Deserializing complex features")
-        serving_vector = self.deserialize_complex_features(serving_vector, td_embedding_feature_names)
+        serving_vector = self.deserialize_complex_features(
+            serving_vector, td_embedding_feature_names
+        )
 
         # Add the passed features
         _logger.debug("Updating with passed features")
@@ -212,7 +212,9 @@ class VectorServer:
         _logger.debug("Deserializing complex features")
         batch_results = list(
             map(
-                lambda row_dict: self.deserialize_complex_features(row_dict, td_embedding_feature_names),
+                lambda row_dict: self.deserialize_complex_features(
+                    row_dict, td_embedding_feature_names
+                ),
                 batch_results,
             )
         )
@@ -276,6 +278,8 @@ class VectorServer:
             _logger.debug("Returning feature vector as pandas dataframe")
             if batch:
                 pandas_df = pd.DataFrame(feature_vectorz)
+            elif inference_helper:
+                pandas_df = pd.DataFrame([feature_vectorz])
             else:
                 pandas_df = pd.DataFrame(feature_vectorz).transpose()
             pandas_df.columns = self._feature_vector_col_name
@@ -347,9 +351,14 @@ class VectorServer:
             if f.is_complex()
         }
 
-    def deserialize_complex_features(self, row_dict: Dict[str, Any], td_embedding_feature_names: set[str]) -> Dict[str, Any]:
+    def deserialize_complex_features(
+        self, row_dict: Dict[str, Any], td_embedding_feature_names: set[str]
+    ) -> Dict[str, Any]:
         for feature_name, schema in self._complex_features.items():
-            if feature_name in row_dict and feature_name not in td_embedding_feature_names:
+            if (
+                feature_name in row_dict
+                and feature_name not in td_embedding_feature_names
+            ):
                 bytes_reader = io.BytesIO(row_dict[feature_name])
                 decoder = avro.io.BinaryDecoder(bytes_reader)
                 row_dict[feature_name] = schema.read(decoder)
