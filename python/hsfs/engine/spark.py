@@ -157,7 +157,12 @@ class Engine:
         feature_names = [f.name for f in feature_group.features]
         dataframe_type = dataframe_type.lower()
         if dataframe_type in ["default", "spark"]:
-            return self._spark_session.createDataFrame(results, feature_names)
+            if len(results) == 0:
+                return self._spark_session.createDataFrame(
+                    self._spark_session.sparkContext.emptyRDD(), StructType()
+                )
+            else:
+                return self._spark_session.createDataFrame(results, feature_names)
         else:
             df = pd.DataFrame(results, columns=feature_names, index=None)
             return self._return_dataframe_type(df, dataframe_type)
