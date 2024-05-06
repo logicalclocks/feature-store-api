@@ -276,14 +276,18 @@ class VectorServer:
             return np.array(feature_vectorz)
         elif return_type.lower() == "pandas":
             _logger.debug("Returning feature vector as pandas dataframe")
-            if batch:
-                pandas_df = pd.DataFrame(feature_vectorz)
+            if batch and inference_helper:
+                return pd.DataFrame(feature_vectorz)
             elif inference_helper:
-                pandas_df = pd.DataFrame([feature_vectorz])
+                return pd.DataFrame([feature_vectorz])
+            elif batch:
+                return pd.DataFrame(
+                    feature_vectorz, columns=self._feature_vector_col_name
+                )
             else:
                 pandas_df = pd.DataFrame(feature_vectorz).transpose()
-            pandas_df.columns = self._feature_vector_col_name
-            return pandas_df
+                pandas_df.columns = self._feature_vector_col_name
+                return pandas_df
         elif return_type.lower() == "polars":
             _logger.debug("Returning feature vector as polars dataframe")
             return pl.DataFrame(
