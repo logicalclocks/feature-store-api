@@ -262,18 +262,18 @@ class VectorServer:
         Dict[str, Any],
         List[Dict[str, Any]],
     ]:
+        # Only get-feature-vector and get-feature-vectors can return list or numpy
         if return_type.lower() == "list" and not inference_helper:
             _logger.debug("Returning feature vector as value list")
             return feature_vectorz
-        elif return_type.lower() == "dict":
-            _logger.debug("Returning feature vector as dictionary")
-            return {
-                self._feature_vector_col_name[i]: feature_vectorz[i]
-                for i in range(len(self._feature_vector_col_name))
-            }
-        elif return_type.lower() == "numpy":
+        elif return_type.lower() == "numpy" and not inference_helper:
             _logger.debug("Returning feature vector as numpy array")
             return np.array(feature_vectorz)
+        # Only inference helper can return dict
+        elif return_type.lower() == "dict" and inference_helper:
+            _logger.debug("Returning feature vector as dictionary")
+            return feature_vectorz
+        # Both can return pandas and polars
         elif return_type.lower() == "pandas":
             _logger.debug("Returning feature vector as pandas dataframe")
             if batch and inference_helper:
@@ -297,7 +297,7 @@ class VectorServer:
             )
         else:
             raise ValueError(
-                f"""Unknown return type. Supported return types are {"'list', " if not inference_helper else ""}'dict', 'polars', 'pandas' and 'numpy'"""
+                f"""Unknown return type. Supported return types are {"'list', 'numpy'" if not inference_helper else "'dict'"}, 'polars' and 'pandas''"""
             )
 
     def get_inference_helper(
