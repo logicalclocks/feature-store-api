@@ -111,7 +111,7 @@ class VectorServer:
         self._inference_helper_col_name = [
             feat.name for feat in features if feat.inference_helper_column
         ]
-        self._transformed_feature_vector_col_name = None
+        self._transformed_feature_vector_col_name: List[str] = None
 
         self._skip_fg_ids = skip_fg_ids or set()
         self._serving_keys = serving_keys or []
@@ -1140,9 +1140,9 @@ class VectorServer:
 
     def transformed_feature_vector_col_name(self):
         if self._transformed_feature_vector_col_name is None:
+            self._transformed_feature_vector_col_name = self._feature_vector_col_name
             for transformation_function in self._transformation_functions:
-                self._transformed_feature_vector_col_name = (
-                    self._feature_vector_col_name
-                    + transformation_function.hopsworks_udf.transformation_feature_names
+                self._transformed_feature_vector_col_name += (
+                    transformation_function.hopsworks_udf.transformation_features
                 )
         return self._transformed_feature_vector_col_name

@@ -1641,7 +1641,6 @@ class TestFeatureViewEngine:
         # Assert
         assert mock_fv_api.return_value.get_training_dataset_by_version.call_count == 1
         assert result.schema == fv.schema
-        assert result.transformation_functions == fv.transformation_functions
 
     def test_create_training_data_metadata(self, mocker):
         # Arrange

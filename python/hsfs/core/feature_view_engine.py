@@ -724,7 +724,7 @@ class FeatureViewEngine:
         td = self._feature_view_api.get_training_dataset_by_version(
             feature_view_obj.name, feature_view_obj.version, training_dataset_version
         )
-        # schema and transformation functions need to be set for writing training data or feature serving
+        # schema needs to be set for writing training data or feature serving
         td.schema = feature_view_obj.schema
         return td
 
@@ -732,7 +732,7 @@ class FeatureViewEngine:
         tds = self._feature_view_api.get_training_datasets(
             feature_view_obj.name, feature_view_obj.version
         )
-        # schema and transformation functions need to be set for writing training data or feature serving
+        # schema needs to be set for writing training data or feature serving
         for td in tds:
             td.schema = feature_view_obj.schema
         return tds

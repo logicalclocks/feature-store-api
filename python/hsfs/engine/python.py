@@ -897,14 +897,14 @@ class Engine:
             df = query_obj.read(
                 read_options=read_options, dataframe_type=dataframe_type
             )
-            if training_dataset_version is None:
-                transformation_function_engine.TransformationFunctionEngine.compute_and_set_feature_statistics(
-                    training_dataset_obj, feature_view_obj, df
-                )
-            else:
-                transformation_function_engine.TransformationFunctionEngine.get_and_set_feature_statistics(
-                    training_dataset_obj, feature_view_obj, training_dataset_version
-                )
+            # if training_dataset_version is None:
+            transformation_function_engine.TransformationFunctionEngine.compute_and_set_feature_statistics(
+                training_dataset_obj, feature_view_obj, df
+            )
+            # else:
+            #    transformation_function_engine.TransformationFunctionEngine.get_and_set_feature_statistics(
+            #        training_dataset_obj, feature_view_obj, training_dataset_version
+            #    )
             return self._apply_transformation_function(
                 training_dataset_obj.transformation_functions, df
             )
@@ -1242,6 +1242,8 @@ class Engine:
         # Arguments
             transformation_functions `List[TransformationFunction]` : List of transformation functions.
             dataset `Union[pd.DataFrame, pl.DataFrame]`: A pandas or polars dataframe.
+        # Returns
+            `DataFrame`: A pandas dataframe with the transformed data.
         # Raises
             `FeatureStoreException`: If any of the features mentioned in the transformation function is not present in the Feature View.
         """

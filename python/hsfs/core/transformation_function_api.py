@@ -19,9 +19,7 @@ from typing import List, Optional, Union
 
 from hsfs import (
     client,
-    training_dataset,
     transformation_function,
-    transformation_function_attached,
 )
 
 
@@ -112,27 +110,3 @@ class TransformationFunctionApi:
         ]
         headers = {"content-type": "application/json"}
         _client._send_request("DELETE", path_params, headers=headers)
-
-    def get_td_transformation_fn(
-        self, training_dataset_instance: training_dataset.TrainingDataset
-    ) -> transformation_function_attached.TransformationFunctionAttached:
-        """
-        Retrieve TransformationFunctionAttached instance
-        Args:
-        training_dataset_instance: TrainingDataset, required
-            training dataset metadata object.
-        """
-        _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "featurestores",
-            self._feature_store_id,
-            "trainingdatasets",
-            training_dataset_instance.id,
-            "transformationfunctions",
-        ]
-
-        return transformation_function_attached.TransformationFunctionAttached.from_response_json(
-            _client._send_request("GET", path_params)
-        )

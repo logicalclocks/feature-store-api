@@ -180,31 +180,35 @@ class TransformationFunctionEngine:
             statistics_features.update(
                 transformation_function.hopsworks_udf.statistics_features
             )
+        if statistics_features:
+            # compute statistics on training data
+            if training_dataset.splits:
+                # compute statistics before transformations are applied
+                stats = (
+                    TransformationFunctionEngine.compute_transformation_fn_statistics(
+                        training_dataset,
+                        list(statistics_features),
+                        [],
+                        dataset.get(training_dataset.train_split),
+                        feature_view_obj,
+                    )
+                )
+            else:
+                stats = (
+                    TransformationFunctionEngine.compute_transformation_fn_statistics(
+                        training_dataset,
+                        list(statistics_features),
+                        [],
+                        dataset,
+                        feature_view_obj,
+                    )
+                )
 
-        # compute statistics on training data
-        if training_dataset.splits:
-            # compute statistics before transformations are applied
-            stats = TransformationFunctionEngine.compute_transformation_fn_statistics(
-                training_dataset,
-                list(statistics_features),
-                [],
-                dataset.get(training_dataset.train_split),
-                feature_view_obj,
-            )
-        else:
-            stats = TransformationFunctionEngine.compute_transformation_fn_statistics(
-                training_dataset,
-                list(statistics_features),
-                [],
-                dataset,
-                feature_view_obj,
-            )
-
-        # Set statistics computed in the hopsworks UDF
-        for transformation_function in feature_view_obj.transformation_functions:
-            transformation_function.hopsworks_udf.transformation_statistics = (
-                stats.feature_descriptive_statistics
-            )
+            # Set statistics computed in the hopsworks UDF
+            for transformation_function in feature_view_obj.transformation_functions:
+                transformation_function.hopsworks_udf.transformation_statistics = (
+                    stats.feature_descriptive_statistics
+                )
 
     @staticmethod
     def get_and_set_feature_statistics(
