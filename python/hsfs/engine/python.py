@@ -54,7 +54,6 @@ from hsfs import (
 from hsfs import storage_connector as sc
 from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.constructor import query
 from hsfs.core import (
     arrow_flight_client,
@@ -71,6 +70,7 @@ from hsfs.core import (
     transformation_function_engine,
     variable_api,
 )
+from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
 from hsfs.training_dataset_split import TrainingDatasetSplit
