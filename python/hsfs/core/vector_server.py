@@ -250,7 +250,9 @@ class VectorServer:
 
     def handle_feature_vector_return_type(
         self,
-        feature_vectorz: Union[List[Any], List[List[Any]]],
+        feature_vectorz: Union[
+            List[Any], List[List[Any]], Dict[str, Any], List[Dict[str, Any]]
+        ],
         batch: bool,
         inference_helper: bool,
         return_type: str,
