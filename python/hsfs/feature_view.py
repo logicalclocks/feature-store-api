@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import warnings
 from datetime import date, datetime
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
@@ -59,6 +60,8 @@ from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
+
+_logger = logging.getLogger(__name__)
 
 TrainingDatasetDataFrameTypes = Union[
     pd.DataFrame,
@@ -144,6 +147,14 @@ class FeatureView:
 
         if self._id:
             self._init_feature_monitoring_engine()
+
+        # last_accessed_training_dataset is only from the perspective of the client itself, and not the backend.
+        # if multiple clients do training datasets operations, each will have their own view of the last accessed.
+        # last accessed (read/write) training dataset is not necessarily the newest (highest version).
+        self._last_accessed_training_dataset = None
+
+    def get_last_accessed_training_dataset(self):
+        return self._last_accessed_training_dataset
 
     def delete(self) -> None:
         """Delete current feature view, all associated metadata and training data.
@@ -503,13 +514,20 @@ class FeatureView:
         if self._vector_server is None:
             self.init_serving(external=external)
 
+        vector_db_features = None
+        td_embedding_feature_names = set()
         if self._vector_db_client:
-            passed_features = self._update_with_vector_db_result(entry, passed_features)
+            vector_db_features = self._get_vector_db_result(entry)
+            td_embedding_feature_names = (
+                self._vector_db_client.td_embedding_feature_names
+            )
         return self._vector_server.get_feature_vector(
             entry,
             return_type,
             passed_features,
             allow_missing,
+            vector_db_features,
+            td_embedding_feature_names,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
         )
@@ -604,19 +622,22 @@ class FeatureView:
         """
         if self._vector_server is None:
             self.init_serving(external=external)
-        updated_passed_feature = []
-        for i in range(len(entry)):
-            updated_passed_feature.append(
-                self._update_with_vector_db_result(
-                    entry[i],
-                    passed_features[i] if passed_features else {},
-                )
+        vector_db_features = []
+        td_embedding_feature_names = set()
+        if self._vector_db_client:
+            for _entry in entry:
+                vector_db_features.append(self._get_vector_db_result(_entry))
+            td_embedding_feature_names = (
+                self._vector_db_client.td_embedding_feature_names
             )
+
         return self._vector_server.get_feature_vectors(
             entry,
             return_type,
-            updated_passed_feature,
+            passed_features,
             allow_missing,
+            vector_db_features,
+            td_embedding_feature_names,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
         )
@@ -721,14 +742,13 @@ class FeatureView:
             self.init_serving(external=external)
         return self._vector_server.get_inference_helpers(self, entry, return_type)
 
-    def _update_with_vector_db_result(
+    def _get_vector_db_result(
         self,
         entry: Dict[str, Any],
-        passed_features: Optional[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
         if not self._vector_db_client:
-            return passed_features
-
+            return {}
+        result_vectors = {}
         for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
             complete, fg_entry = self._vector_db_client.filter_entry_by_join_index(
                 entry, join_index
@@ -737,16 +757,17 @@ class FeatureView:
                 # Not retrieving from vector db if entry is not completed
                 continue
             vector_db_features = self._vector_db_client.read(
-                fg.id, keys=fg_entry, index_name=fg.embedding_index.index_name
+                fg.id,
+                fg.features,
+                keys=fg_entry,
+                index_name=fg.embedding_index.index_name,
             )
 
             # if result is not empty
             if vector_db_features:
                 vector_db_features = vector_db_features[0]  # get the first result
-                if passed_features and vector_db_features:
-                    vector_db_features.update(passed_features)
-                passed_features = vector_db_features
-        return passed_features
+                result_vectors.update(vector_db_features)
+        return result_vectors
 
     def find_neighbors(
         self,
@@ -814,11 +835,13 @@ class FeatureView:
         if len(results) == 0:
             return []
 
-        passed_features = [result[1] for result in results]
-        return self.get_feature_vectors(
+        td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
+
+        return self._vector_server.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
-            passed_features=passed_features,
-            external=external,
+            return_type="list",
+            vector_db_features=[res[1] for res in results],
+            td_embedding_feature_names=td_embedding_feature_names,
             allow_missing=True,
         )
 
@@ -829,7 +852,7 @@ class FeatureView:
                 primary_key_map[sk.required_serving_key] = result_key[prefix_sk]
             elif sk.feature_name in result_key:  # fall back to use raw feature name
                 primary_key_map[sk.required_serving_key] = result_key[sk.feature_name]
-        if len(self._vector_server.required_serving_keys) > len(primary_key_map):
+        if len(set(self._vector_server.required_serving_keys)) > len(primary_key_map):
             raise FeatureStoreException(
                 f"Failed to get feature vector because required primary key [{', '.join([k for k in set([sk.required_serving_key for sk in self._prefix_serving_key_map.values()]) - primary_key_map.keys()])}] are not present in vector db."
                 "If the join of the embedding feature group in the query does not have a prefix,"
@@ -1101,6 +1124,13 @@ class FeatureView:
         """
         return self._feature_view_engine.delete_tag(self, name)
 
+    def update_last_accessed_training_dataset(self, version):
+        if self._last_accessed_training_dataset is not None:
+            _logger.info(
+                f"Provenance cached data - overwriting last accessed/created training dataset from {self._last_accessed_training_dataset} to {version}."
+            )
+        self._last_accessed_training_dataset = version
+
     @usage.method_logger
     def create_training_data(
         self,
@@ -1326,6 +1356,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
 
         return td.version, td_job
 
@@ -1612,7 +1643,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
-
+        self.update_last_accessed_training_dataset(td.version)
         return td.version, td_job
 
     @usage.method_logger
@@ -1895,6 +1926,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
 
         return td.version, td_job
 
@@ -1962,13 +1994,15 @@ class FeatureView:
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
-        _, td_job = self._feature_view_engine.recreate_training_dataset(
+        td, td_job = self._feature_view_engine.recreate_training_dataset(
             self,
             training_dataset_version=training_dataset_version,
             statistics_config=statistics_config,
             user_write_options=write_options or {},
             spine=spine,
         )
+        self.update_last_accessed_training_dataset(td.version)
+
         return td_job
 
     @usage.method_logger
@@ -2120,6 +2154,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2295,6 +2330,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @staticmethod
@@ -2514,6 +2550,7 @@ class FeatureView:
             util.VersionWarning,
             stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @staticmethod
@@ -2599,7 +2636,7 @@ class FeatureView:
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
-        _, df = self._feature_view_engine.get_training_data(
+        td, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2608,6 +2645,7 @@ class FeatureView:
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2670,7 +2708,7 @@ class FeatureView:
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
         """
-        _, df = self._feature_view_engine.get_training_data(
+        td, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2680,6 +2718,7 @@ class FeatureView:
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2744,7 +2783,7 @@ class FeatureView:
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
         """
-        _, df = self._feature_view_engine.get_training_data(
+        td, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2758,6 +2797,7 @@ class FeatureView:
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2976,6 +3016,8 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
+        if self._last_accessed_training_dataset == training_dataset_version:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_dataset_only(
             self, training_data_version=training_dataset_version
         )
@@ -2999,6 +3041,8 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
+        if self._last_accessed_training_dataset is not None:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_dataset_only(self)
 
     @usage.method_logger
@@ -3025,6 +3069,8 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
+        if self._last_accessed_training_dataset == training_dataset_version:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_data(
             self, training_data_version=training_dataset_version
         )
@@ -3048,6 +3094,8 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
+        if self._last_accessed_training_dataset is not None:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_data(self)
 
     def get_feature_monitoring_configs(

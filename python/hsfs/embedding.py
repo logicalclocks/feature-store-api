@@ -309,8 +309,9 @@ class EmbeddingIndex:
             `hsfs.embedding.EmbeddingFeature` object
         """
         feat = self._features.get(name)
-        feat.feature_group = self._feature_group
-        feat.embedding_index = self
+        if feat:
+            feat.feature_group = self._feature_group
+            feat.embedding_index = self
         return feat
 
     def get_embeddings(self):
@@ -341,9 +342,7 @@ class EmbeddingIndex:
             FeaturestoreException: If an error occurs during the count operation.
         """
         if self._vector_db_client is None:
-            self._vector_db_client = VectorDbClient(
-                self._feature_group.select_all()
-            )
+            self._vector_db_client = VectorDbClient(self._feature_group.select_all())
         return self._vector_db_client.count(self.feature_group, options=options)
 
     @classmethod

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import time
 import warnings
 from datetime import date, datetime
@@ -75,6 +76,9 @@ from hsfs.ge_validation_result import ValidationResult
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
+
+
+_logger = logging.getLogger(__name__)
 
 
 @typechecked
@@ -512,6 +516,40 @@ class FeatureGroupBase:
             `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
+    
+    def get_storage_connector_provenance(self):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are storage connectors. These storage connector can be accessible,
+        deleted or inaccessible.
+        For deleted and inaccessible storage connector, only a minimal information is
+        returned.
+
+        # Returns
+            `ExplicitProvenance.Links`: the storage connector used to generated this
+            feature group
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+        """
+        return self._feature_group_engine.get_storage_connector_provenance(self)
+    
+    def get_storage_connector(self):
+        """Get the storage connector using this feature group, based on explicit
+        provenance. Only the accessible storage connector is returned.
+        For more items use the base method - get_storage_connector_provenance
+
+        # Returns
+            `StorageConnector: Storage connector.
+        """
+        storage_connector_provenance = self.get_storage_connector_provenance()
+
+        if storage_connector_provenance.inaccessible or storage_connector_provenance.deleted:
+            _logger.info("The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`")
+
+        if storage_connector_provenance.accessible:
+            return storage_connector_provenance.accessible[0]
+        else:
+            return None
 
     def get_generated_feature_views(self) -> explicit_provenance.Links:
         """Get the generated feature view using this feature group, based on explicit
@@ -2348,7 +2386,8 @@ class FeatureGroup(FeatureGroupBase):
                 self._vector_db_client = VectorDbClient(self.select_all())
             results = self._vector_db_client.read(
                 self.id,
-                {},
+                self.features,
+                keys={},
                 pk=self.embedding_index.col_prefix + self.primary_key[0],
                 index_name=self.embedding_index.index_name,
                 n=n,
@@ -3737,7 +3776,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._vector_db_client = VectorDbClient(self.select_all())
             results = self._vector_db_client.read(
                 self.id,
-                {},
+                self.features,
+                keys={},
                 pk=self.embedding_index.col_prefix + self.primary_key[0],
                 index_name=self.embedding_index.index_name,
                 n=n,
@@ -3960,7 +4000,7 @@ class SpineGroup(FeatureGroupBase):
         online_topic_name: Optional[str] = None,
         topic_name: Optional[str] = None,
         spine: bool = True,
-        dataframe: str = "spine",
+        dataframe: Optional[str] = None,
         deprecated: bool = False,
         **kwargs,
     ) -> None:
@@ -3991,6 +4031,7 @@ class SpineGroup(FeatureGroupBase):
         self._feature_group_engine: "spine_group_engine.SpineGroupEngine" = (
             spine_group_engine.SpineGroupEngine(featurestore_id)
         )
+        self._statistics_config = None
 
         if self._id:
             # Got from Hopsworks, deserialize features and storage connector
@@ -4009,10 +4050,8 @@ class SpineGroup(FeatureGroupBase):
                 if self._features
                 else []
             )
-            self.statistics_config = statistics_config
         else:
             self.primary_key = primary_key
-            self.statistics_config = statistics_config
             self._features = features
 
         self._href = href
@@ -4044,7 +4083,9 @@ class SpineGroup(FeatureGroupBase):
         return self
 
     @property
-    def dataframe(self) -> Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]:
+    def dataframe(
+        self,
+    ) -> Optional[Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]]:
         """Spine dataframe with primary key, event time and
         label column to use for point in time join when fetching features.
         """
@@ -4053,16 +4094,32 @@ class SpineGroup(FeatureGroupBase):
     @dataframe.setter
     def dataframe(
         self,
-        dataframe: Union[
-            pd.DataFrame,
-            pl.DataFrame,
-            np.ndarray,
-            TypeVar("pyspark.sql.DataFrame"),
-            TypeVar("pyspark.RDD"),
+        dataframe: Optional[
+            Union[
+                pd.DataFrame,
+                pl.DataFrame,
+                np.ndarray,
+                TypeVar("pyspark.sql.DataFrame"),
+                TypeVar("pyspark.RDD"),
+            ]
         ],
     ) -> None:
         """Update the spine dataframe contained in the spine group."""
-        self._dataframe = engine.get_instance().convert_to_default_dataframe(dataframe)
+        if dataframe is None:
+            warnings.warn(
+                "Spine group dataframe is not set, use `spine_fg.dataframe = df` to set it"
+                " before attempting to use it as a basis to join features. The dataframe will not"
+                " be saved to Hopsworks when registering the spine group with `save` method.",
+                UserWarning,
+                stacklevel=1,
+            )
+            self._dataframe = (
+                None  # if metadata fetched from backend the dataframe is not set
+            )
+        else:
+            self._dataframe = engine.get_instance().convert_to_default_dataframe(
+                dataframe
+            )
 
         # in fs query the features are not sent, so then don't do validation
         if (

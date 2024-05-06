@@ -62,6 +62,7 @@ FIXTURES = [
     "validation_report",
     "serving_keys",
     "rondb_server",
+    "spine_group",
 ]
 
 backend_fixtures_json = {}
