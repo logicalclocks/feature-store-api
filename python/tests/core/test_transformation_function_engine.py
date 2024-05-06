@@ -366,3 +366,109 @@ class TestTransformationFunctionEngine:
             mock_s_engine.return_value.compute_transformation_fn_statistics.call_count
             == 1
         )
+
+    def test_get_and_set_feature_statistics_no_statistics_required(self, mocker):
+        feature_store_id = 99
+        mocker.patch("hsfs.client.get_instance")
+        mock_s_engine = mocker.patch("hsfs.core.statistics_engine.StatisticsEngine")
+
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
+
+        @hopsworks_udf(int)
+        def testFunction1(col1):
+            return col1 + 1
+
+        tf1 = transformation_function.TransformationFunction(
+            feature_store_id,
+            hopsworks_udf=testFunction1,
+        )
+
+        fg1 = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("label")],
+            id=11,
+            stream=False,
+        )
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=1,
+            data_format="CSV",
+            featurestore_id=99,
+            splits={"train": 0.8, "test": 0.2},
+            id=10,
+        )
+
+        fv = feature_view.FeatureView(
+            name="test",
+            featurestore_id=feature_store_id,
+            query=fg1.select_all(),
+            transformation_functions=[tf1],
+        )
+
+        # Act
+        tf_engine.get_and_set_feature_statistics(
+            training_dataset=td, feature_view_obj=fv, training_dataset_version=1
+        )
+
+        # Assert
+        assert mock_s_engine.return_value.get.call_count == 0
+
+    def test_get_and_set_feature_statistics_statistics_required(self, mocker):
+        feature_store_id = 99
+        mocker.patch("hsfs.client.get_instance")
+        mock_s_engine = mocker.patch("hsfs.core.statistics_engine.StatisticsEngine")
+
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
+
+        @hopsworks_udf(int)
+        def testFunction1(col1, statistics_col1):
+            return col1 + statistics_col1.mean
+
+        tf1 = transformation_function.TransformationFunction(
+            feature_store_id,
+            hopsworks_udf=testFunction1,
+        )
+
+        fg1 = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("label")],
+            id=11,
+            stream=False,
+        )
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=1,
+            data_format="CSV",
+            featurestore_id=99,
+            splits={"train": 0.8, "test": 0.2},
+            id=10,
+        )
+
+        fv = feature_view.FeatureView(
+            name="test",
+            featurestore_id=feature_store_id,
+            query=fg1.select_all(),
+            transformation_functions=[tf1],
+        )
+
+        # Act
+        tf_engine.get_and_set_feature_statistics(
+            training_dataset=td, feature_view_obj=fv, training_dataset_version=1
+        )
+
+        # Assert
+        assert mock_s_engine.return_value.get.call_count == 1

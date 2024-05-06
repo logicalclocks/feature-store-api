@@ -120,14 +120,20 @@ class FeatureView:
             training_helper_columns if training_helper_columns else []
         )
 
-        self._transformation_functions: List[TransformationFunction] = [
-            TransformationFunction(
-                self.featurestore_id, hopsworks_udf=transformation_function, version=1
-            )
-            if not isinstance(transformation_function, TransformationFunction)
-            else transformation_function
-            for transformation_function in transformation_functions
-        ]
+        self._transformation_functions: List[TransformationFunction] = (
+            [
+                TransformationFunction(
+                    self.featurestore_id,
+                    hopsworks_udf=transformation_function,
+                    version=1,
+                )
+                if not isinstance(transformation_function, TransformationFunction)
+                else transformation_function
+                for transformation_function in transformation_functions
+            ]
+            if transformation_functions
+            else []
+        )
 
         self._features = []
         self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
