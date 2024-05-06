@@ -24,9 +24,9 @@ from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf
 
 class FeatureGroupApi:
     BACKEND_FG_STREAM = "streamFeatureGroupDTO"
-    BACKEND_FG_BATCH = "cachedFeatureGroupDTO"
-    BACKEND_FG_EXTERNAL = "onDemandFeatureGroupDTO"
-    BACKEND_FG_SPINE = "onDemandFeatureGroupDTO"
+    BACKEND_FG_BATCH = "cachedFeaturegroupDTO"
+    BACKEND_FG_EXTERNAL = "onDemandFeaturegroupDTO"
+    BACKEND_FG_SPINE = "onDemandFeaturegroupDTO"
 
     def save(
         self,
@@ -104,7 +104,7 @@ class FeatureGroupApi:
             ):
                 fg_objs.append(fg_mod.FeatureGroup.from_response_json(fg_json))
             elif fg_json["type"] == FeatureGroupApi.BACKEND_FG_EXTERNAL:
-                if fg_json["spine"]:
+                if fg_json.get("spine", False):
                     fg_objs.append(fg_mod.SpineGroup.from_response_json(fg_json))
                 else:
                     fg_objs.append(
@@ -367,6 +367,43 @@ class FeatureGroupApi:
             links_json,
             explicit_provenance.Links.Direction.UPSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
+        )
+
+    def get_storage_connector_provenance(self, feature_group_instance):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are storage connectors. These storage connector can be accessible,
+        deleted or inaccessible.
+        For deleted and inaccessible storage connector, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ExplicitProvenance.Links`: the storage connector used to generated this
+            feature group
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_group_instance.feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "provenance",
+            "links",
+        ]
+        query_params = {
+            "expand": "provenance_artifacts",
+            "upstreamLvls": 1,
+            "downstreamLvls": 0,
+        }
+        links_json = _client._send_request("GET", path_params, query_params)
+        return explicit_provenance.Links.from_response_json(
+            links_json,
+            explicit_provenance.Links.Direction.UPSTREAM,
+            explicit_provenance.Links.Type.STORAGE_CONNECTOR,
         )
 
     def get_generated_feature_views(

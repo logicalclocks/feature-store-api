@@ -138,23 +138,22 @@ class ArrowFlightClient:
         StorageConnector.SNOWFLAKE,
         StorageConnector.BIGQUERY,
     ]
-    FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
     READ_ERROR = 'Could not read data using Hopsworks Feature Query Service. If the issue persists, use read_options={"use_hive": True} instead.'
     WRITE_ERROR = 'Could not write data using Hopsworks Feature Query Service. If the issue persists, use write_options={"use_spark": True} instead.'
     DEFAULTING_TO_DIFFERENT_SERVICE_WARNING = (
         "Defaulting to Hive/Spark execution for this call."
     )
     CLIENT_WILL_STAY_ACTIVE_WARNING = 'The client will remain active for future calls. If the issue persists, use read_options={"use_hive": True} or write_options={"use_spark": True}.'
-    WARNING_FULL_QUEUE_ERROR = "No free slots available. "
-    WARNING_TIMEOUT_ERROR = "Request timed out. "
     DEFAULT_TIMEOUT_SECONDS = 900
     DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS = 5
     DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS = 2000
 
     def __init__(self, disabled_for_session: bool = False):
         _logger.debug("Initializing Hopsworks Feature Query Service Client.")
-        self._timeout: float = self.DEFAULT_TIMEOUT_SECONDS
-        self._health_check_timeout: float = self.DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS
+        self._timeout: float = ArrowFlightClient.DEFAULT_TIMEOUT_SECONDS
+        self._health_check_timeout: float = (
+            ArrowFlightClient.DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS
+        )
 
         self._enabled_on_cluster: bool = False
         self._host_url: Optional[str] = None
@@ -197,8 +196,8 @@ class ArrowFlightClient:
             _logger.exception(e)
             warnings.warn(
                 f"Failed to connect to Hopsworks Feature Query Service, got {str(e)}."
-                + self.DEFAULTING_TO_DIFFERENT_SERVICE_WARNING
-                + self.CLIENT_WILL_STAY_ACTIVE_WARNING,
+                + ArrowFlightClient.DEFAULTING_TO_DIFFERENT_SERVICE_WARNING
+                + ArrowFlightClient.CLIENT_WILL_STAY_ACTIVE_WARNING,
                 stacklevel=1,
             )
             return
@@ -270,7 +269,7 @@ class ArrowFlightClient:
                 (
                     # https://arrow.apache.org/docs/cpp/flight.html#excessive-traffic
                     "GRPC_ARG_MIN_RECONNECT_BACKOFF_MS",
-                    self.DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS,
+                    ArrowFlightClient.DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS,
                 )
             ],
         )
@@ -414,7 +413,7 @@ class ArrowFlightClient:
             (
                 arrow_flight_config.get("timeout", self.timeout)
                 if arrow_flight_config
-                else self.DEFAULT_TIMEOUT
+                else self.timeout
             ),
             dataframe_type,
         )
