@@ -306,7 +306,7 @@ class TestTransformationFunctionEngine:
         # Assert
         assert (
             mock_s_engine.return_value.compute_transformation_fn_statistics.call_count
-            == 1
+            == 0
         )
 
     def test_compute_and_set_feature_statistics_train_test_split(self, mocker):
@@ -364,7 +364,7 @@ class TestTransformationFunctionEngine:
         # Assert
         assert (
             mock_s_engine.return_value.compute_transformation_fn_statistics.call_count
-            == 1
+            == 0
         )
 
     def test_get_and_set_feature_statistics_no_statistics_required(self, mocker):

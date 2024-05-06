@@ -175,7 +175,7 @@ class HopsworksUdf:
                 and output_type not in HopsworksUdf.PYTHON_SPARK_TYPE_MAPPING.values()
             ):
                 raise FeatureStoreException(
-                    f"Output type {output_type} is not supported. Please refer to DOCUMENTATION to get more information on the supported types."
+                    f"Output type {output_type} is not supported. Please refer to the documentation to get more information on the supported types."
                 )
             convert_output_types.append(
                 output_type
@@ -364,7 +364,7 @@ class HopsworksUdf:
         source_code = source_code.split("\n")
         # Reconstruct the modified function as a string
         modified_source = (
-            new_signature + "\n" + "\n\t".join(source_code[signature_end_line + 1 :])
+            new_signature + "\n\t" + "\n\t".join(source_code[signature_end_line + 1 :])
         )
 
         # Define a new function with the modified source code
@@ -377,13 +377,13 @@ class HopsworksUdf:
         # Returns
             `List[str]`: List of feature names for the transformed columns
         """
+        _BASE_COLUMN_NAME = (
+            f'{self.function_name}_{"-".join(self.transformation_features)}_'
+        )
         if len(self.output_types) > 1:
-            return [
-                f'{self.function_name}_{"-".join(self.transformation_features)}_{i}'
-                for i in range(len(self.output_types))
-            ]
+            return [f"{_BASE_COLUMN_NAME}{i}" for i in range(len(self.output_types))]
         else:
-            return [f'{self.function_name}_{"-".join(self.transformation_features)}_']
+            return [f"{_BASE_COLUMN_NAME}"]
 
     def _create_pandas_udf_return_schema_from_list(self) -> str:
         """
@@ -395,7 +395,7 @@ class HopsworksUdf:
         if len(self.output_types) > 1:
             return ", ".join(
                 [
-                    f"{self.output_column_names[i]} {self.output_types[i]}"
+                    f"`{self.output_column_names[i]}` {self.output_types[i]}"
                     for i in range(len(self.output_types))
                 ]
             )
@@ -412,20 +412,40 @@ class HopsworksUdf:
         # Returns
             `Callable`: A wrapper function that renames outputs of the User defined function into specified output column names.
         """
+
+        # Function to make transformation function time safe. Defined as a string because it has to be dynamically injected into scope to be executed by spark
+        convert_timstamp_function = """def convert_timezone(date_time_col : pd.Series):
+        import tzlocal
+        current_timezone = tzlocal.get_localzone()
+        if date_time_col.dt.tz is None:
+            # if timestamp is timezone unaware, make sure it's localized to the system's timezone.
+            # otherwise, spark will implicitly convert it to the system's timezone.
+            return date_time_col.dt.tz_localize(str(current_timezone))
+        else:
+            # convert to utc, then localize to system's timezone
+            return date_time_col.dt.tz_convert('UTC').dt.tz_localize(None).dt.tz_localize(str(current_timezone))"""
+
         # Defining wrapper function that renames the column names to specific names
         if len(self.output_types) > 1:
-            code = f"""def renaming_wrapper(*args):
-    import pandas as pd
+            code = f"""import pandas as pd
+{convert_timstamp_function}
+def renaming_wrapper(*args):
     {self._formatted_function_source}
     df = {self.function_name}(*args)
     df = df.rename(columns = {{df.columns[i]: _output_col_names[i] for i in range(len(df.columns))}})
+    for col in df:
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            df[col] = convert_timezone(df[col])
     return df"""
         else:
-            code = f"""def renaming_wrapper(*args):
-    import pandas as pd
+            code = f"""import pandas as pd
+{convert_timstamp_function}
+def renaming_wrapper(*args):
     {self._formatted_function_source}
     df = {self.function_name}(*args)
     df = df.rename(_output_col_names[0])
+    if pd.api.types.is_datetime64_any_dtype(df):
+        df = convert_timezone(df)
     return df"""
 
         # injecting variables into scope used to execute wrapper function.
