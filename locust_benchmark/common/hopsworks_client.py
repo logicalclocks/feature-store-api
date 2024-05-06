@@ -1,4 +1,3 @@
-import datetime
 import random
 import string
 import json
@@ -27,6 +26,7 @@ class HopsworksClient:
             port=self.hopsworks_config.get("port", 443),
             api_key_file=".api_key",
             secrets_store="local",
+            engine="python",
         )
         self.fs = self.connection.get_feature_store()
 
@@ -77,21 +77,11 @@ class HopsworksClient:
         df = pd.DataFrame.from_dict(data)
 
         for i in range(0, schema_repetitions):
-            df["rand_ts_1_" + str(i)] = datetime.datetime.now()
-            df["rand_ts_2_" + str(i)] = datetime.datetime.now()
-            df["rand_int_1" + str(i)] = np.random.randint(0, 100000)
-            df["rand_int_2" + str(i)] = np.random.randint(0, 100000)
-            df["rand_float_1" + str(i)] = np.random.uniform(low=0.0, high=1.0)
-            df["rand_float_2" + str(i)] = np.random.uniform(low=0.0, high=1.0)
-            df["rand_string_1" + str(i)] = "".join(
-                random.choices(string.ascii_lowercase, k=5)
-            )
-            df["rand_string_2" + str(i)] = "".join(
-                random.choices(string.ascii_lowercase, k=5)
-            )
-            df["rand_string_3" + str(i)] = "".join(
-                random.choices(string.ascii_lowercase, k=5)
-            )
+            generator = np.random.default_rng(12)
+            df["rand_int_1" + str(i)] = generator.integers(0, 100000)
+            df["rand_int_2" + str(i)] = generator.integers(0, 100000)
+            df["rand_float_1" + str(i)] = generator.uniform(0.0, 1.0)
+            df["rand_float_2" + str(i)] = generator.uniform(0.0, 1.0)
             df["rand_string_4" + str(i)] = "".join(
                 random.choices(string.ascii_lowercase, k=5)
             )

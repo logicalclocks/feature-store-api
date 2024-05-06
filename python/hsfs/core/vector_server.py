@@ -137,13 +137,14 @@ class VectorServer:
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
             serving_keys=self.serving_keys,
+            connection_options=options,
         )
         self.online_store_sql_client.init_prepared_statements(
             entity,
             external,
             inference_helper_columns,
         )
-        self.online_store_sql_client.init_async_mysql_connection(options=options)
+        # self.online_store_sql_client.init_async_mysql_connection(options=options)
 
     def get_feature_vector(
         self,
@@ -157,7 +158,7 @@ class VectorServer:
             passed_features = {}
 
         # get result row
-        _logger.info("get_feature_vector Online SQL client")
+        _logger.debug("get_feature_vector Online SQL client")
         serving_vector = self.online_store_sql_client.get_single_feature_vector(entry)
         # Deserialize complex features
         _logger.debug("Deserializing complex features")

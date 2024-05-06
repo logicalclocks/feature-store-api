@@ -42,6 +42,7 @@ class OnlineStoreSqlClient:
         feature_store_id: id,
         skip_fg_ids: Optional[Set[int]],
         serving_keys: Optional[Set[ServingKey]] = None,
+        connection_options: Optional[Dict[str, Any]] = None,
     ):
         _logger.info("Initialising OnlineStoreSqlClient")
         self._feature_store_id = feature_store_id
@@ -64,6 +65,7 @@ class OnlineStoreSqlClient:
             feature_store_id
         )
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
+        self._connection_options = connection_options
 
     def fetch_prepared_statements(
         self,
@@ -211,13 +213,13 @@ class OnlineStoreSqlClient:
             "Please call `init_prepared_statement` method first."
         )
         _logger.debug("Acquiring or starting event loop for async engine.")
-        loop = asyncio.get_event_loop()
-        _logger.debug(f"Setting up aiomysql connection, with options : {options}")
-        loop.run_until_complete(
-            self._set_aiomysql_connection(
-                len(self._prepared_statements[self.SINGLE_VECTOR_KEY]), options=options
-            )
-        )
+        # loop = asyncio.get_event_loop()
+        # _logger.debug(f"Setting up aiomysql connection, with options : {options}")
+        # loop.run_until_complete(
+        #     self._set_aiomysql_connection(
+        #         len(self._prepared_statements[self.SINGLE_VECTOR_KEY]), options=options
+        #     )
+        # )
 
     def get_single_feature_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
@@ -507,26 +509,30 @@ class OnlineStoreSqlClient:
             OnlineStoreSqlClient.BATCH_VECTOR_KEY,
         ]
 
-    async def _set_aiomysql_connection(
-        self, default_min_size: int, options: Optional[Dict[str, Any]] = None
-    ) -> None:
+    async def _set_aiomysql_connection(self, default_min_size: int) -> None:
         _logger.debug(
             "Fetching storage connector for sql connection to Online Feature Store."
         )
         online_connector = self._storage_connector_api.get_online_connector(
             self._feature_store_id
         )
-        _logger.debug(
-            f"Creating async engine with options: {options} and default min size: {default_min_size}"
-        )
-        self._async_pool = await util.create_async_engine(
-            online_connector, self._external, default_min_size, options=options
-        )
 
-    async def _query_async_sql(self, stmt, bind_params):
+        if self._async_pool is None:
+            _logger.info("Setting up aiomysql connection pool")
+            _logger.debug(
+                f"Creating async engine with options: {self._connection_options} and default min size: {default_min_size}"
+            )
+            self._async_pool = await util.create_async_engine(
+                online_connector,
+                self._external,
+                default_min_size,
+                options=self._connection_options,
+            )
+
+    async def _query_async_sql(self, stmt, bind_params, pool):
         """Query prepared statement together with bind params using aiomysql connection pool"""
         # Get a connection from the pool
-        async with self._async_pool.acquire() as conn:
+        async with pool.acquire() as conn:
             # Execute the prepared statement
             _logger.debug(
                 f"Executing prepared statement: {stmt} with bind params: {bind_params}"
@@ -540,6 +546,30 @@ class OnlineStoreSqlClient:
 
         return resultset
 
+    # async def _query_async_sql(self, stmt, bind_params, pool):
+    #     """Query prepared statement together with bind params using aiomysql connection pool"""
+    #     # Get a connection from the pool
+    #     import aiomysql
+
+    #     def convert_to_wildcard(stmt,bind_params:Dict[str,Any]):
+    #         k = list(bind_params.keys())[0]
+    #         txt = stmt.text.replace(":"+k, "%s")
+    #         return txt
+
+    #     async with pool.acquire() as conn:
+    #         async with conn.cursor(aiomysql.DictCursor) as cur:
+    #             # Execute the prepared statement
+    #             _logger.debug(
+    #                 f"Executing prepared statement: {stmt} with bind params: {bind_params}"
+    #             )
+    #             q_str = convert_to_wildcard(stmt, bind_params)
+    #             await cur.execute(q_str, list(bind_params.values()) )
+    #             # Fetch the result
+    #             _logger.debug("Waiting for resultset.")
+    #             resultset = await cur.fetchall()
+
+    #             return resultset
+
     async def _execute_prep_statements(
         self,
         prepared_statements: Dict[int, str],
@@ -548,6 +578,9 @@ class OnlineStoreSqlClient:
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
 
+        await self._set_aiomysql_connection(
+            len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
+        )
         # validate if prepared_statements and entries have the same keys
         if prepared_statements.keys() != entries.keys():
             # iterate over prepared_statements and entries to find the missing key
@@ -558,7 +591,9 @@ class OnlineStoreSqlClient:
 
         tasks = [
             asyncio.ensure_future(
-                self._query_async_sql(prepared_statements[key], entries[key])
+                self._query_async_sql(
+                    prepared_statements[key], entries[key], self._async_pool
+                )
             )
             for key in prepared_statements
         ]
@@ -566,10 +601,17 @@ class OnlineStoreSqlClient:
         results = await asyncio.gather(*tasks)
         results_dict = {}
         # Create a dict of results with the prepared statement index as key
-        for i, key in enumerate(prepared_statements):
+        for i, key in enumerate(entries):
             results_dict[key] = results[i]
 
         return results_dict
+
+    async def close(self):
+        """ "Close the async mysql connection pool and wait for it to be closed."""
+        if self._async_pool is not None:
+            self._async_pool.close()
+            await self._async_pool.wait_closed()
+            self._async_pool = None
 
     @property
     def feature_store_id(self) -> int:

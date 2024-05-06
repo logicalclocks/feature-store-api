@@ -15,7 +15,6 @@
 #
 from __future__ import annotations
 
-import asyncio
 import itertools
 import json
 import re
@@ -204,7 +203,6 @@ async def create_async_engine(
         user=online_options["user"],
         password=online_options["password"],
         db=url.database,
-        loop=asyncio.get_running_loop(),
         minsize=(
             options.get("minsize", default_min_size) if options else default_min_size
         ),
@@ -214,6 +212,44 @@ async def create_async_engine(
         pool_recycle=(options.get("pool_recycle", -1) if options else -1),
     )
     return pool
+
+
+# async def create_async_engine(
+#     online_conn: Any,
+#     external: bool,
+#     default_min_size: int,
+#     loop: Any,
+#     options: Optional[Dict[str, Any]] = None,
+# ) -> Any:
+#     online_options = online_conn.spark_options()
+#     # create a aiomysql connection pool
+#     # read the keys user, password from online_conn as use them while creating the connection pool
+#     url = make_url(online_options["url"].replace("jdbc:", ""))
+#     if external:
+#         hostname = get_host_name()
+#     else:
+#         hostname = url.host
+
+#     #from sqlalchemy.ext.asyncio import create_async_engine
+#     import aiomysql
+#     import asyncio
+
+#     pool = await aiomysql.create_pool(
+#         host=hostname,
+#         port=3306,
+#         user=online_options["user"],
+#         password=online_options["password"],
+#         db=url.database,
+#         loop=loop,
+#         minsize=(
+#             options.get("minsize", default_min_size) if options else default_min_size
+#         ),
+#         maxsize=(
+#             options.get("maxsize", default_min_size) if options else default_min_size
+#         ),
+#         pool_recycle=(options.get("pool_recycle", -1) if options else -1),
+#     )
+#     return pool
 
 
 def check_timestamp_format_from_date_string(input_date: str) -> Tuple[str, str]:
