@@ -15,7 +15,7 @@
 #
 import pytest
 from hsfs.client.exceptions import VectorDatabaseException
-from hsfs.core.opensearch import OpenSearchClientSingleton
+from hsfs.core.opensearch import OpenSearchClientSingleton, OpensearchRequestOption
 
 
 class TestOpenSearchClientSingleton:
@@ -66,3 +66,26 @@ class TestOpenSearchClientSingleton:
         assert isinstance(exception, VectorDatabaseException)
         assert exception.reason == expected_reason
         assert exception.info == expected_info
+
+
+class TestOpensearchRequestOption:
+
+    def test_version_1_no_options(self):
+        OpensearchRequestOption.get_version = lambda: 1
+        options = OpensearchRequestOption.get_options({})
+        assert options == {"timeout": "30s"}
+
+    def test_version_1_with_options_timeout_int(self):
+        OpensearchRequestOption.get_version = lambda: 1
+        options = OpensearchRequestOption.get_options({"timeout": 45})
+        assert options == {"timeout": "45s"}
+
+    def test_version_2_no_options(self):
+        OpensearchRequestOption.get_version = lambda: 2
+        options = OpensearchRequestOption.get_options({})
+        assert options == {"timeout": 30}
+
+    def test_version_2_with_options(self):
+        OpensearchRequestOption.get_version = lambda: 2
+        options = OpensearchRequestOption.get_options({"timeout": 50})
+        assert options == {"timeout": 50}
