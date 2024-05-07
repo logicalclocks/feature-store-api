@@ -44,7 +44,7 @@ class OnlineStoreSqlClient:
         serving_keys: Optional[Set[ServingKey]] = None,
         external: bool = True,
     ):
-        _logger.info("Initialising OnlineStoreSqlClient")
+        _logger.info("Initialising Online Store Sql Client")
         self._feature_store_id = feature_store_id
         self._skip_fg_ids: Set[int] = skip_fg_ids or set()
         self._external = external
@@ -312,7 +312,7 @@ class OnlineStoreSqlClient:
         prepared_statement_objects: Dict[int, sql.text],
     ):
         """Execute prepared statements in parallel using aiomysql engine."""
-        _logger.info(
+        _logger.debug(
             f"Starting batch vector retrieval for {len(entries)} entries via aiomysql engine."
         )
         # create dict object that will have of order of the vector as key and values as

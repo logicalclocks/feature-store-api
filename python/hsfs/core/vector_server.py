@@ -21,8 +21,6 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import avro.io
 import avro.schema
-import hsfs
-import hsfs.client
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -32,6 +30,8 @@ from hsfs import (
     training_dataset,
     transformation_function_attached,
 )
+from hsfs import serving_key as sk_mod
+from hsfs import training_dataset_feature as tdf_mod
 from hsfs.core import (
     online_store_sql_client,
     transformation_function_engine,
@@ -45,11 +45,9 @@ class VectorServer:
     def __init__(
         self,
         feature_store_id: int,
-        features: Optional[
-            List[hsfs.training_dataset_feature.TrainingDatasetFeature]
-        ] = None,
+        features: Optional[List[tdf_mod.TrainingDatasetFeature]] = None,
         training_dataset_version: Optional[int] = None,
-        serving_keys: Optional[List[hsfs.serving_key.ServingKey]] = None,
+        serving_keys: Optional[List[sk_mod.ServingKey]] = None,
         skip_fg_ids: Optional[Set[int]] = None,
     ):
         self._training_dataset_version = training_dataset_version
@@ -109,7 +107,7 @@ class VectorServer:
 
     def init_batch_scoring(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
     ):
         self.init_transformation(entity)
 
@@ -160,7 +158,7 @@ class VectorServer:
         if td_embedding_feature_names is None:
             td_embedding_feature_names = set()
         # get result row
-        _logger.info("get_feature_vector Online SQL client")
+        _logger.debug("get_feature_vector Online SQL client")
         serving_vector = self.online_store_sql_client.get_single_feature_vector(entry)
         if vector_db_features:
             serving_vector.update(vector_db_features)
@@ -201,7 +199,7 @@ class VectorServer:
         if td_embedding_feature_names is None:
             td_embedding_feature_names = set()
         """Assembles serving vector from online feature store."""
-        _logger.info("get_feature_vectors through SQL client")
+        _logger.debug("get_feature_vectors through SQL client")
         batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
             entries
         )
@@ -306,7 +304,7 @@ class VectorServer:
         self, entry: Dict[str, Any], return_type: str
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
-        _logger.info("Retrieve inference helper values for single entry.")
+        _logger.debug("Retrieve inference helper values for single entry.")
         _logger.debug(f"entry: {entry} as return type: {return_type}")
         return self.handle_feature_vector_return_type(
             self.online_store_sql_client.get_inference_helper_vector(entry),
@@ -406,11 +404,11 @@ class VectorServer:
         return self._online_store_sql_client
 
     @property
-    def serving_keys(self) -> List[hsfs.serving_key.ServingKey]:
+    def serving_keys(self) -> List[sk_mod.ServingKey]:
         return self._serving_keys
 
     @serving_keys.setter
-    def serving_keys(self, serving_vector_keys: List[hsfs.serving_key.ServingKey]):
+    def serving_keys(self, serving_vector_keys: List[sk_mod.ServingKey]):
         self._serving_keys = serving_vector_keys
 
     @property
