@@ -19,6 +19,7 @@ import logging
 import re
 from functools import wraps
 
+import opensearchpy
 import urllib3
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
@@ -57,8 +58,18 @@ def _handle_opensearch_exception(func):
 
 class OpensearchRequestOption:
     DEFAULT_OPTION_MAP = {
+        "timeout": "30s",
+    }
+
+    DEFAULT_OPTION_MAP_V2_3 = {
+        # starting from opensearch client v2.3, timeout should be in int/float
+        # https://github.com/opensearch-project/opensearch-py/pull/394
         "timeout": 30,
     }
+
+    @classmethod
+    def get_version(cls):
+        return opensearchpy.__version__[0:2]
 
     @classmethod
     def get_options(cls, options: dict):
@@ -74,18 +85,27 @@ class OpensearchRequestOption:
             attribute values of the OpensearchRequestOption class, and values are obtained
             either from the provided options or default values if not available.
         """
+        default_option = (cls.DEFAULT_OPTION_MAP
+                          if cls.get_version() < (2, 3)
+                          else cls.DEFAULT_OPTION_MAP_V2_3)
         if options:
             # make lower case to avoid issues with cases
             options = {k.lower(): v for k, v in options.items()}
             new_options = {}
-            for option, value in cls.DEFAULT_OPTION_MAP.items():
+            for option, value in default_option.items():
                 if option in options:
-                    new_options[option] = options[option]
+                    if (option == "timeout"
+                        and cls.get_version() < (2, 3)
+                        and isinstance(options[option], int)
+                    ):
+                        new_options[option] = f"{options[option]}s"
+                    else:
+                        new_options[option] = options[option]
                 else:
                     new_options[option] = value
             return new_options
         else:
-            return cls.DEFAULT_OPTION_MAP
+            return default_option
 
 
 class OpenSearchClientSingleton:
