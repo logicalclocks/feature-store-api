@@ -3759,18 +3759,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        if online and self.embedding_index:
-            if self._vector_db_client is None:
-                self._vector_db_client = VectorDbClient(self.select_all())
-            results = self._vector_db_client.read(
-                self.id,
-                self.features,
-                keys={},
-                pk=self.embedding_index.col_prefix + self.primary_key[0],
-                index_name=self.embedding_index.index_name,
-                n=n,
-            )
-            return [[result[f.name] for f in self.features] for result in results]
         return self.select_all().show(n, online)
 
     def find_neighbors(
