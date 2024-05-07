@@ -342,9 +342,7 @@ class EmbeddingIndex:
             FeaturestoreException: If an error occurs during the count operation.
         """
         if self._vector_db_client is None:
-            self._vector_db_client = VectorDbClient(
-                self._feature_group.select_all()
-            )
+            self._vector_db_client = VectorDbClient(self._feature_group.select_all())
         return self._vector_db_client.count(self.feature_group, options=options)
 
     @classmethod

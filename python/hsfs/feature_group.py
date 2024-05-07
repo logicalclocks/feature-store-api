@@ -2344,7 +2344,6 @@ class FeatureGroup(FeatureGroupBase):
             self._vector_db_client = VectorDbClient(self.select_all())
         results = self._vector_db_client.find_neighbors(
             embedding,
-            self.features,
             feature=(self.__getattr__(col) if col else None),
             k=k,
             filter=filter,
@@ -3844,7 +3843,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self._vector_db_client = VectorDbClient(self.select_all())
         results = self._vector_db_client.find_neighbors(
             embedding,
-            self.features,
             feature=(self.__getattr__(col) if col else None),
             k=k,
             filter=filter,

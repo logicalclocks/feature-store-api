@@ -9,6 +9,10 @@
     src="https://img.shields.io/badge/docs-HSFS-orange"
     alt="Hopsworks Feature Store Documentation"
   /></a>
+  <a><img
+    src="https://img.shields.io/badge/python-3.8+-blue"
+    alt="python"
+  /></a>
   <a href="https://pypi.org/project/hsfs/"><img
     src="https://img.shields.io/pypi/v/hsfs?color=blue"
     alt="PyPiStatus"
@@ -21,9 +25,9 @@
     src="https://pepy.tech/badge/hsfs/month"
     alt="Downloads"
   /></a>
-  <a href="https://github.com/psf/black"><img
-    src="https://img.shields.io/badge/code%20style-black-000000.svg"
-    alt="CodeStyle"
+  <a href=https://github.com/astral-sh/ruff><img
+    src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"
+    alt="Ruff"
   /></a>
   <a><img
     src="https://img.shields.io/pypi/l/hsfs?color=green"
@@ -41,19 +45,44 @@ The library is environment independent and can be used in two modes:
 
 The library automatically configures itself based on the environment it is run.
 However, to connect from an external environment such as Databricks or AWS Sagemaker,
-additional connection information, such as host and port, is required. For more information about the setup from external environments, see the setup section.
+additional connection information, such as host and port, is required. For more information checkout the [Hopsworks documentation](https://docs.hopsworks.ai/latest/).
 
 ## Getting Started On Hopsworks
 
-Instantiate a connection and get the project feature store handler
+Get started easily by registering an account on [Hopsworks Serverless](https://app.hopsworks.ai/). Create your project and a [new Api key](https://docs.hopsworks.ai/latest/user_guides/projects/api_key/create_api_key/). In a new python environment with Python 3.8 or higher, install the [client library](https://docs.hopsworks.ai/latest/user_guides/client_installation/) using pip:
+
+```bash
+# Get all Hopsworks SDKs: Feature Store, Model Serving and Platform SDK
+pip install hopsworks
+# or minimum install with the Feature Store SDK
+pip install hsfs[python]
+# if using zsh don't forget the quotes
+pip install 'hsfs[python]'
+```
+
+You can start a notebook and instantiate a connection and get the project feature store handler.
+
+```python
+import hopsworks
+
+project = hopsworks.login() # you will be prompted for your api key
+fs = project.get_feature_store()
+```
+
+or using `hsfs` directly:
+
 ```python
 import hsfs
 
-connection = hsfs.connection()
+connection = hsfs.connection(
+    host="c.app.hopsworks.ai", #
+    project="your-project",
+    api_key_value="your-api-key",
+)
 fs = connection.get_feature_store()
 ```
 
-Create a new feature group
+Create a new feature group to start inserting feature values.
 ```python
 fg = fs.create_feature_group("rain",
                         version=1,
@@ -135,7 +164,7 @@ You can find more examples on how to use the library in our [hops-examples](http
 
 ## Usage
 
-Usage data is collected for improving quality of the library. It is turned on by default if the backend 
+Usage data is collected for improving quality of the library. It is turned on by default if the backend
 is "c.app.hopsworks.ai". To turn it off, use one of the following way:
 ```python
 # use environment variable
