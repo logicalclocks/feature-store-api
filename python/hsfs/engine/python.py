@@ -185,15 +185,7 @@ class Engine:
     ) -> bool:
         return arrow_flight_client.is_query_supported(query, read_options or {})
 
-    def _sql_offline(
-        self,
-        sql_query: str,
-        feature_store: feature_store.FeatureStore,
-        dataframe_type: str,
-        schema: Optional[List["feature.Feature"]] = None,
-        hive_config: Optional[Dict[str, Any]] = None,
-        arrow_flight_config: Optional[Dict[str, Any]] = None,
-    ) -> Union[pd.DataFrame, pl.DataFrame]:
+    def _validate_dataframe_type(self, dataframe_type: str):
         if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
             "pandas",
             "polars",
@@ -205,6 +197,17 @@ class Engine:
                 f'dataframe_type : {dataframe_type} not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
             )
 
+    def _sql_offline(
+        self,
+        sql_query: str,
+        feature_store: feature_store.FeatureStore,
+        dataframe_type: str,
+        schema: Optional[List["feature.Feature"]] = None,
+        hive_config: Optional[Dict[str, Any]] = None,
+        arrow_flight_config: Optional[Dict[str, Any]] = None,
+    ) -> Union[pd.DataFrame, pl.DataFrame]:
+
+        self._validate_dataframe_type(dataframe_type)
         if isinstance(sql_query, dict) and "query_string" in sql_query:
             result_df = util.run_with_loading_animation(
                 "Reading data from Hopsworks, using Hopsworks Feature Query Service",
@@ -246,16 +249,7 @@ class Engine:
         read_options: Optional[Dict[str, Any]],
         schema: Optional[List["feature.Feature"]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
-        if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
-            "pandas",
-            "polars",
-            "numpy",
-            "python",
-            "default",
-        ]:
-            raise FeatureStoreException(
-                f'dataframe_type : {dataframe_type} not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
-            )
+        self._validate_dataframe_type(dataframe_type)
 
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
@@ -518,16 +512,8 @@ class Engine:
 
     def read_vector_db(self, feature_group: "hsfs.feature_group.FeatureGroup", n: int =None, dataframe_type: str="default") -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
         dataframe_type = dataframe_type.lower()
-        if not isinstance(dataframe_type, str) or dataframe_type not in [
-            "pandas",
-            "polars",
-            "numpy",
-            "python",
-            "default",
-        ]:
-            raise FeatureStoreException(
-                f'dataframe_type : {dataframe_type} not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
-            )
+        self._validate_dataframe_type(dataframe_type)
+
         results = VectorDbClient.read_feature_group(feature_group, n)
         feature_names = [f.name for f in feature_group.features]
         if dataframe_type == "polars":
