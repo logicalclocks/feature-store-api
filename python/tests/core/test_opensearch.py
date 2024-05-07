@@ -71,21 +71,21 @@ class TestOpenSearchClientSingleton:
 class TestOpensearchRequestOption:
 
     def test_version_1_no_options(self):
-        OpensearchRequestOption.get_version = lambda: 1
+        OpensearchRequestOption.get_version = lambda: (1, 1)
         options = OpensearchRequestOption.get_options({})
         assert options == {"timeout": "30s"}
 
     def test_version_1_with_options_timeout_int(self):
-        OpensearchRequestOption.get_version = lambda: 1
+        OpensearchRequestOption.get_version = lambda: (1, 1)
         options = OpensearchRequestOption.get_options({"timeout": 45})
         assert options == {"timeout": "45s"}
 
-    def test_version_2_no_options(self):
-        OpensearchRequestOption.get_version = lambda: 2
+    def test_version_2_3_no_options(self):
+        OpensearchRequestOption.get_version = lambda: (2, 3)
         options = OpensearchRequestOption.get_options({})
         assert options == {"timeout": 30}
 
-    def test_version_2_with_options(self):
-        OpensearchRequestOption.get_version = lambda: 2
+    def test_version_2_3_with_options(self):
+        OpensearchRequestOption.get_version = lambda: (2, 3)
         options = OpensearchRequestOption.get_options({"timeout": 50})
         assert options == {"timeout": 50}

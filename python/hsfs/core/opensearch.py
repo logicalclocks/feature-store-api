@@ -57,17 +57,19 @@ def _handle_opensearch_exception(func):
 
 
 class OpensearchRequestOption:
-    DEFAULT_OPTION_MAP_V1 = {
-        "timeout": "30s",  # opensearch client v1 requires timeout as str
+    DEFAULT_OPTION_MAP = {
+        "timeout": "30s",
     }
 
-    DEFAULT_OPTION_MAP_V2 = {
+    DEFAULT_OPTION_MAP_V2_3 = {
+        # starting from opensearch client v2.3, timeout should be in int/float
+        # https://github.com/opensearch-project/opensearch-py/pull/394
         "timeout": 30,
     }
 
     @classmethod
     def get_version(cls):
-        return opensearchpy.__version__[0]
+        return opensearchpy.__version__[0:2]
 
     @classmethod
     def get_options(cls, options: dict):
@@ -83,9 +85,9 @@ class OpensearchRequestOption:
             attribute values of the OpensearchRequestOption class, and values are obtained
             either from the provided options or default values if not available.
         """
-        default_option = (cls.DEFAULT_OPTION_MAP_V1
-                          if cls.get_version() == 1
-                          else cls.DEFAULT_OPTION_MAP_V2)
+        default_option = (cls.DEFAULT_OPTION_MAP
+                          if cls.get_version() < (2, 3)
+                          else cls.DEFAULT_OPTION_MAP_V2_3)
         if options:
             # make lower case to avoid issues with cases
             options = {k.lower(): v for k, v in options.items()}
@@ -93,7 +95,7 @@ class OpensearchRequestOption:
             for option, value in default_option.items():
                 if option in options:
                     if (option == "timeout"
-                        and cls.get_version() == 1
+                        and cls.get_version() < (2, 3)
                         and isinstance(options[option], int)
                     ):
                         new_options[option] = f"{options[option]}s"
