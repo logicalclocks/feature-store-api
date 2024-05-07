@@ -18,8 +18,8 @@ from __future__ import annotations
 import logging
 import re
 from functools import wraps
-import opensearchpy
 
+import opensearchpy
 import urllib3
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
