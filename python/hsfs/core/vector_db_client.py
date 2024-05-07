@@ -369,7 +369,7 @@ class VectorDbClient:
             vector_db_client = VectorDbClient(feature_group.select_all())
             results = vector_db_client.read(
                 feature_group.id,
-                {},
+                feature_group.features,
                 pk=feature_group.embedding_index.col_prefix + feature_group.primary_key[0],
                 index_name=feature_group.embedding_index.index_name,
                 n=n
