@@ -317,17 +317,17 @@ class VectorServer:
 
     def get_inference_helpers(
         self,
-        feature_view_object: "feature_view.FeatureView",
+        feature_view_object: feature_view.FeatureView,
         entries: List[Dict[str, Any]],
         return_type: str,
     ) -> Union[pd.DataFrame, pl.DataFrame, List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
-        batch_results = self.online_store_sql_client.get_batch_inference_helper_vectors(
-            entries
+        batch_results, serving_keys = (
+            self.online_store_sql_client.get_batch_inference_helper_vectors(entries)
         )
 
         # drop serving and primary key names from the result dict
-        drop_list = self.serving_keys + list(feature_view_object.primary_keys)
+        drop_list = serving_keys + list(feature_view_object.primary_keys)
 
         _ = list(
             map(
