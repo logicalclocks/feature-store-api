@@ -137,10 +137,10 @@ class VectorServer:
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
             serving_keys=self.serving_keys,
+            external=external,
         )
         self.online_store_sql_client.init_prepared_statements(
             entity,
-            external,
             inference_helper_columns,
         )
         self.online_store_sql_client.init_async_mysql_connection(options=options)
@@ -391,9 +391,9 @@ class VectorServer:
         return feature_values
 
     def _apply_transformation(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
-        for feature_name in self._transformation_functions:
+        for feature_name in self.transformation_functions:
             if feature_name in row_dict:
-                transformation_fn = self._transformation_functions[
+                transformation_fn = self.transformation_functions[
                     feature_name
                 ].transformation_fn
                 row_dict[feature_name] = transformation_fn(row_dict[feature_name])
