@@ -669,7 +669,9 @@ class OnlineStoreSqlClient:
                 "Build serving keys from prepared statements ignoring prefix to ensure compatibility with older version."
             )
             self._serving_keys = util.build_serving_keys_from_prepared_statements(
-                self.prepared_statements[self.SINGLE_VECTOR_KEY],
+                self.prepared_statements[
+                    self.BATCH_VECTOR_KEY
+                ],  # use batch to avoid issue with label_fg
                 ignore_prefix=True,  # if serving_keys are not set it is because the feature view is anterior to 3.3, this ensures compatibility
             )
         return self._serving_keys
