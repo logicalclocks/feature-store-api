@@ -41,8 +41,8 @@ class OnlineStoreSqlClient:
         self,
         feature_store_id: id,
         skip_fg_ids: Optional[Set[int]],
+        external: bool,
         serving_keys: Optional[Set[ServingKey]] = None,
-        external: bool = True,
     ):
         _logger.info("Initialising Online Store Sql Client")
         self._feature_store_id = feature_store_id
