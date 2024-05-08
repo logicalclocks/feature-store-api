@@ -529,23 +529,24 @@ class OnlineStoreSqlClient:
                 options=self._connection_options,
             )
 
-    async def _query_async_sql(self, stmt, bind_params, pool):
+    async def _query_async_sql(self, stmt, bind_params, pool, lock):
         """Query prepared statement together with bind params using aiomysql connection pool"""
         # Get a connection from the pool
+        async with lock:
+            print("......... lock acquired! ........")
+            async with pool.acquire() as conn:
+                # Execute the prepared statement
+                _logger.debug(
+                    f"Executing prepared statement: {stmt} with bind params: {bind_params}"
+                )
+                cursor = await conn.execute(stmt, bind_params)
+                # Fetch the result
+                _logger.debug("Waiting for resultset.")
+                resultset = await cursor.fetchall()
+                _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
+                await cursor.close()
 
-        async with pool.acquire() as conn:
-            # Execute the prepared statement
-            _logger.debug(
-                f"Executing prepared statement: {stmt} with bind params: {bind_params}"
-            )
-            cursor = await conn.execute(stmt, bind_params)
-            # Fetch the result
-            _logger.debug("Waiting for resultset.")
-            resultset = await cursor.fetchall()
-            _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
-            await cursor.close()
-
-        return resultset
+            return resultset
 
     # async def _query_async_sql(self, stmt, bind_params, pool):
     #     """Query prepared statement together with bind params using aiomysql connection pool"""
@@ -579,35 +580,34 @@ class OnlineStoreSqlClient:
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
         lock = asyncio.Lock()  # ... later
-        async with lock:
-            print("......... with lock acquired ........")
-            await self._set_aiomysql_connection(
-                len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
-            )
-            # validate if prepared_statements and entries have the same keys
-            if prepared_statements.keys() != entries.keys():
-                # iterate over prepared_statements and entries to find the missing key
-                # remove missing keys from prepared_statements
-                for key in list(prepared_statements.keys()):
-                    if key not in entries:
-                        prepared_statements.pop(key)
 
-            tasks = [
-                asyncio.ensure_future(
-                    self._query_async_sql(
-                        prepared_statements[key], entries[key], self._async_pool
-                    )
+        await self._set_aiomysql_connection(
+            len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
+        )
+        # validate if prepared_statements and entries have the same keys
+        if prepared_statements.keys() != entries.keys():
+            # iterate over prepared_statements and entries to find the missing key
+            # remove missing keys from prepared_statements
+            for key in list(prepared_statements.keys()):
+                if key not in entries:
+                    prepared_statements.pop(key)
+
+        tasks = [
+            asyncio.ensure_future(
+                self._query_async_sql(
+                    prepared_statements[key], entries[key], self._async_pool, lock
                 )
-                for key in prepared_statements
-            ]
-            # Run the queries in parallel using asyncio.gather
-            results = await asyncio.gather(*tasks)
-            results_dict = {}
-            # Create a dict of results with the prepared statement index as key
-            for i, key in enumerate(entries):
-                results_dict[key] = results[i]
+            )
+            for key in prepared_statements
+        ]
+        # Run the queries in parallel using asyncio.gather
+        results = await asyncio.gather(*tasks)
+        results_dict = {}
+        # Create a dict of results with the prepared statement index as key
+        for i, key in enumerate(entries):
+            results_dict[key] = results[i]
 
-            return results_dict
+        return results_dict
 
     async def close(self):
         """ "Close the async mysql connection pool and wait for it to be closed."""
