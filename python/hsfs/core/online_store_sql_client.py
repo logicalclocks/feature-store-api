@@ -532,19 +532,22 @@ class OnlineStoreSqlClient:
     async def _query_async_sql(self, stmt, bind_params, pool):
         """Query prepared statement together with bind params using aiomysql connection pool"""
         # Get a connection from the pool
-        async with pool.acquire() as conn:
-            # Execute the prepared statement
-            _logger.debug(
-                f"Executing prepared statement: {stmt} with bind params: {bind_params}"
-            )
-            cursor = await conn.execute(stmt, bind_params)
-            # Fetch the result
-            _logger.debug("Waiting for resultset.")
-            resultset = await cursor.fetchall()
-            _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
-            await cursor.close()
+        lock = asyncio.Lock()  # ... later
+        async with lock:
+            print("with lock acquired ........")
+            async with pool.acquire() as conn:
+                # Execute the prepared statement
+                _logger.debug(
+                    f"Executing prepared statement: {stmt} with bind params: {bind_params}"
+                )
+                cursor = await conn.execute(stmt, bind_params)
+                # Fetch the result
+                _logger.debug("Waiting for resultset.")
+                resultset = await cursor.fetchall()
+                _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
+                await cursor.close()
 
-        return resultset
+            return resultset
 
     # async def _query_async_sql(self, stmt, bind_params, pool):
     #     """Query prepared statement together with bind params using aiomysql connection pool"""
