@@ -691,7 +691,6 @@ class FeatureStore:
             TypeVar("short"),  # noqa: F821
             int,
             TypeVar("int"),  # noqa: F821
-            numpy.int,
             numpy.int32,
             numpy.int64,
             TypeVar("int64"),  # noqa: F821
@@ -699,7 +698,6 @@ class FeatureStore:
             TypeVar("bigint"),  # noqa: F821
             float,
             TypeVar("float"),  # noqa: F821
-            numpy.float,
             numpy.float64,
             TypeVar("float64"),  # noqa: F821
             TypeVar("double"),  # noqa: F821
@@ -709,7 +707,6 @@ class FeatureStore:
             bool,
             TypeVar("boolean"),  # noqa: F821
             TypeVar("bool"),  # noqa: F821
-            numpy.bool,
         ],
         version: Optional[int] = None,
     ):
