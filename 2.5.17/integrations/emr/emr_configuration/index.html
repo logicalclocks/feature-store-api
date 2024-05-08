@@ -88,6 +88,22 @@
       
     </div>
     
+      <div data-md-component="outdated" hidden>
+        <aside class="md-banner md-banner--warning">
+          
+            <div class="md-banner__inner md-grid md-typeset">
+              
+You're not viewing the latest version of the documentation.
+<a href="https://docs.hopsworks.ai/latest">
+    <strong>Click here to go to latest.</strong>
+</a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          
+        </aside>
+      </div>
+    
     
       
 
@@ -1740,43 +1756,43 @@ Click on <em>Review</em>, give the policy a name und click on <em>Create policy<
 <h3 id="add-the-hopsworks-feature-store-configuration-to-your-emr-cluster">Add the Hopsworks Feature Store configuration to your EMR cluster<a class="headerlink" href="#add-the-hopsworks-feature-store-configuration-to-your-emr-cluster" title="Permanent link">#</a></h3>
 <p>In order for EMR to be able to talk to the Feature Store, you need to update the Hadoop and Spark configurations.
 Copy the configuration below and replace ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal with the private DNS name of your Hopsworks master node.</p>
-<div class="highlight"><pre><span></span><code><span class="p">[</span><span class="w"></span>
-<span class="w">  </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hadoop-env&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;hadoop-env&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 
-<span class="w">    </span><span class="p">},</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
-<span class="w">      </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;export&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">        </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">          </span><span class="nt">&quot;HADOOP_CLASSPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;$HADOOP_CLASSPATH:/usr/lib/hopsworks/client/*&quot;</span><span class="w"></span>
-<span class="w">        </span><span class="p">},</span><span class="w"></span>
-<span class="w">        </span><span class="nt">&quot;Configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"></span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;Configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;export&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;HADOOP_CLASSPATH&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;$HADOOP_CLASSPATH:/usr/lib/hopsworks/client/*&quot;</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nt">&quot;Configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 
-<span class="w">        </span><span class="p">]</span><span class="w"></span>
-<span class="w">      </span><span class="p">}</span><span class="w"></span>
-<span class="w">    </span><span class="p">]</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="w">  </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;spark-defaults&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ipc.server.ssl.enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.fs.hopsfs.impl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hopsfs.client.HopsFileSystem&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.client.rpc.ssl.enabled.protocol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TLSv1.2&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.hostname.verifier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALLOW_ALL&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.rpc.socket.factory.class.default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.keystores.passwd.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/material_passwd&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.keystore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/keyStore.jks&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.trustore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/trustStore.jks&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.serializer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;org.apache.spark.serializer.KryoSerializer&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.executor.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.driver.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.sql.hive.metastore.jars&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/apache-hive-bin/lib/*&quot;</span><span class="p">,</span><span class="w"></span>
-<span class="w">      </span><span class="nt">&quot;spark.hadoop.hive.metastore.uris&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083&quot;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="w">  </span><span class="p">},</span><span class="w"></span>
-<span class="p">]</span><span class="w"></span>
+<span class="w">        </span><span class="p">]</span>
+<span class="w">      </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;Classification&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;spark-defaults&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;Properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ipc.server.ssl.enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.fs.hopsfs.impl&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hopsfs.client.HopsFileSystem&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.client.rpc.ssl.enabled.protocol&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TLSv1.2&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.hostname.verifier&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ALLOW_ALL&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.rpc.socket.factory.class.default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.keystores.passwd.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/material_passwd&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.keystore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/keyStore.jks&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hops.ssl.trustore.name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/trustStore.jks&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.serializer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;org.apache.spark.serializer.KryoSerializer&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.executor.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.driver.extraClassPath&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/client/*&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.sql.hive.metastore.jars&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/usr/lib/hopsworks/apache-hive-bin/lib/*&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;spark.hadoop.hive.metastore.uris&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;thrift://ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.internal:9083&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">]</span>
 </code></pre></div>
 <p>When you create your EMR cluster, add the configuration:</p>
 <div class="admonition note">
@@ -1797,44 +1813,44 @@ Copy the configuration below and replace ip-XXX-XX-XX-XXX.XX-XXXX-X.compute.inte
 bootstrap action shown below. Copy the content into a file and name the file <code>hopsworks.sh</code>. Copy that file into any S3 bucket that
 is readable by your EMR clusters and take note of the S3 URI of that file e.g., <code>s3://my-emr-init/hopsworks.sh</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
-<span class="nb">set</span> -e
+<span class="nb">set</span><span class="w"> </span>-e
 
-<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$#</span><span class="s2">&quot;</span> -ne <span class="m">3</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
-    <span class="nb">echo</span> <span class="s2">&quot;Usage hopsworks.sh HOPSWORKS_API_KEY_SECRET, HOPSWORKS_HOST, PROJECT_NAME&quot;</span>
-    <span class="nb">exit</span> <span class="m">1</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$#</span><span class="s2">&quot;</span><span class="w"> </span>-ne<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Usage hopsworks.sh HOPSWORKS_API_KEY_SECRET, HOPSWORKS_HOST, PROJECT_NAME&quot;</span>
+<span class="w">    </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span>
 <span class="k">fi</span>
 
 <span class="nv">SECRET_NAME</span><span class="o">=</span><span class="nv">$1</span>
 <span class="nv">HOST</span><span class="o">=</span><span class="nv">$2</span>
 <span class="nv">PROJECT</span><span class="o">=</span><span class="nv">$3</span>
 
-<span class="nv">API_KEY</span><span class="o">=</span><span class="k">$(</span>aws secretsmanager get-secret-value --secret-id <span class="nv">$SECRET_NAME</span> <span class="p">|</span> jq -r .SecretString <span class="p">|</span> jq -r <span class="s1">&#39;.[&quot;api-key&quot;]&#39;</span><span class="k">)</span>
+<span class="nv">API_KEY</span><span class="o">=</span><span class="k">$(</span>aws<span class="w"> </span>secretsmanager<span class="w"> </span>get-secret-value<span class="w"> </span>--secret-id<span class="w"> </span><span class="nv">$SECRET_NAME</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span>.SecretString<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.[&quot;api-key&quot;]&#39;</span><span class="k">)</span>
 
-<span class="nv">PROJECT_ID</span><span class="o">=</span><span class="k">$(</span>curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/getProjectInfo/<span class="nv">$PROJECT</span> <span class="p">|</span> jq -r .projectId<span class="k">)</span>
+<span class="nv">PROJECT_ID</span><span class="o">=</span><span class="k">$(</span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>https://<span class="nv">$HOST</span>/hopsworks-api/api/project/getProjectInfo/<span class="nv">$PROJECT</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span>.projectId<span class="k">)</span>
 
-sudo yum -y install python3-devel.x86_64 <span class="o">||</span> <span class="nb">true</span>
+sudo<span class="w"> </span>yum<span class="w"> </span>-y<span class="w"> </span>install<span class="w"> </span>python3-devel.x86_64<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
 
-sudo mkdir /usr/lib/hopsworks
-sudo chown hadoop:hadoop /usr/lib/hopsworks
-<span class="nb">cd</span> /usr/lib/hopsworks
+sudo<span class="w"> </span>mkdir<span class="w"> </span>/usr/lib/hopsworks
+sudo<span class="w"> </span>chown<span class="w"> </span>hadoop:hadoop<span class="w"> </span>/usr/lib/hopsworks
+<span class="nb">cd</span><span class="w"> </span>/usr/lib/hopsworks
 
-curl -o client.tar.gz -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/client
+curl<span class="w"> </span>-o<span class="w"> </span>client.tar.gz<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/client
 
-tar -xvf client.tar.gz
-tar -xzf client/apache-hive-*-bin.tar.gz <span class="o">||</span> <span class="nb">true</span>
-mv apache-hive-*-bin apache-hive-bin
-rm client.tar.gz
-rm client/apache-hive-*-bin.tar.gz
+tar<span class="w"> </span>-xvf<span class="w"> </span>client.tar.gz
+tar<span class="w"> </span>-xzf<span class="w"> </span>client/apache-hive-*-bin.tar.gz<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">true</span>
+mv<span class="w"> </span>apache-hive-*-bin<span class="w"> </span>apache-hive-bin
+rm<span class="w"> </span>client.tar.gz
+rm<span class="w"> </span>client/apache-hive-*-bin.tar.gz
 
-curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials <span class="p">|</span> jq -r .kStore <span class="p">|</span> base64 -d &gt; keyStore.jks
+curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span>.kStore<span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d<span class="w"> </span>&gt;<span class="w"> </span>keyStore.jks
 
-curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials <span class="p">|</span> jq -r .tStore <span class="p">|</span> base64 -d &gt; trustStore.jks
+curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span>.tStore<span class="w"> </span><span class="p">|</span><span class="w"> </span>base64<span class="w"> </span>-d<span class="w"> </span>&gt;<span class="w"> </span>trustStore.jks
 
-<span class="nb">echo</span> -n <span class="k">$(</span>curl -H <span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span> https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials <span class="p">|</span> jq -r .password<span class="k">)</span> &gt; material_passwd
+<span class="nb">echo</span><span class="w"> </span>-n<span class="w"> </span><span class="k">$(</span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: ApiKey </span><span class="si">${</span><span class="nv">API_KEY</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>https://<span class="nv">$HOST</span>/hopsworks-api/api/project/<span class="nv">$PROJECT_ID</span>/credentials<span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span>-r<span class="w"> </span>.password<span class="k">)</span><span class="w"> </span>&gt;<span class="w"> </span>material_passwd
 
-chmod -R o-rwx /usr/lib/hopsworks
+chmod<span class="w"> </span>-R<span class="w"> </span>o-rwx<span class="w"> </span>/usr/lib/hopsworks
 
-sudo pip3 install --upgrade hsfs~<span class="o">=</span>X.X.0
+sudo<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>hsfs~<span class="o">=</span>X.X.0
 </code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1961,7 +1977,7 @@ the public DNS name of your Hopsworks cluster, such as <code>ad005770-33b5-11eb-
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"default": "latest"}}</script>
     
     
       <script src="../../../assets/javascripts/bundle.c44cc438.min.js"></script>

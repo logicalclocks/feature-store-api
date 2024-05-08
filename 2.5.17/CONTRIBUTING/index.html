@@ -88,6 +88,22 @@
       
     </div>
     
+      <div data-md-component="outdated" hidden>
+        <aside class="md-banner md-banner--warning">
+          
+            <div class="md-banner__inner md-grid md-typeset">
+              
+You're not viewing the latest version of the documentation.
+<a href="https://docs.hopsworks.ai/latest">
+    <strong>Click here to go to latest.</strong>
+</a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          
+        </aside>
+      </div>
+    
     
       
 
@@ -1687,15 +1703,15 @@
 </li>
 <li>
 <p>Install repository in editable mode with development dependencies:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span> python
-pip install -e <span class="s2">&quot;.[hive,dev]&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>python
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[hive,dev]&quot;</span>
 </code></pre></div>
 </li>
 <li>
 <p>Install <a href="https://pre-commit.com/">pre-commit</a> and then activate its hooks. pre-commit is a framework for managing and maintaining multi-language pre-commit hooks. The Feature Store uses pre-commit to ensure code-style and code formatting through <a href="https://github.com/psf/black">black</a> and <a href="https://gitlab.com/pycqa/flake8">flake8</a>. Run the following commands from the <code>python</code> directory:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span> python
-pip install --user pre-commit
-pre-commit install
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>python
+pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>pre-commit
+pre-commit<span class="w"> </span>install
 </code></pre></div>
 </li>
 </ul>
@@ -1703,9 +1719,9 @@ pre-commit install
 <ul>
 <li>
 <p>To run formatting and code-style separately, you can configure your IDE, such as VSCode, to use black and flake8, or run them via the command line:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span> python
-flake8 hsfs
-black hsfs
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>python
+flake8<span class="w"> </span>hsfs
+black<span class="w"> </span>hsfs
 </code></pre></div>
 </li>
 </ul>
@@ -1748,18 +1764,18 @@ black hsfs
 <ol>
 <li>
 <p>Currently we are using our own version of <code>keras-autodoc</code></p>
-<div class="highlight"><pre><span></span><code>pip install git+https://github.com/moritzmeister/keras-autodoc@split-tags-properties
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/moritzmeister/keras-autodoc@split-tags-properties
 </code></pre></div>
 </li>
 <li>
 <p>Install HSFS with <code>docs</code> extras:</p>
-<div class="highlight"><pre><span></span><code>pip install -e .<span class="o">[</span>hive,dev,docs<span class="o">]</span>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>hive,dev,docs<span class="o">]</span>
 </code></pre></div>
 </li>
 <li>
 <p>To build the docs, first run the auto doc script:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span> ..
-python auto_doc.py
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>..
+python<span class="w"> </span>auto_doc.py
 </code></pre></div>
 </li>
 </ol>
@@ -1772,9 +1788,9 @@ The reason for that is that the docs are deployed with versioning on docs.hopswo
 therefore another level is added to all paths, e.g. <code>docs.hopsworks.ai/[version-or-alias]</code>.
 Using relative links should not be affected by this, however, building the docs with version
 (Option 2) is recommended.</p>
-<div class="highlight"><pre><span></span><code>mkdocs build
+<div class="highlight"><pre><span></span><code>mkdocs<span class="w"> </span>build
 <span class="c1"># or</span>
-mkdocs serve
+mkdocs<span class="w"> </span>serve
 </code></pre></div>
 </li>
 </ol>
@@ -1793,40 +1809,40 @@ mkdocs serve
 <code>mike</code> maintains the current state of docs.hopsworks.ai, or just build documentation for the branch you are updating:</p>
 <p>Building <em>one</em> branch:</p>
 <p>Checkout your dev branch with modified docs:
-<div class="highlight"><pre><span></span><code>git checkout <span class="o">[</span>dev-branch<span class="o">]</span>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span><span class="o">[</span>dev-branch<span class="o">]</span>
 </code></pre></div></p>
 <p>Generate API docs if necessary:
-<div class="highlight"><pre><span></span><code>python auto_doc.py
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>auto_doc.py
 </code></pre></div></p>
 <p>Build docs with a version and alias
-<div class="highlight"><pre><span></span><code>mike deploy <span class="o">[</span>version<span class="o">]</span> <span class="o">[</span>alias<span class="o">]</span> --update-alias
+<div class="highlight"><pre><span></span><code>mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>version<span class="o">]</span><span class="w"> </span><span class="o">[</span>alias<span class="o">]</span><span class="w"> </span>--update-alias
 
 <span class="c1"># for example, if you are updating documentation to be merged to master,</span>
 <span class="c1"># which will become the new SNAPSHOT version:</span>
-mike deploy <span class="m">2</span>.2.0-SNAPSHOT dev --update-alias
+mike<span class="w"> </span>deploy<span class="w"> </span><span class="m">2</span>.2.0-SNAPSHOT<span class="w"> </span>dev<span class="w"> </span>--update-alias
 
 <span class="c1"># if you are updating docs of the latest stable release branch</span>
-mike deploy <span class="o">[</span>version<span class="o">]</span> latest --update-alias
+mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>version<span class="o">]</span><span class="w"> </span>latest<span class="w"> </span>--update-alias
 
 <span class="c1"># if you are updating docs of a previous stable release branch</span>
-mike deploy <span class="o">[</span>version<span class="o">]</span>
+mike<span class="w"> </span>deploy<span class="w"> </span><span class="o">[</span>version<span class="o">]</span>
 </code></pre></div></p>
 <p>If no gh-pages branch existed in your local repository, this will have created it.</p>
 <p><strong>Important</strong>: If no previous docs were built, you will have to choose a version as default to be loaded as index, as follows</p>
-<div class="highlight"><pre><span></span><code>mike set-default <span class="o">[</span>version-or-alias<span class="o">]</span>
+<div class="highlight"><pre><span></span><code>mike<span class="w"> </span>set-default<span class="w"> </span><span class="o">[</span>version-or-alias<span class="o">]</span>
 </code></pre></div>
 <p>You can now checkout the gh-pages branch and serve:
-<div class="highlight"><pre><span></span><code>git checkout gh-pages
-mike serve
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>gh-pages
+mike<span class="w"> </span>serve
 </code></pre></div></p>
 <p>You can also list all available versions/aliases:
-<div class="highlight"><pre><span></span><code>mike list
+<div class="highlight"><pre><span></span><code>mike<span class="w"> </span>list
 </code></pre></div></p>
 <p>Delete and reset your local gh-pages branch:
-<div class="highlight"><pre><span></span><code>mike delete --all
+<div class="highlight"><pre><span></span><code>mike<span class="w"> </span>delete<span class="w"> </span>--all
 
 <span class="c1"># or delete single version</span>
-mike delete <span class="o">[</span>version-or-alias<span class="o">]</span>
+mike<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>version-or-alias<span class="o">]</span>
 </code></pre></div></p>
 </li>
 </ol>
@@ -1945,7 +1961,7 @@ the <a href="https://squidfunk.github.io/mkdocs-material/reference/abbreviations
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"default": "latest"}}</script>
     
     
       <script src="../assets/javascripts/bundle.c44cc438.min.js"></script>

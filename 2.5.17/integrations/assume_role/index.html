@@ -88,6 +88,22 @@
       
     </div>
     
+      <div data-md-component="outdated" hidden>
+        <aside class="md-banner md-banner--warning">
+          
+            <div class="md-banner__inner md-grid md-typeset">
+              
+You're not viewing the latest version of the documentation.
+<a href="https://docs.hopsworks.ai/latest">
+    <strong>Click here to go to latest.</strong>
+</a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          
+        </aside>
+      </div>
+    
     
       
 
@@ -1524,8 +1540,8 @@ called the same method she will assume the role with id 1.</p>
 </code></pre></div>
 Scala
 <div class="highlight"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="nn">io</span><span class="p">.</span><span class="nn">hops</span><span class="p">.</span><span class="nn">util</span><span class="p">.</span><span class="nc">CredentialsProvider</span>
-<span class="kd">val</span><span class="w"> </span><span class="n">creds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">CredentialsProvider</span><span class="p">.</span><span class="n">assumeRole</span><span class="p">(</span><span class="nc">CredentialsProvider</span><span class="p">.</span><span class="n">getRole</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="w"></span>
-<span class="n">spark</span><span class="p">.</span><span class="n">read</span><span class="p">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&quot;s3a://resource/test.csv&quot;</span><span class="p">).</span><span class="n">show</span><span class="p">()</span><span class="w"></span>
+<span class="kd">val</span><span class="w"> </span><span class="n">creds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">CredentialsProvider</span><span class="p">.</span><span class="n">assumeRole</span><span class="p">(</span><span class="nc">CredentialsProvider</span><span class="p">.</span><span class="n">getRole</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">spark</span><span class="p">.</span><span class="n">read</span><span class="p">.</span><span class="n">csv</span><span class="p">(</span><span class="s">&quot;s3a://resource/test.csv&quot;</span><span class="p">).</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div></p>
 </div>
 <p>The assume role method sets spark hadoop configurations that will allow spark to read s3 buckets. The code
@@ -1656,7 +1672,7 @@ The code below shows how to read training and validation datasets from s3 bucket
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky"], "search": "../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"default": "latest"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.c44cc438.min.js"></script>
