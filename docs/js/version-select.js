@@ -1,8 +1,11 @@
+
+
 window.addEventListener("DOMContentLoaded", function() {
   // This is a bit hacky. Figure out the base URL from a known CSS file the
   // template refers to...
   var ex = new RegExp("/?css/version-select.css$");
   var sheet = document.querySelector('link[href$="version-select.css"]');
+
 
   var ABS_BASE_URL = sheet.href.replace(ex, "");
   var CURRENT_VERSION = ABS_BASE_URL.split("/").pop();
@@ -23,6 +26,10 @@ window.addEventListener("DOMContentLoaded", function() {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", ABS_BASE_URL + "/../versions.json");
   xhr.onload = function() {
+    // Hide the version selector in the header
+    let version_selector = document.querySelector("div.md-version");
+    version_selector.setAttribute("hidden", "");
+
     var versions = JSON.parse(this.responseText);
 
     var realVersion = versions.find(function(i) {
@@ -32,6 +39,7 @@ window.addEventListener("DOMContentLoaded", function() {
     var latestVersion = versions.find(function(i) {
       return i.aliases.includes("latest");
     }).version;
+
     let outdated_banner = document.querySelector('div[data-md-component="outdated"]');
     if (realVersion !== latestVersion) {
       outdated_banner.removeAttribute("hidden");
@@ -55,6 +63,7 @@ window.addEventListener("DOMContentLoaded", function() {
     container.id = "version-selector";
     // container.className = "md-nav__item";
     container.appendChild(select);
+
 
     var sidebar = document.querySelector(".md-nav--primary > .md-nav__list");
     sidebar.parentNode.insertBefore(container, sidebar.nextSibling);
