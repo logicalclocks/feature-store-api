@@ -39,7 +39,6 @@ window.addEventListener("DOMContentLoaded", function() {
     var latestVersion = versions.find(function(i) {
       return i.aliases.includes("latest");
     }).version;
-
     let outdated_banner = document.querySelector('div[data-md-component="outdated"]');
     if (realVersion !== latestVersion) {
       outdated_banner.removeAttribute("hidden");
