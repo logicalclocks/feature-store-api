@@ -529,6 +529,8 @@ class OnlineStoreSqlClient:
                 options=self._connection_options,
             )
 
+        return self._async_pool
+
     async def _query_async_sql(self, stmt, bind_params, pool, lock):
         """Query prepared statement together with bind params using aiomysql connection pool"""
         # Get a connection from the pool
@@ -581,7 +583,7 @@ class OnlineStoreSqlClient:
         and gather all tasks results for a given list of entries."""
         lock = asyncio.Lock()  # ... later
 
-        await self._set_aiomysql_connection(
+        pool = await self._set_aiomysql_connection(
             len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
         )
         # validate if prepared_statements and entries have the same keys
@@ -595,7 +597,7 @@ class OnlineStoreSqlClient:
         tasks = [
             asyncio.ensure_future(
                 self._query_async_sql(
-                    prepared_statements[key], entries[key], self._async_pool, lock
+                    prepared_statements[key], entries[key], pool, lock
                 )
             )
             for key in prepared_statements
