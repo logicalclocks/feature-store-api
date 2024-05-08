@@ -99,6 +99,7 @@ extra:
     property: G-64FEEXPSDN
   generator: false
   version:
+    provider: mike
     default: latest
   social:
     - icon: fontawesome/brands/twitter
