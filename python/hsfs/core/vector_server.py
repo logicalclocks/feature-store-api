@@ -22,6 +22,7 @@ from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Set, Union
 
 import avro.io
+import avro.schema
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -189,10 +190,10 @@ class VectorServer:
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
             serving_keys=self.serving_keys,
+            external=external,
         )
         self.online_store_sql_client.init_prepared_statements(
             entity,
-            external,
             inference_helper_columns,
         )
         self.online_store_sql_client.init_async_mysql_connection(options=options)
@@ -370,7 +371,9 @@ class VectorServer:
 
     def handle_feature_vector_return_type(
         self,
-        feature_vectorz: Union[List[Any], List[List[Any]]],
+        feature_vectorz: Union[
+            List[Any], List[List[Any]], Dict[str, Any], List[Dict[str, Any]]
+        ],
         batch: bool,
         inference_helper: bool,
         return_type: str,
@@ -382,26 +385,32 @@ class VectorServer:
         Dict[str, Any],
         List[Dict[str, Any]],
     ]:
+        # Only get-feature-vector and get-feature-vectors can return list or numpy
         if return_type.lower() == "list" and not inference_helper:
             _logger.debug("Returning feature vector as value list")
             return feature_vectorz
-        elif return_type.lower() == "dict" and inference_helper:
-            _logger.debug("Returning feature vector as dictionary")
-            return {
-                self._feature_vector_col_name[i]: feature_vectorz[i]
-                for i in range(len(self._feature_vector_col_name))
-            }
-        elif return_type.lower() == "numpy":
+        elif return_type.lower() == "numpy" and not inference_helper:
             _logger.debug("Returning feature vector as numpy array")
             return np.array(feature_vectorz)
+        # Only inference helper can return dict
+        elif return_type.lower() == "dict" and inference_helper:
+            _logger.debug("Returning feature vector as dictionary")
+            return feature_vectorz
+        # Both can return pandas and polars
         elif return_type.lower() == "pandas":
             _logger.debug("Returning feature vector as pandas dataframe")
-            if batch:
-                pandas_df = pd.DataFrame(feature_vectorz)
+            if batch and inference_helper:
+                return pd.DataFrame(feature_vectorz)
+            elif inference_helper:
+                return pd.DataFrame([feature_vectorz])
+            elif batch:
+                return pd.DataFrame(
+                    feature_vectorz, columns=self._feature_vector_col_name
+                )
             else:
                 pandas_df = pd.DataFrame(feature_vectorz).transpose()
-            pandas_df.columns = self._feature_vector_col_name
-            return pandas_df
+                pandas_df.columns = self._feature_vector_col_name
+                return pandas_df
         elif return_type.lower() == "polars":
             _logger.debug("Returning feature vector as polars dataframe")
             return pl.DataFrame(
@@ -411,14 +420,14 @@ class VectorServer:
             )
         else:
             raise ValueError(
-                f"""Unknown return type. Supported return types are {"'dict', " if inference_helper else "'list'"}, 'polars', 'pandas' and 'numpy'"""
+                f"""Unknown return type. Supported return types are {"'list', 'numpy'" if not inference_helper else "'dict'"}, 'polars' and 'pandas''"""
             )
 
     def get_inference_helper(
         self, entry: Dict[str, Any], return_type: str
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
-        _logger.info("Retrieve inference helper values for single entry.")
+        _logger.debug("Retrieve inference helper values for single entry.")
         _logger.debug(f"entry: {entry} as return type: {return_type}")
         return self.handle_feature_vector_return_type(
             self.online_store_sql_client.get_inference_helper_vector(entry),
@@ -429,16 +438,17 @@ class VectorServer:
 
     def get_inference_helpers(
         self,
-        feature_view_object: "feature_view.FeatureView",
+        feature_view_object: feature_view.FeatureView,
         entries: List[Dict[str, Any]],
         return_type: str,
     ) -> Union[pd.DataFrame, pl.DataFrame, List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
-        batch_results = self.online_store_sql_client.get_batch_inference_helper_vectors(
-            entries
+        batch_results, serving_keys = (
+            self.online_store_sql_client.get_batch_inference_helper_vectors(entries)
         )
         # drop serving and primary key names from the result dict
-        drop_list = self.serving_keys + list(feature_view_object.primary_keys)
+        drop_list = serving_keys + list(feature_view_object.primary_keys)
+
         _ = list(
             map(
                 lambda results_dict: [
@@ -804,6 +814,15 @@ class VectorServer:
                     )
                 )
         return feature_values
+
+    def _apply_transformation(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
+        for feature_name in self.transformation_functions:
+            if feature_name in row_dict:
+                transformation_fn = self.transformation_functions[
+                    feature_name
+                ].transformation_fn
+                row_dict[feature_name] = transformation_fn(row_dict[feature_name])
+        return row_dict
 
     @property
     def online_store_sql_client(
