@@ -140,4 +140,5 @@ keyFile.json
 delombok
 
 # dev scripts dir
-dev_scripts
+dev_scripts/
+dev_tools/
