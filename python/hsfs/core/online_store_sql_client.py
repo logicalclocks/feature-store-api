@@ -523,10 +523,10 @@ class OnlineStoreSqlClient:
 
     def _get_connection_pool(self, default_min_size: int, loop=None) -> None:
         # if self._async_pool is None:
-        if self._connection_pool is not None:
-            return self._connection_pool
+        # if self._connection_pool is not None:
+        #    return self._connection_pool
 
-        print("Creating new pool !!!")
+        # print("Creating new pool !!!")
         self._connection_pool = util.create_async_engine(
             self._online_connector,
             self._external,
@@ -604,7 +604,7 @@ class OnlineStoreSqlClient:
 
         # loop = asyncio.get_event_loop()
 
-        self._get_connection_pool(
+        pool = self._get_connection_pool(
             len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
         )
 
@@ -622,8 +622,8 @@ class OnlineStoreSqlClient:
             results_dict[key] = results[i]
 
         # loop.run_until_complete(self.close_pool())
-        # pool.close()
-        # loop.run_until_complete(pool.wait_closed())
+        pool.close()
+        asyncio.run(pool.wait_closed())
 
         return results_dict
 
