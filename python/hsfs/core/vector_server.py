@@ -144,7 +144,7 @@ class VectorServer:
             external,
             inference_helper_columns,
         )
-        # self.online_store_sql_client.init_async_mysql_connection(options=options)
+        self.online_store_sql_client.init_async_mysql_connection(options=options)
 
     def get_feature_vector(
         self,

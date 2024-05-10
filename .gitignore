@@ -141,3 +141,6 @@ delombok
 
 # dev scripts dir
 dev_scripts
+
+*.html
+*.ipynb
