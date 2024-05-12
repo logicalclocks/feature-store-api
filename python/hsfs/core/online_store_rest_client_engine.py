@@ -30,7 +30,6 @@ class OnlineStoreRestClientEngine:
     RETURN_TYPE_FEATURE_VALUE_DICT = "feature_value_dict"
     RETURN_TYPE_FEATURE_VALUE_LIST = "feature_value_list"
     RETURN_TYPE_RESPONSE_JSON = "response_json"  # as a python dict
-    SQL_TIMESTAMP_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
     def __init__(
         self,

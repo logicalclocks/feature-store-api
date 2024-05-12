@@ -225,7 +225,7 @@ class FeatureView:
             feature_view_name, feature_view_version
         )
 
-    def update(self) -> "FeatureView":
+    def update(self) -> FeatureView:
         """Update the description of the feature view.
 
         !!! example "Update the feature view with a new description."
@@ -522,12 +522,12 @@ class FeatureView:
                 self._vector_db_client.td_embedding_feature_names
             )
         return self._vector_server.get_feature_vector(
-            entry,
-            return_type,
-            passed_features,
-            allow_missing,
-            vector_db_features,
-            td_embedding_feature_names,
+            entry=entry,
+            return_type=return_type,
+            passed_features=passed_features,
+            allow_missing=allow_missing,
+            vector_db_features=vector_db_features,
+            td_embedding_feature_names=td_embedding_feature_names,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
         )
@@ -632,12 +632,12 @@ class FeatureView:
             )
 
         return self._vector_server.get_feature_vectors(
-            entry,
-            return_type,
-            passed_features,
-            allow_missing,
-            vector_db_features,
-            td_embedding_feature_names,
+            entries=entry,
+            return_type=return_type,
+            passed_features=passed_features,
+            allow_missing=allow_missing,
+            vector_db_features=vector_db_features,
+            td_embedding_feature_names=td_embedding_feature_names,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
         )

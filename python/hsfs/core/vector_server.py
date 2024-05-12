@@ -67,6 +67,7 @@ class VectorServer:
     DEFAULT_ONLINE_STORE_CLIENT_KEY = "default_online_store_client"
     ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY = "config_online_store_rest_client"
     RESET_ONLINE_REST_CLIENT_OPTIONS_KEY = "reset_online_store_rest_client"
+    SQL_TIMESTAMP_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
     def __init__(
         self,
