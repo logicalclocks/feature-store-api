@@ -237,7 +237,7 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: Optional[Dict[str, Any]] = None,
         vector_db_features: Optional[Dict[str, Any]] = None,
-        td_embedding_feature_names: Optional[set[str]] = None,
+        td_embedding_feature_names: Optional[Set[str]] = None,
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
@@ -248,6 +248,11 @@ class VectorServer:
 
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
+        )
+        self.identify_missing_features_pre_fetch(
+            entry=entry,
+            passed_features=passed_features,
+            td_embedding_feature_names=td_embedding_feature_names,
         )
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_feature_vector Online REST client")
@@ -638,12 +643,12 @@ class VectorServer:
                 _logger.debug(
                     f"Adding return feature value deserializer for complex feature {feature.name} with transformation function."
                 )
-                self._return_value_handlers[feature.name] = (
+                self._return_feature_value_handlers[feature.name] = (
                     lambda feature_value, feature_name=feature.name: _logger.debug(
                         f"Deserialize and transform value of feature {feature_name}"
                     )
-                    or self.transformation_fns[feature_name].transformation_fn(
-                        self._complex_feature_decoder[feature_name](feature_value)
+                    or self._transformation_functions[feature_name].transformation_fn(
+                        self._complex_feature_decoders[feature_name](feature_value)
                     )
                 )
             elif feature.is_complex():
@@ -711,7 +716,10 @@ class VectorServer:
         )
 
     def identify_missing_features_pre_fetch(
-        self, entry: Dict[str, Any], passed_features: Dict[str, Any]
+        self,
+        entry: Dict[str, Any],
+        passed_features: Dict[str, Any],
+        td_embedding_feature_names: Set[str],
     ) -> List[str]:
         """Identify feature which will be missing in the fetched feature vector and which are not passed.
 
@@ -751,9 +759,8 @@ class VectorServer:
                     if f.feature_group.name == serving_key.feature_group.name
                 ]
             )
-        raise NotImplementedError(
-            "This method is not implemented for the current version of the Vector Server."
-        )
+
+        return per_serving_key_features
 
     def get_complex_feature_schemas(self) -> Dict[str, avro.io.DatumReader]:
         return {
