@@ -317,6 +317,14 @@ class VectorServer:
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
+        for entry, passed, embedded in zip(
+            entries, passed_features, td_embedding_feature_names
+        ):
+            self.identify_missing_features_pre_fetch(
+                entry=entry,
+                passed_features=passed,
+                td_embedding_feature_names=embedded,
+            )
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_batch_feature_vector Online REST client")
             batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
@@ -720,7 +728,7 @@ class VectorServer:
         entry: Dict[str, Any],
         passed_features: Dict[str, Any],
         td_embedding_feature_names: Set[str],
-    ) -> List[str]:
+    ):
         """Identify feature which will be missing in the fetched feature vector and which are not passed.
 
         Each serving key, value (or composite keys) need not be present in entry mapping. Missing key, value
@@ -732,16 +740,27 @@ class VectorServer:
         - The method does not check whether serving keys correspond to existing rows in the online feature store.
         - The method does not check whether the passed features names and data types correspond to the query schema.
         """
+        missing_features_per_serving_keys = {}
+        has_missing = False
         for sk_name, fetched_features in self.per_serving_key_features.items():
+            passed_feature_names = set(passed_features.keys())
+            passed_feature_names.add(td_embedding_feature_names)
             # if not present and all corresponding features are not passed via passed_features
+            # or vector_db_features
             if sk_name not in entry.keys() and not fetched_features.issubset(
-                set(passed_features.keys())
+                passed_feature_names
             ):
-                return list(fetched_features.difference(passed_features.keys()))
+                has_missing = True
+                missing_features_per_serving_keys[sk_name] = fetched_features
 
-        raise NotImplementedError(
-            "This method is not implemented for the current version of the Vector Server."
-        )
+        if has_missing:
+            raise client.exceptions.FeatureStoreException(
+                f"Incomplete feature vector requests: {missing_features_per_serving_keys}."
+                "To fetch or build a complete feature vector provide either (or both):\n"
+                "\t- the missing features by adding corresponding serving key, value to the entry.\n"
+                "\t- the missing features as key, value pair using the passed_features kwarg.\n"
+                "Use `allow_missing=True` to allow missing features in the fetched feature vector."
+            )
 
     def build_per_serving_key_features(
         self,
