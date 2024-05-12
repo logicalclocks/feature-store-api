@@ -15,6 +15,7 @@
 #
 from __future__ import annotations
 
+import itertools
 import logging
 from base64 import b64decode
 from datetime import datetime, timezone
@@ -41,6 +42,7 @@ from hsfs import (
 from hsfs import (
     transformation_function_attached as tfa_mod,
 )
+from hsfs.client import online_store_rest_client
 from hsfs.core import (
     online_store_rest_client_engine,
     online_store_sql_client,
@@ -226,7 +228,7 @@ class VectorServer:
                 online_store_rest_client_config,
             )
 
-        client.online_store_rest_client.init_or_reset_online_store_rest_client(
+        online_store_rest_client.init_or_reset_online_store_rest_client(
             optional_config=online_store_rest_client_config,
             reset_client=reset_online_rest_client,
         )
@@ -319,8 +321,10 @@ class VectorServer:
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
         if allow_missing is False:
-            for entry, passed, embedded in zip(
-                entries, passed_features, td_embedding_feature_names
+            for entry, passed, embedded in itertools.zip_longest(
+                entries,
+                passed_features,
+                td_embedding_feature_names,
             ):
                 self.identify_missing_features_pre_fetch(
                     entry=entry,
@@ -750,15 +754,19 @@ class VectorServer:
             )
             if td_embedding_feature_names and len(td_embedding_feature_names) > 0:
                 passed_feature_names.add(td_embedding_feature_names)
+            neither_fetched_nor_passed = fetched_features.difference(
+                passed_feature_names
+            )
             # if not present and all corresponding features are not passed via passed_features
             # or vector_db_features
             if sk_name not in entry.keys() and not fetched_features.issubset(
                 passed_feature_names
             ):
-                has_missing = True
-                missing_features_per_serving_keys[sk_name] = (
-                    fetched_features.difference(passed_feature_names)
+                _logger.debug(
+                    f"Missing serving key {sk_name} and corresponding features {neither_fetched_nor_passed}."
                 )
+                has_missing = True
+                missing_features_per_serving_keys[sk_name] = neither_fetched_nor_passed
 
         if has_missing:
             raise client.exceptions.FeatureStoreException(
