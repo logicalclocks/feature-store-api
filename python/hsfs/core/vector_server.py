@@ -724,11 +724,6 @@ class VectorServer:
         - The method does not check whether serving keys correspond to existing rows in the online feature store.
         - The method does not check whether the passed features names and data types correspond to the query schema.
         """
-        if not hasattr(self, "per_serving_key_features"):
-            self.per_serving_key_features = self.build_per_serving_key_features(
-                self.serving_keys, self._features
-            )
-
         for sk_name, fetched_features in self.per_serving_key_features.items():
             # if not present and all corresponding features are not passed via passed_features
             if sk_name not in entry.keys() and not fetched_features.issubset(
@@ -746,6 +741,16 @@ class VectorServer:
         features: List[tdf_mod.TrainingDatasetFeature],
     ) -> Dict[str, set[str]]:
         """Build a dictionary of feature names which will be fetched per serving key."""
+        per_serving_key_features = {}
+
+        for serving_key in serving_keys:
+            per_serving_key_features[serving_key.required_serving_key] = set(
+                [
+                    f.name
+                    for f in features
+                    if f.feature_group.name == serving_key.feature_group.name
+                ]
+            )
         raise NotImplementedError(
             "This method is not implemented for the current version of the Vector Server."
         )
@@ -864,6 +869,18 @@ class VectorServer:
     @property
     def ordered_feature_names(self) -> List[str]:
         return self._ordered_feature_names
+
+    @property
+    def per_serving_key_features(self) -> Dict[str, set[str]]:
+        if (
+            not hasattr(self, "_per_serving_key_features")
+            or self._per_serving_key_features is None
+            or len(self._per_serving_key_features) == 0
+        ):
+            self._per_serving_key_features = self.build_per_serving_key_features(
+                self.serving_keys, self._features
+            )
+        return self._per_serving_key_features
 
     @property
     def transformation_functions(
