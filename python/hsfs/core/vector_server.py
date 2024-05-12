@@ -249,11 +249,12 @@ class VectorServer:
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
-        self.identify_missing_features_pre_fetch(
-            entry=entry,
-            passed_features=passed_features,
-            td_embedding_feature_names=td_embedding_feature_names,
-        )
+        if allow_missing is False:
+            self.identify_missing_features_pre_fetch(
+                entry=entry,
+                passed_features=passed_features,
+                td_embedding_feature_names=td_embedding_feature_names,
+            )
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_feature_vector Online REST client")
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
@@ -317,14 +318,15 @@ class VectorServer:
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
-        for entry, passed, embedded in zip(
-            entries, passed_features, td_embedding_feature_names
-        ):
-            self.identify_missing_features_pre_fetch(
-                entry=entry,
-                passed_features=passed,
-                td_embedding_feature_names=embedded,
-            )
+        if allow_missing is False:
+            for entry, passed, embedded in zip(
+                entries, passed_features, td_embedding_feature_names
+            ):
+                self.identify_missing_features_pre_fetch(
+                    entry=entry,
+                    passed_features=passed,
+                    td_embedding_feature_names=embedded,
+                )
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_batch_feature_vector Online REST client")
             batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
@@ -743,15 +745,20 @@ class VectorServer:
         missing_features_per_serving_keys = {}
         has_missing = False
         for sk_name, fetched_features in self.per_serving_key_features.items():
-            passed_feature_names = set(passed_features.keys())
-            passed_feature_names.add(td_embedding_feature_names)
+            passed_feature_names = (
+                set(passed_features.keys()) if passed_features else set()
+            )
+            if td_embedding_feature_names and len(td_embedding_feature_names) > 0:
+                passed_feature_names.add(td_embedding_feature_names)
             # if not present and all corresponding features are not passed via passed_features
             # or vector_db_features
             if sk_name not in entry.keys() and not fetched_features.issubset(
                 passed_feature_names
             ):
                 has_missing = True
-                missing_features_per_serving_keys[sk_name] = fetched_features
+                missing_features_per_serving_keys[sk_name] = (
+                    fetched_features.difference(passed_feature_names)
+                )
 
         if has_missing:
             raise client.exceptions.FeatureStoreException(
