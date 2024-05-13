@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import List, Optional, Union
 
 from hsfs import (
     client,
@@ -25,6 +25,7 @@ from hsfs import (
     feature_group,
     feature_view,
     training_dataset_feature,
+    transformation_function,
     util,
 )
 from hsfs.client import exceptions
@@ -39,11 +40,6 @@ from hsfs.core import (
     training_dataset_engine,
 )
 from hsfs.training_dataset_split import TrainingDatasetSplit
-
-
-if TYPE_CHECKING:
-    from hsfs.feature_view import FeatureView
-    from hsfs.transformation_function import TransformationFunction
 
 
 class FeatureViewEngine:
@@ -68,7 +64,9 @@ class FeatureViewEngine:
         )
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
 
-    def save(self, feature_view_obj: FeatureView) -> FeatureView:
+    def save(
+        self, feature_view_obj: feature_view.FeatureView
+    ) -> feature_view.FeatureView:
         """
         Save a feature view to the backend.
 
@@ -135,7 +133,9 @@ class FeatureViewEngine:
         )
         return updated_fv
 
-    def update(self, feature_view_obj: FeatureView) -> FeatureView:
+    def update(
+        self, feature_view_obj: feature_view.FeatureView
+    ) -> feature_view.FeatureView:
         """
         Update the feature view object saved in the backend
 
@@ -150,7 +150,7 @@ class FeatureViewEngine:
 
     def get(
         self, name: str, version: int = None
-    ) -> Union[FeatureView, List[FeatureView]]:
+    ) -> Union[feature_view.FeatureView, List[feature_view.FeatureView]]:
         """
         Get a feature view form the backend using name or using name and version.
 
@@ -267,7 +267,7 @@ class FeatureViewEngine:
 
     def get_attached_transformation_fn(
         self, name: str, version: int
-    ) -> List[TransformationFunction]:
+    ) -> List[transformation_function.TransformationFunction]:
         """
         Get transformation functions attached to a feature view form the backend
 

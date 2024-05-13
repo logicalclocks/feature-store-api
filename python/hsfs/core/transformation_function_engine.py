@@ -15,19 +15,12 @@
 #
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, TypeVar, Union
 
-from hsfs import training_dataset
+import pandas as pd
+import polars as pl
+from hsfs import feature_view, statistics, training_dataset, transformation_function
 from hsfs.core import transformation_function_api
-
-
-if TYPE_CHECKING:
-    import pandas as pd
-    import polars as pl
-    import pyspark.sql as ps
-    from hsfs.feature_view import FeatureView
-    from hsfs.statistics import Statistics
-    from hsfs.transformation_function import TransformationFunction
 
 
 class TransformationFunctionEngine:
@@ -50,13 +43,13 @@ class TransformationFunctionEngine:
         )
 
     def save(
-        self, transformation_fn_instance: TransformationFunction
-    ) -> TransformationFunction:
+        self, transformation_fn_instance: transformation_function.TransformationFunction
+    ) -> transformation_function.TransformationFunction:
         """
         Save a transformation function into the feature store.
 
         # Argument
-            transformation_fn_instance `TransformationFunction`: The transformation function to be saved into the feature store.
+            transformation_fn_instance `transformation_function.TransformationFunction`: The transformation function to be saved into the feature store.
         """
         self._transformation_function_api.register_transformation_fn(
             transformation_fn_instance
@@ -64,7 +57,10 @@ class TransformationFunctionEngine:
 
     def get_transformation_fn(
         self, name: str, version: Optional[int] = None
-    ) -> Union[TransformationFunction, List[TransformationFunction]]:
+    ) -> Union[
+        transformation_function.TransformationFunction,
+        List[transformation_function.TransformationFunction],
+    ]:
         """
         Retrieve a transformation function from the feature store.
 
@@ -75,7 +71,7 @@ class TransformationFunctionEngine:
             name ` Optional[str]`: The name of the transformation function to be retrieved.
             version `Optional[int]`: The version of the transformation function to be retrieved.
         # Returns
-            `Union[TransformationFunction, List[TransformationFunction]]` : A transformation function if name and version is provided. A list of transformation functions if only name is provided.
+            `Union[transformation_function.TransformationFunction, List[transformation_function.TransformationFunction]]` : A transformation function if name and version is provided. A list of transformation functions if only name is provided.
         """
 
         transformation_fn_instances = (
@@ -83,12 +79,14 @@ class TransformationFunctionEngine:
         )
         return transformation_fn_instances
 
-    def get_transformation_fns(self) -> List[TransformationFunction]:
+    def get_transformation_fns(
+        self,
+    ) -> List[transformation_function.TransformationFunction]:
         """
         Get all the transformation functions in the feature store
 
         # Returns
-            `List[TransformationFunction]` : A list of transformation functions.
+            `List[transformation_function.TransformationFunction]` : A list of transformation functions.
         """
         transformation_fn_instances = (
             self._transformation_function_api.get_transformation_fn(
@@ -102,12 +100,15 @@ class TransformationFunctionEngine:
             transformation_fns.append(transformation_fn_instance)
         return transformation_fns
 
-    def delete(self, transformation_function_instance: TransformationFunction) -> None:
+    def delete(
+        self,
+        transformation_function_instance: transformation_function.TransformationFunction,
+    ) -> None:
         """
         Delete a transformation function from the feature store.
 
         # Arguments
-            transformation_function_instance `TransformationFunction`: The transformation function to be removed from the feature store.
+            transformation_function_instance `transformation_function.TransformationFunction`: The transformation function to be removed from the feature store.
         """
         self._transformation_function_api.delete(transformation_function_instance)
 
@@ -116,9 +117,11 @@ class TransformationFunctionEngine:
         training_dataset_obj: training_dataset.TrainingDataset,
         statistics_features: List[str],
         label_encoder_features: List[str],
-        feature_dataframe: Union[pd.DataFrame, pl.DataFrame, ps.DataFrame],
-        feature_view_obj: FeatureView,
-    ) -> Statistics:
+        feature_dataframe: Union[
+            pd.DataFrame, pl.DataFrame, TypeVar("pyspark.sql.DataFrame")
+        ],
+        feature_view_obj: feature_view.FeatureView,
+    ) -> statistics.Statistics:
         """
         Compute the statistics required for a training dataset object.
 
@@ -141,9 +144,9 @@ class TransformationFunctionEngine:
 
     @staticmethod
     def get_ready_to_use_transformation_fns(
-        feature_view: FeatureView,
+        feature_view: feature_view.FeatureView,
         training_dataset_version: Optional[int] = None,
-    ) -> List[TransformationFunction]:
+    ) -> List[transformation_function.TransformationFunction]:
         # get attached transformation functions
         transformation_functions = (
             feature_view._feature_view_engine.get_attached_transformation_fn()
@@ -185,10 +188,12 @@ class TransformationFunctionEngine:
     @staticmethod
     def compute_and_set_feature_statistics(
         training_dataset: training_dataset.TrainingDataset,
-        feature_view_obj: FeatureView,
+        feature_view_obj: feature_view.FeatureView,
         dataset: Union[
-            Dict[str, Union[pd.DataFrame, pl.DataFrame, ps.DataFrame]],
-            Union[pd.DataFrame, pl.DataFrame, ps.DataFrame],
+            Dict[
+                str, Union[pd.DataFrame, pl.DataFrame, TypeVar("pyspark.sql.DataFrame")]
+            ],
+            Union[pd.DataFrame, pl.DataFrame, TypeVar("pyspark.sql.DataFrame")],
         ],
     ) -> None:
         """
@@ -204,10 +209,8 @@ class TransformationFunctionEngine:
         statistics_features: Set[str] = set()
 
         # Finding the features for which statistics is required
-        for transformation_function in feature_view_obj.transformation_functions:
-            statistics_features.update(
-                transformation_function.hopsworks_udf.statistics_features
-            )
+        for tf in feature_view_obj.transformation_functions:
+            statistics_features.update(tf.hopsworks_udf.statistics_features)
         if statistics_features:
             # compute statistics on training data
             if training_dataset.splits:
@@ -233,15 +236,15 @@ class TransformationFunctionEngine:
                 )
 
             # Set statistics computed in the hopsworks UDF
-            for transformation_function in feature_view_obj.transformation_functions:
-                transformation_function.hopsworks_udf.transformation_statistics = (
+            for tf in feature_view_obj.transformation_functions:
+                tf.hopsworks_udf.transformation_statistics = (
                     stats.feature_descriptive_statistics
                 )
 
     @staticmethod
     def get_and_set_feature_statistics(
         training_dataset: training_dataset.TrainingDataset,
-        feature_view_obj: FeatureView,
+        feature_view_obj: feature_view.FeatureView,
         training_dataset_version: int = None,
     ) -> None:
         """
@@ -277,7 +280,7 @@ class TransformationFunctionEngine:
                     "No statistics available for initializing transformation functions."
                 )
 
-            for transformation_function in feature_view_obj.transformation_functions:
-                transformation_function.hopsworks_udf.transformation_statistics = (
+            for tf in feature_view_obj.transformation_functions:
+                tf.hopsworks_udf.transformation_statistics = (
                     td_tffn_stats.feature_descriptive_statistics
                 )
