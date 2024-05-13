@@ -432,7 +432,6 @@ def renaming_wrapper(*args):
         df = convert_timezone(df)
     return df"""
             )
-        print(code)
         # injecting variables into scope used to execute wrapper function.
         scope = __import__("__main__").__dict__
         if self.transformation_statistics is not None:
