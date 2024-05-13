@@ -124,8 +124,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    "java",
-    "python/tests/transformations_test_helper/" # transformations_test_helper excluded from fomating and linting because the used formating is required for the test cases
+    "java"
 ]
 
 # Same as Black.
