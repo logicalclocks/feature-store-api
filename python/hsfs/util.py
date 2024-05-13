@@ -182,7 +182,7 @@ def get_dataset_type(path: str) -> Literal["HIVEDB", "DATASET"]:
         return "DATASET"
 
 
-def create_async_engine(
+async def create_async_engine(
     online_conn: Any,
     external: bool,
     default_min_size: int,
@@ -198,31 +198,24 @@ def create_async_engine(
     else:
         hostname = url.host
 
-    import asyncio
-
     # assert asyncio.get_running_loop is not None, "No running event loop found. Please run this function inside an event loop."
     # loop = asyncio.get_running_loop()
-    pool = asyncio.run(
-        async_create_engine(
-            host=hostname,
-            port=3306,
-            user=online_options["user"],
-            password=online_options["password"],
-            db=url.database,
-            minsize=(
-                options.get("minsize", default_min_size)
-                if options
-                else default_min_size
-            ),
-            maxsize=(
-                options.get("maxsize", default_min_size)
-                if options
-                else default_min_size
-            ),
-            pool_recycle=(options.get("pool_recycle", -1) if options else -1),
-            # loop=loop,
-        )
+    pool = await async_create_engine(
+        host=hostname,
+        port=3306,
+        user=online_options["user"],
+        password=online_options["password"],
+        db=url.database,
+        minsize=(
+            options.get("minsize", default_min_size) if options else default_min_size
+        ),
+        maxsize=(
+            options.get("maxsize", default_min_size) if options else default_min_size
+        ),
+        pool_recycle=(options.get("pool_recycle", -1) if options else -1),
+        # loop=loop,
     )
+
     return pool
 
 

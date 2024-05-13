@@ -19,6 +19,7 @@ import asyncio
 import json
 import logging
 import re
+from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import nest_asyncio
@@ -521,12 +522,12 @@ class OnlineStoreSqlClient:
             OnlineStoreSqlClient.BATCH_VECTOR_KEY,
         ]
 
-    def _get_connection_pool(self, default_min_size: int, loop=None) -> None:
+    async def _get_connection_pool(self, default_min_size: int, loop=None) -> None:
         if self._connection_pool is not None:
             return self._connection_pool
 
         print("Creating new pool !!!")
-        self._connection_pool = util.create_async_engine(
+        self._connection_pool = await util.create_async_engine(
             self._online_connector,
             self._external,
             default_min_size,
@@ -536,25 +537,35 @@ class OnlineStoreSqlClient:
 
         return self._connection_pool
 
-    async def _query_async_sql(self, stmt, bind_params, lock):
+    @asynccontextmanager
+    async def get_connection(self):
+        conn = await self._connection_pool.acquire()
+        try:
+            yield conn
+        finally:
+            self._connection_pool.release(conn)
+
+    async def _query_async_sql(self, stmt, bind_params):
         """Query prepared statement together with bind params using aiomysql connection pool"""
         # Get a connection from the pool
         # lock = asyncio.Lock()
+        await self._get_connection_pool(
+            len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
+        )
 
-        async with lock:
-            async with self._connection_pool.acquire() as conn:
-                # Execute the prepared statement
-                _logger.debug(
-                    f"Executing prepared statement: {stmt} with bind params: {bind_params}"
-                )
-                cursor = await conn.execute(stmt, bind_params)
-                # Fetch the result
-                _logger.debug("Waiting for resultset.")
-                resultset = await cursor.fetchall()
-                _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
-                await cursor.close()
+        async with self.get_connection() as conn:
+            # Execute the prepared statement
+            _logger.debug(
+                f"Executing prepared statement: {stmt} with bind params: {bind_params}"
+            )
+            cursor = await conn.execute(stmt, bind_params)
+            # Fetch the result
+            _logger.debug("Waiting for resultset.")
+            resultset = await cursor.fetchall()
+            _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
+            await cursor.close()
 
-                return resultset
+            return resultset
 
     # async def _query_async_sql(self, stmt, bind_params, pool):
     #     """Query prepared statement together with bind params using aiomysql connection pool"""
@@ -604,13 +615,9 @@ class OnlineStoreSqlClient:
 
         # loop = asyncio.get_event_loop()
 
-        self._get_connection_pool(
-            len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
-        )
-        lock = asyncio.Lock()
         tasks = [
             asyncio.ensure_future(
-                self._query_async_sql(prepared_statements[key], entries[key], lock)
+                self._query_async_sql(prepared_statements[key], entries[key])
             )
             for key in prepared_statements
         ]
