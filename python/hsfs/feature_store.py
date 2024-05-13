@@ -1325,7 +1325,7 @@ class FeatureStore:
         """
         return TransformationFunction(
             featurestore_id=self._id,
-            transformation_fn=transformation_function,
+            hopsworks_udf=transformation_function,
             version=version,
         )
 

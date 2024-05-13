@@ -3408,9 +3408,10 @@ class FeatureView:
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
             logging_enabled=json_decamelized.get('enabled_logging', False),
-            transformation_functions=TransformationFunction.from_response_json(
-                transformation_functions
-            )
+            transformation_functions=[
+                TransformationFunction.from_response_json(transformation_function)
+                for transformation_function in transformation_functions
+            ]
             if transformation_functions
             else [],
         )

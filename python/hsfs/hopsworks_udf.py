@@ -144,8 +144,10 @@ class HopsworksUdf:
             else transformation_features
         )
 
-        self._formatted_function_source = HopsworksUdf._format_source_code(
-            self._function_source, self._transformation_features
+        self._formatted_function_source, self._module_imports = (
+            HopsworksUdf._format_source_code(
+                self._function_source, self._transformation_features
+            )
         )
 
         self._output_column_names: List[str] = self._get_output_column_names()
@@ -215,30 +217,6 @@ class HopsworksUdf:
         return imports
 
     @staticmethod
-    def _get_module_path(module_name: str) -> str:
-        """
-        Function that returns the path to the source code of a python module.
-
-        Cannot extract path if the module is defined in a jupyter notebook since it is currently impossible find the path of a jupyter notebook.(https://github.com/ipython/ipython/issues/10123)
-
-        # Arguments
-            path: `str`. Path to python file from which imports are to be extracted.
-        # Raises
-            AttributeError : If the provided module is defined in a jupyter notebook.
-        # Returns
-            `str`: a string that contains the path to the module
-        """
-
-        def _get_module_path(module):
-            return module.__file__
-
-        module_path = {}
-        exec(
-            f'import {module_name}\nmodule_path["path"] = _get_module_path({module_name})'
-        )
-        return module_path["path"]
-
-    @staticmethod
     def _extract_source_code(udf_function: Callable) -> str:
         """
         Function to extract the source code of the function along with the imports used in the file.
@@ -252,12 +230,12 @@ class HopsworksUdf:
         """
         try:
             module_imports = HopsworksUdf._get_module_imports(
-                HopsworksUdf._get_module_path(udf_function.__module__)
+                inspect.getfile(udf_function)
             )
-        except AttributeError:
+        except FileNotFoundError:
             module_imports = [""]
             warnings.warn(
-                "Passed UDF defined in a Jupyter notebook. Cannot extract import dependencies from a notebook. Please make sure to import all dependencies for the UDF inside the function.",
+                "Cannot extract imported dependencies for the function module. Please make sure to import all dependencies for the UDF inside the function.",
                 stacklevel=2,
             )
 
@@ -340,7 +318,7 @@ class HopsworksUdf:
     @staticmethod
     def _format_source_code(
         source_code: str, transformation_features: List[TransformationFeature]
-    ) -> str:
+    ) -> Tuple[str, str]:
         """
         Function that parses the existing source code to remove statistics parameter and remove all decorators and type hints from the function source code.
 
@@ -348,13 +326,13 @@ class HopsworksUdf:
             source_code: `str`. Source code of a function.
             transformation_features `List[TransformationFeature]`: List of transformation features provided in the function argument.
         # Returns
-            `str`: Source code that does not contain any decorators, type hints or statistics parameters.
+            `Tuple[str, str]`: Tuple that contains Source code that does not contain any decorators, type hints or statistics parameters and the module imports
         """
 
         _, signature, _, signature_end_line = HopsworksUdf._parse_function_signature(
             source_code
         )
-
+        module_imports = source_code.split("@")[0]
         arg_list = [feature.feature_name for feature in transformation_features]
 
         # Reconstruct the function signature
@@ -367,8 +345,7 @@ class HopsworksUdf:
             new_signature + "\n\t" + "\n\t".join(source_code[signature_end_line + 1 :])
         )
 
-        # Define a new function with the modified source code
-        return modified_source
+        return modified_source, module_imports
 
     def _get_output_column_names(self) -> str:
         """
@@ -423,11 +400,14 @@ class HopsworksUdf:
             return date_time_col.dt.tz_localize(str(current_timezone))
         else:
             # convert to utc, then localize to system's timezone
-            return date_time_col.dt.tz_convert('UTC').dt.tz_localize(None).dt.tz_localize(str(current_timezone))"""
+            return date_time_col.dt.tz_localize(None).dt.tz_localize(str(current_timezone))"""
 
         # Defining wrapper function that renames the column names to specific names
         if len(self.output_types) > 1:
-            code = f"""import pandas as pd
+            code = (
+                self._module_imports
+                + "\n"
+                + f"""import pandas as pd
 {convert_timstamp_function}
 def renaming_wrapper(*args):
     {self._formatted_function_source}
@@ -437,8 +417,12 @@ def renaming_wrapper(*args):
         if pd.api.types.is_datetime64_any_dtype(df[col]):
             df[col] = convert_timezone(df[col])
     return df"""
+            )
         else:
-            code = f"""import pandas as pd
+            code = (
+                self._module_imports
+                + "\n"
+                + f"""import pandas as pd
 {convert_timstamp_function}
 def renaming_wrapper(*args):
     {self._formatted_function_source}
@@ -447,13 +431,13 @@ def renaming_wrapper(*args):
     if pd.api.types.is_datetime64_any_dtype(df):
         df = convert_timezone(df)
     return df"""
-
+            )
+        print(code)
         # injecting variables into scope used to execute wrapper function.
         scope = __import__("__main__").__dict__
         if self.transformation_statistics is not None:
             scope.update(self.transformation_statistics)
         scope.update({"_output_col_names": self.output_column_names})
-
         # executing code
         exec(code, scope)
 
@@ -524,12 +508,8 @@ def renaming_wrapper(*args):
             `Dict`: Dictionary that contains all data required to json serialize the object.
         """
         return {
-            "sourceCode": self._original_code,
-            "outputTypes": ",".join(
-                [python_type.__name__ for python_type in self.output_types]
-            )
-            if isinstance(self.output_types, List)
-            else self.output_types.__name__,
+            "sourceCode": self._function_source,
+            "outputTypes": self.output_types,
             "transformationFeatures": self.transformation_features,
             "name": self._function_name,
         }

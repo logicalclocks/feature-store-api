@@ -80,6 +80,24 @@
       ]
     }
   },
+  "get_list_one_argument": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "id" : 1,
+          "version": 2,
+          "featurestoreId": 11,
+          "hopsworksUdf":{
+            "sourceCode": "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n",
+            "name": "add_mean_fs",
+            "outputTypes":"double",
+            "transformationFeatures":"data"
+          }
+        }
+      ]
+    }
+  },
   "get_list_empty": {
     "response": {
       "count": 0,
