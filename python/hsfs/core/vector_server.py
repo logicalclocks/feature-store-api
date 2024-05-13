@@ -38,18 +38,13 @@ from hsfs import (
 from hsfs import (
     training_dataset_feature as tdf_mod,
 )
-from hsfs import (
-    transformation_function_attached as tfa_mod,
-)
 from hsfs.client import exceptions, online_store_rest_client
 from hsfs.core import (
     online_store_rest_client_engine,
     online_store_sql_engine,
-)
-from hsfs.core import (
     transformation_function_engine as tf_engine_mod,
+    transformation_functions
 )
-
 
 HAS_FASTAVRO = False
 try:
@@ -112,7 +107,6 @@ class VectorServer:
             feat.name for feat in features if feat.inference_helper_column
         ]
         self._transformed_feature_vector_col_name: List[str] = None
-
         self._skip_fg_ids = skip_fg_ids or set()
         self._serving_keys = serving_keys or []
         self._required_serving_keys = []
@@ -120,9 +114,8 @@ class VectorServer:
         self._transformation_function_engine = (
             tf_engine_mod.TransformationFunctionEngine(feature_store_id)
         )
-        self._transformation_functions: Dict[
-            str, tfa_mod.TransformationFunctionAttached
-        ] = {}
+        self._transformation_functions: List[transformation_functions.TransformationFunction] = []
+
         self._sql_client = None
 
         self._rest_client_engine = None
@@ -314,7 +307,6 @@ class VectorServer:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = []
-
         # Assertions on passed_features and vector_db_features
         assert (
             passed_features is None
@@ -600,7 +592,7 @@ class VectorServer:
         return self.handle_feature_vector_return_type(
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
-
+    
 
     def which_client_and_ensure_initialised(
         self, force_rest_client: bool, force_sql_client: bool
@@ -1042,9 +1034,7 @@ class VectorServer:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, tfa_mod.TransformationFunctionAttached]:
-        if self._transformation_functions is None:
-            self._transformation_functions = {}
+    ) -> Optional[List[transformation_functions.TransformationFunction]]:
         return self._transformation_functions
 
     @property
