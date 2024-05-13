@@ -31,7 +31,6 @@ from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -58,6 +57,7 @@ from hsfs import (
     feature,
     feature_store,
     feature_view,
+    transformation_function,
     util,
 )
 from hsfs import storage_connector as sc
@@ -88,10 +88,6 @@ from pyhive.exc import OperationalError
 from sqlalchemy import sql
 from thrift.transport.TTransport import TTransportException
 from tqdm.auto import tqdm
-
-
-if TYPE_CHECKING:
-    from hsfs.transformation_function import TransformationFunction
 
 
 # Disable pyhive INFO logging
@@ -1296,14 +1292,14 @@ class Engine:
 
     def _apply_transformation_function(
         self,
-        transformation_functions: List[TransformationFunction],
+        transformation_functions: List[transformation_function.TransformationFunction],
         dataset: Union[pd.DataFrame, pl.DataFrame],
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         """
         Apply transformation function to the dataframe.
 
         # Arguments
-            transformation_functions `List[TransformationFunction]` : List of transformation functions.
+            transformation_functions `List[transformation_function.TransformationFunction]` : List of transformation functions.
             dataset `Union[pd.DataFrame, pl.DataFrame]`: A pandas or polars dataframe.
         # Returns
             `DataFrame`: A pandas dataframe with the transformed data.
@@ -1323,8 +1319,8 @@ class Engine:
             else:
                 dataset = dataset.to_pandas(use_pyarrow_extension_array=False)
 
-        for transformation_function in transformation_functions:
-            hopsworks_udf = transformation_function.hopsworks_udf
+        for tf in transformation_functions:
+            hopsworks_udf = tf.hopsworks_udf
             missing_features = set(hopsworks_udf.transformation_features) - set(
                 dataset.columns
             )
@@ -1333,17 +1329,15 @@ class Engine:
                     f"Features {missing_features} specified in the transformation function '{hopsworks_udf.function_name}' are not present in the feature view. Please specify the feature required correctly."
                 )
 
-            transformed_features.update(
-                transformation_function.hopsworks_udf.transformation_features
-            )
+            transformed_features.update(tf.hopsworks_udf.transformation_features)
             dataset = pd.concat(
                 [
                     dataset,
-                    transformation_function.hopsworks_udf.get_udf()(
+                    tf.hopsworks_udf.get_udf()(
                         *(
                             [
                                 dataset[feature]
-                                for feature in transformation_function.hopsworks_udf.transformation_features
+                                for feature in tf.hopsworks_udf.transformation_features
                             ]
                         )
                     ),

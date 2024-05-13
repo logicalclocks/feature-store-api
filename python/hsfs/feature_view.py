@@ -19,7 +19,7 @@ import json
 import logging
 import warnings
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
 
 import humps
 import numpy as np
@@ -54,14 +54,11 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
 from hsfs.feature import Feature
+from hsfs.hopsworks_udf import HopsworksUdf
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.transformation_function import TransformationFunction
-
-
-if TYPE_CHECKING:
-    from hsfs.hopsworks_udf import HopsworksUdf
 
 
 _logger = logging.getLogger(__name__)
@@ -517,9 +514,16 @@ class FeatureView:
         td_embedding_feature_names = set()
         if self._vector_db_client:
             vector_db_features = self._get_vector_db_result(entry)
-            td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
+            td_embedding_feature_names = (
+                self._vector_db_client.td_embedding_feature_names
+            )
         return self._vector_server.get_feature_vector(
-            entry, return_type, passed_features, vector_db_features, td_embedding_feature_names, allow_missing
+            entry,
+            return_type,
+            passed_features,
+            vector_db_features,
+            td_embedding_feature_names,
+            allow_missing,
         )
 
     def get_feature_vectors(
@@ -614,13 +618,18 @@ class FeatureView:
         td_embedding_feature_names = set()
         if self._vector_db_client:
             for _entry in entry:
-                vector_db_features.append(
-                    self._get_vector_db_result(_entry)
-                )
-            td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
+                vector_db_features.append(self._get_vector_db_result(_entry))
+            td_embedding_feature_names = (
+                self._vector_db_client.td_embedding_feature_names
+            )
 
         return self._vector_server.get_feature_vectors(
-            entry, return_type, passed_features, vector_db_features, td_embedding_feature_names, allow_missing
+            entry,
+            return_type,
+            passed_features,
+            vector_db_features,
+            td_embedding_feature_names,
+            allow_missing,
         )
 
     def get_inference_helper(
@@ -738,7 +747,10 @@ class FeatureView:
                 # Not retrieving from vector db if entry is not completed
                 continue
             vector_db_features = self._vector_db_client.read(
-                fg.id, fg.features, keys=fg_entry, index_name=fg.embedding_index.index_name
+                fg.id,
+                fg.features,
+                keys=fg_entry,
+                index_name=fg.embedding_index.index_name,
             )
 
             # if result is not empty
@@ -820,7 +832,7 @@ class FeatureView:
             return_type="list",
             vector_db_features=[res[1] for res in results],
             td_embedding_feature_names=td_embedding_feature_names,
-            allow_missing=True
+            allow_missing=True,
         )
 
     def _extract_primary_key(self, result_key: Dict[str, str]) -> Dict[str, str]:

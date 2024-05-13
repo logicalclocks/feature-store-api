@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import great_expectations as ge
 import humps
@@ -48,12 +48,9 @@ from hsfs.core import (
 )
 from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
+from hsfs.hopsworks_udf import HopsworksUdf
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
-
-
-if TYPE_CHECKING:
-    from hsfs.hopsworks_udf import HopsworksUdf
 
 
 @typechecked

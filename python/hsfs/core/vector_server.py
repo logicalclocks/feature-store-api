@@ -17,28 +17,20 @@ from __future__ import annotations
 
 import io
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import avro.io
 import avro.schema
 import numpy as np
 import pandas as pd
 import polars as pl
-from hsfs import (
-    client,
-    feature_view,
-    training_dataset,
-)
+from hsfs import client, feature_view, training_dataset, transformation_function
 from hsfs import serving_key as sk_mod
 from hsfs import training_dataset_feature as tdf_mod
 from hsfs.core import (
     online_store_sql_client,
     transformation_function_engine,
 )
-
-
-if TYPE_CHECKING:
-    from hsfs.transformation_function import TransformationFunction
 
 
 _logger = logging.getLogger(__name__)
@@ -385,14 +377,12 @@ class VectorServer:
         return feature_values
 
     def _apply_transformation(self, row_dict: dict):
-        for transformation_function in self._transformation_functions:
+        for tf in self._transformation_functions:
             features = [
                 pd.Series(row_dict[feature])
-                for feature in transformation_function.hopsworks_udf.transformation_features
+                for feature in tf.hopsworks_udf.transformation_features
             ]
-            transformed_result = transformation_function.hopsworks_udf.get_udf()(
-                *features
-            )
+            transformed_result = tf.hopsworks_udf.get_udf()(*features)
             if isinstance(transformed_result, pd.Series):
                 row_dict[transformed_result.name] = transformed_result.values[0]
             else:
@@ -435,7 +425,7 @@ class VectorServer:
     @property
     def transformation_functions(
         self,
-    ) -> Optional[TransformationFunction]:
+    ) -> Optional[transformation_function.TransformationFunction]:
         return self._transformation_functions
 
     def transformed_feature_vector_col_name(self):

@@ -23,19 +23,13 @@ import re
 import shutil
 import warnings
 from datetime import date, datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import avro
 import numpy as np
 import pandas as pd
 import tzlocal
-
-
-if TYPE_CHECKING:
-    from hsfs.constructor.query import Query
-    from hsfs.feature_view import FeatureView
-    from hsfs.training_dataset import TrainingDataset
-    from hsfs.transformation_function import TransformationFunction
+from hsfs.constructor import query
 
 # in case importing in %%local
 from hsfs.core.vector_db_client import VectorDbClient
@@ -89,11 +83,18 @@ from great_expectations.data_context.types.base import (
     DataContextConfig,
     InMemoryStoreBackendDefaults,
 )
-from hsfs import client, feature, training_dataset_feature, util
+from hsfs import (
+    client,
+    feature,
+    feature_view,
+    training_dataset,
+    training_dataset_feature,
+    transformation_function,
+    util,
+)
 from hsfs import feature_group as fg_mod
 from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.constructor import query
 from hsfs.core import (
     dataset_api,
     delta_engine,
@@ -556,9 +557,9 @@ class Engine:
 
     def get_training_data(
         self,
-        training_dataset: TrainingDataset,
-        feature_view_obj: FeatureView,
-        query_obj: Query,
+        training_dataset: training_dataset.TrainingDataset,
+        feature_view_obj: feature_view.FeatureView,
+        query_obj: query.Query,
         read_options: Dict[str, Any],
         dataframe_type: str,
         training_dataset_version: int = None,
@@ -607,12 +608,12 @@ class Engine:
 
     def write_training_dataset(
         self,
-        training_dataset: TrainingDataset,
-        query_obj: Query,
+        training_dataset: training_dataset.TrainingDataset,
+        query_obj: query.Query,
         user_write_options: Dict[str, Any],
         save_mode: str,
         read_options: Dict[str, Any] = None,
-        feature_view_obj: FeatureView = None,
+        feature_view_obj: feature_view.FeatureView = None,
         to_df: bool = False,
         training_dataset_version: Optional[int] = None,
     ):
@@ -844,7 +845,9 @@ class Engine:
         write_options,
         save_mode,
         to_df=False,
-        transformation_functions: List[TransformationFunction] = None,
+        transformation_functions: List[
+            transformation_function.TransformationFunction
+        ] = None,
     ):
         for split_name, feature_dataframe in feature_dataframes.items():
             split_path = training_dataset.location + "/" + str(split_name)
@@ -1226,7 +1229,9 @@ class Engine:
         ).save(feature_group.location)
 
     def _apply_transformation_function(
-        self, transformation_functions: List[TransformationFunction], dataset: DataFrame
+        self,
+        transformation_functions: List[transformation_function.TransformationFunction],
+        dataset: DataFrame,
     ):
         """
         Apply transformation function to the dataframe.
@@ -1244,8 +1249,8 @@ class Engine:
         transformation_features = []
         output_col_names = []
         explode_name = []
-        for transformation_function in transformation_functions:
-            hopsworks_udf = transformation_function.hopsworks_udf
+        for tf in transformation_functions:
+            hopsworks_udf = tf.hopsworks_udf
             missing_features = set(hopsworks_udf.transformation_features) - set(
                 dataset.columns
             )
@@ -1255,9 +1260,7 @@ class Engine:
                     f"Features {missing_features} specified in the transformation function '{hopsworks_udf.function_name}' are not present in the feature view. Please specify the feature required correctly."
                 )
 
-            transformed_features.update(
-                transformation_function.hopsworks_udf.transformation_features
-            )
+            transformed_features.update(tf.hopsworks_udf.transformation_features)
 
             pandas_udf = hopsworks_udf.get_udf()
             output_col_name = hopsworks_udf.output_column_names[0]
