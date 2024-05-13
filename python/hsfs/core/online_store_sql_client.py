@@ -306,8 +306,8 @@ class OnlineStoreSqlClient:
             f"Executing prepared statements for serving vector with entries: {bind_entries}"
         )
         # loop = asyncio.get_running_loop()
-        results_dict = self._execute_prep_statements(
-            prepared_statement_execution, bind_entries
+        results_dict = asyncio.run(
+            self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
 
         _logger.debug(f"Retrieved feature vectors: {results_dict}")
@@ -522,11 +522,10 @@ class OnlineStoreSqlClient:
         ]
 
     def _get_connection_pool(self, default_min_size: int, loop=None) -> None:
-        # if self._async_pool is None:
-        # if self._connection_pool is not None:
-        #    return self._connection_pool
+        if self._connection_pool is not None:
+            return self._connection_pool
 
-        # print("Creating new pool !!!")
+        print("Creating new pool !!!")
         self._connection_pool = util.create_async_engine(
             self._online_connector,
             self._external,
@@ -537,24 +536,25 @@ class OnlineStoreSqlClient:
 
         return self._connection_pool
 
-    async def _query_async_sql(self, stmt, bind_params):
+    async def _query_async_sql(self, stmt, bind_params, lock):
         """Query prepared statement together with bind params using aiomysql connection pool"""
         # Get a connection from the pool
         # lock = asyncio.Lock()
 
-        async with self._connection_pool.acquire() as conn:
-            # Execute the prepared statement
-            _logger.debug(
-                f"Executing prepared statement: {stmt} with bind params: {bind_params}"
-            )
-            cursor = await conn.execute(stmt, bind_params)
-            # Fetch the result
-            _logger.debug("Waiting for resultset.")
-            resultset = await cursor.fetchall()
-            _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
-            await cursor.close()
+        async with lock:
+            async with self._connection_pool.acquire() as conn:
+                # Execute the prepared statement
+                _logger.debug(
+                    f"Executing prepared statement: {stmt} with bind params: {bind_params}"
+                )
+                cursor = await conn.execute(stmt, bind_params)
+                # Fetch the result
+                _logger.debug("Waiting for resultset.")
+                resultset = await cursor.fetchall()
+                _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
+                await cursor.close()
 
-        return resultset
+                return resultset
 
     # async def _query_async_sql(self, stmt, bind_params, pool):
     #     """Query prepared statement together with bind params using aiomysql connection pool"""
@@ -587,7 +587,7 @@ class OnlineStoreSqlClient:
             await self._connection_pool.wait_closed()
             self._connection_pool = None
 
-    def _execute_prep_statements(
+    async def _execute_prep_statements(
         self,
         prepared_statements: Dict[int, str],
         entries: Union[List[Dict[str, Any]], Dict[str, Any]],
@@ -604,26 +604,26 @@ class OnlineStoreSqlClient:
 
         # loop = asyncio.get_event_loop()
 
-        pool = self._get_connection_pool(
+        self._get_connection_pool(
             len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
         )
-
+        lock = asyncio.Lock()
         tasks = [
             asyncio.ensure_future(
-                self._query_async_sql(prepared_statements[key], entries[key])
+                self._query_async_sql(prepared_statements[key], entries[key], lock)
             )
             for key in prepared_statements
         ]
         # Run the queries in parallel using asyncio.gather
-        results = asyncio.run(asyncio.gather(*tasks))
+        results = await asyncio.gather(*tasks)
         results_dict = {}
         # Create a dict of results with the prepared statement index as key
         for i, key in enumerate(entries):
             results_dict[key] = results[i]
 
         # loop.run_until_complete(self.close_pool())
-        pool.close()
-        asyncio.run(pool.wait_closed())
+        # pool.close()
+        # asyncio.run(pool.wait_closed())
 
         return results_dict
 

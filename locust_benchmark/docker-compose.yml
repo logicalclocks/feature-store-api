@@ -4,7 +4,7 @@ services:
   master:
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    image: locust-hsfs:master
+    image: locust-hsfs:test
     ports:
      - "8089:8089"
     volumes:
@@ -14,7 +14,8 @@ services:
   worker:
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    image: locust-hsfs:master
+    image: locust-hsfs:test
     volumes:
       - ./:/home/locust
     command: -f /home/locust/locustfile.py MySQLFeatureVectorLookup --worker --master-host master
+    scale: 1
