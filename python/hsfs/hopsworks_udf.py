@@ -278,6 +278,7 @@ class HopsworksUdf:
             ]
         )
         arg_list = signature.split("(")[1].split(")")[0].split(",")
+        arg_list = [arg for arg in arg_list if not arg.strip() == ""]
         return arg_list, signature, signature_start_line, signature_end_line
 
     @staticmethod
@@ -293,7 +294,7 @@ class HopsworksUdf:
         # Get source code of the original function
         arg_list, _, _, _ = HopsworksUdf._parse_function_signature(source_code)
 
-        if arg_list == [""]:
+        if arg_list == []:
             raise FeatureStoreException(
                 "No arguments present in the provided user defined function. Please provide at least one argument in the defined user defined function."
             )

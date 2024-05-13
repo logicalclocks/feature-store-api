@@ -8,8 +8,6 @@ ignore = [
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
-# transformations_test_helper excluded from fomating and linting because the used formating is required for the test cases
-exclude = ["transformations_test_helper/"]
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -36,4 +34,4 @@ line-ending = "auto"
 pythonpath = [
   ".", "tests"
 ]
-addopts = "--ignore=python/tests/transformations_test_helper/"
+addopts = "--ignore=python/tests/test_helper/"
