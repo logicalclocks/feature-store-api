@@ -140,6 +140,49 @@ class TransformationFunctionEngine:
         )
 
     @staticmethod
+    def get_ready_to_use_transformation_fns(
+        feature_view: FeatureView,
+        training_dataset_version: Optional[int] = None,
+    ) -> List[TransformationFunction]:
+        # get attached transformation functions
+        transformation_functions = (
+            feature_view._feature_view_engine.get_attached_transformation_fn()
+        )
+        is_stat_required = any(
+            [tf.hopsworks_udf.statistics_required for tf in transformation_functions]
+        )
+        if not is_stat_required:
+            td_tffn_stats = None
+        else:
+            # if there are any transformation functions that require statistics get related statistics and
+            # populate with relevant arguments
+            # there should be only one statistics object with before_transformation=true
+            if training_dataset_version is None:
+                raise ValueError(
+                    "Training data version is required for transformation. Call `feature_view.init_serving(version)` "
+                    "or `feature_view.init_batch_scoring(version)` to pass the training dataset version."
+                    "Training data can be created by `feature_view.create_training_data` or `feature_view.training_data`."
+                )
+            td_tffn_stats = feature_view._statistics_engine.get(
+                feature_view,
+                before_transformation=True,
+                training_dataset_version=training_dataset_version,
+            )
+
+        if is_stat_required and td_tffn_stats is None:
+            raise ValueError(
+                "No statistics available for initializing transformation functions."
+                + "Training data can be created by `feature_view.create_training_data` or `feature_view.training_data`."
+            )
+
+        if is_stat_required:
+            for transformation_function in transformation_functions:
+                transformation_function.hopsworks_udf.transformation_statistics = (
+                    td_tffn_stats.feature_descriptive_statistics
+                )
+        return transformation_functions
+
+    @staticmethod
     def compute_and_set_feature_statistics(
         training_dataset: training_dataset.TrainingDataset,
         feature_view_obj: FeatureView,
