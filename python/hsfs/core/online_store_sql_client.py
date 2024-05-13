@@ -616,7 +616,7 @@ class OnlineStoreSqlClient:
         # loop = asyncio.get_event_loop()
 
         tasks = [
-            asyncio.ensure_future(
+            asyncio.create_task(
                 self._query_async_sql(prepared_statements[key], entries[key])
             )
             for key in prepared_statements
