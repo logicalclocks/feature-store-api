@@ -684,9 +684,30 @@
       "id": 11,
       "version": 1,
       "description": "test_description",
-      "transformation_functions": {
-        "featurestore_id": 5
-      },
+      "transformation_functions": [
+          {
+            "id" : 1,
+            "version": 2,
+            "featurestoreId": 11,
+            "hopsworksUdf":{
+              "sourceCode": "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n",
+              "name": "add_mean_fs",
+              "outputTypes":"double",
+              "transformationFeatures":"data"
+            }
+          },
+          {
+            "id" : 2,
+            "version": 1,
+            "featurestoreId": 11,
+            "hopsworksUdf":{
+              "sourceCode": "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
+              "name": "add_one_fs",
+              "outputTypes":"double",
+              "transformationFeatures":"col1"
+            }
+          }
+      ],
       "features": [
         {
           "name": "intt",
