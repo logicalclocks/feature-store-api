@@ -23,12 +23,13 @@ import re
 import shutil
 import warnings
 from datetime import date, datetime, timezone
-from typing import Any, List, Optional, TypeVar, Union, TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
 
 import avro
 import numpy as np
 import pandas as pd
 import tzlocal
+
 
 if TYPE_CHECKING:
     from hsfs.constructor.query import Query
@@ -158,7 +159,14 @@ class Engine:
             sql_query, feature_store, online_conn, "default", read_options
         ).show(n)
 
-    def read_vector_db(self, feature_group: fg_mod.FeatureGroup, n: int =None, dataframe_type: str="default") -> Union[pd.DataFrame, np.ndarray, List[List[Any]], TypeVar("pyspark.sql.DataFrame")]:
+    def read_vector_db(
+        self,
+        feature_group: fg_mod.FeatureGroup,
+        n: int = None,
+        dataframe_type: str = "default",
+    ) -> Union[
+        pd.DataFrame, np.ndarray, List[List[Any]], TypeVar("pyspark.sql.DataFrame")
+    ]:
         results = VectorDbClient.read_feature_group(feature_group, n)
         feature_names = [f.name for f in feature_group.features]
         dataframe_type = dataframe_type.lower()

@@ -20,6 +20,7 @@ from hsfs import feature as feature_mod
 from hsfs import feature_group as feature_group_mod
 from hsfs import util
 
+
 class TrainingDatasetFeature:
     def __init__(
         self,
