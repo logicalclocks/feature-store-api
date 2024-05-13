@@ -25,7 +25,6 @@ import warnings
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
 
-
 if TYPE_CHECKING:
     import great_expectations
     from pyspark.rdd import RDD
