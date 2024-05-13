@@ -43,13 +43,13 @@ from hsfs.core import (
     online_store_rest_client_engine,
     online_store_sql_engine,
     transformation_function_engine as tf_engine_mod,
-    transformation_functions
+    transformation_function
 )
+
 
 HAS_FASTAVRO = False
 try:
     from fastavro import schemaless_reader
-
     HAS_FASTAVRO = True
 except ImportError:
     from avro.io import BinaryDecoder
@@ -106,7 +106,7 @@ class VectorServer:
         self._transformation_function_engine = (
             tf_engine_mod.TransformationFunctionEngine(feature_store_id)
         )
-        self._transformation_functions: List[transformation_functions.TransformationFunction] = []
+        self._transformation_functions: List[transformation_function.TransformationFunction] = []
 
         self._sql_client = None
 
@@ -184,7 +184,7 @@ class VectorServer:
         entity: Union[feature_view.FeatureView],
     ):
         # attach transformation functions
-        self._transformation_functions = transformation_function_engine.TransformationFunctionEngine.get_ready_to_use_transformation_fns(
+        self._transformation_functions = tf_engine_mod.TransformationFunctionEngine.get_ready_to_use_transformation_fns(
             entity,
             self._training_dataset_version,
         )
@@ -564,7 +564,6 @@ class VectorServer:
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
     
-
     def which_client_and_ensure_initialised(
         self, force_rest_client: bool, force_sql_client: bool
     ) -> str:
@@ -628,14 +627,12 @@ class VectorServer:
 
     def apply_transformation(self, row_dict: dict):
         _logger.debug("Applying transformation functions to : %s", matching_keys)
-        for transformation_function in self.transformation_functions:
+        for tf in self.transformation_functions:
             features = [
                 pd.Series(row_dict[feature])
-                for feature in transformation_function.hopsworks_udf.transformation_features
+                for feature in tf.hopsworks_udf.transformation_features
             ]
-            transformed_result = transformation_function.hopsworks_udf.get_udf()(
-                *features
-            )
+            transformed_result = tf.hopsworks_udf.get_udf()(*features)
             if isinstance(transformed_result, pd.Series):
                 row_dict[transformed_result.name] = transformed_result.values[0]
             else:
@@ -678,6 +675,7 @@ class VectorServer:
             for f in self._features
             if f.is_complex()
         }
+
         if len(complex_feature_schemas) == 0:
             return {}
         else:
@@ -869,7 +867,6 @@ class VectorServer:
                 passed_feature_names = passed_feature_names.union(
                     vector_db_features.keys()
                 )
-
             neither_fetched_nor_passed = fetched_features.difference(
                 passed_feature_names
             )
@@ -912,7 +909,7 @@ class VectorServer:
                 ]
             )
         return per_serving_key_features
-
+    
     @property
     def sql_client(
         self,
