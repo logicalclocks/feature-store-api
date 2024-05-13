@@ -154,7 +154,10 @@ class TransformationFunction:
                     tffn_dto["hopsworks_udf"] = HopsworksUdf.from_response_json(
                         tffn_dto["hopsworks_udf"]
                     )
-            return [cls(**tffn_dto) for tffn_dto in json_decamelized["items"]]
+            if json_decamelized["count"] == 1:
+                return cls(**json_decamelized["items"][0])
+            else:
+                return [cls(**tffn_dto) for tffn_dto in json_decamelized["items"]]
         else:
             if json_decamelized.get("hopsworks_udf", False):
                 json_decamelized["hopsworks_udf"] = HopsworksUdf.from_response_json(

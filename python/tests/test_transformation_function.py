@@ -171,6 +171,30 @@ class TestTransformationFunction:
             == "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
         )
 
+    def test_from_response_json_list_one_argument(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["transformation_function"]["get_list_one_argument"][
+            "response"
+        ]
+
+        # Act
+        tf = TransformationFunction.from_response_json(json)
+
+        # Assert
+        assert not isinstance(tf, list)
+        assert tf.id == 1
+        assert tf._featurestore_id == 11
+        assert tf.version == 2
+        assert tf.hopsworks_udf.function_name == "add_mean_fs"
+        assert tf.hopsworks_udf.output_types == ["double"]
+        assert tf.hopsworks_udf.statistics_required
+        assert tf.hopsworks_udf.transformation_features == ["data"]
+        assert tf.hopsworks_udf.statistics_features == ["data"]
+        assert (
+            tf.hopsworks_udf._function_source
+            == "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n"
+        )
+
     def test_transformation_function_definition_no_hopworks_udf(self):
         def test(col1):
             return col1 + 1
