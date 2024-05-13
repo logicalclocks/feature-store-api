@@ -77,11 +77,6 @@ class VectorServer:
         self._serving_keys = serving_keys or []
         self._required_serving_keys = []
 
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(
-                feature_store_id
-            )
-        )
         self._transformation_functions = None
         self._online_store_sql_client: Optional[
             online_store_sql_client.OnlineStoreSqlClient
@@ -116,14 +111,12 @@ class VectorServer:
 
     def init_transformation(
         self,
-        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
+        entity: Union[feature_view.FeatureView],
     ):
         # attach transformation functions
-        self._transformation_functions = (
-            self.transformation_function_engine.get_ready_to_use_transformation_fns(
-                entity,
-                self._training_dataset_version,
-            )
+        self._transformation_functions = transformation_function_engine.TransformationFunctionEngine.get_ready_to_use_transformation_fns(
+            entity,
+            self._training_dataset_version,
         )
 
     def setup_online_store_sql_client(
@@ -444,12 +437,6 @@ class VectorServer:
         self,
     ) -> Optional[TransformationFunction]:
         return self._transformation_functions
-
-    @property
-    def transformation_function_engine(
-        self,
-    ) -> transformation_function_engine.TransformationFunctionEngine:
-        return self._transformation_function_engine
 
     def transformed_feature_vector_col_name(self):
         if self._transformed_feature_vector_col_name is None:
