@@ -191,14 +191,12 @@ class VectorServer:
 
     def init_transformation(
         self,
-        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
+        entity: Union[feature_view.FeatureView],
     ):
         # attach transformation functions
-        self._transformation_functions = (
-            self.transformation_function_engine.get_ready_to_use_transformation_fns(
-                entity,
-                self._training_dataset_version,
-            )
+        self._transformation_functions = transformation_function_engine.TransformationFunctionEngine.get_ready_to_use_transformation_fns(
+            entity,
+            self._training_dataset_version,
         )
 
     def setup_sql_client(
