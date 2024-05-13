@@ -30,7 +30,17 @@ import warnings
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union, TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import avro
 import boto3
@@ -209,7 +219,6 @@ class Engine:
         hive_config: Optional[Dict[str, Any]] = None,
         arrow_flight_config: Optional[Dict[str, Any]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
-
         self._validate_dataframe_type(dataframe_type)
         if isinstance(sql_query, dict) and "query_string" in sql_query:
             result_df = util.run_with_loading_animation(
@@ -513,7 +522,12 @@ class Engine:
             sql_query, feature_store, online_conn, "default", read_options or {}
         ).head(n)
 
-    def read_vector_db(self, feature_group: "hsfs.feature_group.FeatureGroup", n: int =None, dataframe_type: str="default") -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
+    def read_vector_db(
+        self,
+        feature_group: "hsfs.feature_group.FeatureGroup",
+        n: int = None,
+        dataframe_type: str = "default",
+    ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
         dataframe_type = dataframe_type.lower()
         self._validate_dataframe_type(dataframe_type)
 
