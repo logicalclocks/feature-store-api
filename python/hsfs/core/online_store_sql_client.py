@@ -223,6 +223,8 @@ class OnlineStoreSqlClient:
         self._online_connector = self._storage_connector_api.get_online_connector(
             self._feature_store_id
         )
+        max_simultaneous_queries = 5
+        self._semaphore = asyncio.Semaphore(max_simultaneous_queries)
 
         nest_asyncio.apply()
 
@@ -552,20 +554,20 @@ class OnlineStoreSqlClient:
         await self._get_connection_pool(
             len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
         )
+        async with self._semaphore:
+            async with self.get_connection() as conn:
+                # Execute the prepared statement
+                _logger.debug(
+                    f"Executing prepared statement: {stmt} with bind params: {bind_params}"
+                )
+                cursor = await conn.execute(stmt, bind_params)
+                # Fetch the result
+                _logger.debug("Waiting for resultset.")
+                resultset = await cursor.fetchall()
+                _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
+                await cursor.close()
 
-        async with self.get_connection() as conn:
-            # Execute the prepared statement
-            _logger.debug(
-                f"Executing prepared statement: {stmt} with bind params: {bind_params}"
-            )
-            cursor = await conn.execute(stmt, bind_params)
-            # Fetch the result
-            _logger.debug("Waiting for resultset.")
-            resultset = await cursor.fetchall()
-            _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
-            await cursor.close()
-
-            return resultset
+                return resultset
 
     # async def _query_async_sql(self, stmt, bind_params, pool):
     #     """Query prepared statement together with bind params using aiomysql connection pool"""
