@@ -216,10 +216,16 @@ class TransformationFunctionEngine:
             dataset `Union[Dict[str,  Union[pd.DataFrame, pl.DataFrame, ps.DataFrame]],  Union[pd.DataFrame, pl.DataFrame, ps.DataFrame]]`: A dataframe that conqtains the training data or a dictionary that contains both the training and test data.
         """
         statistics_features: Set[str] = set()
+        label_encoder_features: Set[str] = set()
 
         # Finding the features for which statistics is required
         for tf in feature_view_obj.transformation_functions:
             statistics_features.update(tf.hopsworks_udf.statistics_features)
+            if (
+                tf.hopsworks_udf.function_name == "label_encoder"
+                or tf.hopsworks_udf.function_name == "one_hot_encoder"
+            ):
+                label_encoder_features.update(tf.hopsworks_udf.statistics_features)
         if statistics_features:
             # compute statistics on training data
             if training_dataset.splits:
@@ -228,7 +234,7 @@ class TransformationFunctionEngine:
                     TransformationFunctionEngine.compute_transformation_fn_statistics(
                         training_dataset,
                         list(statistics_features),
-                        [],
+                        list(label_encoder_features),
                         dataset.get(training_dataset.train_split),
                         feature_view_obj,
                     )
@@ -238,7 +244,7 @@ class TransformationFunctionEngine:
                     TransformationFunctionEngine.compute_transformation_fn_statistics(
                         training_dataset,
                         list(statistics_features),
-                        [],
+                        list(label_encoder_features),
                         dataset,
                         feature_view_obj,
                     )
