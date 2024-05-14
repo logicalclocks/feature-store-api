@@ -420,7 +420,7 @@ class VectorServer:
 
         _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)
 
-        return [result_dict.get(fname, None) for fname in self.feature_vector_col_name]
+        return [result_dict.get(fname, None) for fname in self.transformed_feature_vector_col_name]
 
     def handle_feature_vector_return_type(
         self,
@@ -864,7 +864,7 @@ class VectorServer:
                 ]
             )
         return per_serving_key_features
-    
+
     @property
     def online_store_sql_client(
         self,
@@ -1007,9 +1007,20 @@ class VectorServer:
 
     def transformed_feature_vector_col_name(self):
         if self._transformed_feature_vector_col_name is None:
-            self._transformed_feature_vector_col_name = self._feature_vector_col_name
+            transformation_features = []
+            output_column_names = []
             for transformation_function in self._transformation_functions:
-                self._transformed_feature_vector_col_name += (
+                transformation_features += (
                     transformation_function.hopsworks_udf.transformation_features
                 )
+                output_column_names += (
+                    transformation_function.hopsworks_udf.output_column_names
+                )
+
+            self._transformed_feature_vector_col_name = [
+                feature
+                for feature in self._feature_vector_col_name
+                if feature not in transformation_features
+            ]
+            self._transformed_feature_vector_col_name.extend(output_column_names)
         return self._transformed_feature_vector_col_name

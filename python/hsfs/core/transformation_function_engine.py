@@ -149,8 +149,17 @@ class TransformationFunctionEngine:
     ) -> List[transformation_function.TransformationFunction]:
         # get attached transformation functions
         transformation_functions = (
-            feature_view._feature_view_engine.get_attached_transformation_fn()
+            feature_view._feature_view_engine.get_attached_transformation_fn(
+                feature_view.name, feature_view.version
+            )
         )
+
+        transformation_functions = (
+            [transformation_functions]
+            if not isinstance(transformation_functions, list)
+            else transformation_functions
+        )
+
         is_stat_required = any(
             [tf.hopsworks_udf.statistics_required for tf in transformation_functions]
         )
