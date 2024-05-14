@@ -664,9 +664,7 @@ class VectorServer:
                 row_dict[transformed_result.name] = transformed_result.values[0]
             else:
                 for col in transformed_result:
-                    row_dict[transformed_result.name] = transformed_result[col].values[
-                        0
-                    ]
+                    row_dict[col] = transformed_result[col].values[0]
         return row_dict
 
     def apply_return_value_handlers(
