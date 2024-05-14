@@ -358,7 +358,7 @@ class VectorServer:
 
     def _generate_vector(self, result_dict: Dict[str, Any], fill_na: bool = False):
         feature_values = []
-        for feature_name in self._feature_vector_col_name:
+        for feature_name in self.transformed_feature_vector_col_name:
             if feature_name not in result_dict:
                 if fill_na:
                     feature_values.append(None)
@@ -428,11 +428,23 @@ class VectorServer:
     ) -> Optional[transformation_function.TransformationFunction]:
         return self._transformation_functions
 
+    @property
     def transformed_feature_vector_col_name(self):
         if self._transformed_feature_vector_col_name is None:
-            self._transformed_feature_vector_col_name = self._feature_vector_col_name
+            transformation_features = []
+            output_column_names = []
             for transformation_function in self._transformation_functions:
-                self._transformed_feature_vector_col_name += (
+                transformation_features += (
                     transformation_function.hopsworks_udf.transformation_features
                 )
+                output_column_names += (
+                    transformation_function.hopsworks_udf.output_column_names
+                )
+
+            self._transformed_feature_vector_col_name = [
+                feature
+                for feature in self._feature_vector_col_name
+                if feature not in transformation_features
+            ]
+            self._transformed_feature_vector_col_name.extend(output_column_names)
         return self._transformed_feature_vector_col_name
