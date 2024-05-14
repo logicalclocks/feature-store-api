@@ -480,6 +480,19 @@ def renaming_wrapper(*args):
         udf.output_column_names = udf._get_output_column_names()
         return udf
 
+    def update_return_type_one_hot(self):
+        self._output_types = [
+            self._output_types[0]
+            for _ in range(
+                len(
+                    self.transformation_statistics[
+                        "statistics_feature"
+                    ].extended_statistics["unique_values"]
+                )
+            )
+        ]
+        self.output_column_names = self._get_output_column_names()
+
     def get_udf(self) -> Callable:
         """
         Function that checks the current engine type and returns the appropriate UDF.
@@ -490,6 +503,10 @@ def renaming_wrapper(*args):
         # Returns
             `Callable`: Pandas UDF in the spark engine otherwise returns a python function for the UDF.
         """
+        # Update the number of outputs for one hot encoder to match the number of unique values for the feature
+        if self.function_name == "one_hot_encoder":
+            self.update_return_type_one_hot()
+
         if engine.get_type() in ["hive", "python", "training"]:
             return self.hopsworksUdf_wrapper()
         else:
