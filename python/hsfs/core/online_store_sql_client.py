@@ -125,7 +125,7 @@ class OnlineStoreSqlClient:
         self.fetch_prepared_statements(entity, inference_helper_columns)
 
         self.init_parametrize_and_serving_utils(
-            self.prepared_statements[self.SINGLE_VECTOR_KEY]
+            self.prepared_statements[self.BATCH_VECTOR_KEY]
         )
 
         for key in self.get_prepared_statement_labels(inference_helper_columns):
@@ -144,7 +144,7 @@ class OnlineStoreSqlClient:
             "Initializing parametrize and serving utils property using %s",
             json.dumps(prepared_statements, default=lambda x: x.__dict__, indent=2),
         )
-        self._prefix_by_serving_index = {
+        self.prefix_by_serving_index = {
             statement.prepared_statement_index: statement.prefix
             for statement in prepared_statements
         }
@@ -628,6 +628,7 @@ class OnlineStoreSqlClient:
 
     @prefix_by_serving_index.setter
     def prefix_by_serving_index(self, prefix_by_serving_index: Dict[int, str]) -> None:
+        _logger.debug(f"Setting prefix by serving index {prefix_by_serving_index}.")
         self._prefix_by_serving_index = prefix_by_serving_index
 
     @property
