@@ -53,6 +53,9 @@ class PreparedStatementParameter:
     def to_dict(self) -> Dict[str, Any]:
         return {"name": self._name, "index": self._index}
 
+    def __repr__(self) -> str:
+        return humps.decamelize(json.dumps(self.to_dict(), sort_keys=True, indent=4))
+
     @property
     def name(self) -> Optional[str]:
         return self._name
