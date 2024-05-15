@@ -15,6 +15,7 @@
 #
 from __future__ import annotations
 
+import asyncio
 import itertools
 import json
 import re
@@ -213,7 +214,7 @@ async def create_async_engine(
             options.get("maxsize", default_min_size) if options else default_min_size
         ),
         pool_recycle=(options.get("pool_recycle", -1) if options else -1),
-        # loop=loop,
+        loop=asyncio.get_running_loop(),
     )
 
     return pool

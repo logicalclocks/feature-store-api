@@ -6,6 +6,7 @@ from common.stop_watch import stopwatch
 from locust import HttpUser, User, task, constant, events
 from locust.runners import MasterRunner, LocalRunner
 from urllib3 import PoolManager
+import nest_asyncio
 
 
 @events.init.add_listener
@@ -76,6 +77,7 @@ class MySQLFeatureVectorLookup(User):
         print("Init user")
         self.fv.init_serving(external=self.client.external)
         sleep(2)
+        nest_asyncio.apply()
 
     def on_stop(self):
         print("Closing user")
@@ -116,6 +118,7 @@ class MySQLFeatureVectorBatchLookup(User):
             {"ip": random.randint(0, self.client.rows - 1)}
             for i in range(self.client.batch_size)
         ]
+
         self._get_feature_vectors(pks)
 
     @stopwatch
