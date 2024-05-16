@@ -68,6 +68,9 @@ jobs:
 
       - name: Display Python version
         run: python --version
+      
+      - name: Display Java version
+        run: java --version
 
       - name: Display pip freeze
         run: pip freeze
