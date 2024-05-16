@@ -179,6 +179,12 @@ class Query:
                 + " to specify whether to read from the Online Feature Store.",
                 stacklevel=1,
             )
+        self._check_read_supported(online)
+        if online and self._left_feature_group.embedding_index:
+            return engine.get_instance().read_vector_db(
+                self._left_feature_group, dataframe_type=dataframe_type
+            )
+
         if not read_options:
             read_options = {}
         sql_query, online_conn = self._prep_read(online, read_options)
@@ -223,11 +229,13 @@ class Query:
         """
         self._check_read_supported(online)
         read_options = {}
-        sql_query, online_conn = self._prep_read(online, read_options)
-
-        return engine.get_instance().show(
-            sql_query, self._feature_store_name, n, online_conn, read_options
-        )
+        if online and self._left_feature_group.embedding_index:
+            return engine.get_instance().read_vector_db(self._left_feature_group, n)
+        else:
+            sql_query, online_conn = self._prep_read(online, read_options)
+            return engine.get_instance().show(
+                sql_query, self._feature_store_name, n, online_conn, read_options
+            )
 
     def join(
         self,
@@ -538,19 +546,22 @@ class Query:
                 + " to specify whether to read from the Online Feature Store.",
                 stacklevel=1,
             )
+        has_embedding = False
         for fg in self.featuregroups:
             if fg.embedding_index:
-                raise FeatureStoreException(
-                    "Reading from query containing embedding is not supported."
-                    " Use `feature_view.get_feature_vector(s) instead."
-                )
-            elif fg.online_enabled is False:
+                has_embedding = True
+            if fg.online_enabled is False:
                 raise FeatureStoreException(
                     f"Found {fg.name} in query Feature Groups which is not `online_enabled`."
                     + "If you intend to use the Online Feature Store, please enable the Feature Group"
                     + " for online serving by setting `online=True` on creation. Otherwise, set online=False"
                     + " when using the `read` method."
                 )
+        if has_embedding and len(self.featuregroups) > 1:
+            raise FeatureStoreException(
+                "Reading from query containing embedding and join is not supported."
+                " Use `feature_view.get_feature_vector(s) instead."
+            )
 
     @classmethod
     def _hopsworks_json(cls, json_dict: Dict[str, Any]) -> "Query":

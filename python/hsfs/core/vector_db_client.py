@@ -34,6 +34,8 @@ class VectorDbClient:
         Filter.LT: "lt",
         Filter.LE: "lte",
     }
+    _index_result_limit_k = dict()
+    _index_result_limit_n = dict()
 
     def __init__(self, query, serving_keys=None):
         self._opensearch_client = None
@@ -47,7 +49,7 @@ class VectorDbClient:
         self._embedding_fg_by_join_index = {}
         self._fg_id_to_vdb_pks = {}
         self._opensearch_client = None
-        self._index_result_limit_k = {}
+
         self._serving_keys = serving_keys
         self._serving_key_by_serving_index: Dict[int, hsfs.serving_key.ServingKey] = {}
         self.init()
@@ -159,7 +161,7 @@ class VectorDbClient:
         ):
             # Get the max number of results allowed to request if it is not available.
             # This is expected to be executed once only.
-            if not self._index_result_limit_k.get(index_name):
+            if not VectorDbClient._index_result_limit_k.get(index_name):
                 query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = 2**31 - 1
                 try:
                     # It is expected that this request ALWAYS fails because requested k is too large.
@@ -174,13 +176,13 @@ class VectorDbClient:
                             VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K
                         )
                     ):
-                        self._index_result_limit_k[index_name] = e.info.get(
+                        VectorDbClient._index_result_limit_k[index_name] = e.info.get(
                             VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K
                         )
                     else:
                         raise e
             query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = min(
-                self._index_result_limit_k.get(index_name, k), 3 * k
+                VectorDbClient._index_result_limit_k.get(index_name, k), 3 * k
             )
             results = self._opensearch_client.search(
                 body=query, index=index_name, options=options
@@ -332,7 +334,25 @@ class VectorDbClient:
                 "query": {"bool": {"must": {"exists": {"field": pk}}}},
                 "size": n,
             }
-
+            if n is None:
+                if VectorDbClient._index_result_limit_n.get(index_name) is None:
+                    try:
+                        query["size"] = 2**31 - 1
+                        self._opensearch_client.search(body=query,
+                                                             index=index_name)
+                    except VectorDatabaseException as e:
+                        if (
+                            e.reason == VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE
+                            and e.info.get(
+                            VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE_INFO_N
+                        )
+                        ):
+                            VectorDbClient._index_result_limit_n[index_name] = e.info.get(
+                                VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE_INFO_N
+                            )
+                        else:
+                            raise e
+                query["size"] = VectorDbClient._index_result_limit_n.get(index_name)
         query["_source"] = list(self._fg_vdb_col_fg_col_map.get(fg_id).keys())
         results = self._opensearch_client.search(body=query, index=index_name)
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
@@ -342,6 +362,21 @@ class VectorDbClient:
             ))
             for item in results["hits"]["hits"]
         ]
+
+    @staticmethod
+    def read_feature_group(feature_group: "hsfs.feature_group.FeatureGroup", n: int =None) -> list:
+        if feature_group.embedding_index:
+            vector_db_client = VectorDbClient(feature_group.select_all())
+            results = vector_db_client.read(
+                feature_group.id,
+                feature_group.features,
+                pk=feature_group.embedding_index.col_prefix + feature_group.primary_key[0],
+                index_name=feature_group.embedding_index.index_name,
+                n=n
+            )
+            return [[result[f.name] for f in feature_group.features] for result in results]
+        else:
+            raise FeatureStoreException("Feature group does not have embedding.")
 
     def count(self, fg, options=None):
         query = {
