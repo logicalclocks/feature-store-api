@@ -42,7 +42,7 @@ def robust_scaler(
     )
 
 
-# @hopsworks_udf(int)
+@hopsworks_udf(int)
 def label_encoder(
     feature: pd.Series, statistics_feature: FeatureDescriptiveStatistics
 ) -> pd.Series:
@@ -53,15 +53,16 @@ def label_encoder(
     return pd.Series([value_to_index[data] for data in feature])
 
 
+@hopsworks_udf(bool)
 def one_hot_encoder(
     feature: pd.Series, statistics_feature: FeatureDescriptiveStatistics
 ) -> pd.Series:
     unique_data = [
         value for value in statistics_feature.extended_statistics["unique_values"]
     ]
-    print(statistics_feature.extended_statistics["unique_values"])
     one_hot = pd.get_dummies(feature, dtype="bool")
     for data in unique_data:
         if data not in one_hot:
             one_hot[data] = False
-    return one_hot
+    # Sorting by columns so as to maintain consistency in column order.
+    return one_hot.reindex(sorted(one_hot.columns), axis=1)
