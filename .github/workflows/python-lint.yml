@@ -74,9 +74,6 @@ jobs:
         with:
           java-version: '8'
           distribution: 'adopt'
-      
-      - name: Display Java version
-        run: java --version
 
       - name: Display pip freeze
         run: pip freeze
