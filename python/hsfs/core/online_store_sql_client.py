@@ -22,6 +22,7 @@ import re
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import nest_asyncio
 from hsfs import feature_view, training_dataset, util
 from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
@@ -233,6 +234,20 @@ class OnlineStoreSqlClient:
         # )
         # self._loop = loop
 
+        import sys
+
+        def is_notebook():
+            if "ipykernel" in sys.modules:
+                return True
+            else:
+                return False
+
+        if is_notebook():
+            print("Running in Jupyter notebook. applying nest_asyncio")
+            nest_asyncio.apply()
+        else:
+            print("Running in python script. Not applying nest_asyncio")
+
     def get_single_feature_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
         return self._single_vector_result(
@@ -307,19 +322,32 @@ class OnlineStoreSqlClient:
             f"Executing prepared statements for serving vector with entries: {bind_entries}"
         )
 
+        # try:
+        #     loop = asyncio.get_event_loop()
+        #     if loop.is_closed():
+        #         loop = asyncio.new_event_loop()
+        #     asyncio.set_event_loop(loop)
+        #     results_dict = loop.run_until_complete(
+        #         self._execute_prep_statements(
+        #             prepared_statement_execution, bind_entries
+        #         ),
+        #     )
+        # finally:
+        #     # loop.close()
+        #     pass
+
         try:
             loop = asyncio.get_event_loop()
-            if loop.is_closed():
-                loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            results_dict = loop.run_until_complete(
-                self._execute_prep_statements(
-                    prepared_statement_execution, bind_entries
-                ),
-            )
-        finally:
-            # loop.close()
-            pass
+        except RuntimeError as ex:
+            if "There is no current event loop in thread" in str(ex):
+                print("Creating new loop")
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+        results_dict = loop.run_until_complete(
+            self._execute_prep_statements(prepared_statement_execution, bind_entries),
+        )
 
         _logger.debug(f"Retrieved feature vectors: {results_dict}")
 
