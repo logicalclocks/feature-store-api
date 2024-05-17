@@ -433,8 +433,11 @@ def renaming_wrapper(*args):
         df = convert_timezone(df)
     return df"""
             )
+
         # injecting variables into scope used to execute wrapper function.
-        scope = __import__("__main__").__dict__
+
+        # Shallow copy of scope performed because updating statistics argument of scope must not affect other instances.
+        scope = __import__("__main__").__dict__.copy()
         if self.transformation_statistics is not None:
             scope.update(self.transformation_statistics)
         scope.update({"_output_col_names": self.output_column_names})
