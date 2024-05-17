@@ -753,7 +753,10 @@ class VectorServer:
                 set(passed_features.keys()) if passed_features else set()
             )
             if td_embedding_feature_names and len(td_embedding_feature_names) > 0:
-                passed_feature_names.add(td_embedding_feature_names)
+                passed_feature_names = passed_feature_names.union(
+                    td_embedding_feature_names
+                )
+            _logger.debug("td_embedding_feature_names %s", td_embedding_feature_names)
             neither_fetched_nor_passed = fetched_features.difference(
                 passed_feature_names
             )
