@@ -41,12 +41,13 @@ class OnlineStoreSqlClient:
         self,
         feature_store_id: id,
         skip_fg_ids: Optional[Set[int]],
+        external: bool,
         serving_keys: Optional[Set[ServingKey]] = None,
     ):
-        _logger.info("Initialising OnlineStoreSqlClient")
+        _logger.info("Initialising Online Store Sql Client")
         self._feature_store_id = feature_store_id
         self._skip_fg_ids: Set[int] = skip_fg_ids or set()
-        self._external = True
+        self._external = external
 
         self._prefix_by_serving_index = None
         self._pkname_by_serving_index = None
@@ -116,17 +117,15 @@ class OnlineStoreSqlClient:
     def init_prepared_statements(
         self,
         entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
-        external: bool,
         inference_helper_columns: bool,
     ) -> None:
         _logger.debug(
             "Fetch and reset prepared statements and external as user may be re-initialising with different parameters"
         )
         self.fetch_prepared_statements(entity, inference_helper_columns)
-        self._external = external
 
         self.init_parametrize_and_serving_utils(
-            self.prepared_statements[self.SINGLE_VECTOR_KEY]
+            self.prepared_statements[self.BATCH_VECTOR_KEY]
         )
 
         for key in self.get_prepared_statement_labels(inference_helper_columns):
@@ -145,7 +144,7 @@ class OnlineStoreSqlClient:
             "Initializing parametrize and serving utils property using %s",
             json.dumps(prepared_statements, default=lambda x: x.__dict__, indent=2),
         )
-        self._prefix_by_serving_index = {
+        self.prefix_by_serving_index = {
             statement.prepared_statement_index: statement.prefix
             for statement in prepared_statements
         }
@@ -161,18 +160,18 @@ class OnlineStoreSqlClient:
 
         _logger.debug("Build serving keys by PreparedStatementParameter.index")
         for sk in self._serving_keys:
-            self._serving_key_by_serving_index[sk.join_index] = (
-                self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            self.serving_key_by_serving_index[sk.join_index] = (
+                self.serving_key_by_serving_index.get(sk.join_index, []) + [sk]
             )
         _logger.debug("Sort serving keys by PreparedStatementParameter.index")
-        for join_index in self._serving_key_by_serving_index:
+        for join_index in self.serving_key_by_serving_index:
             # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
             # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
             if join_index in self._feature_name_order_by_psp:
-                self._serving_key_by_serving_index[join_index] = sorted(
-                    self._serving_key_by_serving_index[join_index],
+                self.serving_key_by_serving_index[join_index] = sorted(
+                    self.serving_key_by_serving_index[join_index],
                     key=lambda _sk,
-                    join_index=join_index: self._feature_name_order_by_psp[
+                    join_index=join_index: self.feature_name_order_by_psp[
                         join_index
                     ].get(_sk.feature_name, 0),
                 )
@@ -268,7 +267,7 @@ class OnlineStoreSqlClient:
         for prepared_statement_index in prepared_statement_objects:
             pk_entry = {}
             next_statement = False
-            for sk in self._serving_key_by_serving_index[prepared_statement_index]:
+            for sk in self.serving_key_by_serving_index[prepared_statement_index]:
                 if sk.required_serving_key not in entry.keys():
                     # Check if there is any entry matched with feature name.
                     if sk.feature_name in entry.keys():
@@ -313,7 +312,7 @@ class OnlineStoreSqlClient:
         prepared_statement_objects: Dict[int, sql.text],
     ):
         """Execute prepared statements in parallel using aiomysql engine."""
-        _logger.info(
+        _logger.debug(
             f"Starting batch vector retrieval for {len(entries)} entries via aiomysql engine."
         )
         # create dict object that will have of order of the vector as key and values as
@@ -344,7 +343,7 @@ class OnlineStoreSqlClient:
                                 # if the required serving key is not provided.
                                 or e.get(sk.feature_name)
                             )
-                            for sk in self._serving_key_by_serving_index[
+                            for sk in self.serving_key_by_serving_index[
                                 prepared_statement_index
                             ]
                         ]
@@ -370,12 +369,12 @@ class OnlineStoreSqlClient:
         # construct the results
         for prepared_statement_index in prepared_stmts_to_execute:
             statement_results = {}
-            serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
+            serving_keys = self.serving_key_by_serving_index[prepared_statement_index]
             serving_keys_all_fg += serving_keys
             prefix_features = [
-                (self._prefix_by_serving_index[prepared_statement_index] or "")
+                (self.prefix_by_serving_index[prepared_statement_index] or "")
                 + sk.feature_name
-                for sk in self._serving_key_by_serving_index[prepared_statement_index]
+                for sk in self.serving_key_by_serving_index[prepared_statement_index]
             ]
             _logger.debug(
                 f"Use prefix from prepare statement because prefix from serving key is collision adjusted {prefix_features}."
@@ -465,7 +464,9 @@ class OnlineStoreSqlClient:
         )
 
     @staticmethod
-    def _get_result_key(primary_keys: str, result_dict: Dict[str, str]) -> Tuple[str]:
+    def _get_result_key(
+        primary_keys: List[str], result_dict: Dict[str, str]
+    ) -> Tuple[str]:
         _logger.debug(f"Get result key {primary_keys} from result dict {result_dict}")
         result_key = []
         for pk in primary_keys:
@@ -627,6 +628,7 @@ class OnlineStoreSqlClient:
 
     @prefix_by_serving_index.setter
     def prefix_by_serving_index(self, prefix_by_serving_index: Dict[int, str]) -> None:
+        _logger.debug(f"Setting prefix by serving index {prefix_by_serving_index}.")
         self._prefix_by_serving_index = prefix_by_serving_index
 
     @property
@@ -668,7 +670,9 @@ class OnlineStoreSqlClient:
                 "Build serving keys from prepared statements ignoring prefix to ensure compatibility with older version."
             )
             self._serving_keys = util.build_serving_keys_from_prepared_statements(
-                self.prepared_statements[self.SINGLE_VECTOR_KEY],
+                self.prepared_statements[
+                    self.BATCH_VECTOR_KEY
+                ],  # use batch to avoid issue with label_fg
                 ignore_prefix=True,  # if serving_keys are not set it is because the feature view is anterior to 3.3, this ensures compatibility
             )
         return self._serving_keys

@@ -199,7 +199,7 @@ class StorageConnector(ABC):
             `hsfs.client.exceptions.RestAPIError`.
         """
         return self._storage_connector_api.get_feature_groups_provenance(self)
-    
+
     def get_feature_groups(self):
         """Get the feature groups using this storage connector, based on explicit
         provenance. Only the accessible feature groups are returned.

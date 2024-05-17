@@ -516,7 +516,7 @@ class FeatureGroupBase:
             `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
-    
+
     def get_storage_connector_provenance(self):
         """Get the parents of this feature group, based on explicit provenance.
         Parents are storage connectors. These storage connector can be accessible,
@@ -532,7 +532,7 @@ class FeatureGroupBase:
             `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_storage_connector_provenance(self)
-    
+
     def get_storage_connector(self):
         """Get the storage connector using this feature group, based on explicit
         provenance. Only the accessible storage connector is returned.
@@ -2381,18 +2381,6 @@ class FeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        if online and self.embedding_index:
-            if self._vector_db_client is None:
-                self._vector_db_client = VectorDbClient(self.select_all())
-            results = self._vector_db_client.read(
-                self.id,
-                self.features,
-                keys={},
-                pk=self.embedding_index.col_prefix + self.primary_key[0],
-                index_name=self.embedding_index.index_name,
-                n=n,
-            )
-            return [[result[f.name] for f in self.features] for result in results]
         return self.select_all().show(n, online)
 
     def save(
@@ -3771,18 +3759,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        if online and self.embedding_index:
-            if self._vector_db_client is None:
-                self._vector_db_client = VectorDbClient(self.select_all())
-            results = self._vector_db_client.read(
-                self.id,
-                self.features,
-                keys={},
-                pk=self.embedding_index.col_prefix + self.primary_key[0],
-                index_name=self.embedding_index.index_name,
-                n=n,
-            )
-            return [[result[f.name] for f in self.features] for result in results]
         return self.select_all().show(n, online)
 
     def find_neighbors(
