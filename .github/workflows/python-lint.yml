@@ -70,15 +70,18 @@ jobs:
         run: python --version
       
       - name: Set up JDK 8
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          java-version: '8'
-          distribution: 'adopt'
+          java-version: '21'
+          distribution: temurin
       
       - name: Set up Spark
         uses: vemonet/setup-spark@v1
         with:
-            spark-version: '3.1.1'
+          spark-version: '3.4.1'
+          hadoop-version: '3'
+      
+      - run: spark-submit --version
 
       - name: Display pip freeze
         run: pip freeze
