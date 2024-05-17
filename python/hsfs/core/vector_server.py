@@ -255,7 +255,7 @@ class VectorServer:
             self.identify_missing_features_pre_fetch(
                 entry=entry,
                 passed_features=passed_features,
-                td_embedding_feature_names=td_embedding_feature_names,
+                vector_db_features=vector_db_features,
             )
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_feature_vector Online REST client")
@@ -321,15 +321,15 @@ class VectorServer:
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
         if allow_missing is False:
-            for entry, passed, embedded in itertools.zip_longest(
+            for entry, passed, vector_features in itertools.zip_longest(
                 entries,
                 passed_features,
-                td_embedding_feature_names,
+                vector_db_features,
             ):
                 self.identify_missing_features_pre_fetch(
                     entry=entry,
                     passed_features=passed,
-                    td_embedding_feature_names=embedded,
+                    vector_db_features=vector_features,
                 )
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_batch_feature_vector Online REST client")
@@ -733,7 +733,7 @@ class VectorServer:
         self,
         entry: Dict[str, Any],
         passed_features: Dict[str, Any],
-        td_embedding_feature_names: Set[str],
+        vector_db_features: Dict[str, Any],
     ):
         """Identify feature which will be missing in the fetched feature vector and which are not passed.
 
@@ -752,11 +752,11 @@ class VectorServer:
             passed_feature_names = (
                 set(passed_features.keys()) if passed_features else set()
             )
-            if td_embedding_feature_names and len(td_embedding_feature_names) > 0:
+            if vector_db_features and len(vector_db_features) > 0:
                 passed_feature_names = passed_feature_names.union(
-                    td_embedding_feature_names
+                    vector_db_features.keys()
                 )
-            _logger.debug("td_embedding_feature_names %s", td_embedding_feature_names)
+            _logger.debug("vector_db_features : %s", vector_db_features)
             neither_fetched_nor_passed = fetched_features.difference(
                 passed_feature_names
             )
