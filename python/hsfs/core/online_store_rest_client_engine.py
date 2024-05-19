@@ -15,6 +15,7 @@
 #
 from __future__ import annotations
 
+import itertools
 import logging
 from typing import Any, Dict, List, Optional, Union
 
@@ -184,6 +185,7 @@ class OnlineStoreRestClientEngine:
         metadata_options: Optional[Dict[str, bool]] = None,
         allow_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
+        passed_features_allow_missing: bool = False,
     ) -> List[Dict[str, Any]]:
         """Get a list of feature vectors from the online feature store via RonDB Rest Server Feature Store API.
 
@@ -234,13 +236,29 @@ class OnlineStoreRestClientEngine:
         response = self._online_store_rest_client_api.get_batch_raw_feature_vectors(
             payload=payload
         )
-        if not allow_missing and any(
-            [status == self.MISSING_STATUS for status in response["status"]]
-        ):
+        # Hack to handle partial serving key entries with passed feature values
+        missing_without_passed = [
+            (
+                status == self.MISSING_STATUS
+                and (passed_values is None or len(passed_values) == 0)
+            )
+            for (status, passed_values) in itertools.zip_longest(
+                response["status"], passed_features_allow_missing, fillvalue=None
+            )
+        ]
+        if not allow_missing and any(missing_without_passed):
             missing_count = 0
             missing_entries = []
-            for entry, status in zip(entries, response["status"]):
-                if status == self.MISSING_STATUS:
+            for entry, status in itertools.zip_longest(
+                entries,
+                response["status"],
+                passed_features_allow_missing,
+                fillvalue=None,
+            ):
+                if status == self.MISSING_STATUS and (
+                    passed_features_allow_missing is None
+                    or len(passed_features_allow_missing) == 0
+                ):
                     missing_count += 1
                     missing_entries.append(entry)
                     _logger.error(

@@ -257,7 +257,9 @@ class VectorServer:
             _logger.debug("get_feature_vector Online REST client")
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
                 entry,
-                allow_missing=allow_missing,
+                # hack to avoid raising error if partial serving key is passed along with passed features
+                # but allow missing set to false
+                allow_missing=allow_missing or len(passed_features) > 0,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
@@ -320,6 +322,9 @@ class VectorServer:
                 entries=entries,
                 allow_missing=allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+                # hack to avoid raising error if partial serving key is passed along with passed features
+                # but allow missing set to false
+                passed_features_allow_missing=passed_features,
             )
         else:
             # get result row
