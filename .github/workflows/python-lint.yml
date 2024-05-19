@@ -69,19 +69,8 @@ jobs:
       - name: Display Python version
         run: python --version
       
-      - name: Set up JDK 8
-        uses: actions/setup-java@v4
-        with:
-          java-version: '8'
-          distribution: 'adopt'
-      
-      - name: Set up Spark
-        uses: vemonet/setup-spark@v1
-        with:
-          spark-version: '3.1.1'
-          hadoop-version: '3.2'
-      
-      - run: spark-submit --version
+      - name: Uninstall pydantic
+        run: pip uninstall -y pydantic pydantic_core
 
       - name: Display pip freeze
         run: pip freeze
