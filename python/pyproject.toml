@@ -41,7 +41,7 @@ dependencies = [
     "avro==1.11.3",
     "sqlalchemy",
     "PyMySQL[rsa]",
-    "great_expectations==0.18.12",
+    "great_expectations==0.17.12",
     "importlib_metadata==7.1.0",
     "pyparsing==2.4.7",
     "termcolor==2.4.0",

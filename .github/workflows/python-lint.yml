@@ -68,9 +68,6 @@ jobs:
 
       - name: Display Python version
         run: python --version
-      
-      - name: Uninstall pydantic
-        run: pip uninstall -y pydantic pydantic_core
 
       - name: Display pip freeze
         run: pip freeze
