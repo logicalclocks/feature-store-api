@@ -247,6 +247,7 @@ class VectorServer:
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
+        self.identify_missing_composite_key(entry)
         if allow_missing is False:
             self.identify_missing_features_pre_fetch(
                 entry=entry,
@@ -255,11 +256,17 @@ class VectorServer:
             )
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_feature_vector Online REST client")
+            # hack to avoid raising error if partial serving key is passed along with passed features
+            # but allow missing set to false
+            if allow_missing is True:
+                hack_allow_missing = True
+            elif passed_features is None or len(passed_features) == 0:
+                hack_allow_missing = False
+            else:
+                hack_allow_missing = True
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
                 entry,
-                # hack to avoid raising error if partial serving key is passed along with passed features
-                # but allow missing set to false
-                allow_missing=allow_missing or len(passed_features) > 0,
+                allow_missing=hack_allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
@@ -305,12 +312,13 @@ class VectorServer:
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
-        if allow_missing is False:
-            for entry, passed, vector_features in itertools.zip_longest(
-                entries,
-                passed_features,
-                vector_db_features,
-            ):
+        for entry, passed, vector_features in itertools.zip_longest(
+            entries,
+            passed_features,
+            vector_db_features,
+        ):
+            self.identify_missing_composite_key(entry)
+            if allow_missing is False:
                 self.identify_missing_features_pre_fetch(
                     entry=entry,
                     passed_features=passed,
@@ -772,6 +780,20 @@ class VectorServer:
                 "Use `allow_missing=True` to allow missing features in the fetched feature vector."
             )
 
+    def identify_missing_composite_key(self, entry: Dict[str, Any]) -> None:
+        """Identify if the entry has all the required composite keys."""
+        # Check if entry has either all or none of composite serving keys
+        for composite_group in self.groups_of_composite_serving_keys.values():
+            present_keys = [
+                True if sk_name in entry.keys() else False
+                for sk_name in composite_group
+            ]
+            if not all(present_keys) and any(present_keys):
+                raise client.exceptions.FeatureStoreException(
+                    "Provide either all composite serving keys or none. "
+                    f"Composite keys: {composite_group} in entry {entry}."
+                )
+
     def build_per_serving_key_features(
         self,
         serving_keys: List[sk_mod.ServingKey],
@@ -871,6 +893,19 @@ class VectorServer:
                 sk.required_serving_key for sk in self.serving_keys
             ]
         return self._required_serving_keys
+
+    @property
+    def groups_of_composite_serving_keys(self) -> Dict[int, List[str]]:
+        if not hasattr(self, "_groups_of_composite_serving_keys"):
+            self._groups_of_composite_serving_keys = {
+                sk.feature_group.id: [
+                    sk_match.required_serving_key
+                    for sk_match in self.serving_keys
+                    if sk_match.feature_group.id == sk.feature_group.id
+                ]
+                for sk in self.serving_keys
+            }
+        return self._groups_of_composite_serving_keys
 
     @property
     def training_dataset_version(self) -> Optional[int]:

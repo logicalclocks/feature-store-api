@@ -249,15 +249,14 @@ class OnlineStoreRestClientEngine:
         if not allow_missing and any(missing_without_passed):
             missing_count = 0
             missing_entries = []
-            for entry, status in itertools.zip_longest(
+            for entry, status, passed_values in itertools.zip_longest(
                 entries,
                 response["status"],
                 passed_features_allow_missing,
                 fillvalue=None,
             ):
                 if status == self.MISSING_STATUS and (
-                    passed_features_allow_missing is None
-                    or len(passed_features_allow_missing) == 0
+                    passed_values is None or len(passed_values) == 0
                 ):
                     missing_count += 1
                     missing_entries.append(entry)
