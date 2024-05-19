@@ -91,7 +91,7 @@ class OnlineStoreRestClientSingleton:
         ] = None,
         optional_config: Optional[Dict[str, Any]] = None,
     ):
-        _logger.info(
+        _logger.debug(
             f"Initialising Online Store Rest Client {'with optional configuration' if optional_config else ''}."
         )
         if optional_config:
@@ -116,7 +116,7 @@ class OnlineStoreRestClientSingleton:
         ] = None,
         optional_config: Optional[Dict[str, Any]] = None,
     ):
-        _logger.info(
+        _logger.debug(
             f"Resetting Online Store Rest Client {'with optional configuration' if optional_config else ''}."
         )
         if optional_config:
@@ -140,7 +140,7 @@ class OnlineStoreRestClientSingleton:
         optional_config: Optional[Dict[str, Any]] = None,
         use_current_config: bool = True,
     ):
-        _logger.info("Setting up Online Store Rest Client.")
+        _logger.debug("Setting up Online Store Rest Client.")
         if optional_config and not isinstance(optional_config, dict):
             raise ValueError(
                 "optional_config must be a dictionary. See documentation for allowed keys and values."
@@ -284,7 +284,7 @@ class OnlineStoreRestClientSingleton:
     ) -> requests.Response:
         url = self._base_url.copy()
         url.path.segments.extend(path_params)
-        _logger.info(f"Sending {method} request to {url.url}.")
+        _logger.debug(f"Sending {method} request to {url.url}.")
         _logger.debug(f"Provided Data: {data}")
         _logger.debug(f"Provided Headers: {headers}")
         prepped_request = self._session.prepare_request(

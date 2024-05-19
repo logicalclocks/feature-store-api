@@ -148,7 +148,7 @@ class OnlineStoreRestClientApi:
                 - 500: Internal server error.
         """
         if response.status_code == 200:
-            _logger.info(
+            _logger.debug(
                 "Received response from RonDB Rest Server with status code 200"
             )
             _logger.debug(f"Response: {json.dumps(response.json(), indent=2)}")

@@ -239,15 +239,11 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: Optional[Dict[str, Any]] = None,
         vector_db_features: Optional[Dict[str, Any]] = None,
-        td_embedding_feature_names: Optional[Set[str]] = None,
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
-        if td_embedding_feature_names is None:
-            td_embedding_feature_names = set()
-
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
@@ -261,6 +257,7 @@ class VectorServer:
             _logger.debug("get_feature_vector Online REST client")
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
                 entry,
+                allow_missing=allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
@@ -269,23 +266,12 @@ class VectorServer:
                 entry
             )
 
+        if vector_db_features is not None:
+            _logger.debug("Updating with vector_db features")
+            serving_vector.update(vector_db_features)
         if passed_features is not None:
             _logger.debug("Updating with passed features")
             serving_vector.update(passed_features)
-
-        if vector_db_features:
-            _logger.debug("Updating with vector_db features")
-            serving_vector.update(vector_db_features)
-
-        # Deserialize complex features
-        _logger.debug("Deserializing complex features")
-        serving_vector = self.deserialize_complex_features(
-            serving_vector, td_embedding_feature_names
-        )
-
-        # apply transformation functions
-        _logger.debug("Applying transformation functions")
-        serving_vector = self._apply_transformation(serving_vector)
 
         _logger.debug(
             "Converting to row dict to list, optionally filling missing values"
@@ -306,7 +292,6 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: Optional[List[Dict[str, Any]]] = None,
         vector_db_features: Optional[List[Dict[str, Any]]] = None,
-        td_embedding_feature_names: Optional[set[str]] = None,
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
@@ -314,8 +299,6 @@ class VectorServer:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = []
-        if td_embedding_feature_names is None:
-            td_embedding_feature_names = set()
 
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
@@ -335,6 +318,7 @@ class VectorServer:
             _logger.debug("get_batch_feature_vector Online REST client")
             batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
                 entries=entries,
+                allow_missing=allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
@@ -344,42 +328,42 @@ class VectorServer:
                 entries
             )
 
-        if vector_db_features:
-            for i in range(len(batch_results)):
-                batch_results[i].update(vector_db_features[i])
-
-        # apply passed features to each batch result
-        _logger.debug("Updating with passed features")
-        for vector_index, pf in enumerate(passed_features):
-            # Rest client handles pk errors in batch request by returning None values
-            if batch_results is None:
-                batch_results = pf
-            batch_results[vector_index].update(pf)
-
-        # Deserialize complex features
-        _logger.debug("Deserializing complex features")
-        batch_results = list(
-            map(
-                lambda row_dict: self.deserialize_complex_features(
-                    row_dict, td_embedding_feature_names
-                ),
-                batch_results,
-            )
-        )
-
         # get vectors
         _logger.debug(
             "Converting to row vectors to list, applies deserialization and transformation function."
             "If optionally filling missing values"
         )
+        # Assertions on passed_features and vector_db_features
+        assert (
+            passed_features is None
+            or len(passed_features) == 0
+            or len(passed_features) == len(batch_results)
+        ), "Passed features should be None, empty or have the same length as the batch results"
+        assert (
+            vector_db_features is None
+            or len(vector_db_features) == 0
+            or len(vector_db_features) == len(batch_results)
+        ), "Vector DB features should be None, empty or have the same length as the batch results"
+
         vectors = []
-        for result in batch_results:
+        for result_dict, passed_values, vector_db_result in itertools.zip_longest(
+            batch_results,
+            passed_features or [],
+            vector_db_features or [],
+            fillvalue=None,
+        ):
+            if vector_db_result is not None:
+                _logger.debug("Updating with vector_db features")
+                result_dict.update(vector_db_result)
+            if passed_values is not None:
+                _logger.debug("Updating with passed features")
+                result_dict.update(passed_values)
             # for backward compatibility, before 3.4, if result is empty,
             # instead of throwing error, it skips the result
-            if len(result) != 0 or allow_missing:
+            if len(result_dict) != 0 or allow_missing:
                 vectors.append(
                     self._generate_vector(
-                        result,
+                        result_dict=result_dict,
                         online_client_choice=online_client_choice,
                         fill_na=allow_missing,
                     )
@@ -753,10 +737,13 @@ class VectorServer:
                 set(passed_features.keys()) if passed_features else set()
             )
             if vector_db_features and len(vector_db_features) > 0:
+                _logger.debug(
+                    "vector_db_features for pre-fetch missing : %s", vector_db_features
+                )
                 passed_feature_names = passed_feature_names.union(
                     vector_db_features.keys()
                 )
-            _logger.debug("vector_db_features : %s", vector_db_features)
+
             neither_fetched_nor_passed = fetched_features.difference(
                 passed_feature_names
             )
@@ -812,19 +799,6 @@ class VectorServer:
             if f.is_complex()
         }
 
-    def deserialize_complex_features(
-        self, row_dict: Dict[str, Any], td_embedding_feature_names: set[str]
-    ) -> Dict[str, Any]:
-        for feature_name, schema in self._complex_features.items():
-            if (
-                feature_name in row_dict
-                and feature_name not in td_embedding_feature_names
-            ):
-                bytes_reader = BytesIO(row_dict[feature_name])
-                decoder = avro.io.BinaryDecoder(bytes_reader)
-                row_dict[feature_name] = schema.read(decoder)
-        return row_dict
-
     def _generate_vector(
         self,
         result_dict: Optional[Dict[str, Any]],
@@ -864,15 +838,6 @@ class VectorServer:
                     )
                 )
         return feature_values
-
-    def _apply_transformation(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
-        for feature_name in self.transformation_functions:
-            if feature_name in row_dict:
-                transformation_fn = self.transformation_functions[
-                    feature_name
-                ].transformation_fn
-                row_dict[feature_name] = transformation_fn(row_dict[feature_name])
-        return row_dict
 
     @property
     def online_store_sql_client(

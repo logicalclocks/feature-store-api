@@ -18,8 +18,9 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-import hsfs
+from hsfs import training_dataset_feature as td_feature_mod
 from hsfs import util
+from hsfs.client import exceptions
 from hsfs.core import online_store_rest_client_api
 
 
@@ -30,13 +31,14 @@ class OnlineStoreRestClientEngine:
     RETURN_TYPE_FEATURE_VALUE_DICT = "feature_value_dict"
     RETURN_TYPE_FEATURE_VALUE_LIST = "feature_value_list"
     RETURN_TYPE_RESPONSE_JSON = "response_json"  # as a python dict
+    MISSING_STATUS = "MISSING"
 
     def __init__(
         self,
         feature_store_name: str,
         feature_view_name: str,
         feature_view_version: int,
-        features: List[hsfs.training_dataset_feature.TrainingDatasetFeature],
+        features: List[td_feature_mod.TrainingDatasetFeature],
     ):
         """Initialize the Online Store Rest Client Engine. This class contains the logic to mediate
         the interaction between the python client and the RonDB Rest Server Feature Store API.
@@ -48,7 +50,7 @@ class OnlineStoreRestClientEngine:
             features: A list of features to be used for the feature vector conversion. Note that the features
                 must be ordered according to the feature vector schema.
         """
-        _logger.info(
+        _logger.debug(
             f"Initializing Online Store Rest Client Engine for Feature View {feature_view_name}, version: {feature_view_version} in Feature Store {feature_store_name}."
         )
         self._online_store_rest_client_api = (
@@ -115,6 +117,7 @@ class OnlineStoreRestClientEngine:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
+        allow_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> Dict[str, Any]:
         """Get a single feature vector from the online feature store via RonDB Rest Server Feature Store API.
@@ -156,6 +159,15 @@ class OnlineStoreRestClientEngine:
         response = self._online_store_rest_client_api.get_single_raw_feature_vector(
             payload=payload
         )
+        if not allow_missing and response["status"] == self.MISSING_STATUS:
+            _logger.error(
+                f"Values are missing for entry: {entry}, "
+                f"partial response (no passed or embedded features): {response['features']}."
+            )
+            raise exceptions.FeatureStoreException(
+                f"Values are missing for entry: {entry}, no row found for corresponding primary key value."
+                f" Partial response (no passed or embedded features): {response['features']}."
+            )
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             return self.convert_rdrs_response_to_feature_value_row(
@@ -170,6 +182,7 @@ class OnlineStoreRestClientEngine:
         entries: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
+        allow_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> List[Dict[str, Any]]:
         """Get a list of feature vectors from the online feature store via RonDB Rest Server Feature Store API.
@@ -197,7 +210,7 @@ class OnlineStoreRestClientEngine:
             `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
             `ValueError`: If the length of the passed features does not match the length of the entries.
         """
-        _logger.info(
+        _logger.debug(
             f"Getting batch raw feature vectors for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
         )
         _logger.debug(f"entries: {entries}\npassed features: {passed_features}")
@@ -221,7 +234,24 @@ class OnlineStoreRestClientEngine:
         response = self._online_store_rest_client_api.get_batch_raw_feature_vectors(
             payload=payload
         )
-        _logger.debug(response)
+        if not allow_missing and any(
+            [status == self.MISSING_STATUS for status in response["status"]]
+        ):
+            missing_count = 0
+            missing_entries = []
+            for entry, status in zip(entries, response["status"]):
+                if status == self.MISSING_STATUS:
+                    missing_count += 1
+                    missing_entries.append(entry)
+                    _logger.error(
+                        f"Values are missing for entry: {entry}, "
+                        f"partial response (no passed or embedded features): {response['features']}."
+                    )
+            raise exceptions.FeatureStoreException(
+                f"Found {missing_count} out of {len(entries)} with missing values, "
+                "no row found for corresponding primary key value. "
+                f"Missing entries: {missing_entries}. Check the logs for more details."
+            )
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             _logger.debug("Converting batch response to feature value rows for each.")
@@ -291,7 +321,7 @@ class OnlineStoreRestClientEngine:
         return self._feature_view_version
 
     @property
-    def features(self) -> List[hsfs.training_dataset_feature.TrainingDatasetFeature]:
+    def features(self) -> List[td_feature_mod.TrainingDatasetFeature]:
         return self._ordered_feature_names
 
     @property
