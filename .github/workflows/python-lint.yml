@@ -70,7 +70,7 @@ jobs:
         run: python --version
       
       - name: Set PYSPARK_PYTHON
-        run: echo "export PYSPARK_PYTHON=C:\hostedtoolcache\windows\Python\3.10.11\x64" >> $GITHUB_ENV
+        run: export PYSPARK_PYTHON=C:\hostedtoolcache\windows\Python\3.10.11\x64
       
       - name: echo PYSPARK_PYTHON
         run: echo $PYSPARK_PYTHON
