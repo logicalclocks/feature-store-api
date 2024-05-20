@@ -45,11 +45,11 @@ from hsfs import (
 from hsfs.client import online_store_rest_client
 from hsfs.core import (
     online_store_rest_client_engine,
-    online_store_sql_client,
 )
 from hsfs.core import (
     transformation_function_engine as tf_engine_mod,
 )
+from python.hsfs.core import online_store_sql_engine
 
 
 HAS_FASTAVRO = False
@@ -189,7 +189,7 @@ class VectorServer:
         options: Optional[Dict[str, Any]] = None,
     ) -> None:
         _logger.info("Initialising Vector Server Online Store SQL client")
-        self._online_store_sql_client = online_store_sql_client.OnlineStoreSqlClient(
+        self._online_store_sql_client = online_store_sql_engine.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
             serving_keys=self.serving_keys,
@@ -869,7 +869,7 @@ class VectorServer:
     @property
     def online_store_sql_client(
         self,
-    ) -> Optional[online_store_sql_client.OnlineStoreSqlClient]:
+    ) -> Optional[online_store_sql_engine.OnlineStoreSqlClient]:
         return self._online_store_sql_client
 
     @property
