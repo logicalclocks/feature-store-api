@@ -68,6 +68,9 @@ jobs:
 
       - name: Display Python version
         run: python --version
+      
+      - name: Uninstall marshmallow
+        run: pip uninstall -y marshmallow
 
       - name: Display pip freeze
         run: pip freeze
