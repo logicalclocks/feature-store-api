@@ -14,6 +14,7 @@
 #
 from __future__ import annotations
 
+import copy
 import json
 from typing import Any, Dict, List, Optional, Union
 
@@ -129,8 +130,10 @@ class TransformationFunction:
         # Raises
             `FeatureStoreException: If the provided number of features do not match the number of arguments in the defined UDF or if the provided feature names are not strings.
         """
-        self._hopsworks_udf = self._hopsworks_udf(*features)
-        return self
+        # Deep copy so that the same transformation function can be used to create multiple new transformation function with different features.
+        transformation = copy.deepcopy(self)
+        transformation._hopsworks_udf = transformation._hopsworks_udf(*features)
+        return transformation
 
     @classmethod
     def from_response_json(
