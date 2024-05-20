@@ -45,11 +45,11 @@ from hsfs import (
 from hsfs.client import online_store_rest_client
 from hsfs.core import (
     online_store_rest_client_engine,
+    online_store_sql_engine,
 )
 from hsfs.core import (
     transformation_function_engine as tf_engine_mod,
 )
-from python.hsfs.core import online_store_sql_engine
 
 
 HAS_FASTAVRO = False
@@ -247,14 +247,16 @@ class VectorServer:
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
-        self.identify_missing_composite_key(entry)
-        if allow_missing is False:
-            self.identify_missing_features_pre_fetch(
-                entry=entry,
-                passed_features=passed_features,
-                vector_db_features=vector_db_features,
-            )
-        if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+        rondb_entry = self.validate_entry(
+            entry=entry,
+            allow_missing=allow_missing,
+            passed_features=passed_features,
+            vector_db_features=vector_db_features,
+        )
+        if len(rondb_entry) == 0:
+            _logger.debug("Empty entry for rondb, skipping fetching.")
+            serving_vector = {}  # updated below with vector_db_features and passed_features
+        elif online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_feature_vector Online REST client")
             # hack to avoid raising error if partial serving key is passed along with passed features
             # but allow missing set to false
@@ -265,14 +267,14 @@ class VectorServer:
             else:
                 hack_allow_missing = True
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
-                entry,
+                rondb_entry,
                 allow_missing=hack_allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
             _logger.debug("get_feature_vector Online SQL client")
             serving_vector = self.online_store_sql_client.get_single_feature_vector(
-                entry
+                rondb_entry
             )
 
         if vector_db_features is not None:
@@ -309,62 +311,85 @@ class VectorServer:
         if passed_features is None:
             passed_features = []
 
+        # Assertions on passed_features and vector_db_features
+        assert (
+            passed_features is None
+            or len(passed_features) == 0
+            or len(passed_features) == len(entries)
+        ), "Passed features should be None, empty or have the same length as the entries"
+        assert (
+            vector_db_features is None
+            or len(vector_db_features) == 0
+            or len(vector_db_features) == len(entries)
+        ), "Vector DB features should be None, empty or have the same length as the entries"
+
         online_client_choice = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
-        for entry, passed, vector_features in itertools.zip_longest(
-            entries,
+        rondb_entries = []
+        skipped_empty_entries = []
+        has_passed_features = []
+        for (idx, entry), passed, vector_features in itertools.zip_longest(
+            enumerate(entries),
             passed_features,
             vector_db_features,
         ):
-            self.identify_missing_composite_key(entry)
-            if allow_missing is False:
-                self.identify_missing_features_pre_fetch(
-                    entry=entry,
-                    passed_features=passed,
-                    vector_db_features=vector_features,
-                )
+            rondb_entry = self.validate_entry(
+                entry=entry,
+                allow_missing=allow_missing,
+                passed_features=passed,
+                vector_db_features=vector_features,
+            )
+            if len(rondb_entry) != 0:
+                rondb_entries.append(rondb_entry)
+                # see get_feature_vectors in rest client for hack explanation
+                if passed is not None and len(passed) != 0:
+                    has_passed_features.append(True)
+                else:
+                    has_passed_features.append(False)
+            else:
+                skipped_empty_entries.append(idx)
+
         if online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_batch_feature_vector Online REST client")
             batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
-                entries=entries,
+                entries=rondb_entries,
                 allow_missing=allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
                 # hack to avoid raising error if partial serving key is passed along with passed features
                 # but allow missing set to false
-                passed_features_allow_missing=passed_features,
+                has_passed_features=has_passed_features,
             )
         else:
             # get result row
             _logger.debug("get_batch_feature_vectors through SQL client")
             batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
-                entries
+                rondb_entries
             )
 
-        # get vectors
         _logger.debug(
             "Converting to row vectors to list, applies deserialization and transformation function."
             "If optionally filling missing values"
         )
-        # Assertions on passed_features and vector_db_features
-        assert (
-            passed_features is None
-            or len(passed_features) == 0
-            or len(passed_features) == len(batch_results)
-        ), "Passed features should be None, empty or have the same length as the batch results"
-        assert (
-            vector_db_features is None
-            or len(vector_db_features) == 0
-            or len(vector_db_features) == len(batch_results)
-        ), "Vector DB features should be None, empty or have the same length as the batch results"
-
         vectors = []
-        for result_dict, passed_values, vector_db_result in itertools.zip_longest(
-            batch_results,
+        next_skipped = (
+            skipped_empty_entries.pop(0) if len(skipped_empty_entries) > 0 else None
+        )
+        for idx, passed_values, vector_db_result in itertools.zip_longest(
+            range(len(entries)),
             passed_features or [],
             vector_db_features or [],
             fillvalue=None,
         ):
+            if next_skipped == idx:
+                next_skipped = (
+                    skipped_empty_entries.pop(0)
+                    if len(skipped_empty_entries) > 0
+                    else None
+                )
+                result_dict = {}
+            else:
+                result_dict = batch_results.pop(0)
             if vector_db_result is not None:
                 _logger.debug("Updating with vector_db features")
                 result_dict.update(vector_db_result)
@@ -726,6 +751,57 @@ class VectorServer:
             self._ordered_feature_names,
         )
 
+    def validate_entry(
+        self,
+        entry: Dict[str, Any],
+        allow_missing: bool,
+        passed_features: Dict[str, Any],
+        vector_db_features: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Validate the provided key, value pair in the entry.
+
+        The following checks are performed:
+            - Check that all keys in the entry correspond to a serving key.
+            - Check that composite keys are provided together.
+
+        If allow_missing is set to False:
+            - check that for missing serving key in entry, the feature are provided
+                via passed_features or vector_db_features.
+
+        Keys relevant to vector_db are filtered out.
+        """
+        _logger.debug("Checking keys in entry are valid serving keys.")
+        for key in entry.keys():
+            if key not in self.required_serving_keys:
+                raise client.exceptions.FeatureStoreException(
+                    f"Provided key {key} is not a serving key. Required serving keys: {self.required_serving_keys}."
+                )
+
+        _logger.debug("Checking entry has either all or none of composite serving keys")
+        for composite_group in self.groups_of_composite_serving_keys.values():
+            present_keys = [
+                True if sk_name in entry.keys() else False
+                for sk_name in composite_group
+            ]
+            if not all(present_keys) and any(present_keys):
+                raise client.exceptions.FeatureStoreException(
+                    "Provide either all composite serving keys or none. "
+                    f"Composite keys: {composite_group} in entry {entry}."
+                )
+
+        if allow_missing is False:
+            self.identify_missing_features_pre_fetch(
+                entry=entry,
+                passed_features=passed_features,
+                vector_db_features=vector_db_features,
+            )
+
+        return {
+            key: value
+            for key, value in entry.items()
+            if key not in self.vector_db_serving_keys
+        }
+
     def identify_missing_features_pre_fetch(
         self,
         entry: Dict[str, Any],
@@ -743,6 +819,9 @@ class VectorServer:
         - The method does not check whether serving keys correspond to existing rows in the online feature store.
         - The method does not check whether the passed features names and data types correspond to the query schema.
         """
+        _logger.debug(
+            "Checking missing serving keys in entry correspond to passed features."
+        )
         missing_features_per_serving_keys = {}
         has_missing = False
         for sk_name, fetched_features in self.per_serving_key_features.items():
@@ -780,20 +859,6 @@ class VectorServer:
                 "Use `allow_missing=True` to allow missing features in the fetched feature vector."
             )
 
-    def identify_missing_composite_key(self, entry: Dict[str, Any]) -> None:
-        """Identify if the entry has all the required composite keys."""
-        # Check if entry has either all or none of composite serving keys
-        for composite_group in self.groups_of_composite_serving_keys.values():
-            present_keys = [
-                True if sk_name in entry.keys() else False
-                for sk_name in composite_group
-            ]
-            if not all(present_keys) and any(present_keys):
-                raise client.exceptions.FeatureStoreException(
-                    "Provide either all composite serving keys or none. "
-                    f"Composite keys: {composite_group} in entry {entry}."
-                )
-
     def build_per_serving_key_features(
         self,
         serving_keys: List[sk_mod.ServingKey],
@@ -801,7 +866,6 @@ class VectorServer:
     ) -> Dict[str, set[str]]:
         """Build a dictionary of feature names which will be fetched per serving key."""
         per_serving_key_features = {}
-
         for serving_key in serving_keys:
             per_serving_key_features[serving_key.required_serving_key] = set(
                 [
@@ -810,7 +874,6 @@ class VectorServer:
                     if f.feature_group.name == serving_key.feature_group.name
                 ]
             )
-
         return per_serving_key_features
 
     def get_complex_feature_schemas(self) -> Dict[str, avro.io.DatumReader]:
@@ -906,6 +969,16 @@ class VectorServer:
                 for sk in self.serving_keys
             }
         return self._groups_of_composite_serving_keys
+
+    @property
+    def vector_db_serving_keys(self) -> List[str]:
+        if not hasattr(self, "_vector_db_serving_keys"):
+            self._vector_db_serving_keys = [
+                sk.required_serving_key
+                for sk in self.serving_keys
+                if sk.feature_group.id not in self._skip_fg_ids
+            ]
+        return self._vector_db_serving_keys
 
     @property
     def training_dataset_version(self) -> Optional[int]:

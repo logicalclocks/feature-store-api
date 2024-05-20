@@ -181,11 +181,11 @@ class OnlineStoreRestClientEngine:
     def get_batch_feature_vectors(
         self,
         entries: List[Dict[str, Any]],
+        has_passed_features: List[bool],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
         allow_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
-        passed_features_allow_missing: bool = False,
     ) -> List[Dict[str, Any]]:
         """Get a list of feature vectors from the online feature store via RonDB Rest Server Feature Store API.
 
@@ -238,26 +238,19 @@ class OnlineStoreRestClientEngine:
         )
         # Hack to handle partial serving key entries with passed feature values
         missing_without_passed = [
-            (
-                status == self.MISSING_STATUS
-                and (passed_values is None or len(passed_values) == 0)
-            )
-            for (status, passed_values) in itertools.zip_longest(
-                response["status"], passed_features_allow_missing, fillvalue=None
-            )
+            (status == self.MISSING_STATUS and has_passed)
+            for status, has_passed in zip(response["status"], has_passed_features)
         ]
         if not allow_missing and any(missing_without_passed):
             missing_count = 0
             missing_entries = []
-            for entry, status, passed_values in itertools.zip_longest(
+            for entry, status, has_passed in itertools.zip_longest(
                 entries,
                 response["status"],
-                passed_features_allow_missing,
+                has_passed_features,
                 fillvalue=None,
             ):
-                if status == self.MISSING_STATUS and (
-                    passed_values is None or len(passed_values) == 0
-                ):
+                if status == self.MISSING_STATUS and has_passed:
                     missing_count += 1
                     missing_entries.append(entry)
                     _logger.error(
