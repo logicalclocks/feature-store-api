@@ -72,6 +72,15 @@ class ServingPreparedStatement:
             "queryOnline": self._query_online,
         }
 
+    def __repr__(self) -> str:
+        repr_dict = humps.decamelize(self.to_dict())
+        repr_dict["feature_group_id"] = self._feature_group_id
+        repr_dict["prefix"] = self._prefix
+        repr_dict["prepared_statement_parameters"] = [
+            pstm_param.__repr__() for pstm_param in self._prepared_statement_parameters
+        ]
+        return json.dumps(repr_dict, sort_keys=True, indent=4)
+
     @property
     def feature_group_id(self) -> Optional[int]:
         return self._feature_group_id

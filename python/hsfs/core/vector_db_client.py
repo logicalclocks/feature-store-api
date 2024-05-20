@@ -15,6 +15,8 @@
 #
 from __future__ import annotations
 
+import base64
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import hsfs
@@ -32,6 +34,8 @@ class VectorDbClient:
         Filter.LT: "lt",
         Filter.LE: "lte",
     }
+    _index_result_limit_k = dict()
+    _index_result_limit_n = dict()
 
     def __init__(self, query, serving_keys=None):
         self._opensearch_client = None
@@ -41,10 +45,11 @@ class VectorDbClient:
         self._fg_vdb_col_td_col_map = {}
         self._fg_col_vdb_col_map = {}
         self._fg_embedding_map = {}
+        self._td_embedding_feature_names = set()
         self._embedding_fg_by_join_index = {}
         self._fg_id_to_vdb_pks = {}
         self._opensearch_client = None
-        self._index_result_limit_k = {}
+
         self._serving_keys = serving_keys
         self._serving_key_by_serving_index: Dict[int, hsfs.serving_key.ServingKey] = {}
         self.init()
@@ -90,6 +95,8 @@ class VectorDbClient:
                         "Do not support join of same fg multiple times."
                     )
                 self._embedding_fg_by_join_index[i] = join_fg
+                for embedding_feature in join_fg.embedding_index.get_embeddings():
+                    self._td_embedding_feature_names.add((join.prefix or "") + embedding_feature.name)
                 vdb_col_td_col_map = {}
                 for feat in join_fg.features:
                     vdb_col_td_col_map[
@@ -154,7 +161,7 @@ class VectorDbClient:
         ):
             # Get the max number of results allowed to request if it is not available.
             # This is expected to be executed once only.
-            if not self._index_result_limit_k.get(index_name):
+            if not VectorDbClient._index_result_limit_k.get(index_name):
                 query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = 2**31 - 1
                 try:
                     # It is expected that this request ALWAYS fails because requested k is too large.
@@ -169,13 +176,13 @@ class VectorDbClient:
                             VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K
                         )
                     ):
-                        self._index_result_limit_k[index_name] = e.info.get(
+                        VectorDbClient._index_result_limit_k[index_name] = e.info.get(
                             VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K
                         )
                     else:
                         raise e
             query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = min(
-                self._index_result_limit_k.get(index_name, k), 3 * k
+                VectorDbClient._index_result_limit_k.get(index_name, k), 3 * k
             )
             results = self._opensearch_client.search(
                 body=query, index=index_name, options=options
@@ -185,13 +192,29 @@ class VectorDbClient:
         return [
             (
                 1 / item["_score"] - 1,
-                self._rewrite_result_key(
+                self._convert_to_pandas_type(embedding_feature.feature_group.features, self._rewrite_result_key(
                     item["_source"],
                     self._fg_vdb_col_td_col_map[embedding_feature.feature_group.id],
-                ),
+                )),
             )
             for item in results["hits"]["hits"]
         ]
+
+    def _convert_to_pandas_type(self, schema, result):
+        for feature in schema:
+            feature_name = feature.name
+            feature_type = feature.type.lower()
+            feature_value = result.get(feature_name)
+            if not feature_value:  # Feature value can be null
+                continue
+            elif feature_type == "date":
+                result[feature_name] = datetime.utcfromtimestamp(feature_value // 10**3).date()
+            elif feature_type == "timestamp":
+                # convert timestamp in ms to datetime in s
+                result[feature_name] = datetime.utcfromtimestamp(feature_value // 10**3)
+            elif feature_type == "binary" or (feature.is_complex() and feature not in self._embedding_features):
+                result[feature_name] = base64.b64decode(feature_value)
+        return result
 
     def _check_filter(self, filter, fg):
         if not filter:
@@ -286,7 +309,7 @@ class VectorDbClient:
             new_map[new_key] = value
         return new_map
 
-    def read(self, fg_id, keys=None, pk=None, index_name=None, n=10):
+    def read(self, fg_id, schema, keys=None, pk=None, index_name=None, n=10):
         if fg_id not in self._fg_vdb_col_fg_col_map:
             raise FeatureStoreException("Provided fg does not have embedding.")
         if not index_name:
@@ -311,16 +334,49 @@ class VectorDbClient:
                 "query": {"bool": {"must": {"exists": {"field": pk}}}},
                 "size": n,
             }
-
+            if n is None:
+                if VectorDbClient._index_result_limit_n.get(index_name) is None:
+                    try:
+                        query["size"] = 2**31 - 1
+                        self._opensearch_client.search(body=query,
+                                                             index=index_name)
+                    except VectorDatabaseException as e:
+                        if (
+                            e.reason == VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE
+                            and e.info.get(
+                            VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE_INFO_N
+                        )
+                        ):
+                            VectorDbClient._index_result_limit_n[index_name] = e.info.get(
+                                VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE_INFO_N
+                            )
+                        else:
+                            raise e
+                query["size"] = VectorDbClient._index_result_limit_n.get(index_name)
         query["_source"] = list(self._fg_vdb_col_fg_col_map.get(fg_id).keys())
         results = self._opensearch_client.search(body=query, index=index_name)
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
         return [
-            self._rewrite_result_key(
+            self._convert_to_pandas_type(schema, self._rewrite_result_key(
                 item["_source"], self._fg_vdb_col_td_col_map[fg_id]
-            )
+            ))
             for item in results["hits"]["hits"]
         ]
+
+    @staticmethod
+    def read_feature_group(feature_group: "hsfs.feature_group.FeatureGroup", n: int =None) -> list:
+        if feature_group.embedding_index:
+            vector_db_client = VectorDbClient(feature_group.select_all())
+            results = vector_db_client.read(
+                feature_group.id,
+                feature_group.features,
+                pk=feature_group.embedding_index.col_prefix + feature_group.primary_key[0],
+                index_name=feature_group.embedding_index.index_name,
+                n=n
+            )
+            return [[result[f.name] for f in feature_group.features] for result in results]
+        else:
+            raise FeatureStoreException("Feature group does not have embedding.")
 
     def count(self, fg, options=None):
         query = {
@@ -375,3 +431,7 @@ class VectorDbClient:
         else:
             self._serving_key_by_serving_index = {}
         return self._serving_key_by_serving_index
+
+    @property
+    def td_embedding_feature_names(self):
+        return self._td_embedding_feature_names

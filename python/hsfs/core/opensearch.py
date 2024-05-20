@@ -19,6 +19,7 @@ import logging
 import re
 from functools import wraps
 
+import opensearchpy
 import urllib3
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
@@ -34,26 +35,56 @@ from retrying import retry
 
 
 def _is_timeout(exception):
-    return (isinstance(exception, urllib3.exceptions.ReadTimeoutError)
-            or isinstance(exception, ConnectionTimeout))
+    return isinstance(exception, urllib3.exceptions.ReadTimeoutError) or isinstance(
+        exception, ConnectionTimeout
+    )
+
 
 def _handle_opensearch_exception(func):
     @wraps(func)
     def error_handler_wrapper(*args, **kw):
         try:
             return func(*args, **kw)
+        except (ConnectionError, AuthenticationException):
+            # OpenSearchConnectionError occurs when connection is closed.
+            # OpenSearchAuthenticationException occurs when jwt is expired
+            OpenSearchClientSingleton()._refresh_opensearch_connection()
+            return func(*args, **kw)
+        except RequestError as e:
+            caused_by = e.info.get("error") and e.info["error"].get("caused_by")
+            if caused_by and caused_by["type"] == "illegal_argument_exception":
+                raise OpenSearchClientSingleton()._create_vector_database_exception(
+                    caused_by["reason"]) from e
+            raise VectorDatabaseException(
+                VectorDatabaseException.OTHERS,
+                f"Error in Opensearch request: {e}",
+                e.info,
+            ) from e
         except Exception as e:
             if _is_timeout(e):
-                raise FeatureStoreException(OpenSearchClientSingleton.TIMEOUT_ERROR_MSG) from e
+                raise FeatureStoreException(
+                    OpenSearchClientSingleton.TIMEOUT_ERROR_MSG
+                ) from e
             else:
                 raise e
 
     return error_handler_wrapper
 
+
 class OpensearchRequestOption:
     DEFAULT_OPTION_MAP = {
-       "timeout": 30,
+        "timeout": "30s",
     }
+
+    DEFAULT_OPTION_MAP_V2_3 = {
+        # starting from opensearch client v2.3, timeout should be in int/float
+        # https://github.com/opensearch-project/opensearch-py/pull/394
+        "timeout": 30,
+    }
+
+    @classmethod
+    def get_version(cls):
+        return opensearchpy.__version__[0:2]
 
     @classmethod
     def get_options(cls, options: dict):
@@ -69,18 +100,27 @@ class OpensearchRequestOption:
             attribute values of the OpensearchRequestOption class, and values are obtained
             either from the provided options or default values if not available.
         """
+        default_option = (cls.DEFAULT_OPTION_MAP
+                          if cls.get_version() < (2, 3)
+                          else cls.DEFAULT_OPTION_MAP_V2_3)
         if options:
             # make lower case to avoid issues with cases
             options = {k.lower(): v for k, v in options.items()}
             new_options = {}
-            for option, value in cls.DEFAULT_OPTION_MAP.items():
+            for option, value in default_option.items():
                 if option in options:
-                    new_options[option] = options[option]
+                    if (option == "timeout"
+                        and cls.get_version() < (2, 3)
+                        and isinstance(options[option], int)
+                    ):
+                        new_options[option] = f"{options[option]}s"
+                    else:
+                        new_options[option] = options[option]
                 else:
                     new_options[option] = value
             return new_options
         else:
-            return cls.DEFAULT_OPTION_MAP
+            return default_option
 
 
 class OpenSearchClientSingleton:
@@ -121,24 +161,7 @@ class OpenSearchClientSingleton:
     )
     @_handle_opensearch_exception
     def search(self, index=None, body=None, options=None):
-        try:
-            return self._opensearch_client.search(body=body, index=index, params=OpensearchRequestOption.get_options(options))
-        except (ConnectionError, AuthenticationException):
-            # OpenSearchConnectionError occurs when connection is closed.
-            # OpenSearchAuthenticationException occurs when jwt is expired
-            self._refresh_opensearch_connection()
-            return self._opensearch_client.search(body=body, index=index,
-                                                  params=OpensearchRequestOption.get_options(options))
-        except RequestError as e:
-            caused_by = e.info.get("error") and e.info["error"].get("caused_by")
-            if caused_by and caused_by["type"] == "illegal_argument_exception":
-                raise self._create_vector_database_exception(
-                    caused_by["reason"]) from e
-            raise VectorDatabaseException(
-                VectorDatabaseException.OTHERS,
-                f"Error in Opensearch request: {e}",
-                e.info,
-            ) from e
+        return self._opensearch_client.search(body=body, index=index, params=OpensearchRequestOption.get_options(options))
 
     @retry(
         wait_exponential_multiplier=1000,
@@ -147,9 +170,10 @@ class OpenSearchClientSingleton:
     )
     @_handle_opensearch_exception
     def count(self, index, body=None, options=None):
-        result = self._opensearch_client.count(index=index, body=body,
-                                               params=OpensearchRequestOption.get_options(options))
-        return result['count']
+        result = self._opensearch_client.count(
+            index=index, body=body, params=OpensearchRequestOption.get_options(options)
+        )
+        return result["count"]
 
     def close(self):
         if self._opensearch_client:
@@ -166,9 +190,7 @@ class OpenSearchClientSingleton:
                     f"Illegal argument in vector database request: "
                     f"Requested k is too large, it needs to be less than {k}."
                 )
-                info = {
-                    VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K: int(
-                        k)}
+                info = {VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K: int(k)}
             else:
                 reason = VectorDatabaseException.REQUESTED_K_TOO_LARGE
                 message = "Illegal argument in vector database request: Requested k is too large."

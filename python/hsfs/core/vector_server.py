@@ -21,8 +21,6 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import avro.io
 import avro.schema
-import hsfs
-import hsfs.client
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -32,6 +30,8 @@ from hsfs import (
     training_dataset,
     transformation_function_attached,
 )
+from hsfs import serving_key as sk_mod
+from hsfs import training_dataset_feature as tdf_mod
 from hsfs.core import (
     online_store_sql_client,
     transformation_function_engine,
@@ -45,11 +45,9 @@ class VectorServer:
     def __init__(
         self,
         feature_store_id: int,
-        features: Optional[
-            List[hsfs.training_dataset_feature.TrainingDatasetFeature]
-        ] = None,
+        features: Optional[List[tdf_mod.TrainingDatasetFeature]] = None,
         training_dataset_version: Optional[int] = None,
-        serving_keys: Optional[List[hsfs.serving_key.ServingKey]] = None,
+        serving_keys: Optional[List[sk_mod.ServingKey]] = None,
         skip_fg_ids: Optional[Set[int]] = None,
     ):
         self._training_dataset_version = training_dataset_version
@@ -109,7 +107,7 @@ class VectorServer:
 
     def init_batch_scoring(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
     ):
         self.init_transformation(entity)
 
@@ -137,11 +135,10 @@ class VectorServer:
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
             serving_keys=self.serving_keys,
-            connection_options=options,
+            external=external,
         )
         self.online_store_sql_client.init_prepared_statements(
             entity,
-            external,
             inference_helper_columns,
         )
         self.online_store_sql_client.init_async_mysql_connection(options=options)
@@ -151,18 +148,25 @@ class VectorServer:
         entry: Dict[str, Any],
         return_type: Optional[str] = None,
         passed_features: Optional[Dict[str, Any]] = None,
+        vector_db_features: Optional[Dict[str, Any]] = None,
+        td_embedding_feature_names: Optional[set[str]] = None,
         allow_missing: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = {}
-
+        if td_embedding_feature_names is None:
+            td_embedding_feature_names = set()
         # get result row
         _logger.debug("get_feature_vector Online SQL client")
         serving_vector = self.online_store_sql_client.get_single_feature_vector(entry)
+        if vector_db_features:
+            serving_vector.update(vector_db_features)
         # Deserialize complex features
         _logger.debug("Deserializing complex features")
-        serving_vector = self.deserialize_complex_features(serving_vector)
+        serving_vector = self.deserialize_complex_features(
+            serving_vector, td_embedding_feature_names
+        )
 
         # Add the passed features
         _logger.debug("Updating with passed features")
@@ -185,21 +189,30 @@ class VectorServer:
         self,
         entries: List[Dict[str, Any]],
         return_type: Optional[str] = None,
-        passed_features: List[Dict[str, Any]] = None,
+        passed_features: Optional[List[Dict[str, Any]]] = None,
+        vector_db_features: Optional[List[Dict[str, Any]]] = None,
+        td_embedding_feature_names: Optional[set[str]] = None,
         allow_missing: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], List[Dict[str, Any]]]:
         if passed_features is None:
             passed_features = []
+        if td_embedding_feature_names is None:
+            td_embedding_feature_names = set()
         """Assembles serving vector from online feature store."""
-        _logger.info("get_feature_vectors through SQL client")
+        _logger.debug("get_feature_vectors through SQL client")
         batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
             entries
         )
+        if vector_db_features:
+            for i in range(len(batch_results)):
+                batch_results[i].update(vector_db_features[i])
         # Deserialize complex features
         _logger.debug("Deserializing complex features")
         batch_results = list(
             map(
-                lambda row_dict: self.deserialize_complex_features(row_dict),
+                lambda row_dict: self.deserialize_complex_features(
+                    row_dict, td_embedding_feature_names
+                ),
                 batch_results,
             )
         )
@@ -235,7 +248,9 @@ class VectorServer:
 
     def handle_feature_vector_return_type(
         self,
-        feature_vectorz: Union[List[Any], List[List[Any]]],
+        feature_vectorz: Union[
+            List[Any], List[List[Any]], Dict[str, Any], List[Dict[str, Any]]
+        ],
         batch: bool,
         inference_helper: bool,
         return_type: str,
@@ -247,26 +262,32 @@ class VectorServer:
         Dict[str, Any],
         List[Dict[str, Any]],
     ]:
+        # Only get-feature-vector and get-feature-vectors can return list or numpy
         if return_type.lower() == "list" and not inference_helper:
             _logger.debug("Returning feature vector as value list")
             return feature_vectorz
-        elif return_type.lower() == "dict":
-            _logger.debug("Returning feature vector as dictionary")
-            return {
-                self._feature_vector_col_name[i]: feature_vectorz[i]
-                for i in range(len(self._feature_vector_col_name))
-            }
-        elif return_type.lower() == "numpy":
+        elif return_type.lower() == "numpy" and not inference_helper:
             _logger.debug("Returning feature vector as numpy array")
             return np.array(feature_vectorz)
+        # Only inference helper can return dict
+        elif return_type.lower() == "dict" and inference_helper:
+            _logger.debug("Returning feature vector as dictionary")
+            return feature_vectorz
+        # Both can return pandas and polars
         elif return_type.lower() == "pandas":
             _logger.debug("Returning feature vector as pandas dataframe")
-            if batch:
-                pandas_df = pd.DataFrame(feature_vectorz)
+            if batch and inference_helper:
+                return pd.DataFrame(feature_vectorz)
+            elif inference_helper:
+                return pd.DataFrame([feature_vectorz])
+            elif batch:
+                return pd.DataFrame(
+                    feature_vectorz, columns=self._feature_vector_col_name
+                )
             else:
                 pandas_df = pd.DataFrame(feature_vectorz).transpose()
-            pandas_df.columns = self._feature_vector_col_name
-            return pandas_df
+                pandas_df.columns = self._feature_vector_col_name
+                return pandas_df
         elif return_type.lower() == "polars":
             _logger.debug("Returning feature vector as polars dataframe")
             return pl.DataFrame(
@@ -276,14 +297,14 @@ class VectorServer:
             )
         else:
             raise ValueError(
-                f"""Unknown return type. Supported return types are {"'list', " if not inference_helper else ""}'dict', 'polars', 'pandas' and 'numpy'"""
+                f"""Unknown return type. Supported return types are {"'list', 'numpy'" if not inference_helper else "'dict'"}, 'polars' and 'pandas''"""
             )
 
     def get_inference_helper(
         self, entry: Dict[str, Any], return_type: str
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
-        _logger.info("Retrieve inference helper values for single entry.")
+        _logger.debug("Retrieve inference helper values for single entry.")
         _logger.debug(f"entry: {entry} as return type: {return_type}")
         return self.handle_feature_vector_return_type(
             self.online_store_sql_client.get_inference_helper_vector(entry),
@@ -294,17 +315,17 @@ class VectorServer:
 
     def get_inference_helpers(
         self,
-        feature_view_object: "feature_view.FeatureView",
+        feature_view_object: feature_view.FeatureView,
         entries: List[Dict[str, Any]],
         return_type: str,
     ) -> Union[pd.DataFrame, pl.DataFrame, List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
-        batch_results = self.online_store_sql_client.get_batch_inference_helper_vectors(
-            entries
+        batch_results, serving_keys = (
+            self.online_store_sql_client.get_batch_inference_helper_vectors(entries)
         )
 
         # drop serving and primary key names from the result dict
-        drop_list = self.serving_keys + list(feature_view_object.primary_keys)
+        drop_list = serving_keys + list(feature_view_object.primary_keys)
 
         _ = list(
             map(
@@ -334,9 +355,14 @@ class VectorServer:
             if f.is_complex()
         }
 
-    def deserialize_complex_features(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def deserialize_complex_features(
+        self, row_dict: Dict[str, Any], td_embedding_feature_names: set[str]
+    ) -> Dict[str, Any]:
         for feature_name, schema in self._complex_features.items():
-            if feature_name in row_dict:
+            if (
+                feature_name in row_dict
+                and feature_name not in td_embedding_feature_names
+            ):
                 bytes_reader = io.BytesIO(row_dict[feature_name])
                 decoder = avro.io.BinaryDecoder(bytes_reader)
                 row_dict[feature_name] = schema.read(decoder)
@@ -363,9 +389,9 @@ class VectorServer:
         return feature_values
 
     def _apply_transformation(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
-        for feature_name in self._transformation_functions:
+        for feature_name in self.transformation_functions:
             if feature_name in row_dict:
-                transformation_fn = self._transformation_functions[
+                transformation_fn = self.transformation_functions[
                     feature_name
                 ].transformation_fn
                 row_dict[feature_name] = transformation_fn(row_dict[feature_name])
@@ -378,11 +404,11 @@ class VectorServer:
         return self._online_store_sql_client
 
     @property
-    def serving_keys(self) -> List[hsfs.serving_key.ServingKey]:
+    def serving_keys(self) -> List[sk_mod.ServingKey]:
         return self._serving_keys
 
     @serving_keys.setter
-    def serving_keys(self, serving_vector_keys: List[hsfs.serving_key.ServingKey]):
+    def serving_keys(self, serving_vector_keys: List[sk_mod.ServingKey]):
         self._serving_keys = serving_vector_keys
 
     @property
