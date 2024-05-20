@@ -181,7 +181,7 @@ class OnlineStoreRestClientEngine:
     def get_batch_feature_vectors(
         self,
         entries: List[Dict[str, Any]],
-        has_passed_features: List[bool],
+        has_passed_or_vector_features: List[bool],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
         allow_missing: bool = False,
@@ -237,30 +237,11 @@ class OnlineStoreRestClientEngine:
             payload=payload
         )
         # Hack to handle partial serving key entries with passed feature values
-        missing_without_passed = [
-            (status == self.MISSING_STATUS and has_passed)
-            for status, has_passed in zip(response["status"], has_passed_features)
-        ]
-        if not allow_missing and any(missing_without_passed):
-            missing_count = 0
-            missing_entries = []
-            for entry, status, has_passed in itertools.zip_longest(
-                entries,
-                response["status"],
-                has_passed_features,
-                fillvalue=None,
-            ):
-                if status == self.MISSING_STATUS and has_passed:
-                    missing_count += 1
-                    missing_entries.append(entry)
-                    _logger.error(
-                        f"Values are missing for entry: {entry}, "
-                        f"partial response (no passed or embedded features): {response['features']}."
-                    )
-            raise exceptions.FeatureStoreException(
-                f"Found {missing_count} out of {len(entries)} with missing values, "
-                "no row found for corresponding primary key value. "
-                f"Missing entries: {missing_entries}. Check the logs for more details."
+        if not allow_missing:
+            self.check_for_missing_values(
+                has_passed_or_vector_features=has_passed_or_vector_features,
+                entries=entries,
+                response=response,
             )
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
@@ -274,6 +255,40 @@ class OnlineStoreRestClientEngine:
             ]
         else:
             return response
+
+    def check_for_missing_values(
+        self,
+        has_passed_or_vector_features: List[bool],
+        entries: List[Dict[str, Any]],
+        response: Dict[str, Any],
+    ):
+        missing_without_passed = [
+            (status == self.MISSING_STATUS and not has_passed)
+            for status, has_passed in zip(
+                response["status"], has_passed_or_vector_features
+            )
+        ]
+        if any(missing_without_passed):
+            missing_count = 0
+            missing_entries = []
+            for entry, status, has_passed in itertools.zip_longest(
+                entries,
+                response["status"],
+                has_passed_or_vector_features,
+                fillvalue=None,
+            ):
+                if status == self.MISSING_STATUS and not has_passed:
+                    missing_count += 1
+                    missing_entries.append(entry)
+                    _logger.error(
+                        f"Values are missing for entry: {entry}, "
+                        f"partial response (no passed or embedded features): {response['features']}."
+                    )
+            raise exceptions.FeatureStoreException(
+                f"Found {missing_count} out of {len(entries)} with missing values, "
+                "no row found for corresponding primary key value. "
+                f"Missing entries: {missing_entries}. Check the logs for more details."
+            )
 
     def convert_rdrs_response_to_feature_value_row(
         self,
