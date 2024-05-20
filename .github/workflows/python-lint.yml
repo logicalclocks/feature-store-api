@@ -69,8 +69,8 @@ jobs:
       - name: Display Python version
         run: python --version
       
-      - name: Uninstall marshmallow
-        run: pip uninstall -y marshmallow
+      - name: Set PYSPARK_PYTHON
+        run: echo "export PYSPARK_PYTHON=/usr/local/bin/python3" >> $GITHUB_ENV
 
       - name: Display pip freeze
         run: pip freeze
