@@ -192,7 +192,7 @@ class TransformationFunctionEngine:
                 transformation_function.hopsworks_udf.transformation_statistics = (
                     td_tffn_stats.feature_descriptive_statistics
                 )
-        return transformation_functions
+        return feature_view._sort_transformation_functions(transformation_functions)
 
     @staticmethod
     def compute_and_set_feature_statistics(
