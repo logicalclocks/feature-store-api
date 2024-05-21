@@ -136,6 +136,11 @@ class FeatureView:
             else []
         )
 
+        if self._transformation_functions:
+            self._transformation_functions = FeatureView._sort_transformation_functions(
+                self._transformation_functions
+            )
+
         self._features = []
         self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
             feature_view_engine.FeatureViewEngine(featurestore_id)
@@ -379,6 +384,23 @@ class FeatureView:
             self._vector_db_client = VectorDbClient(
                 self.query, serving_keys=self._serving_keys
             )
+
+    @staticmethod
+    def _sort_transformation_functions(
+        transformation_functions: List[TransformationFunction],
+    ) -> List[TransformationFunction]:
+        """
+        Function that sorts transformation functions in the order of the output column names.
+
+        The list of transformation functions are sorted based on the output columns names to maintain consistent ordering.
+
+        # Arguments
+            transformation_functions:  `List[TransformationFunction]`. List of transformation functions to be sorted
+
+        # Returns
+            `List[TransformationFunction]`: List of transformation functions to be sorted
+        """
+        return sorted(transformation_functions, key=lambda x: x.output_column_names[0])
 
     def init_batch_scoring(
         self,

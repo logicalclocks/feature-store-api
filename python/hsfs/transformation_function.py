@@ -228,3 +228,8 @@ class TransformationFunction:
     def hopsworks_udf(self) -> HopsworksUdf:
         """Meta data class for the user defined transformation function."""
         return self._hopsworks_udf
+
+    @property
+    def output_column_names(self) -> List[str]:
+        """Output column names of transformation functions"""
+        return self._hopsworks_udf._output_column_names
