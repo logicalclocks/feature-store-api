@@ -19,7 +19,7 @@ import asyncio
 import json
 import logging
 import re
-from contextlib import asynccontextmanager
+import sys
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import nest_asyncio
@@ -68,7 +68,6 @@ class OnlineStoreSqlClient:
             feature_store_id
         )
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
-        self._connection_options = connection_options
         self._online_connector = None
 
     def fetch_prepared_statements(
@@ -210,42 +209,30 @@ class OnlineStoreSqlClient:
         return prepared_statements_dict
 
     def init_async_mysql_connection(self, options=None):
+        def is_runtime_notebook():
+            if "ipykernel" in sys.modules:
+                return True
+            else:
+                return False
+
         assert self._prepared_statements.get(self.SINGLE_VECTOR_KEY) is not None, (
             "Prepared statements are not initialized. "
             "Please call `init_prepared_statement` method first."
         )
-        _logger.debug("Acquiring or starting event loop for async engine.")
-
         _logger.debug(
             "Fetching storage connector for sql connection to Online Feature Store."
         )
         self._online_connector = self._storage_connector_api.get_online_connector(
             self._feature_store_id
         )
-        max_simultaneous_queries = 20
-        self._semaphore = asyncio.Semaphore(max_simultaneous_queries)
-        # nest_asyncio.apply()
+        self._connection_options = options
+        self._hostname = util.get_host_name() if self._external else None
 
-        # _logger.debug(f"Setting up aiomysql connection, with options : {options}")
-        # loop = asyncio.get_event_loop()
-        # self._set_aiomysql_connection(
-        #     len(self._prepared_statements[self.SINGLE_VECTOR_KEY]),loop=loop
-        # )
-        # self._loop = loop
-
-        import sys
-
-        def is_notebook():
-            if "ipykernel" in sys.modules:
-                return True
-            else:
-                return False
-
-        if is_notebook():
-            print("Running in Jupyter notebook. applying nest_asyncio")
+        if is_runtime_notebook():
+            _logger.debug("Running in Jupyter notebook, applying nest_asyncio")
             nest_asyncio.apply()
         else:
-            print("Running in python script. Not applying nest_asyncio")
+            _logger.debug("Running in python script. Not applying nest_asyncio")
 
     def get_single_feature_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
@@ -320,32 +307,20 @@ class OnlineStoreSqlClient:
         _logger.debug(
             f"Executing prepared statements for serving vector with entries: {bind_entries}"
         )
-
-        # try:
-        #     loop = asyncio.get_event_loop()
-        #     if loop.is_closed():
-        #         loop = asyncio.new_event_loop()
-        #     asyncio.set_event_loop(loop)
-        #     results_dict = loop.run_until_complete(
-        #         self._execute_prep_statements(
-        #             prepared_statement_execution, bind_entries
-        #         ),
-        #     )
-        # finally:
-        #     # loop.close()
-        #     pass
-
         try:
+            _logger.debug("Acquiring or starting event loop for async engine.")
             loop = asyncio.get_event_loop()
             asyncio.set_event_loop(loop)
         except RuntimeError as ex:
             if "There is no current event loop in thread" in str(ex):
-                print("Creating new loop")
+                _logger.debug(
+                    "No existing running event loop. Creating new event loop."
+                )
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
 
         results_dict = loop.run_until_complete(
-            self._execute_prep_statements(prepared_statement_execution, bind_entries),
+            self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
 
         _logger.debug(f"Retrieved feature vectors: {results_dict}")
@@ -413,7 +388,18 @@ class OnlineStoreSqlClient:
             f"Executing prepared statements for batch vector with entries: {entry_values}"
         )
         # run all the prepared statements in parallel using aiomysql engine
-        loop = asyncio.get_event_loop()
+        try:
+            _logger.debug("Acquiring or starting event loop for async engine.")
+            loop = asyncio.get_event_loop()
+            asyncio.set_event_loop(loop)
+        except RuntimeError as ex:
+            if "There is no current event loop in thread" in str(ex):
+                _logger.debug(
+                    "No existing running event loop. Creating new event loop."
+                )
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
         parallel_results = loop.run_until_complete(
             self._execute_prep_statements(prepared_stmts_to_execute, entry_values)
         )
@@ -562,24 +548,16 @@ class OnlineStoreSqlClient:
         ]
 
     async def _get_connection_pool(self, default_min_size: int, loop=None) -> None:
-        print("Creating new pool !!!")
         self._connection_pool = await util.create_async_engine(
             self._online_connector,
             self._external,
             default_min_size,
             options=self._connection_options,
             loop=loop,
+            hostname=self._hostname,
         )
 
         return self._connection_pool
-
-    @asynccontextmanager
-    async def get_connection(self):
-        conn = await self._connection_pool.acquire()
-        try:
-            yield conn
-        finally:
-            self._connection_pool.release(conn)
 
     async def _query_async_sql(self, stmt, bind_params):
         """Query prepared statement together with bind params using aiomysql connection pool"""
@@ -600,37 +578,6 @@ class OnlineStoreSqlClient:
             await cursor.close()
 
             return resultset
-
-    # async def _query_async_sql(self, stmt, bind_params, pool):
-    #     """Query prepared statement together with bind params using aiomysql connection pool"""
-    #     # Get a connection from the pool
-    #     import aiomysql
-
-    #     def convert_to_wildcard(stmt,bind_params:Dict[str,Any]):
-    #         k = list(bind_params.keys())[0]
-    #         txt = stmt.text.replace(":"+k, "%s")
-    #         return txt
-
-    #     async with pool.acquire() as conn:
-    #         async with conn.cursor(aiomysql.DictCursor) as cur:
-    #             # Execute the prepared statement
-    #             _logger.debug(
-    #                 f"Executing prepared statement: {stmt} with bind params: {bind_params}"
-    #             )
-    #             q_str = convert_to_wildcard(stmt, bind_params)
-    #             await cur.execute(q_str, list(bind_params.values()) )
-    #             # Fetch the result
-    #             _logger.debug("Waiting for resultset.")
-    #             resultset = await cur.fetchall()
-
-    #             return resultset
-
-    async def close_pool(self):
-        """ "Close the async mysql connection pool and wait for it to be closed."""
-        if self._connection_pool is not None:
-            self._connection_pool.close()
-            await self._connection_pool.wait_closed()
-            self._connection_pool = None
 
     async def _execute_prep_statements(
         self,

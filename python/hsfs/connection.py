@@ -280,13 +280,10 @@ class Connection:
             conn.close()
             ```
         """
-        # OpenSearchClientSingleton().close()
         client.stop()
         self._feature_store_api = None
         engine.stop()
         self._connected = False
-        # close OnlineStoreSqlClient
-        # OnlineStoreSqlClient().close()
 
         print("Connection closed.")
 

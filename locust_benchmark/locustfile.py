@@ -95,7 +95,7 @@ class MySQLFeatureVectorLookup(User):
 
 class MySQLFeatureVectorBatchLookup(User):
     wait_time = constant(0)
-    weight = 1
+    # weight = 1
     # fixed_count = 1
 
     def __init__(self, environment):
@@ -107,10 +107,11 @@ class MySQLFeatureVectorBatchLookup(User):
     def on_start(self):
         print("Init user")
         self.fv.init_serving(external=self.client.external)
+        nest_asyncio.apply()
 
     def on_stop(self):
         print("Closing user")
-        self.client.close()
+        # self.client.close()
 
     @task
     def get_feature_vector_batch(self):

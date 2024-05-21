@@ -188,19 +188,31 @@ async def create_async_engine(
     external: bool,
     default_min_size: int,
     options: Optional[Dict[str, Any]] = None,
-    loop: Any = None,
+    loop: Any | None = None,
+    hostname: Optional[str] = None,
 ) -> Any:
     online_options = online_conn.spark_options()
-    # create a aiomysql connection pool
     # read the keys user, password from online_conn as use them while creating the connection pool
     url = make_url(online_options["url"].replace("jdbc:", ""))
-    if external:
-        hostname = get_host_name()
-    else:
-        hostname = url.host
+    if hostname is None:
+        if external:
+            print("Hostname not supplied, retrieving hostname from client")
+            hostname = get_host_name()
+        else:
+            hostname = url.host
 
-    # assert asyncio.get_running_loop is not None, "No running event loop found. Please run this function inside an event loop."
-    # loop = asyncio.get_running_loop()
+    print(f"hostname: {hostname} ")
+
+    # assert that get_running_loop() does not throw RuntimeError
+    try:
+        if loop is None:
+            loop = asyncio.get_running_loop()
+    except RuntimeError as er:
+        raise RuntimeError(
+            "Event loop is not running. Please provide an event loop to create the engine."
+        ) from er
+
+    # create a aiomysql connection pool
     pool = await async_create_engine(
         host=hostname,
         port=3306,
@@ -214,48 +226,10 @@ async def create_async_engine(
             options.get("maxsize", default_min_size) if options else default_min_size
         ),
         pool_recycle=(options.get("pool_recycle", -1) if options else -1),
-        loop=asyncio.get_running_loop(),
+        loop=loop,
     )
 
     return pool
-
-
-# async def create_async_engine(
-#     online_conn: Any,
-#     external: bool,
-#     default_min_size: int,
-#     loop: Any,
-#     options: Optional[Dict[str, Any]] = None,
-# ) -> Any:
-#     online_options = online_conn.spark_options()
-#     # create a aiomysql connection pool
-#     # read the keys user, password from online_conn as use them while creating the connection pool
-#     url = make_url(online_options["url"].replace("jdbc:", ""))
-#     if external:
-#         hostname = get_host_name()
-#     else:
-#         hostname = url.host
-
-#     #from sqlalchemy.ext.asyncio import create_async_engine
-#     import aiomysql
-#     import asyncio
-
-#     pool = await aiomysql.create_pool(
-#         host=hostname,
-#         port=3306,
-#         user=online_options["user"],
-#         password=online_options["password"],
-#         db=url.database,
-#         loop=loop,
-#         minsize=(
-#             options.get("minsize", default_min_size) if options else default_min_size
-#         ),
-#         maxsize=(
-#             options.get("maxsize", default_min_size) if options else default_min_size
-#         ),
-#         pool_recycle=(options.get("pool_recycle", -1) if options else -1),
-#     )
-#     return pool
 
 
 def check_timestamp_format_from_date_string(input_date: str) -> Tuple[str, str]:
