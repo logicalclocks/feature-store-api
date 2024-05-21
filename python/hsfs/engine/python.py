@@ -1022,7 +1022,7 @@ class Engine:
         # and the apply them
         for split_name in result_dfs:
             result_dfs[split_name] = self._apply_transformation_function(
-                training_dataset_obj.transformation_functions,
+                feature_view_obj.transformation_functions,
                 result_dfs.get(split_name),
             )
 
