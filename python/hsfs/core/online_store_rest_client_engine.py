@@ -40,7 +40,6 @@ class OnlineStoreRestClientEngine:
         feature_view_name: str,
         feature_view_version: int,
         features: List[td_feature_mod.TrainingDatasetFeature],
-        fg_id_to_name: Dict[int, str],
     ):
         """Initialize the Online Store Rest Client Engine. This class contains the logic to mediate
         the interaction between the python client and the RonDB Rest Server Feature Store API.
@@ -167,11 +166,11 @@ class OnlineStoreRestClientEngine:
         )
 
         if not allow_missing and any(
-            map(lambda x: x.get("httpStatus") == "404", response["statusDetailed"])
+            map(lambda x: x.get("httpStatus") == 404, response["detailedStatus"])
         ):
             fg_with_missing_rows = []
-            for operations in response["statusDetailed"]:
-                if operations.get("httpStatus") == "404":
+            for operations in response["detailedStatus"]:
+                if operations.get("httpStatus") == 404:
                     fg_with_missing_rows.append(
                         self._fg_id_to_name.get(
                             operations.get("featureGroupId"),
@@ -180,11 +179,11 @@ class OnlineStoreRestClientEngine:
                     )
 
             _logger.error(
-                f"Values are missing for entry: {entry}, no row found for corresponding primary key value in {",".join(fg_with_missing_rows)}."
+                f"Values are missing for entry: {entry}, no row found for corresponding primary key value in {','.join(fg_with_missing_rows)}."
                 f" Partial response (no passed or embedded features): {response['features']}."
             )
             raise exceptions.FeatureStoreException(
-                f"Values are missing for entry: {entry}, no row found for corresponding primary key value in {",".join(fg_with_missing_rows)}."
+                f"Values are missing for entry: {entry}, no row found for corresponding primary key value in {','.join(fg_with_missing_rows)}."
                 f" Partial response (no passed or embedded features): {response['features']}."
             )
 
@@ -279,7 +278,7 @@ class OnlineStoreRestClientEngine:
         response: Dict[str, Any],
     ):
         missing_row = [
-            any([operation["httpStatus"] == "404" for operation in detailedStatus])
+            any([operation["httpStatus"] == 404 for operation in detailedStatus])
             for detailedStatus in response["detailedStatus"]
         ]
         if any(missing_row):
@@ -290,7 +289,7 @@ class OnlineStoreRestClientEngine:
                 response["detailedStatus"],
                 fillvalue=None,
             ):
-                if any([operation["httpStatus"] == "404" for operation in status]):
+                if any([operation["httpStatus"] == 404 for operation in status]):
                     missing_count += 1
                     missing_entries.append(entry)
             _logger.error("Found missing values for entries: %s", missing_entries)
@@ -361,6 +360,10 @@ class OnlineStoreRestClientEngine:
     @property
     def ordered_feature_names(self) -> List[str]:
         return self._ordered_feature_names
+
+    @property
+    def fg_id_to_name(self) -> Dict[int, str]:
+        return self._fg_id_to_name
 
     @property
     def online_store_rest_client_api(
