@@ -260,19 +260,9 @@ class VectorServer:
             }  # updated below with vector_db_features and passed_features
         elif online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_feature_vector Online REST client")
-            # hack to avoid raising error if partial serving key is passed along with passed features
-            # but allow missing set to false
-            if allow_missing is True:
-                hack_allow_missing = True
-            elif (passed_features is None or len(passed_features) == 0) and (
-                vector_db_features is None or len(vector_db_features) == 0
-            ):
-                hack_allow_missing = False
-            else:
-                hack_allow_missing = True
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
                 rondb_entry,
-                allow_missing=hack_allow_missing,
+                allow_missing=allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
@@ -332,7 +322,6 @@ class VectorServer:
         )
         rondb_entries = []
         skipped_empty_entries = []
-        has_passed_or_vector_features = []
         for (idx, entry), passed, vector_features in itertools.zip_longest(
             enumerate(entries),
             passed_features,
@@ -346,13 +335,6 @@ class VectorServer:
             )
             if len(rondb_entry) != 0:
                 rondb_entries.append(rondb_entry)
-                # see get_feature_vectors in rest client for hack explanation
-                if (passed is not None and len(passed) != 0) or (
-                    vector_features is not None and len(vector_features) != 0
-                ):
-                    has_passed_or_vector_features.append(True)
-                else:
-                    has_passed_or_vector_features.append(False)
             else:
                 skipped_empty_entries.append(idx)
 
@@ -365,9 +347,6 @@ class VectorServer:
                 entries=rondb_entries,
                 allow_missing=allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
-                # hack to avoid raising error if partial serving key is passed along with passed features
-                # but allow missing set to false
-                has_passed_or_vector_features=has_passed_or_vector_features,
             )
         elif len(rondb_entries) > 0:
             # get result row

@@ -40,6 +40,7 @@ class OnlineStoreRestClientEngine:
         feature_view_name: str,
         feature_view_version: int,
         features: List[td_feature_mod.TrainingDatasetFeature],
+        fg_id_to_name: Dict[int, str],
     ):
         """Initialize the Online Store Rest Client Engine. This class contains the logic to mediate
         the interaction between the python client and the RonDB Rest Server Feature Store API.
@@ -61,20 +62,22 @@ class OnlineStoreRestClientEngine:
         self._feature_view_name = feature_view_name
         self._feature_view_version = feature_view_version
         self._features = features
-        self._ordered_feature_names = [
-            feat.name
-            for feat in features
+        self._ordered_feature_names = []
+        self._fg_id_to_name = {}
+        for feat in features:
             if not (
                 feat.label
                 or feat.inference_helper_column
                 or feat.training_helper_column
-            )
-        ]
+            ):
+                self._ordered_feature_names.append(feat.name)
+            self._fg_id_to_name[feat.feature_group.id] = feat.feature_group.name
 
     def build_base_payload(
         self,
         metadata_options: Optional[Dict[str, bool]] = None,
         validate_passed_features: bool = False,
+        allow_missing: bool = False,
     ) -> Dict[str, Union[str, Dict[str, bool]]]:
         """Build the base payload for the RonDB REST Server Feature Store API.
 
@@ -101,6 +104,7 @@ class OnlineStoreRestClientEngine:
             "featureViewVersion": self._feature_view_version,
             "options": {
                 "validatePassedFeatures": validate_passed_features,
+                "includeDetailedStatus": not allow_missing,
             },
         }
 
@@ -153,6 +157,7 @@ class OnlineStoreRestClientEngine:
             metadata_options=metadata_options,
             # This ensures consistency with the sql client behaviour.
             validate_passed_features=False,
+            allow_missing=allow_missing,
         )
         payload["entries"] = entry
         payload["passedFeatures"] = passed_features
@@ -160,13 +165,26 @@ class OnlineStoreRestClientEngine:
         response = self._online_store_rest_client_api.get_single_raw_feature_vector(
             payload=payload
         )
-        if not allow_missing and response["status"] == self.MISSING_STATUS:
+
+        if not allow_missing and any(
+            map(lambda x: x.get("httpStatus") == "404", response["statusDetailed"])
+        ):
+            fg_with_missing_rows = []
+            for operations in response["statusDetailed"]:
+                if operations.get("httpStatus") == "404":
+                    fg_with_missing_rows.append(
+                        self._fg_id_to_name.get(
+                            operations.get("featureGroupId"),
+                            "FeatureGroup name not found",
+                        )
+                    )
+
             _logger.error(
-                f"Values are missing for entry: {entry}, "
-                f"partial response (no passed or embedded features): {response['features']}."
+                f"Values are missing for entry: {entry}, no row found for corresponding primary key value in {",".join(fg_with_missing_rows)}."
+                f" Partial response (no passed or embedded features): {response['features']}."
             )
             raise exceptions.FeatureStoreException(
-                f"Values are missing for entry: {entry}, no row found for corresponding primary key value."
+                f"Values are missing for entry: {entry}, no row found for corresponding primary key value in {",".join(fg_with_missing_rows)}."
                 f" Partial response (no passed or embedded features): {response['features']}."
             )
 
@@ -181,7 +199,6 @@ class OnlineStoreRestClientEngine:
     def get_batch_feature_vectors(
         self,
         entries: List[Dict[str, Any]],
-        has_passed_or_vector_features: List[bool],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
         allow_missing: bool = False,
@@ -220,6 +237,7 @@ class OnlineStoreRestClientEngine:
             metadata_options=metadata_options,
             # This ensures consistency with the sql client behaviour.
             validate_passed_features=False,
+            allow_missing=allow_missing,
         )
         payload["entries"] = entries
         if isinstance(passed_features, list) and (
@@ -239,7 +257,6 @@ class OnlineStoreRestClientEngine:
         # Hack to handle partial serving key entries with passed feature values
         if not allow_missing:
             self.check_for_missing_values(
-                has_passed_or_vector_features=has_passed_or_vector_features,
                 entries=entries,
                 response=response,
             )
@@ -258,36 +275,28 @@ class OnlineStoreRestClientEngine:
 
     def check_for_missing_values(
         self,
-        has_passed_or_vector_features: List[bool],
         entries: List[Dict[str, Any]],
         response: Dict[str, Any],
     ):
-        missing_without_passed = [
-            (status == self.MISSING_STATUS and not has_passed)
-            for status, has_passed in zip(
-                response["status"], has_passed_or_vector_features
-            )
+        missing_row = [
+            any([operation["httpStatus"] == "404" for operation in detailedStatus])
+            for detailedStatus in response["detailedStatus"]
         ]
-        if any(missing_without_passed):
+        if any(missing_row):
             missing_count = 0
             missing_entries = []
-            for entry, status, has_passed in itertools.zip_longest(
+            for entry, status in itertools.zip_longest(
                 entries,
-                response["status"],
-                has_passed_or_vector_features,
+                response["detailedStatus"],
                 fillvalue=None,
             ):
-                if status == self.MISSING_STATUS and not has_passed:
+                if any([operation["httpStatus"] == "404" for operation in status]):
                     missing_count += 1
                     missing_entries.append(entry)
-                    _logger.error(
-                        f"Values are missing for entry: {entry}, "
-                        f"partial response (no passed or embedded features): {response['features']}."
-                    )
+            _logger.error("Found missing values for entries: %s", missing_entries)
             raise exceptions.FeatureStoreException(
                 f"Found {missing_count} out of {len(entries)} with missing values, "
-                "no row found for corresponding primary key value. "
-                f"Missing entries: {missing_entries}. Check the logs for more details."
+                "no row found for corresponding primary key value. Check the logs for more details."
             )
 
     def convert_rdrs_response_to_feature_value_row(
