@@ -577,7 +577,7 @@ class OnlineStoreSqlClient:
             _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
             await cursor.close()
 
-            return resultset
+        return resultset
 
     async def _execute_prep_statements(
         self,

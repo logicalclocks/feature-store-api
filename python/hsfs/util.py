@@ -196,7 +196,6 @@ async def create_async_engine(
     url = make_url(online_options["url"].replace("jdbc:", ""))
     if hostname is None:
         if external:
-            print("Hostname not supplied, retrieving hostname from client")
             hostname = get_host_name()
         else:
             hostname = url.host

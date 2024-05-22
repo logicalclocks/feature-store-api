@@ -27,6 +27,7 @@ from hsfs.core import (
     services_api,
     variable_api,
 )
+from hsfs.core.opensearch import OpenSearchClientSingleton
 from hsfs.decorators import connected, not_connected
 from requests.exceptions import ConnectionError
 
@@ -280,6 +281,7 @@ class Connection:
             conn.close()
             ```
         """
+        OpenSearchClientSingleton().close()
         client.stop()
         self._feature_store_api = None
         engine.stop()
