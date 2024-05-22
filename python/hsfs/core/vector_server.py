@@ -255,14 +255,13 @@ class VectorServer:
         )
         if len(rondb_entry) == 0:
             _logger.debug("Empty entry for rondb, skipping fetching.")
-            serving_vector = {
-                fname: None for fname in self._feature_vector_col_name
-            }  # updated below with vector_db_features and passed_features
+            serving_vector = {}  # updated below with vector_db_features and passed_features
         elif online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.debug("get_feature_vector Online REST client")
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
                 rondb_entry,
                 allow_missing=allow_missing,
+                drop_missing=True,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
@@ -283,7 +282,6 @@ class VectorServer:
         )
         vector = self._generate_vector(
             serving_vector,
-            online_client_choice=online_client_choice,
             fill_na=allow_missing,
         )
 
@@ -338,19 +336,16 @@ class VectorServer:
             else:
                 skipped_empty_entries.append(idx)
 
-        batch_results = []
-        list_detailed_status = []
         if (
             online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT
             and len(rondb_entries) > 0
         ):
             _logger.debug("get_batch_feature_vector Online REST client")
-            batch_results, list_detailed_status = (
-                self.online_store_rest_client_engine.get_batch_feature_vectors(
-                    entries=rondb_entries,
-                    allow_missing=allow_missing,
-                    return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
-                )
+            batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
+                entries=rondb_entries,
+                allow_missing=allow_missing,
+                drop_missing=True,
+                return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         elif len(rondb_entries) > 0:
             # get result row
@@ -360,6 +355,7 @@ class VectorServer:
             )
         else:
             _logger.debug("Empty entries for rondb, skipping fetching.")
+            batch_results = []
 
         _logger.debug(
             "Converting to row vectors to list, applies deserialization and transformation function."
@@ -385,20 +381,14 @@ class VectorServer:
                     if len(skipped_empty_entries) > 0
                     else None
                 )
-                result_dict = {fname: None for fname in self._feature_vector_col_name}
-                detailed_status = None
+                result_dict = {}
             else:
                 result_dict = batch_results.pop(0)
-                detailed_status = (
-                    list_detailed_status.pop(0)
-                    if len(list_detailed_status) > 0
-                    else None
-                )
 
             # Errors in batch requests are returned as None values
             if result_dict is None:
-                _logger.debug("Found null result, filling with None values.")
-                result_dict = [None for _ in range(len(self._feature_vector_col_name))]
+                _logger.debug("Found null result, setting to empty dict.")
+                result_dict = {}
             if vector_db_result is not None:
                 _logger.debug("Updating with vector_db features")
                 result_dict.update(vector_db_result)
@@ -406,20 +396,12 @@ class VectorServer:
                 _logger.debug("Updating with passed features")
                 result_dict.update(passed_values)
 
-            if allow_missing is False:
-                self.identify_missing_features_post_fetch(
-                    entry=entries[idx],
-                    passed_features=passed_values,
-                    vector_db_features=vector_db_result,
-                    detailed_status=detailed_status,
-                )
             # for backward compatibility, before 3.4, if result is empty,
             # instead of throwing error, it skips the result
             if len(result_dict) != 0 or allow_missing:
                 vectors.append(
                     self._generate_vector(
                         result_dict=result_dict,
-                        online_client_choice=online_client_choice,
                         fill_na=allow_missing,
                     )
                 )
@@ -670,7 +652,6 @@ class VectorServer:
         - The handlers should be reusable without paying overhead for rebuilding them for each feature vector.
         """
         self._return_feature_value_handlers = {}
-        self._ordered_feature_names = []
         self._ordered_feature_group_feature_names = []
         _logger.debug(
             f"Setting return feature value handlers for Feature View {self._feature_view_name},"
@@ -684,7 +665,6 @@ class VectorServer:
                 )
                 continue
 
-            self._ordered_feature_names.append(feature.name)
             self._ordered_feature_group_feature_names.append(
                 feature.feature_group_feature_name
             )
@@ -763,10 +743,6 @@ class VectorServer:
                     )
                     or feature_value
                 )
-        _logger.debug(
-            "Ordered feature names, skipping label or training helper columns: %s",
-            self._ordered_feature_names,
-        )
 
     def validate_entry(
         self,
@@ -907,22 +883,18 @@ class VectorServer:
     def _generate_vector(
         self,
         result_dict: Optional[Dict[str, Any]],
-        online_client_choice: str,
         fill_na: bool = False,
     ) -> List[Any]:
         feature_values = []
-        for feature_name in self._feature_vector_col_name:
+        for fname in self.feature_vector_col_name:
             # Detects columns which were neither passed nor fetched from sql client
             # Only works for sql client as rest client returns missing as None
-            if (
-                online_client_choice is self.DEFAULT_ONLINE_STORE_SQL_CLIENT
-                and feature_name not in result_dict
-            ):
+            if fname not in result_dict.keys():
                 if fill_na:
                     feature_values.append(None)
                 else:
                     raise exceptions.FeatureStoreException(
-                        f"Feature '{feature_name}' is missing from vector."
+                        f"Feature '{fname}' is missing from vector."
                         "Possible reasons: "
                         "1. There is no match in the given entry."
                         " Please check if the entry exists in the online feature store"
@@ -930,41 +902,13 @@ class VectorServer:
                         f"2. Required entries [{', '.join(self.required_serving_keys)}] or "
                         f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
                     )
-            elif result_dict[feature_name] is None:
+            elif result_dict[fname] is None:
                 feature_values.append(None)
             else:
                 feature_values.append(
-                    self._return_feature_value_handlers[feature_name](
-                        result_dict[feature_name]
-                    )
+                    self._return_feature_value_handlers[fname](result_dict[fname])
                 )
         return feature_values
-
-    def check_for_missing_values(
-        self,
-        entries: List[Dict[str, Any]],
-        response: Dict[str, Any],
-    ):
-        missing_row = [
-            any([operation["httpStatus"] == 404 for operation in detailedStatus])
-            for detailedStatus in response["detailedStatus"]
-        ]
-        if any(missing_row):
-            missing_count = 0
-            missing_entries = []
-            for entry, status in itertools.zip_longest(
-                entries,
-                response["detailedStatus"],
-                fillvalue=None,
-            ):
-                if any([operation["httpStatus"] == 404 for operation in status]):
-                    missing_count += 1
-                    missing_entries.append(entry)
-            _logger.error("Found missing values for entries: %s", missing_entries)
-            raise exceptions.FeatureStoreException(
-                f"Found {missing_count} out of {len(entries)} with missing values, "
-                "no row found for corresponding primary key value. Check the logs for more details."
-            )
 
     @property
     def online_store_sql_client(
@@ -1030,8 +974,8 @@ class VectorServer:
         self._training_dataset_version = training_dataset_version
 
     @property
-    def ordered_feature_names(self) -> List[str]:
-        return self._ordered_feature_names
+    def feature_vector_col_name(self) -> List[str]:
+        return self._feature_vector_col_name
 
     @property
     def per_serving_key_features(self) -> Dict[str, set[str]]:

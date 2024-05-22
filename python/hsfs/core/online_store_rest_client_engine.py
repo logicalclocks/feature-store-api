@@ -15,6 +15,7 @@
 #
 from __future__ import annotations
 
+import itertools
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -60,7 +61,7 @@ class OnlineStoreRestClientEngine:
         self._feature_view_version = feature_view_version
         self._features = features
         self._ordered_feature_names = []
-        self._fg_id_to_name = {}
+        self._feature_names_per_fg_id = {}
         for feat in features:
             if not (
                 feat.label
@@ -68,13 +69,21 @@ class OnlineStoreRestClientEngine:
                 or feat.training_helper_column
             ):
                 self._ordered_feature_names.append(feat.name)
-            self._fg_id_to_name[feat.feature_group.id] = feat.feature_group.name
+            if feat.feature_group.id not in self._feature_names_per_fg_id.keys():
+                self._feature_names_per_fg_id[feat.feature_group.id] = [
+                    feat.feature_group.name
+                ]
+            else:
+                self._feature_names_per_fg_id[feat.feature_group.id].append(feat.name)
+        _logger.debug(
+            f"Mapping fg_id to feature names: {self._feature_names_per_fg_id}."
+        )
 
     def build_base_payload(
         self,
         metadata_options: Optional[Dict[str, bool]] = None,
         validate_passed_features: bool = False,
-        allow_missing: bool = False,
+        include_detailed_status: bool = False,
     ) -> Dict[str, Union[str, Dict[str, bool]]]:
         """Build the base payload for the RonDB REST Server Feature Store API.
 
@@ -101,7 +110,7 @@ class OnlineStoreRestClientEngine:
             "featureViewVersion": self._feature_view_version,
             "options": {
                 "validatePassedFeatures": validate_passed_features,
-                "includeDetailedStatus": not allow_missing,
+                "includeDetailedStatus": include_detailed_status,
             },
         }
 
@@ -120,6 +129,7 @@ class OnlineStoreRestClientEngine:
         passed_features: Optional[Dict[str, Any]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
         allow_missing: bool = False,
+        drop_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> Union[
         Tuple[Union[List[Any], Dict[str, Any]], Optional[List[Dict[str, Any]]]],
@@ -157,7 +167,8 @@ class OnlineStoreRestClientEngine:
             metadata_options=metadata_options,
             # This ensures consistency with the sql client behaviour.
             validate_passed_features=False,
-            allow_missing=allow_missing,
+            # Only necessary to get the detailed status if we are not allowing missing features.
+            include_detailed_status=not allow_missing,
         )
         payload["entries"] = entry
         payload["passedFeatures"] = passed_features
@@ -169,8 +180,10 @@ class OnlineStoreRestClientEngine:
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             return self.convert_rdrs_response_to_feature_value_row(
                 row_feature_values=response["features"],
+                detailed_status=response.get("detailedStatus", None),
+                drop_missing=drop_missing,
                 return_type=return_type,
-            ), response.get("detailedStatus", None)
+            )
         else:
             return response
 
@@ -180,6 +193,7 @@ class OnlineStoreRestClientEngine:
         passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
         allow_missing: bool = False,
+        drop_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> Union[
         Tuple[List[Union[List[Any], Dict[str, Any]]], List[Dict[str, Any]]],
@@ -218,7 +232,8 @@ class OnlineStoreRestClientEngine:
             metadata_options=metadata_options,
             # This ensures consistency with the sql client behaviour.
             validate_passed_features=False,
-            allow_missing=allow_missing,
+            # Only necessary to get the detailed status if we are not allowing missing features.
+            include_detailed_status=not allow_missing,
         )
         payload["entries"] = entries
         if isinstance(passed_features, list) and (
@@ -229,7 +244,8 @@ class OnlineStoreRestClientEngine:
             payload["passedFeatures"] = []
         else:
             raise ValueError(
-                "Length of passed features does not match the length of the entries."
+                "Length of passed features does not match the length of the entries. "
+                "If some entries do not have passed features, pass an empty dict for those entries."
             )
 
         response = self._online_store_rest_client_api.get_batch_raw_feature_vectors(
@@ -241,16 +257,22 @@ class OnlineStoreRestClientEngine:
             return [
                 self.convert_rdrs_response_to_feature_value_row(
                     row_feature_values=row,
+                    detailed_status=detailed_status,
+                    drop_missing=drop_missing,
                     return_type=return_type,
                 )
-                for row in response["features"]
-            ], response.get("detailedStatus", [])
+                for row, detailed_status in itertools.zip_longest(
+                    response["features"], response.get("detailedStatus", []) or []
+                )
+            ]
         else:
             return response
 
     def convert_rdrs_response_to_feature_value_row(
         self,
         row_feature_values: Union[List[Any], None],
+        drop_missing: bool,
+        detailed_status: List[Dict[str, Any]] = None,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_LIST,
     ) -> Union[List[Any], Dict[str, Any]]:
         """Convert the response from the RonDB Rest Server Feature Store API to a feature:value dict.
@@ -266,15 +288,27 @@ class OnlineStoreRestClientEngine:
             A dictionary with the feature names as keys and the feature values as values. Values types are not guaranteed to
             match the feature type in the metadata. Timestamp SQL types are converted to python datetime.
         """
+        failed_read_feature_names = []
+        if detailed_status is not None and drop_missing:
+            for operation_status in detailed_status:
+                if operation_status["httpStatus"] != 200:
+                    failed_read_feature_names.extend(
+                        self.feature_names_per_fg_id[operation_status["featureGroupId"]]
+                    )
+            _logger.debug(
+                f"Features names which failed on read: {failed_read_feature_names}."
+            )
+
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
             if row_feature_values is None:
                 _logger.debug(
                     "Feature vector is null, returning None for all features."
                 )
-                return [None for _ in self.ordered_feature_names]
-            _logger.debug(
-                f"Apply deserializer or transformation function to feature value list : {row_feature_values}."
-            )
+                return [
+                    None
+                    for name in self.ordered_feature_names
+                    if name not in failed_read_feature_names
+                ]
             return row_feature_values
 
         elif return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
@@ -282,13 +316,11 @@ class OnlineStoreRestClientEngine:
                 _logger.debug(
                     "Feature vector is null, returning None for all features."
                 )
-                return {name: None for name in self.ordered_feature_names}
-            _logger.debug(
-                f"Apply deserializer or transformation function and convert feature values to dictionary : {row_feature_values}."
-            )
+                return {}
             return {
                 name: value
                 for (name, value) in zip(self.ordered_feature_names, row_feature_values)
+                if name not in failed_read_feature_names
             }
 
     @property
@@ -305,15 +337,15 @@ class OnlineStoreRestClientEngine:
 
     @property
     def features(self) -> List[td_feature_mod.TrainingDatasetFeature]:
-        return self._ordered_feature_names
+        return self._features
 
     @property
     def ordered_feature_names(self) -> List[str]:
         return self._ordered_feature_names
 
     @property
-    def fg_id_to_name(self) -> Dict[int, str]:
-        return self._fg_id_to_name
+    def feature_names_per_fg_id(self) -> Dict[int, List[str]]:
+        return self._feature_names_per_fg_id
 
     @property
     def online_store_rest_client_api(
