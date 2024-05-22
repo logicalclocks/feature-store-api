@@ -338,15 +338,19 @@ class VectorServer:
             else:
                 skipped_empty_entries.append(idx)
 
+        batch_results = []
+        list_detailed_status = []
         if (
             online_client_choice == self.DEFAULT_ONLINE_STORE_REST_CLIENT
             and len(rondb_entries) > 0
         ):
             _logger.debug("get_batch_feature_vector Online REST client")
-            batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
-                entries=rondb_entries,
-                allow_missing=allow_missing,
-                return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            batch_results, list_detailed_status = (
+                self.online_store_rest_client_engine.get_batch_feature_vectors(
+                    entries=rondb_entries,
+                    allow_missing=allow_missing,
+                    return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+                )
             )
         elif len(rondb_entries) > 0:
             # get result row
@@ -356,7 +360,6 @@ class VectorServer:
             )
         else:
             _logger.debug("Empty entries for rondb, skipping fetching.")
-            batch_results = []
 
         _logger.debug(
             "Converting to row vectors to list, applies deserialization and transformation function."
@@ -366,7 +369,11 @@ class VectorServer:
         next_skipped = (
             skipped_empty_entries.pop(0) if len(skipped_empty_entries) > 0 else None
         )
-        for idx, passed_values, vector_db_result in itertools.zip_longest(
+        for (
+            idx,
+            passed_values,
+            vector_db_result,
+        ) in itertools.zip_longest(
             range(len(entries)),
             passed_features or [],
             vector_db_features or [],
@@ -379,14 +386,33 @@ class VectorServer:
                     else None
                 )
                 result_dict = {fname: None for fname in self._feature_vector_col_name}
+                detailed_status = None
             else:
                 result_dict = batch_results.pop(0)
+                detailed_status = (
+                    list_detailed_status.pop(0)
+                    if len(list_detailed_status) > 0
+                    else None
+                )
+
+            # Errors in batch requests are returned as None values
+            if result_dict is None:
+                _logger.debug("Found null result, filling with None values.")
+                result_dict = [None for _ in range(len(self._feature_vector_col_name))]
             if vector_db_result is not None:
                 _logger.debug("Updating with vector_db features")
                 result_dict.update(vector_db_result)
             if passed_values is not None:
                 _logger.debug("Updating with passed features")
                 result_dict.update(passed_values)
+
+            if allow_missing is False:
+                self.identify_missing_features_post_fetch(
+                    entry=entries[idx],
+                    passed_features=passed_values,
+                    vector_db_features=vector_db_result,
+                    detailed_status=detailed_status,
+                )
             # for backward compatibility, before 3.4, if result is empty,
             # instead of throwing error, it skips the result
             if len(result_dict) != 0 or allow_missing:
@@ -884,10 +910,6 @@ class VectorServer:
         online_client_choice: str,
         fill_na: bool = False,
     ) -> List[Any]:
-        # Errors in batch requests are returned as None values
-        if result_dict is None:
-            return [None for _ in range(len(self._feature_vector_col_name))]
-
         feature_values = []
         for feature_name in self._feature_vector_col_name:
             # Detects columns which were neither passed nor fetched from sql client
