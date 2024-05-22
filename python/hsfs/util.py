@@ -201,9 +201,6 @@ async def create_async_engine(
         else:
             hostname = url.host
 
-    print(f"hostname: {hostname} ")
-
-    # assert that get_running_loop() does not throw RuntimeError
     try:
         if loop is None:
             loop = asyncio.get_running_loop()
