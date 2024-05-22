@@ -15,13 +15,11 @@
 #
 from __future__ import annotations
 
-import itertools
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from hsfs import training_dataset_feature as td_feature_mod
 from hsfs import util
-from hsfs.client import exceptions
 from hsfs.core import online_store_rest_client_api
 
 
@@ -123,7 +121,10 @@ class OnlineStoreRestClientEngine:
         metadata_options: Optional[Dict[str, bool]] = None,
         allow_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
-    ) -> Dict[str, Any]:
+    ) -> Union[
+        Tuple[Union[List[Any], Dict[str, Any]], Optional[List[Dict[str, Any]]]],
+        Dict[str, Any],
+    ]:
         """Get a single feature vector from the online feature store via RonDB Rest Server Feature Store API.
 
         Check the RonDB Rest Server Feature Store API documentation for more details:
@@ -165,33 +166,11 @@ class OnlineStoreRestClientEngine:
             payload=payload
         )
 
-        if not allow_missing and any(
-            map(lambda x: x.get("httpStatus") == 404, response["detailedStatus"])
-        ):
-            fg_with_missing_rows = []
-            for operations in response["detailedStatus"]:
-                if operations.get("httpStatus") == 404:
-                    fg_with_missing_rows.append(
-                        self._fg_id_to_name.get(
-                            operations.get("featureGroupId"),
-                            "FeatureGroup name not found",
-                        )
-                    )
-
-            _logger.error(
-                f"Values are missing for entry: {entry}, no row found for corresponding primary key value in {','.join(fg_with_missing_rows)}."
-                f" Partial response (no passed or embedded features): {response['features']}."
-            )
-            raise exceptions.FeatureStoreException(
-                f"Values are missing for entry: {entry}, no row found for corresponding primary key value in {','.join(fg_with_missing_rows)}."
-                f" Partial response (no passed or embedded features): {response['features']}."
-            )
-
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             return self.convert_rdrs_response_to_feature_value_row(
                 row_feature_values=response["features"],
                 return_type=return_type,
-            )
+            ), response.get("detailedStatus", None)
         else:
             return response
 
@@ -202,7 +181,10 @@ class OnlineStoreRestClientEngine:
         metadata_options: Optional[Dict[str, bool]] = None,
         allow_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
-    ) -> List[Dict[str, Any]]:
+    ) -> Union[
+        Tuple[List[Union[List[Any], Dict[str, Any]]], List[Dict[str, Any]]],
+        Dict[str, Any],
+    ]:
         """Get a list of feature vectors from the online feature store via RonDB Rest Server Feature Store API.
 
         Check the RonDB Rest Server Feature Store API documentation for more details:
@@ -253,12 +235,6 @@ class OnlineStoreRestClientEngine:
         response = self._online_store_rest_client_api.get_batch_raw_feature_vectors(
             payload=payload
         )
-        # Hack to handle partial serving key entries with passed feature values
-        if not allow_missing:
-            self.check_for_missing_values(
-                entries=entries,
-                response=response,
-            )
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             _logger.debug("Converting batch response to feature value rows for each.")
@@ -268,35 +244,9 @@ class OnlineStoreRestClientEngine:
                     return_type=return_type,
                 )
                 for row in response["features"]
-            ]
+            ], response.get("detailedStatus", [])
         else:
             return response
-
-    def check_for_missing_values(
-        self,
-        entries: List[Dict[str, Any]],
-        response: Dict[str, Any],
-    ):
-        missing_row = [
-            any([operation["httpStatus"] == 404 for operation in detailedStatus])
-            for detailedStatus in response["detailedStatus"]
-        ]
-        if any(missing_row):
-            missing_count = 0
-            missing_entries = []
-            for entry, status in itertools.zip_longest(
-                entries,
-                response["detailedStatus"],
-                fillvalue=None,
-            ):
-                if any([operation["httpStatus"] == 404 for operation in status]):
-                    missing_count += 1
-                    missing_entries.append(entry)
-            _logger.error("Found missing values for entries: %s", missing_entries)
-            raise exceptions.FeatureStoreException(
-                f"Found {missing_count} out of {len(entries)} with missing values, "
-                "no row found for corresponding primary key value. Check the logs for more details."
-            )
 
     def convert_rdrs_response_to_feature_value_row(
         self,

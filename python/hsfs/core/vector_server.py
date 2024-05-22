@@ -42,7 +42,7 @@ from hsfs import (
 from hsfs import (
     transformation_function_attached as tfa_mod,
 )
-from hsfs.client import online_store_rest_client
+from hsfs.client import exceptions, online_store_rest_client
 from hsfs.core import (
     online_store_rest_client_engine,
     online_store_sql_engine,
@@ -764,7 +764,7 @@ class VectorServer:
         _logger.debug("Checking keys in entry are valid serving keys.")
         for key in entry.keys():
             if key not in self.required_serving_keys:
-                raise client.exceptions.FeatureStoreException(
+                raise exceptions.FeatureStoreException(
                     f"Provided key {key} is not a serving key. Required serving keys: {self.required_serving_keys}."
                 )
 
@@ -775,7 +775,7 @@ class VectorServer:
                 for sk_name in composite_group
             ]
             if not all(present_keys) and any(present_keys):
-                raise client.exceptions.FeatureStoreException(
+                raise exceptions.FeatureStoreException(
                     "Provide either all composite serving keys or none. "
                     f"Composite keys: {composite_group} in entry {entry}."
                 )
@@ -840,7 +840,7 @@ class VectorServer:
                 missing_features_per_serving_keys[sk_name] = neither_fetched_nor_passed
 
         if has_missing:
-            raise client.exceptions.FeatureStoreException(
+            raise exceptions.FeatureStoreException(
                 f"Incomplete feature vector requests: {missing_features_per_serving_keys}."
                 "To fetch or build a complete feature vector provide either (or both):\n"
                 "\t- the missing features by adding corresponding serving key, value to the entry.\n"
@@ -899,7 +899,7 @@ class VectorServer:
                 if fill_na:
                     feature_values.append(None)
                 else:
-                    raise client.exceptions.FeatureStoreException(
+                    raise exceptions.FeatureStoreException(
                         f"Feature '{feature_name}' is missing from vector."
                         "Possible reasons: "
                         "1. There is no match in the given entry."
@@ -917,6 +917,32 @@ class VectorServer:
                     )
                 )
         return feature_values
+
+    def check_for_missing_values(
+        self,
+        entries: List[Dict[str, Any]],
+        response: Dict[str, Any],
+    ):
+        missing_row = [
+            any([operation["httpStatus"] == 404 for operation in detailedStatus])
+            for detailedStatus in response["detailedStatus"]
+        ]
+        if any(missing_row):
+            missing_count = 0
+            missing_entries = []
+            for entry, status in itertools.zip_longest(
+                entries,
+                response["detailedStatus"],
+                fillvalue=None,
+            ):
+                if any([operation["httpStatus"] == 404 for operation in status]):
+                    missing_count += 1
+                    missing_entries.append(entry)
+            _logger.error("Found missing values for entries: %s", missing_entries)
+            raise exceptions.FeatureStoreException(
+                f"Found {missing_count} out of {len(entries)} with missing values, "
+                "no row found for corresponding primary key value. Check the logs for more details."
+            )
 
     @property
     def online_store_sql_client(
