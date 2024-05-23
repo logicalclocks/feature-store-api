@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from hsfs import training_dataset_feature
@@ -214,10 +214,7 @@ class TestOnlineRestClientEngine:
             response = backend_fixtures["rondb_server"][fixture_key]
         reference_feature_vector = {
             "ticker": "APPL",
-            "when": datetime.strptime(
-                "2022-01-01 00:00:00",
-                rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
-            ),
+            "when": datetime.fromtimestamp(11231413423, timezone.utc),
             "price": 21.3,
             "volume": 10,
         }
@@ -266,6 +263,7 @@ class TestOnlineRestClientEngine:
             entry=payload["entry"],
             passed_features=passed_features,
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            drop_missing=True,
         )
 
         # Assert
@@ -294,6 +292,7 @@ class TestOnlineRestClientEngine:
             entry=payload["entry"],
             passed_features=passed_features,
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
+            drop_missing=True,
         )
 
         # Assert
@@ -326,6 +325,7 @@ class TestOnlineRestClientEngine:
         response_json = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
+            drop_missing=True,
         )
 
         # Assert
@@ -362,19 +362,13 @@ class TestOnlineRestClientEngine:
         reference_batch_vectors = [
             {
                 "ticker": "APPL",
-                "when": datetime.strptime(
-                    "2022-01-01 00:00:00",
-                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
-                ),
+                "when": datetime.fromtimestamp(11231413423, timezone.utc),
                 "price": 21.3,
                 "volume": 10,
             },
             {
                 "ticker": "GOOG",
-                "when": datetime.strptime(
-                    "2022-01-01 00:00:00",
-                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
-                ),
+                "when": datetime.fromtimestamp(11231413423, timezone.utc),
                 "price": 12.3,
                 "volume": 43,
             },
@@ -384,6 +378,7 @@ class TestOnlineRestClientEngine:
         feature_vector_dict = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            drop_missing=True,
         )
 
         # Assert
@@ -414,10 +409,7 @@ class TestOnlineRestClientEngine:
             },
             {
                 "ticker": "GOOG",
-                "when": datetime.strptime(
-                    "2022-01-01 00:00:00",
-                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
-                ),
+                "when": datetime.fromtimestamp(11231413423, timezone.utc),
                 "price": 12.3,
                 "volume": 43,
             },
@@ -427,6 +419,7 @@ class TestOnlineRestClientEngine:
         feature_vector_dict = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            drop_missing=True,
         )
 
         # Assert
@@ -447,10 +440,7 @@ class TestOnlineRestClientEngine:
         reference_batch_vectors = [
             {
                 "ticker": "APPL",
-                "when": datetime.strptime(
-                    "2022-01-01 00:00:00",
-                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
-                ),
+                "when": datetime.fromtimestamp(11231413423, timezone.utc),
                 "price": 21.3,
                 "volume": 10,
             },
@@ -462,10 +452,7 @@ class TestOnlineRestClientEngine:
             },
             {
                 "ticker": "GOOG",
-                "when": datetime.strptime(
-                    "2022-01-01 00:00:00",
-                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
-                ),
+                "when": datetime.fromtimestamp(11231413423, timezone.utc),
                 "price": 12.3,
                 "volume": 43,
             },
@@ -475,6 +462,7 @@ class TestOnlineRestClientEngine:
         batch_vectors = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            drop_missing=True,
         )
 
         # Assert
