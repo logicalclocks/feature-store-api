@@ -70,9 +70,7 @@ class OnlineStoreRestClientEngine:
             ):
                 self._ordered_feature_names.append(feat.name)
             if feat.feature_group.id not in self._feature_names_per_fg_id.keys():
-                self._feature_names_per_fg_id[feat.feature_group.id] = [
-                    feat.feature_group.name
-                ]
+                self._feature_names_per_fg_id[feat.feature_group.id] = [feat.name]
             else:
                 self._feature_names_per_fg_id[feat.feature_group.id].append(feat.name)
         _logger.debug(
