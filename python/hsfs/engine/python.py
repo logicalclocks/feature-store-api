@@ -1011,14 +1011,15 @@ class Engine:
                 training_dataset_obj,
             )
 
-        if training_dataset_version is None:
-            transformation_function_engine.TransformationFunctionEngine.compute_and_set_feature_statistics(
-                training_dataset_obj, feature_view_obj, result_dfs
-            )
-        else:
-            transformation_function_engine.TransformationFunctionEngine.get_and_set_feature_statistics(
-                training_dataset_obj, feature_view_obj, training_dataset_version
-            )
+        # TODO : Currently statistics always computed since in memory training dataset retrieved is not consistent
+        # if training_dataset_version is None:
+        transformation_function_engine.TransformationFunctionEngine.compute_and_set_feature_statistics(
+            training_dataset_obj, feature_view_obj, result_dfs
+        )
+        # else:
+        #    transformation_function_engine.TransformationFunctionEngine.get_and_set_feature_statistics(
+        #        training_dataset_obj, feature_view_obj, training_dataset_version
+        #    )
         # and the apply them
         for split_name in result_dfs:
             result_dfs[split_name] = self._apply_transformation_function(
@@ -1290,6 +1291,21 @@ class Engine:
                 f.write(bytesio_object.getbuffer())
         return local_file
 
+    def _check_pyarrow_extension(self):
+        """
+        Function to check if pyarrow extension should be used for copying polars dataframe to pandas
+        """
+        try:
+            import pandas as pd
+            from packaging.version import Version
+
+            if Version(pd.__version__) > Version("2.0"):
+                return True
+            else:
+                return False
+        except Exception:
+            return False  # Return false if pyarrow or pandas cannot be imported
+
     def _apply_transformation_function(
         self,
         transformation_functions: List[transformation_function.TransformationFunction],
@@ -1312,7 +1328,7 @@ class Engine:
             dataset, pl.dataframe.frame.DataFrame
         ):
             # Converting polars dataframe to pandas because currently we support only pandas UDF's as transformation functions.
-            if os.getenv("USE_PYARROW_EXTENSION", False):
+            if self._check_pyarrow_extension():
                 dataset = dataset.to_pandas(
                     use_pyarrow_extension_array=True
                 )  # Zero copy if pyarrow extension can be used.
