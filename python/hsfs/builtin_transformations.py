@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import numpy as np
 import pandas as pd
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs.hopsworks_udf import hopsworks_udf
@@ -50,7 +51,9 @@ def label_encoder(
         value for value in statistics_feature.extended_statistics["unique_values"]
     ]
     value_to_index = {value: index for index, value in enumerate(unique_data)}
-    return pd.Series([value_to_index[data] for data in feature])
+    return pd.Series(
+        [value_to_index[data] if not pd.isna(data) else np.nan for data in feature]
+    )
 
 
 @hopsworks_udf(bool)

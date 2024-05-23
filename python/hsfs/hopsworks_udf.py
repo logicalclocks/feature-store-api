@@ -150,9 +150,9 @@ class HopsworksUdf:
             )
         )
 
-        self._output_column_names: List[str] = self._get_output_column_names()
-
         self._statistics: Optional[Dict[str, FeatureDescriptiveStatistics]] = None
+
+        self._output_column_names: List[str] = self._get_output_column_names()
 
     @staticmethod
     def _validate_and_convert_output_types(
@@ -496,21 +496,21 @@ def renaming_wrapper(*args):
         ]
         self.output_column_names = self._get_output_column_names()
 
-    def get_udf(self) -> Callable:
+    def get_udf(self, force_python_udf: bool = False) -> Callable:
         """
         Function that checks the current engine type and returns the appropriate UDF.
 
         In the spark engine the UDF is returned as a pandas UDF.
         While in the python engine the UDF is returned as python function.
 
+        # Arguments
+            force_python_udf: `bool`. Force return a python compatible udf irrespective of engine.
+
         # Returns
             `Callable`: Pandas UDF in the spark engine otherwise returns a python function for the UDF.
         """
-        # Update the number of outputs for one hot encoder to match the number of unique values for the feature
-        if self.function_name == "one_hot_encoder":
-            self.update_return_type_one_hot()
 
-        if engine.get_type() in ["hive", "python", "training"]:
+        if engine.get_type() in ["hive", "python", "training"] or force_python_udf:
             return self.hopsworksUdf_wrapper()
         else:
             from pyspark.sql.functions import pandas_udf
@@ -581,6 +581,9 @@ def renaming_wrapper(*args):
     @property
     def output_types(self) -> List[str]:
         """Get the output types of the UDF"""
+        # Update the number of outputs for one hot encoder to match the number of unique values for the feature
+        if self.function_name == "one_hot_encoder" and self.transformation_statistics:
+            self.update_return_type_one_hot()
         return self._output_types
 
     @property

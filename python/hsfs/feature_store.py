@@ -1287,7 +1287,7 @@ class FeatureStore:
     @usage.method_logger
     def create_transformation_function(
         self,
-        transformation_function: callable,
+        transformation_function: HopsworksUdf,
         version: Optional[int] = None,
     ) -> TransformationFunction:
         """Create a transformation function metadata object.

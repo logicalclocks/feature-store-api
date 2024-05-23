@@ -659,7 +659,9 @@ class VectorServer:
                 pd.Series(row_dict[feature])
                 for feature in tf.hopsworks_udf.transformation_features
             ]
-            transformed_result = tf.hopsworks_udf.get_udf()(*features)
+            transformed_result = tf.hopsworks_udf.get_udf(force_python_udf=True)(
+                *features
+            )  # Get only python compatible UDF irrespective of engine
             if isinstance(transformed_result, pd.Series):
                 row_dict[transformed_result.name] = transformed_result.values[0]
             else:
