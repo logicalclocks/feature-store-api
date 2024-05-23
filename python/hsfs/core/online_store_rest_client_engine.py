@@ -298,28 +298,49 @@ class OnlineStoreRestClientEngine:
             )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
-            if row_feature_values is None:
+            if row_feature_values is None and drop_missing:
+                _logger.debug("Convert null feature vector to empty list.")
+                return []
+            elif row_feature_values is None:
                 _logger.debug(
                     "Feature vector is null, returning None for all features."
                 )
+                return [None for _ in self.ordered_feature_names]
+            elif drop_missing:
+                _logger.debug(
+                    "Dropping missing features from the feature vector and return as list."
+                )
                 return [
-                    None
-                    for name in self.ordered_feature_names
+                    value
+                    for (name, value) in zip(
+                        self.ordered_feature_names, row_feature_values
+                    )
                     if name not in failed_read_feature_names
                 ]
             return row_feature_values
 
         elif return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
-            if row_feature_values is None:
+            if row_feature_values is None and drop_missing:
+                _logger.debug("Convert null feature vector to empty dict.")
+                return {}
+            elif row_feature_values is None:
                 _logger.debug(
                     "Feature vector is null, returning None for all features."
                 )
-                return {}
-            return {
-                name: value
-                for (name, value) in zip(self.ordered_feature_names, row_feature_values)
-                if name not in failed_read_feature_names
-            }
+                return {name: None for name in self.ordered_feature_names}
+            elif drop_missing:
+                _logger.debug(
+                    "Dropping missing features from the feature vector and return as dict."
+                )
+                return {
+                    name: value
+                    for (name, value) in zip(
+                        self.ordered_feature_names, row_feature_values
+                    )
+                    if (name not in failed_read_feature_names or drop_missing)
+                }
+            else:
+                return dict(zip(self.ordered_feature_names, row_feature_values))
 
     @property
     def feature_store_name(self) -> str:

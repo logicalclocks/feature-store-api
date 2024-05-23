@@ -18,7 +18,6 @@ from datetime import datetime, timezone
 import pytest
 from hsfs import training_dataset_feature
 from hsfs.core import online_store_rest_client_engine
-from hsfs.util import convert_event_time_to_timestamp
 
 
 ONLINE_STORE_REST_CLIENT_API_GET_BATCH_RAW_FEATURE_VECTORS = "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_batch_raw_feature_vectors"
@@ -153,7 +152,7 @@ class TestOnlineRestClientEngine:
             features=training_dataset_complex_features,
         )
 
-    def test_build_base_payload_no_metadata_options(
+    def test_build_base_payload_default_options(
         self, rest_client_engine_base, backend_fixtures
     ):
         # Act
@@ -161,60 +160,89 @@ class TestOnlineRestClientEngine:
 
         # Assert
         for key, value in payload.items():
-            if key != "metadataOptions":
+            if key != "metadataOptions" and key != "options":
                 assert (
                     backend_fixtures["rondb_server"]["get_single_vector_payload"][key]
                     == value
                 )
 
         assert ("metadataOptions" in payload.keys()) is False
+        assert ("options" in payload.keys()) is True
+        assert payload["options"] == {
+            "validatePassedFeatures": False,
+            "includeDetailedStatus": False,
+        }
 
-    @pytest.mark.parametrize(
-        "keys", [["featureName", "featureType"], ["featureType", "featureName"]]
-    )
-    def test_build_base_payload_with_metadata_options(
+    def test_build_base_payload_with_metadata_and_options(
         self, keys, rest_client_engine_base, backend_fixtures
     ):
         # Act
         payload = rest_client_engine_base.build_base_payload(
-            metadata_options={keys[0]: True, keys[1]: False}
+            metadata_options={"featureName": True, "featureType": False},
+            validate_passed_features=True,  # not default
+            include_detailed_status=False,  # not default
         )
 
         # Assert
-        for key, value in payload.items():
-            if key != "metadataOptions":
-                assert (
-                    backend_fixtures["rondb_server"]["get_single_vector_payload"][key]
-                    == value
-                )
+        assert payload["metadataOptions"]["featureName"] is True
+        assert payload["metadataOptions"]["featureType"] is False
+        assert payload["options"] == {
+            "validatePassedFeatures": True,
+            "includeDetailedStatus": True,
+        }
 
-        assert payload["metadataOptions"][keys[1]] is False
-        assert payload["metadataOptions"][keys[0]] is True
+    @pytest.mark.parametrize(
+        "drop_missing",
+        [True, False],
+    )
+    def test_convert_rdrs_response_to_feature_vector_if_null(
+        self,
+        rest_client_engine_ticker: online_store_rest_client_engine.OnlineStoreRestClientEngine,
+        drop_missing: bool,
+    ):
+        # Act
+        feature_vector_dict = rest_client_engine_ticker.convert_rdrs_response_to_feature_value_row(
+            row_feature_values=None,
+            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            drop_missing=drop_missing,
+        )
+        feature_vector_list = rest_client_engine_ticker.convert_rdrs_response_to_feature_value_row(
+            row_feature_values=None,
+            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_LIST,
+            drop_missing=drop_missing,
+        )
+
+        # Assert
+        if drop_missing:
+            assert feature_vector_dict == {}
+            assert feature_vector_list == []
+        else:
+            assert feature_vector_dict == {
+                "ticker": None,
+                "when": None,
+                "price": None,
+                "volume": None,
+            }
+            assert feature_vector_list == [None, None, None, None]
 
     @pytest.mark.parametrize(
         "fixture_key",
         [
             "get_single_vector_response_json_complete",
-            "get_single_vector_response_json_complete_int_timestamp",
             "get_single_vector_response_json_complete_no_metadata",
         ],
     )
     def test_convert_rdrs_response_to_feature_vector_row_single_complete_response(
-        self, backend_fixtures, rest_client_engine_ticker, fixture_key
+        self,
+        backend_fixtures,
+        rest_client_engine_ticker: online_store_rest_client_engine.OnlineStoreRestClientEngine,
+        fixture_key,
     ):
         # Arrange
-        if "int_timestamp" in fixture_key:
-            response = backend_fixtures["rondb_server"][
-                fixture_key.replace("_int_timestamp", "")
-            ]
-            response["features"][1] = convert_event_time_to_timestamp(
-                "2022-01-01 00:00:00"
-            )
-        else:
-            response = backend_fixtures["rondb_server"][fixture_key]
+        response = backend_fixtures["rondb_server"][fixture_key]
         reference_feature_vector = {
             "ticker": "APPL",
-            "when": datetime.fromtimestamp(11231413423, timezone.utc),
+            "when": "2022-01-01 00:00:00",
             "price": 21.3,
             "volume": 10,
         }
@@ -223,6 +251,7 @@ class TestOnlineRestClientEngine:
         feature_vector_dict = rest_client_engine_ticker.convert_rdrs_response_to_feature_value_row(
             row_feature_values=response["features"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
+            drop_missing=True,  # no effect here
         )
 
         # Assert
@@ -268,8 +297,6 @@ class TestOnlineRestClientEngine:
 
         # Assert
         # Check that the response was not converted to a feature vector if return_type is response json
-        print("resp :", response_json)
-        print("ref :", reference_vector)
         assert response_json == reference_vector
         assert mock_online_rest_api.called_once_with(payload=payload)
 
@@ -290,9 +317,9 @@ class TestOnlineRestClientEngine:
         # Act
         response_json = rest_client_engine_ticker.get_single_feature_vector(
             entry=payload["entry"],
+            drop_missing=True,
             passed_features=passed_features,
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
-            drop_missing=True,
         )
 
         # Assert
