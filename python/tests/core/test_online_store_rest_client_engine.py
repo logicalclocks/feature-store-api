@@ -13,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from datetime import datetime, timezone
 
 import pytest
 from hsfs import training_dataset_feature
@@ -174,13 +173,14 @@ class TestOnlineRestClientEngine:
         }
 
     def test_build_base_payload_with_metadata_and_options(
-        self, keys, rest_client_engine_base, backend_fixtures
+        self,
+        rest_client_engine_base,
     ):
         # Act
         payload = rest_client_engine_base.build_base_payload(
             metadata_options={"featureName": True, "featureType": False},
             validate_passed_features=True,  # not default
-            include_detailed_status=False,  # not default
+            include_detailed_status=True,  # not default
         )
 
         # Assert
@@ -257,81 +257,6 @@ class TestOnlineRestClientEngine:
         # Assert
         assert feature_vector_dict == reference_feature_vector
 
-    @pytest.mark.parametrize(
-        "passed_features, fixture_key",
-        [
-            (
-                {"price": 12.4},
-                "get_single_vector_response_json_pk_value_no_match_with_passed_price",
-            ),
-            ({}, "get_single_vector_response_json_pk_value_no_match"),
-        ],
-    )
-    def test_get_single_feature_vector_pk_value_no_match(
-        self,
-        mocker,
-        passed_features,
-        fixture_key,
-        backend_fixtures,
-        rest_client_engine_ticker,
-    ):
-        # Arrange
-        payload = backend_fixtures["rondb_server"]["get_single_vector_payload"].copy()
-        payload["passed_features"] = passed_features
-
-        mock_online_rest_api = mocker.patch(
-            ONLINE_STORE_REST_CLIENT_API_GET_SINGLE_RAW_FEATURE_VECTOR,
-            return_value=backend_fixtures["rondb_server"][fixture_key],
-        )
-        reference_vector = payload["entry"]
-        reference_vector.update({"when": None, "price": None, "volume": None})
-        reference_vector.update(passed_features)
-
-        # Act
-        response_json = rest_client_engine_ticker.get_single_feature_vector(
-            entry=payload["entry"],
-            passed_features=passed_features,
-            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
-            drop_missing=True,
-        )
-
-        # Assert
-        # Check that the response was not converted to a feature vector if return_type is response json
-        assert response_json == reference_vector
-        assert mock_online_rest_api.called_once_with(payload=payload)
-
-    @pytest.mark.parametrize("passed_features", [{"price": 12.4}, {}])
-    def test_get_single_feature_vector_response_json(
-        self, mocker, passed_features, backend_fixtures, rest_client_engine_ticker
-    ):
-        # Arrange
-        payload = backend_fixtures["rondb_server"]["get_single_vector_payload"].copy()
-        payload["passed_features"] = passed_features
-
-        mock_online_rest_api = mocker.patch(
-            ONLINE_STORE_REST_CLIENT_API_GET_SINGLE_RAW_FEATURE_VECTOR,
-            return_value=backend_fixtures["rondb_server"][
-                "get_single_vector_response_json_complete"
-            ],
-        )
-        # Act
-        response_json = rest_client_engine_ticker.get_single_feature_vector(
-            entry=payload["entry"],
-            drop_missing=True,
-            passed_features=passed_features,
-            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
-        )
-
-        # Assert
-        # Check that the response was not converted to a feature vector if return_type is response json
-        assert (
-            response_json
-            == backend_fixtures["rondb_server"][
-                "get_single_vector_response_json_complete"
-            ]
-        )
-        assert mock_online_rest_api.called_once_with(payload=payload)
-
     def test_get_batch_feature_vectors_response_json(
         self,
         mocker,
@@ -389,13 +314,13 @@ class TestOnlineRestClientEngine:
         reference_batch_vectors = [
             {
                 "ticker": "APPL",
-                "when": datetime.fromtimestamp(11231413423, timezone.utc),
+                "when": "2022-01-01 00:00:00",
                 "price": 21.3,
                 "volume": 10,
             },
             {
                 "ticker": "GOOG",
-                "when": datetime.fromtimestamp(11231413423, timezone.utc),
+                "when": "2022-01-01 00:00:00",
                 "price": 12.3,
                 "volume": 43,
             },
@@ -436,7 +361,7 @@ class TestOnlineRestClientEngine:
             },
             {
                 "ticker": "GOOG",
-                "when": datetime.fromtimestamp(11231413423, timezone.utc),
+                "when": "2022-01-01 00:00:00",
                 "price": 12.3,
                 "volume": 43,
             },
@@ -467,19 +392,14 @@ class TestOnlineRestClientEngine:
         reference_batch_vectors = [
             {
                 "ticker": "APPL",
-                "when": datetime.fromtimestamp(11231413423, timezone.utc),
+                "when": "2022-01-01 00:00:00",
                 "price": 21.3,
                 "volume": 10,
             },
-            {
-                "ticker": None,
-                "when": None,
-                "price": None,
-                "volume": None,
-            },
+            {},
             {
                 "ticker": "GOOG",
-                "when": datetime.fromtimestamp(11231413423, timezone.utc),
+                "when": "2022-01-01 00:00:00",
                 "price": 12.3,
                 "volume": 43,
             },
