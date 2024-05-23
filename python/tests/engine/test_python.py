@@ -2477,6 +2477,7 @@ class TestPython:
         mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
+        mock_feature_view = mocker.patch("hsfs.feature_view.FeatureView")
 
         python_engine = python.Engine()
 
@@ -2504,7 +2505,7 @@ class TestPython:
         result = python_engine._prepare_transform_split_df(
             query_obj=q,
             training_dataset_obj=td,
-            feature_view_obj=None,
+            feature_view_obj=mock_feature_view,
             read_option=None,
             dataframe_type="default",
         )
@@ -2525,6 +2526,7 @@ class TestPython:
         mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
+        mock_feature_view = mocker.patch("hsfs.feature_view.FeatureView")
 
         python_engine = python.Engine()
 
@@ -2570,7 +2572,7 @@ class TestPython:
         result = python_engine._prepare_transform_split_df(
             query_obj=q,
             training_dataset_obj=td,
-            feature_view_obj=None,
+            feature_view_obj=mock_feature_view,
             read_option=None,
             dataframe_type="default",
         )
@@ -2591,6 +2593,7 @@ class TestPython:
         mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
+        mock_feature_view = mocker.patch("hsfs.feature_view.FeatureView")
 
         python_engine = python.Engine()
 
@@ -2635,7 +2638,7 @@ class TestPython:
         result = python_engine._prepare_transform_split_df(
             query_obj=q,
             training_dataset_obj=td,
-            feature_view_obj=None,
+            feature_view_obj=mock_feature_view,
             read_option=None,
             dataframe_type="default",
         )
