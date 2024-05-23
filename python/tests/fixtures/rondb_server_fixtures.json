@@ -1,6 +1,11 @@
 {
   "get_single_vector_response_json_complete": {
-    "features": ["APPL", "2022-01-01 00:00:00", 21.3, 10],
+    "features": [
+      "APPL",
+      "2022-01-01 00:00:00",
+      21.3,
+      10
+    ],
     "metadata": [
       {
         "featureName": "ticker",
@@ -22,17 +27,32 @@
     "status": "COMPLETE"
   },
   "get_single_vector_response_json_complete_no_metadata": {
-    "features": ["APPL", "2022-01-01 00:00:00", 21.3, 10],
+    "features": [
+      "APPL",
+      "2022-01-01 00:00:00",
+      21.3,
+      10
+    ],
     "metadata": null,
     "status": "COMPLETE"
   },
   "get_single_vector_response_json_pk_value_no_match": {
-    "features": ["APPL", null, null, null],
+    "features": [
+      "APPL",
+      null,
+      null,
+      null
+    ],
     "metadata": null,
     "status": "MISSING"
   },
   "get_single_vector_response_json_pk_value_no_match_with_passed_price": {
-    "features": ["APPL", null, 12.4, null],
+    "features": [
+      "APPL",
+      null,
+      12.4,
+      null
+    ],
     "metadata": null,
     "status": "MISSING"
   },
@@ -47,7 +67,8 @@
       "price": 21.3
     },
     "options": {
-      "validatePassedFeatures": false
+      "validatePassedFeatures": false,
+      "includeDetailedStatus": true
     }
   },
   "get_batch_vector_payload": {
@@ -71,13 +92,24 @@
       }
     ],
     "options": {
-      "validatePassedFeatures": false
+      "validatePassedFeatures": false,
+      "includeDetailedStatus": true
     }
   },
   "get_batch_vector_response_json_complete": {
     "features": [
-      ["APPL", "2022-01-01 00:00:00", 21.3, 10],
-      ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
+      [
+        "APPL",
+        "2022-01-01 00:00:00",
+        21.3,
+        10
+      ],
+      [
+        "GOOG",
+        "2022-01-01 00:00:00",
+        12.3,
+        43
+      ]
     ],
     "metadata": [
       {
@@ -97,29 +129,72 @@
         "featureType": "bigint"
       }
     ],
-    "status": ["COMPLETE", "COMPLETE"]
+    "status": [
+      "COMPLETE",
+      "COMPLETE"
+    ]
   },
   "get_batch_vector_response_json_complete_no_metadata": {
     "features": [
-      ["APPL", "2022-01-01 00:00:00", 21.3, 10],
-      ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
+      [
+        "APPL",
+        "2022-01-01 00:00:00",
+        21.3,
+        10
+      ],
+      [
+        "GOOG",
+        "2022-01-01 00:00:00",
+        12.3,
+        43
+      ]
     ],
-    "status": ["COMPLETE", "COMPLETE"]
+    "status": [
+      "COMPLETE",
+      "COMPLETE"
+    ]
   },
   "get_batch_vector_response_json_partial_pk_value_no_match": {
     "features": [
-      ["APPL", null, null, null],
-      ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
+      [
+        "APPL",
+        null,
+        null,
+        null
+      ],
+      [
+        "GOOG",
+        "2022-01-01 00:00:00",
+        12.3,
+        43
+      ]
     ],
-    "status": ["MISSING", "COMPLETE"]
+    "status": [
+      "MISSING",
+      "COMPLETE"
+    ]
   },
   "get_batch_vector_response_json_partial_error": {
     "features": [
-      ["APPL", "2022-01-01 00:00:00", 21.3, 10],
+      [
+        "APPL",
+        "2022-01-01 00:00:00",
+        21.3,
+        10
+      ],
       null,
-      ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
+      [
+        "GOOG",
+        "2022-01-01 00:00:00",
+        12.3,
+        43
+      ]
     ],
-    "status": ["COMPLETE", "ERROR", "COMPLETE"]
+    "status": [
+      "COMPLETE",
+      "ERROR",
+      "COMPLETE"
+    ]
   },
   "bad_request_primary_key_or_passed_features_error": {
     "code": 12,
@@ -140,5 +215,88 @@
     "code": 13,
     "message": "Internal server error",
     "reason": "Internal server error"
+  },
+  "fraud_online": {
+    "single": {
+      "entry_with_valid_tid": {
+        "cc_num": 4817626088411704,
+        "tid": "056150bffcb8005643d7551ebe47075d"
+      },
+      "entry_with_invalid_tid": {
+        "cc_num": 4817626088411704,
+        "tid": "fgf"
+      },
+      "entry_no_tid": {
+        "cc_num": 4817626088411704
+      },
+      "entry_no_cc_num": {
+        "tid": "056150bffcb8005643d7551ebe47075d"
+      },
+      "entry_invalid_tid": {
+        "tid": "fgf"
+      },
+      "entry_invalid_cc_num": {
+        "cc_num": 5965
+      }
+    },
+    "batch": {
+      "entries_with_valid_tid": [
+        {
+          "cc_num": 4817626088411704,
+          "tid": "056150bffcb8005643d7551ebe47075d"
+        },
+        {
+          "cc_num": 4913092500025965,
+          "tid": "056150bffcb8005643d7551ebe47075d"
+        }
+      ],
+      "entries_with_invalid_tid": [
+        {
+          "cc_num": 4817626088411704,
+          "tid": "fgf"
+        },
+        {
+          "cc_num": 4913092500025965,
+          "tid": "075d"
+        }
+      ],
+      "entries_no_tid": [
+        {
+          "cc_num": 4817626088411704
+        },
+        {
+          "cc_num": 4913092500025965
+        }
+      ],
+      "mixed_entries": [
+        {
+          "cc_num": 4817626088411704
+        },
+        {
+          "cc_num": 4913092500025965,
+          "tid": "fgf"
+        },
+        {
+          "cc_num": 4817626088411704,
+          "tid": "056150bffcb8005643d7551ebe47075d"
+        }
+      ]
+    },
+    "passed_features": {
+      "single_tid": {
+        "fraud_label": 0,
+        "country": "Belgium",
+        "cc_num": 4817626088411704,
+        "datetime": "2022-03-31 00:54:43",
+        "time_delta_t_minus_1": 0.0168946,
+        "int_id": 7802,
+        "loc_delta_t_minus_1": 0.566185,
+        "loc_delta_t_plus_1": -13.6,
+        "amount": 21.8
+      },
+      "single_cc_num": {
+        "gender": "M"
+      }
+    }
   }
 }
