@@ -511,6 +511,8 @@ class VectorServer:
         return_type: str,
     ) -> Union[pd.DataFrame, pl.DataFrame, List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
+        _logger.debug("Retrieve inference helper values for batch entries.")
+        _logger.debug(f"entries: {entries} as return type: {return_type}")
         batch_results, serving_keys = (
             self.online_store_sql_client.get_batch_inference_helper_vectors(entries)
         )
@@ -690,9 +692,6 @@ class VectorServer:
             self.build_complex_feature_decoders()
         )
         for feature in features:
-            # These features are not part of the feature vector.
-            if feature.label or feature.training_helper_column:
-                continue
             if feature.type == "timestamp":
                 self._return_feature_value_handlers[feature.name] = (
                     self._handle_timestamp_based_on_dtype
