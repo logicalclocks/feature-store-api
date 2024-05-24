@@ -649,22 +649,47 @@ class VectorServer:
                 f"Building complex feature decoders corresponding to {complex_feature_schemas}."
             )
         if HAS_FASTAVRO:
+            _logger.debug("Using fastavro for deserialization.")
             return {
                 f_name: (
-                    lambda feature_value, avro_schema=schema: schemaless_reader(
-                        BytesIO(b64decode(feature_value)),
-                        avro_schema.writers_schema.to_json(),
+                    lambda feature_value, avro_schema=schema: (
+                        schemaless_reader(
+                            BytesIO(
+                                feature_value
+                                if isinstance(feature_value, bytes)
+                                else b64decode(feature_value)
+                            ),
+                            avro_schema.writers_schema.to_json(),
+                        )
+                        # embedded features are deserialized already but not complex features stored in Opensearch
+                        if (
+                            isinstance(feature_value, bytes)
+                            or isinstance(feature_value, str)
+                        )
+                        else feature_value
                     )
-                    # embedded features are deserialized already but not complex features stored in Opensearch
-                    if isinstance(feature_value, str)
-                    else feature_value
                 )
                 for (f_name, schema) in complex_feature_schemas.items()
             }
         else:
+            _logger.debug("Fast Avro not found, using avro for deserialization.")
             return {
-                f_name: lambda feature_value, avro_schema=schema: avro_schema.read(
-                    BinaryDecoder(BytesIO(b64decode(feature_value)))
+                f_name: (
+                    lambda feature_value, avro_schema=schema: avro_schema.read(
+                        BinaryDecoder(
+                            BytesIO(
+                                feature_value
+                                if isinstance(feature_value, bytes)
+                                else b64decode(feature_value)
+                            )
+                        )
+                    )
+                    # embedded features are deserialized already but not complex features stored in Opensearch
+                    if (
+                        isinstance(feature_value, str)
+                        or isinstance(feature_value, bytes)
+                    )
+                    else feature_value
                 )
                 for (f_name, schema) in complex_feature_schemas.items()
             }
