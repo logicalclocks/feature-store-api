@@ -257,30 +257,17 @@ class VectorServer:
                 drop_missing=not allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
-            _logger.debug("Got serving vector: %s", serving_vector)
         else:
             _logger.debug("get_feature_vector Online SQL client")
             serving_vector = self.online_store_sql_client.get_single_feature_vector(
                 rondb_entry
             )
-            _logger.debug("Got serving vector: %s", serving_vector)
 
-        if vector_db_features is not None:
-            _logger.debug("Updating with vector_db features: %s", vector_db_features)
-            serving_vector.update(vector_db_features)
-        if passed_features is not None:
-            _logger.debug("Updating with passed features: %s", passed_features)
-            serving_vector.update(passed_features)
-
-        self.apply_return_value_handlers(serving_vector)
-        self.apply_transformation(serving_vector)
-
-        _logger.debug(
-            "Converting to row dict to list, optionally filling missing values"
-        )
-        vector = self._generate_vector(
-            serving_vector,
-            fill_na=allow_missing,
+        vector = self.assemble_feature_vector(
+            result_dict=serving_vector,
+            passed_values=passed_features or {},
+            vector_db_result=vector_db_features or {},
+            allow_missing=allow_missing,
         )
 
         return self.handle_feature_vector_return_type(
@@ -356,45 +343,23 @@ class VectorServer:
             _logger.debug("Empty entries for rondb, skipping fetching.")
             batch_results = []
 
-        return self.assemble_batch_feature_vectors(
-            num_entries=len(entries),
-            batch_results=batch_results,
-            skipped_empty_entries=skipped_empty_entries,
-            passed_features=passed_features or [],
-            vector_db_features=vector_db_features or [],
-            allow_missing=allow_missing,
-            return_type=return_type,
-        )
-
-    def assemble_batch_feature_vectors(
-        self,
-        num_entries: int,
-        batch_results: List[Dict[str, Any]],
-        skipped_empty_entries: List[int],
-        passed_features: List[Dict[str, Any]],
-        vector_db_features: List[Dict[str, Any]],
-        allow_missing: bool,
-        return_type: Union[Literal["list", "numpy", "pandas", "polars"]],
-    ) -> List[List[str]]:
-        """Assembles serving vector from online feature store."""
-        vectors = []
-        _logger.debug(
-            "Assembling feature vectors from batch results, optionally filling missing values."
-        )
+        _logger.debug("Assembling feature vectors from batch results")
         next_skipped = (
             skipped_empty_entries.pop(0) if len(skipped_empty_entries) > 0 else None
         )
+        vectors = []
         for (
             idx,
             passed_values,
             vector_db_result,
         ) in itertools.zip_longest(
-            range(num_entries),
+            range(len(entries)),
             passed_features or [],
             vector_db_features or [],
             fillvalue=None,
         ):
             if next_skipped == idx:
+                _logger.debug("Entry %d was skipped, setting to empty dict.", idx)
                 next_skipped = (
                     skipped_empty_entries.pop(0)
                     if len(skipped_empty_entries) > 0
@@ -404,37 +369,68 @@ class VectorServer:
             else:
                 result_dict = batch_results.pop(0)
 
-            # Errors in batch requests are returned as None values
-            if result_dict is None:
-                _logger.debug("Found null result, setting to empty dict.")
-                result_dict = {}
-            if vector_db_result is not None:
-                _logger.debug("Updating with vector_db features")
-                result_dict.update(vector_db_result)
-            if passed_values is not None:
-                _logger.debug("Updating with passed features")
-                result_dict.update(passed_values)
+            vector = self.assemble_feature_vector(
+                result_dict=result_dict,
+                passed_values=passed_values,
+                vector_db_result=vector_db_result,
+                allow_missing=allow_missing,
+            )
 
-            if len(self.return_feature_value_handlers) > 0:
-                _logger.debug("Applying deserializers and timestamp converter")
-                self.apply_return_value_handlers(result_dict)
-            if len(self.transformation_functions) > 0:
-                _logger.debug("Applying transformation functions")
-                self.apply_transformation(result_dict)
-
-            # for backward compatibility, before 3.4, if result is empty,
-            # instead of throwing error, it skips the result
-            if len(result_dict) != 0 or allow_missing:
-                vectors.append(
-                    self._generate_vector(
-                        result_dict=result_dict,
-                        fill_na=allow_missing,
-                    )
-                )
+            if vector is not None:
+                vectors.append(vector)
 
         return self.handle_feature_vector_return_type(
             vectors, batch=True, inference_helper=False, return_type=return_type
         )
+
+    def assemble_feature_vector(
+        self,
+        result_dict: Dict[str, Any],
+        passed_values: Optional[Dict[str, Any]],
+        vector_db_result: Optional[Dict[str, Any]],
+        allow_missing: bool,
+    ) -> Optional[List[Any]]:
+        """Assembles serving vector from online feature store."""
+        # Errors in batch requests are returned as None values
+        _logger.debug("Assembling serving vector: %s", result_dict)
+        if result_dict is None:
+            _logger.debug("Found null result, setting to empty dict.")
+            result_dict = {}
+        if vector_db_result is not None and len(vector_db_result) > 0:
+            _logger.debug("Updating with vector_db features: %s", vector_db_result)
+            result_dict.update(vector_db_result)
+        if passed_values is not None and len(passed_values) > 0:
+            _logger.debug("Updating with passed features: %s", passed_values)
+            result_dict.update(passed_values)
+
+        missing_features = set(self.feature_vector_col_name).difference(
+            result_dict.keys()
+        )
+        # for backward compatibility, before 3.4, if result is empty,
+        # instead of throwing error, it skips the result
+        # Maybe we drop this behaviour for 4.0
+        if len(result_dict) == 0 and not allow_missing:
+            return None
+
+        if not allow_missing and len(missing_features) > 0:
+            raise exceptions.FeatureStoreException(
+                f"Feature(s) {str(missing_features)} is missing from vector."
+                "Possible reasons: "
+                "1. There is no match in the given entry."
+                " Please check if the entry exists in the online feature store"
+                " or provide the feature as passed_feature. "
+                f"2. Required entries [{', '.join(self.required_serving_keys)}] or "
+                f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
+            )
+
+        if len(self.return_feature_value_handlers) > 0:
+            self.apply_return_value_handlers(result_dict)
+        if len(self.transformation_functions) > 0:
+            self.apply_transformation(result_dict)
+
+        _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)
+
+        return [result_dict.get(fname, None) for fname in self.feature_vector_col_name]
 
     def handle_feature_vector_return_type(
         self,
@@ -609,25 +605,23 @@ class VectorServer:
             self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
     def apply_transformation(self, row_dict: Dict[str, Any]):
-        _logger.debug(
-            "Applying transformation functions to : %s",
-            self.transformation_functions.keys(),
+        matching_keys = set(self.transformation_functions.keys()).intersection(
+            row_dict.keys()
         )
-        for feature_name, tf_obj in self.transformation_functions.items():
-            if feature_name in row_dict:
-                row_dict[feature_name] = tf_obj.transformation_fn(
-                    row_dict[feature_name]
-                )
+        _logger.debug("Applying transformation functions to : %s", matching_keys)
+        for feature_name in matching_keys:
+            row_dict[feature_name] = self.transformation_functions[
+                feature_name
+            ].transformation_fn(row_dict[feature_name])
         return row_dict
 
     def apply_return_value_handlers(self, row_dict: Dict[str, Any]):
-        _logger.debug(
-            "Applying return value handlers to : %s",
-            self.return_feature_value_handlers.keys(),
+        matching_keys = set(self.return_feature_value_handlers.keys()).intersection(
+            row_dict.keys()
         )
-        for feature_name, handler in self.return_feature_value_handlers.items():
-            if feature_name in row_dict:
-                row_dict[feature_name] = handler(row_dict[feature_name])
+        _logger.debug("Applying return value handlers to : %s", matching_keys)
+        for fname in matching_keys:
+            row_dict[fname] = self.return_feature_value_handlers[fname](row_dict[fname])
         return row_dict
 
     def build_complex_feature_decoders(self) -> Dict[str, Callable]:
@@ -848,32 +842,6 @@ class VectorServer:
                 ]
             )
         return per_serving_key_features
-
-    def _generate_vector(
-        self,
-        result_dict: Optional[Dict[str, Any]],
-        fill_na: bool = False,
-    ) -> List[Any]:
-        feature_values = []
-        for fname in self.feature_vector_col_name:
-            # Detects columns which were neither passed nor fetched from sql client
-            # Only works for sql client as rest client returns missing as None
-            if fname not in result_dict.keys():
-                if fill_na:
-                    feature_values.append(None)
-                else:
-                    raise exceptions.FeatureStoreException(
-                        f"Feature '{fname}' is missing from vector."
-                        "Possible reasons: "
-                        "1. There is no match in the given entry."
-                        " Please check if the entry exists in the online feature store"
-                        " or provide the feature as passed_feature. "
-                        f"2. Required entries [{', '.join(self.required_serving_keys)}] or "
-                        f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
-                    )
-            else:
-                feature_values.append(result_dict[fname])
-        return feature_values
 
     @property
     def online_store_sql_client(
