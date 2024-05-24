@@ -56,7 +56,7 @@ def init_or_reset_online_store_rest_client(
         )
 
 
-def get_instance() -> "OnlineStoreRestClientSingleton":
+def get_instance() -> OnlineStoreRestClientSingleton:
     global _online_store_rest_client
     if _online_store_rest_client is None:
         _logger.warning(

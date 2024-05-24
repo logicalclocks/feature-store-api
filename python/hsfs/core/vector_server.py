@@ -254,25 +254,25 @@ class VectorServer:
             _logger.debug("get_feature_vector Online REST client")
             serving_vector = self.online_store_rest_client_engine.get_single_feature_vector(
                 rondb_entry,
-                allow_missing=allow_missing,
-                drop_missing=True,
+                drop_missing=not allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
+            _logger.debug("Got serving vector: %s", serving_vector)
         else:
             _logger.debug("get_feature_vector Online SQL client")
             serving_vector = self.online_store_sql_client.get_single_feature_vector(
                 rondb_entry
             )
+            _logger.debug("Got serving vector: %s", serving_vector)
 
         if vector_db_features is not None:
-            _logger.debug("Updating with vector_db features")
+            _logger.debug("Updating with vector_db features: %s", vector_db_features)
             serving_vector.update(vector_db_features)
         if passed_features is not None:
-            _logger.debug("Updating with passed features")
+            _logger.debug("Updating with passed features: %s", passed_features)
             serving_vector.update(passed_features)
 
         self.apply_return_value_handlers(serving_vector)
-
         self.apply_transformation(serving_vector)
 
         _logger.debug(
@@ -343,8 +343,7 @@ class VectorServer:
             _logger.debug("get_batch_feature_vector Online REST client")
             batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
                 entries=rondb_entries,
-                allow_missing=allow_missing,
-                drop_missing=True,
+                drop_missing=not allow_missing,
                 return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         elif len(rondb_entries) > 0:
@@ -608,7 +607,11 @@ class VectorServer:
             self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
     def apply_transformation(self, row_dict: Dict[str, Any]):
-        for feature_name, tf_obj in self.transformation_functions:
+        _logger.debug(
+            "Applying transformation functions to : %s",
+            self.transformation_functions.keys(),
+        )
+        for feature_name, tf_obj in self.transformation_functions.items():
             if feature_name in row_dict:
                 row_dict[feature_name] = tf_obj.transformation_fn(
                     row_dict[feature_name]
@@ -616,6 +619,10 @@ class VectorServer:
         return row_dict
 
     def apply_return_value_handlers(self, row_dict: Dict[str, Any]):
+        _logger.debug(
+            "Applying return value handlers to : %s",
+            self.return_feature_value_handlers.keys(),
+        )
         for feature_name, handler in self.return_feature_value_handlers.items():
             if feature_name in row_dict:
                 row_dict[feature_name] = handler(row_dict[feature_name])

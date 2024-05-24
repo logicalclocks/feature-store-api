@@ -61,7 +61,7 @@ class OnlineStoreRestClientEngine:
         self._feature_view_version = feature_view_version
         self._features = features
         self._ordered_feature_names = []
-        self._feature_names_per_fg_id = {}
+        self._feature_names_per_fg_id: Dict[int, List[str]] = {}
         for feat in features:
             if not (
                 feat.label
@@ -69,10 +69,12 @@ class OnlineStoreRestClientEngine:
                 or feat.training_helper_column
             ):
                 self._ordered_feature_names.append(feat.name)
-            if feat.feature_group.id not in self._feature_names_per_fg_id.keys():
-                self._feature_names_per_fg_id[feat.feature_group.id] = [feat.name]
-            else:
-                self._feature_names_per_fg_id[feat.feature_group.id].append(feat.name)
+                if feat.feature_group.id not in self._feature_names_per_fg_id.keys():
+                    self._feature_names_per_fg_id[feat.feature_group.id] = [feat.name]
+                else:
+                    self._feature_names_per_fg_id[feat.feature_group.id].append(
+                        feat.name
+                    )
         _logger.debug(
             f"Mapping fg_id to feature names: {self._feature_names_per_fg_id}."
         )
@@ -91,6 +93,8 @@ class OnlineStoreRestClientEngine:
         # Arguments:
             validate_passed_features: Whether to validate the passed features against
                 the feature view schema on the RonDB Server.
+            include_detailed_status: Whether to include detailed status information in the response.
+                This is necessary to drop missing features from the feature vector.
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
 
@@ -126,7 +130,6 @@ class OnlineStoreRestClientEngine:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
-        allow_missing: bool = False,
         drop_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> Union[
@@ -143,15 +146,18 @@ class OnlineStoreRestClientEngine:
             passed_features: A dictionary with the feature names as keys and the values to substitute for this specific vector.
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
+            drop_missing: Whether to drop missing features from the feature vector. Requires including detailed status.
             return_type: The type of the return value. Either "feature_value_dict", "feature_value_list" or "response_json".
 
         # Returns:
             The response json containing the feature vector as well as status information
             and optionally descriptive metadata about the features. It contains the following fields:
-                - "status": The status pertinent to this single feature vector.
+                - "status": The status pertinent to this single feature vector. One of COMPLETE, MISSING or ERROR.
                 - "features": A list of the feature values.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
                     Null if metadata options are not set or status is ERROR.
+                - "detailedStatus": A list of dictionaries with detailed status information for each read operations.
+                    Keys include operationId, featureGroupId, httpStatus and message.
 
         # Raises:
             `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
@@ -166,7 +172,7 @@ class OnlineStoreRestClientEngine:
             # This ensures consistency with the sql client behaviour.
             validate_passed_features=False,
             # Only necessary to get the detailed status if we are not allowing missing features.
-            include_detailed_status=not allow_missing,
+            include_detailed_status=drop_missing,
         )
         payload["entries"] = entry
         payload["passedFeatures"] = passed_features
@@ -190,7 +196,6 @@ class OnlineStoreRestClientEngine:
         entries: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
-        allow_missing: bool = False,
         drop_missing: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> Union[
@@ -208,15 +213,19 @@ class OnlineStoreRestClientEngine:
                 Note that the list should be ordered in the same way as the entries list.
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
+            drop_missing: Whether to drop missing features from the feature vector. Requires including detailed status.
             return_type: The type of the return value. Either "feature_value_dict", "feature_value_list" or "response_json".
 
         # Returns:
             The response json containing the feature vector as well as status information
             and optionally descriptive metadata about the features. It contains the following fields:
                 - "status": A list of the status for each feature vector retrieval.
+                    Possible values are COMPLETE, MISSING or ERROR.
                 - "features": A list containing list of the feature values for each feature_vector.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
                     Null if metadata options are not set or status is ERROR.
+                - "detailedStatus": A list of dictionaries with detailed status information for each read operations.
+                    Keys include operationId, featureGroupId, httpStatus and message.
 
         # Raises:
             `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
@@ -231,7 +240,7 @@ class OnlineStoreRestClientEngine:
             # This ensures consistency with the sql client behaviour.
             validate_passed_features=False,
             # Only necessary to get the detailed status if we are not allowing missing features.
-            include_detailed_status=not allow_missing,
+            include_detailed_status=drop_missing,
         )
         payload["entries"] = entries
         if isinstance(passed_features, list) and (
@@ -280,12 +289,19 @@ class OnlineStoreRestClientEngine:
 
         # Arguments:
             row_feature_values: A list of the feature values.
+            drop_missing: Whether to drop missing features from the feature vector. Relies on detailed status.
+            detailed_status: A list of dictionaries with detailed status information for each read operations.
+                Keys include operationId, featureGroupId, httpStatus and message.
             return_type: The type of the return value. Either "feature_value_dict" or "feature_value_list".
 
         # Returns:
             A dictionary with the feature names as keys and the feature values as values. Values types are not guaranteed to
             match the feature type in the metadata. Timestamp SQL types are converted to python datetime.
         """
+        if drop_missing and detailed_status is None:
+            raise ValueError(
+                "Detailed status is required to drop missing features from the feature vector."
+            )
         failed_read_feature_names = []
         if detailed_status is not None and drop_missing:
             for operation_status in detailed_status:
@@ -317,6 +333,7 @@ class OnlineStoreRestClientEngine:
                     )
                     if name not in failed_read_feature_names
                 ]
+            _logger.debug("Returning feature vector as list.")
             return row_feature_values
 
         elif return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
@@ -337,9 +354,10 @@ class OnlineStoreRestClientEngine:
                     for (name, value) in zip(
                         self.ordered_feature_names, row_feature_values
                     )
-                    if (name not in failed_read_feature_names or drop_missing)
+                    if name not in failed_read_feature_names
                 }
             else:
+                _logger.debug("Returning feature vector as dict.")
                 return dict(zip(self.ordered_feature_names, row_feature_values))
 
     @property
