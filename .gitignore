@@ -52,6 +52,7 @@ coverage.xml
 .pytest_cache/
 .ruff_cache/
 bigquery.json
+metastore_db/
 
 # Translations
 *.mo

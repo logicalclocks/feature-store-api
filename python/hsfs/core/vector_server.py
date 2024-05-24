@@ -20,14 +20,13 @@ import logging
 from base64 import b64decode
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
 
 import avro.io
 import avro.schema
 import numpy as np
 import pandas as pd
 import polars as pl
-from avro.schema import Schema
 from hsfs import (
     client,
     feature_view,
@@ -111,13 +110,15 @@ class VectorServer:
         self._transformation_function_engine = (
             tf_engine_mod.TransformationFunctionEngine(feature_store_id)
         )
-        self._transformation_functions = None
+        self._transformation_functions: Dict[
+            str, tfa_mod.TransformationFunctionAttached
+        ] = {}
         self._online_store_sql_client = None
 
         self._online_store_rest_client_engine = None
         self._init_online_store_rest_client: Optional[bool] = None
         self._init_online_store_sql_client: Optional[bool] = None
-        self._default_online_store_client = None
+        self._default_online_store_client: Optional[Literal["rest", "sql"]] = None
 
         self.set_return_feature_value_handlers(features=self._features)
 
@@ -141,13 +142,6 @@ class VectorServer:
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
-        self._complex_features = self.get_complex_feature_schemas()
-
-        if len(self._complex_features) > 0:
-            _logger.debug(f"Complex feature schemas: {self._complex_features}")
-            self._complex_feature_decoders = self.build_complex_feature_decoders(
-                complex_feature_schemas=self._complex_features
-            )
         self.set_return_feature_value_handlers(features=entity.features)
 
         if self._init_online_store_rest_client:
@@ -236,7 +230,7 @@ class VectorServer:
     def get_feature_vector(
         self,
         entry: Dict[str, Any],
-        return_type: Optional[str] = None,
+        return_type: Union[Literal["list", "numpy", "pandas", "polars"]],
         passed_features: Optional[Dict[str, Any]] = None,
         vector_db_features: Optional[Dict[str, Any]] = None,
         allow_missing: bool = False,
@@ -277,6 +271,10 @@ class VectorServer:
             _logger.debug("Updating with passed features")
             serving_vector.update(passed_features)
 
+        self.apply_return_value_handlers(serving_vector)
+
+        self.apply_transformation(serving_vector)
+
         _logger.debug(
             "Converting to row dict to list, optionally filling missing values"
         )
@@ -292,7 +290,9 @@ class VectorServer:
     def get_feature_vectors(
         self,
         entries: List[Dict[str, Any]],
-        return_type: Optional[str] = None,
+        return_type: Optional[
+            Union[Literal["list", "numpy", "pandas", "polars"]]
+        ] = None,
         passed_features: Optional[List[Dict[str, Any]]] = None,
         vector_db_features: Optional[List[Dict[str, Any]]] = None,
         allow_missing: bool = False,
@@ -357,11 +357,31 @@ class VectorServer:
             _logger.debug("Empty entries for rondb, skipping fetching.")
             batch_results = []
 
-        _logger.debug(
-            "Converting to row vectors to list, applies deserialization and transformation function."
-            "If optionally filling missing values"
+        return self.assemble_batch_feature_vectors(
+            num_entries=len(entries),
+            batch_results=batch_results,
+            skipped_empty_entries=skipped_empty_entries,
+            passed_features=passed_features or [],
+            vector_db_features=vector_db_features or [],
+            allow_missing=allow_missing,
+            return_type=return_type,
         )
+
+    def assemble_batch_feature_vectors(
+        self,
+        num_entries: int,
+        batch_results: List[Dict[str, Any]],
+        skipped_empty_entries: List[int],
+        passed_features: List[Dict[str, Any]],
+        vector_db_features: List[Dict[str, Any]],
+        allow_missing: bool,
+        return_type: Union[Literal["list", "numpy", "pandas", "polars"]],
+    ) -> List[List[str]]:
+        """Assembles serving vector from online feature store."""
         vectors = []
+        _logger.debug(
+            "Assembling feature vectors from batch results, optionally filling missing values."
+        )
         next_skipped = (
             skipped_empty_entries.pop(0) if len(skipped_empty_entries) > 0 else None
         )
@@ -370,7 +390,7 @@ class VectorServer:
             passed_values,
             vector_db_result,
         ) in itertools.zip_longest(
-            range(len(entries)),
+            range(num_entries),
             passed_features or [],
             vector_db_features or [],
             fillvalue=None,
@@ -396,6 +416,13 @@ class VectorServer:
                 _logger.debug("Updating with passed features")
                 result_dict.update(passed_values)
 
+            if len(self.return_feature_value_handlers) > 0:
+                _logger.debug("Applying deserializers and timestamp converter")
+                self.apply_return_value_handlers(result_dict)
+            if len(self.transformation_functions) > 0:
+                _logger.debug("Applying transformation functions")
+                self.apply_transformation(result_dict)
+
             # for backward compatibility, before 3.4, if result is empty,
             # instead of throwing error, it skips the result
             if len(result_dict) != 0 or allow_missing:
@@ -417,12 +444,13 @@ class VectorServer:
         ],
         batch: bool,
         inference_helper: bool,
-        return_type: str,
+        return_type: Union[Literal["list", "dict", "numpy", "pandas", "polars"]],
     ) -> Union[
         pd.DataFrame,
         pl.DataFrame,
         np.ndarray,
         List[Any],
+        List[List[Any]],
         Dict[str, Any],
         List[Dict[str, Any]],
     ]:
@@ -579,10 +607,44 @@ class VectorServer:
         else:
             self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
-    def build_complex_feature_decoders(
-        self, complex_feature_schemas: Dict[str, Schema]
-    ) -> Dict[str, Callable]:
-        """Build a dictionary of functions to deserialize the complex feature values returned from RonDB Server."""
+    def apply_transformation(self, row_dict: Dict[str, Any]):
+        for feature_name, tf_obj in self.transformation_functions:
+            if feature_name in row_dict:
+                row_dict[feature_name] = tf_obj.transformation_fn(
+                    row_dict[feature_name]
+                )
+        return row_dict
+
+    def apply_return_value_handlers(self, row_dict: Dict[str, Any]):
+        for feature_name, handler in self.return_feature_value_handlers.items():
+            if feature_name in row_dict:
+                row_dict[feature_name] = handler(row_dict[feature_name])
+        return row_dict
+
+    def build_complex_feature_decoders(self) -> Dict[str, Callable]:
+        """Build a dictionary of functions to deserialize or convert feature values.
+
+        Handles:
+            - deserialization of complex features from the online feature store
+            - conversion of string or int timestamps to datetime objects
+        """
+        complex_feature_schemas = {
+            f.name: avro.io.DatumReader(
+                avro.schema.parse(
+                    f._feature_group._get_feature_avro_schema(
+                        f.feature_group_feature_name
+                    )
+                )
+            )
+            for f in self._features
+            if f.is_complex()
+        }
+        if len(complex_feature_schemas) == 0:
+            return {}
+        else:
+            _logger.debug(
+                f"Building complex feature decoders corresponding to {complex_feature_schemas}."
+            )
         if HAS_FASTAVRO:
             return {
                 f_name: (
@@ -604,6 +666,31 @@ class VectorServer:
                 for (f_name, schema) in complex_feature_schemas.items()
             }
 
+    def set_return_feature_value_handlers(
+        self, features: List[tdf_mod.TrainingDatasetFeature]
+    ) -> List[Callable]:
+        """Build a dictionary of functions to convert/deserialize/transform the feature values returned from RonDB Server.
+
+        Re-using the current logic from the vector server means that we currently iterate over the feature vectors
+        and values multiple times, as well as converting the feature values to a dictionary and then back to a list.
+        """
+        self._return_feature_value_handlers = {}
+        _logger.debug(
+            f"Setting return feature value handlers for Feature View {self._feature_view_name},"
+            f" version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
+        )
+        self._return_feature_value_handlers.update(
+            self.build_complex_feature_decoders()
+        )
+        for feature in features:
+            # These features are not part of the feature vector.
+            if feature.label or feature.training_helper_column:
+                continue
+            if feature.type == "timestamp":
+                self._return_feature_value_handlers[feature.name] = (
+                    self._handle_timestamp_based_on_dtype
+                )
+
     def _handle_timestamp_based_on_dtype(
         self, timestamp_value: Union[str, int]
     ) -> Optional[datetime]:
@@ -615,134 +702,23 @@ class VectorServer:
         # Arguments:
             timestamp_value: The timestamp value to be handled, either as int or str.
         """
-        if isinstance(timestamp_value, int):
-            _logger.debug(
-                f"Converting timestamp {timestamp_value} to datetime from UNIX timestamp."
-            )
+        if timestamp_value is None:
+            return None
+        elif isinstance(timestamp_value, int):
+            # in case of passed features, an event time could be passed as int timestamp
             return datetime.fromtimestamp(
                 timestamp_value / 1000, tz=timezone.utc
             ).replace(tzinfo=None)
         elif isinstance(timestamp_value, str):
-            _logger.debug(
-                f"Parsing timestamp {timestamp_value} to datetime from SQL timestamp string."
-            )
+            # rest client returns timestamp as string
             return datetime.strptime(timestamp_value, self.SQL_TIMESTAMP_STRING_FORMAT)
         elif isinstance(timestamp_value, datetime):
-            _logger.debug(
-                f"Returning passed timestamp {timestamp_value} as it is already a datetime."
-            )
+            # sql client returns already datetime object
             return timestamp_value
         else:
             raise ValueError(
-                f"Timestamp value {timestamp_value} was expected to be of type int or str."
+                f"Timestamp value {timestamp_value} was expected to be of type int, str or datetime."
             )
-
-    def set_return_feature_value_handlers(
-        self, features: List[tdf_mod.TrainingDatasetFeature]
-    ) -> List[Callable]:
-        """Build a dictionary of functions to convert/deserialize/transform the feature values returned from RonDB Server.
-
-        TODO: Trim down logging once stabilised
-
-        Re-using the current logic from the vector server means that we currently iterate over the feature vectors
-        and values multiple times, as well as converting the feature values to a dictionary and then back to a list.
-
-        - The handlers do not need to handle the case where the feature value is None.
-        - The handlers should first convert/deserialize the feature values and then transform them if necessary.
-        - The handlers should be reusable without paying overhead for rebuilding them for each feature vector.
-        """
-        self._return_feature_value_handlers = {}
-        self._ordered_feature_group_feature_names = []
-        _logger.debug(
-            f"Setting return feature value handlers for Feature View {self._feature_view_name},"
-            f" version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
-        )
-        for feature in features:
-            # These features are not part of the feature vector.
-            if feature.label or feature.training_helper_column:
-                _logger.debug(
-                    f"Skipping Feature {feature.name} as it is a label or training helper column."
-                )
-                continue
-
-            self._ordered_feature_group_feature_names.append(
-                feature.feature_group_feature_name
-            )
-            if (
-                feature.is_complex()
-                and feature.name in self.transformation_functions.keys()
-            ):
-                # deserialize and then transform
-                _logger.debug(
-                    f"Adding return feature value deserializer for complex feature {feature.name} with transformation function."
-                )
-                self._return_feature_value_handlers[feature.name] = (
-                    lambda feature_value, feature_name=feature.name: _logger.debug(
-                        f"Deserialize and transform value of feature {feature_name}"
-                    )
-                    or self._transformation_functions[feature_name].transformation_fn(
-                        self._complex_feature_decoders[feature_name](feature_value)
-                    )
-                )
-            elif feature.is_complex():
-                # deserialize only
-                _logger.debug(
-                    f"Adding return feature value deserializer for complex feature {feature.name}."
-                )
-                self._return_feature_value_handlers[feature.name] = (
-                    lambda feature_value, feature_name=feature.name: _logger.debug(
-                        f"Transform value of feature {feature_name}"
-                    )
-                    or self._complex_feature_decoders[feature_name](feature_value)
-                )
-            elif (
-                feature.type == "timestamp"
-                and feature.name in self.transformation_functions.keys()
-            ):
-                # convert and then transform
-                _logger.debug(
-                    f"Adding return feature value converter for timestamp feature {feature.name} with transformation function."
-                )
-                self._return_feature_value_handlers[feature.name] = (
-                    lambda feature_value, feature_name=feature.name: _logger.debug(
-                        f"Convert and transform timestamp feature {feature_name}"
-                    )
-                    or self._transformation_functions[feature_name].transformation_fn(
-                        self._handle_timestamp_based_on_dtype(feature_value)
-                    )
-                )
-            elif feature.type == "timestamp":
-                # convert only
-                _logger.debug(
-                    f"Adding return feature value converter for timestamp feature {feature.name}."
-                )
-                self._return_feature_value_handlers[feature.name] = (
-                    self._handle_timestamp_based_on_dtype
-                )
-            elif feature.name in self.transformation_functions.keys():
-                # transform only
-                _logger.debug(
-                    f"Adding return feature value transformation for feature {feature.name}."
-                )
-                self._return_feature_value_handlers[feature.name] = (
-                    lambda feature_value, feature_name=feature.name: _logger.debug(
-                        f"Transform value of feature {feature_name}"
-                    )
-                    or self.transformation_functions[feature_name].transformation_fn(
-                        feature_value
-                    )
-                )
-            else:
-                # no transformation
-                _logger.debug(
-                    f"Adding return feature value handler for feature {feature.name}."
-                )
-                self._return_feature_value_handlers[feature.name] = (
-                    lambda feature_value, feature_name=feature.name: _logger.debug(
-                        f"Applying identity to value of {feature_name}"
-                    )
-                    or feature_value
-                )
 
     def validate_entry(
         self,
@@ -867,19 +843,6 @@ class VectorServer:
             )
         return per_serving_key_features
 
-    def get_complex_feature_schemas(self) -> Dict[str, avro.io.DatumReader]:
-        return {
-            f.name: avro.io.DatumReader(
-                avro.schema.parse(
-                    f._feature_group._get_feature_avro_schema(
-                        f.feature_group_feature_name
-                    )
-                )
-            )
-            for f in self._features
-            if f.is_complex()
-        }
-
     def _generate_vector(
         self,
         result_dict: Optional[Dict[str, Any]],
@@ -902,12 +865,8 @@ class VectorServer:
                         f"2. Required entries [{', '.join(self.required_serving_keys)}] or "
                         f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
                     )
-            elif result_dict[fname] is None:
-                feature_values.append(None)
             else:
-                feature_values.append(
-                    self._return_feature_value_handlers[fname](result_dict[fname])
-                )
+                feature_values.append(result_dict[fname])
         return feature_values
 
     @property
@@ -1004,6 +963,11 @@ class VectorServer:
         Empty if there are no complex features. Using the Avro Schema to deserialize the complex feature values.
         """
         return self._complex_feature_decoders
+
+    @property
+    def return_feature_value_handlers(self) -> Dict[str, Callable]:
+        """A dictionary of functions to the feature values returned from RonDB Server."""
+        return self._return_feature_value_handlers
 
     @property
     def transformation_function_engine(
