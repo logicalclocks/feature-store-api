@@ -61,6 +61,7 @@ FIXTURES = [
     "user",
     "validation_report",
     "serving_keys",
+    "rondb_server",
     "spine_group",
 ]
 
