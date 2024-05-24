@@ -172,6 +172,13 @@ class FeatureGroupBase:
                 f"Feature Group `{self._name}`, version `{self._version}` is deprecated",
                 stacklevel=1,
             )
+    
+    def check_features(self, features) -> None:
+        if not features:
+            warnings.warn(
+                f"Feature Group `{self._name}`, version `{self._version}` returned no features",
+                stacklevel=1,
+            )
 
     def delete(self) -> None:
         """Drop the entire feature group along with its feature data.
@@ -2043,6 +2050,8 @@ class FeatureGroup(FeatureGroupBase):
         self._description: Optional[str] = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
+
+        self.check_features(features)
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -3467,6 +3476,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._data_format = data_format.upper() if data_format else None
         self._path = path
 
+        self.check_features(features)
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -3999,6 +4009,7 @@ class SpineGroup(FeatureGroupBase):
         self._created = created
         self._creator = user.User.from_response_json(creator)
 
+        self.check_features(features)
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])

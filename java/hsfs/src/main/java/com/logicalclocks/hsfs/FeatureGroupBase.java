@@ -73,7 +73,6 @@ public abstract class FeatureGroupBase<T> {
   protected List<String> primaryKeys;
 
   @Getter
-  @Setter
   protected List<Feature> features;
 
   @Getter
@@ -143,6 +142,13 @@ public abstract class FeatureGroupBase<T> {
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
+
+  public void setFeatures(List<Feature> features) {
+    this.features = features;
+    if (features == null || features.isEmpty()) {
+      LOGGER.warn(String.format("Feature Group `%s`, version `%s` returned no features", this.name, this.version));
+    }
+  }
 
   public void setDeprecated(Boolean deprecated) {
     this.deprecated = deprecated;
