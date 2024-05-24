@@ -172,7 +172,7 @@ class FeatureGroupBase:
                 f"Feature Group `{self._name}`, version `{self._version}` is deprecated",
                 stacklevel=1,
             )
-    
+
     def check_features(self, features) -> None:
         if not features:
             warnings.warn(
