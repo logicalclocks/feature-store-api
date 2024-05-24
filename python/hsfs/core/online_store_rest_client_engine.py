@@ -298,7 +298,9 @@ class OnlineStoreRestClientEngine:
             A dictionary with the feature names as keys and the feature values as values. Values types are not guaranteed to
             match the feature type in the metadata. Timestamp SQL types are converted to python datetime.
         """
-        if drop_missing and detailed_status is None:
+        if drop_missing and (
+            detailed_status is None and row_feature_values is not None
+        ):
             raise ValueError(
                 "Detailed status is required to drop missing features from the feature vector."
             )

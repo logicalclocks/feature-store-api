@@ -191,10 +191,7 @@ class TestOnlineRestClientEngine:
             "includeDetailedStatus": True,
         }
 
-    @pytest.mark.parametrize(
-        "drop_missing",
-        [True, False],
-    )
+    @pytest.mark.parametrize("drop_missing", [True, False])
     def test_convert_rdrs_response_to_feature_vector_if_null(
         self,
         rest_client_engine_ticker: online_store_rest_client_engine.OnlineStoreRestClientEngine,
@@ -251,7 +248,7 @@ class TestOnlineRestClientEngine:
         feature_vector_dict = rest_client_engine_ticker.convert_rdrs_response_to_feature_value_row(
             row_feature_values=response["features"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
-            drop_missing=True,  # no effect here
+            drop_missing=False,
         )
 
         # Assert
@@ -277,7 +274,7 @@ class TestOnlineRestClientEngine:
         response_json = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
-            drop_missing=True,
+            drop_missing=False,
         )
 
         # Assert
@@ -330,7 +327,7 @@ class TestOnlineRestClientEngine:
         feature_vector_dict = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
-            drop_missing=True,
+            drop_missing=False,
         )
 
         # Assert
@@ -353,12 +350,7 @@ class TestOnlineRestClientEngine:
         )
 
         reference_batch_vectors = [
-            {
-                "ticker": "APPL",
-                "when": None,
-                "price": None,
-                "volume": None,
-            },
+            {},
             {
                 "ticker": "GOOG",
                 "when": "2022-01-01 00:00:00",
