@@ -229,9 +229,7 @@ class Query:
         self._check_read_supported(online)
         read_options = {}
         if online and self._left_feature_group.embedding_index:
-            return engine.get_instance().read_vector_db(
-                self._left_feature_group, n
-            )
+            return engine.get_instance().read_vector_db(self._left_feature_group, n)
         else:
             sql_query, online_conn = self._prep_read(online, read_options)
             return engine.get_instance().show(
@@ -244,7 +242,7 @@ class Query:
         on: Optional[List[str]] = None,
         left_on: Optional[List[str]] = None,
         right_on: Optional[List[str]] = None,
-        join_type: Optional[str] = "inner",
+        join_type: Optional[str] = "left",
         prefix: Optional[str] = None,
     ) -> "Query":
         """Join Query with another Query.
@@ -778,7 +776,7 @@ class Query:
         """List of feature groups used in the query"""
         featuregroups = {self._left_feature_group}
         for join_obj in self.joins:
-            featuregroups.add(join_obj.query._left_feature_group)
+            self._rec_add(join_obj, featuregroups)
         return list(featuregroups)
 
     @property
@@ -817,6 +815,12 @@ class Query:
             `Feature`. Feature object.
         """
         return self._get_feature_by_name(feature_name)[0]
+
+    def _rec_add(self, join_object, featuregroups):
+        if len(join_object.query.joins) > 0:
+            for nested_join in join_object.query.joins:
+                self._rec_add(nested_join, featuregroups)
+        featuregroups.add(join_object.query._left_feature_group)
 
     def __getattr__(self, name: str) -> Any:
         try:
