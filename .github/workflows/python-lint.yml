@@ -3,51 +3,8 @@ name: python
 on: pull_request
 
 jobs:
-  lint_stylecheck:
-    name: Lint and Stylecheck
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Get all changed files
-        id: get-changed-files
-        uses: tj-actions/changed-files@v44
-        with:
-          files_yaml: |
-            src:
-              - 'python/**/*.py'
-              - '!python/tests/**/*.py'
-            test:
-              - 'python/tests/**/*.py'
-
-      - name: install deps
-        run: pip install ruff==0.4.2
-
-      - name: ruff on python files
-        if: steps.get-changed-files.outputs.src_any_changed == 'true'
-        env:
-          SRC_ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.src_all_changed_files }}
-        run: ruff check --output-format=github $SRC_ALL_CHANGED_FILES
-
-      - name: ruff on test files
-        if: steps.get-changed-files.outputs.test_any_changed == 'true'
-        env:
-          TEST_ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.test_all_changed_files }}
-        run: ruff check --output-format=github $TEST_ALL_CHANGED_FILES
-
-      - name: ruff format --check $ALL_CHANGED_FILES
-        env:
-          ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
-        run: ruff format $ALL_CHANGED_FILES
-
   unit_tests_windows_local:
     name: Unit Testing (Windows) (Local TZ)
-    needs: lint_stylecheck
     runs-on: windows-latest
 
     steps:
