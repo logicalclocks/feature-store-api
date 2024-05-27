@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import datetime
+import os
 import statistics
 
 import pandas as pd
@@ -44,6 +45,7 @@ from pyspark.sql.types import (
 )
 
 
+@pytest.mark.skipif(os.name == "nt")
 class TestPythonSparkTransformationFunctions:
     def _create_training_dataset(self):
         f = training_dataset_feature.TrainingDatasetFeature(
