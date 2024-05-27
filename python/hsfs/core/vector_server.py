@@ -38,9 +38,6 @@ from hsfs import (
 from hsfs import (
     training_dataset_feature as tdf_mod,
 )
-from hsfs import (
-    transformation_function_attached as tfa_mod,
-)
 from hsfs.client import exceptions, online_store_rest_client
 from hsfs.core import (
     online_store_rest_client_engine,
@@ -110,9 +107,7 @@ class VectorServer:
         self._transformation_function_engine = (
             tf_engine_mod.TransformationFunctionEngine(feature_store_id)
         )
-        self._transformation_functions: Dict[
-            str, tfa_mod.TransformationFunctionAttached
-        ] = {}
+        self._transformation_functions = {}
         self._online_store_sql_client = None
 
         self._online_store_rest_client_engine = None
@@ -949,7 +944,7 @@ class VectorServer:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, tfa_mod.TransformationFunctionAttached]:
+    ):
         if self._transformation_functions is None:
             self._transformation_functions = {}
         return self._transformation_functions
