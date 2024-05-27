@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import datetime
+import os
 import statistics
 
 import pandas as pd
@@ -44,6 +45,11 @@ from pyspark.sql.types import (
 )
 
 
+# TODO : Remove skipping UT in windows after Greater expectations has been upgraded to 1.0 or after it has been made optional
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="Skip tests in windows since it fails due to dependency problem with greater expectations 0.18.2, Fixed on upgrading to 1.0",
+)
 class TestPythonSparkTransformationFunctions:
     def _create_training_dataset(self):
         f = training_dataset_feature.TrainingDatasetFeature(
