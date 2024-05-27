@@ -603,6 +603,7 @@ class VectorServer:
             self.default_online_store_client = self.DEFAULT_ONLINE_STORE_REST_CLIENT
         else:
             self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+            self._init_online_store_sql_client = True
 
     def apply_transformation(self, row_dict: Dict[str, Any]):
         matching_keys = set(self.transformation_functions.keys()).intersection(
