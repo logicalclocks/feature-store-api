@@ -31,25 +31,26 @@ from hsfs import (
     client,
     feature_view,
     training_dataset,
+    transformation_function,
 )
 from hsfs import (
     serving_key as sk_mod,
 )
-from hsfs import (
-    training_dataset_feature as tdf_mod,
-)
+from hsfs import training_dataset_feature as tdf_mod
 from hsfs.client import exceptions, online_store_rest_client
 from hsfs.core import (
     online_store_rest_client_engine,
     online_store_sql_engine,
+)
+from hsfs.core import (
     transformation_function_engine as tf_engine_mod,
-    transformation_function
 )
 
 
 HAS_FASTAVRO = False
 try:
     from fastavro import schemaless_reader
+
     HAS_FASTAVRO = True
 except ImportError:
     from avro.io import BinaryDecoder
@@ -105,7 +106,9 @@ class VectorServer:
         self._transformation_function_engine = (
             tf_engine_mod.TransformationFunctionEngine(feature_store_id)
         )
-        self._transformation_functions: List[transformation_function.TransformationFunction] = []
+        self._transformation_functions: List[
+            transformation_function.TransformationFunction
+        ] = []
         self._online_store_sql_client = None
 
         self._online_store_rest_client_engine = None
@@ -420,7 +423,7 @@ class VectorServer:
 
         _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)
 
-        return [result_dict.get(fname, None) for fname in self.transformed_feature_vector_col_name]
+        return [result_dict.get(fname, None) for fname in self.transformed_features]
 
     def handle_feature_vector_return_type(
         self,
@@ -518,7 +521,7 @@ class VectorServer:
         return self.handle_feature_vector_return_type(
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
-    
+
     def which_client_and_ensure_initialised(
         self, force_rest_client: bool, force_sql_client: bool
     ) -> str:
@@ -596,7 +599,7 @@ class VectorServer:
             self._init_online_store_sql_client = True
 
     def apply_transformation(self, row_dict: dict):
-        _logger.debug("Applying transformation functions to : %s", matching_keys)
+        _logger.debug("Applying transformation functions.")
         for tf in self.transformation_functions:
             features = [
                 pd.Series(row_dict[feature])
@@ -1005,7 +1008,7 @@ class VectorServer:
         )
         self._default_online_store_client = default_online_store_client
 
-    def transformed_feature_vector_col_name(self):
+    def transformed_features(self):
         if self._transformed_feature_vector_col_name is None:
             transformation_features = []
             output_column_names = []
