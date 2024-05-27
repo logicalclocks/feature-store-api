@@ -446,7 +446,10 @@ class VectorServer:
 
         _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)
         if transformed:
-            return [result_dict.get(fname, None) for fname in self.transformed_features]
+            return [
+                result_dict.get(fname, None)
+                for fname in self.transformed_feature_vector_col_name
+            ]
         else:
             return [result_dict.get(fname, None) for fname in self._untransformed_feature_vector_col_name]
 
@@ -1125,7 +1128,7 @@ class VectorServer:
         _logger.debug(f"Default Online Store Client is set to {default_client}.")
         self._default_client = default_client
 
-    def transformed_features(self):
+    def transformed_feature_vector_col_name(self):
         if self._transformed_feature_vector_col_name is None:
             transformation_features = []
             output_column_names = []
