@@ -49,6 +49,7 @@ dependencies = [
     "zipp==3.18.2",
     "tzlocal",
     "fsspec",
+    "nest_asyncio",
     "retrying",
     "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql",
     "polars>=0.20.18,<=0.21.0",
