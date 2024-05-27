@@ -45,7 +45,10 @@ from pyspark.sql.types import (
 )
 
 
-@pytest.mark.skipif(os.name == "nt")
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="Tests fail in windows does to dependency problem with greater expectations 0.18.2, Fixed on upgrading to 1.0",
+)
 class TestPythonSparkTransformationFunctions:
     def _create_training_dataset(self):
         f = training_dataset_feature.TrainingDatasetFeature(
