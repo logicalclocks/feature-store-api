@@ -102,6 +102,18 @@ try:
 except ImportError:
     pass
 
+PYARROW_EXTENSION_ENABLE = False
+try:
+    import pandas as pd
+    from packaging.version import Version
+
+    if Version(pd.__version__) > Version("2.0"):
+        PYARROW_EXTENSION_ENABLE = True
+    else:
+        PYARROW_EXTENSION_ENABLE = False
+except Exception:
+    PYARROW_EXTENSION_ENABLE = False  # Set PYARROW_EXTENSION_ENABLE to false if pyarrow or pandas cannot be imported
+
 # Decimal types are currently not supported
 _INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
 _BIG_INT_TYPES = [pa.uint32(), pa.int64()]
@@ -1291,21 +1303,6 @@ class Engine:
                 f.write(bytesio_object.getbuffer())
         return local_file
 
-    def _check_pyarrow_extension(self):
-        """
-        Function to check if pyarrow extension should be used for copying polars dataframe to pandas
-        """
-        try:
-            import pandas as pd
-            from packaging.version import Version
-
-            if Version(pd.__version__) > Version("2.0"):
-                return True
-            else:
-                return False
-        except Exception:
-            return False  # Return false if pyarrow or pandas cannot be imported
-
     def _apply_transformation_function(
         self,
         transformation_functions: List[transformation_function.TransformationFunction],
@@ -1328,7 +1325,7 @@ class Engine:
             dataset, pl.dataframe.frame.DataFrame
         ):
             # Converting polars dataframe to pandas because currently we support only pandas UDF's as transformation functions.
-            if self._check_pyarrow_extension():
+            if PYARROW_EXTENSION_ENABLE:
                 dataset = dataset.to_pandas(
                     use_pyarrow_extension_array=True
                 )  # Zero copy if pyarrow extension can be used.
