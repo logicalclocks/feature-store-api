@@ -127,6 +127,45 @@ class FeatureGroupApi:
         else:
             return fg_objs
 
+    def get_by_id(
+        self, feature_store_id: int, feature_group_id: int
+    ) -> Union[
+        fg_mod.FeatureGroup,
+        fg_mod.SpineGroup,
+        fg_mod.ExternalFeatureGroup,
+    ]:
+        """Get the metadata of a feature group with a certain id.
+
+        :param feature_store_id: feature store id
+        :type feature_store_id: int
+        :param feature_group_id: id of the feature group
+        :type feature_group_id: int
+
+        :return: feature group metadata object
+        :rtype: FeatureGroup, SpineGroup, ExternalFeatureGroup
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_store_id,
+            "featuregroups",
+            feature_group_id,
+        ]
+
+        fg_json = _client._send_request("GET", path_params)
+        if (
+            fg_json["type"] == FeatureGroupApi.BACKEND_FG_STREAM
+            or fg_json["type"] == FeatureGroupApi.BACKEND_FG_BATCH
+        ):
+            return fg_mod.FeatureGroup.from_response_json(fg_json)
+        elif fg_json["type"] == FeatureGroupApi.BACKEND_FG_EXTERNAL:
+            if fg_json.get("spine", False):
+                return fg_mod.SpineGroup.from_response_json(fg_json)
+            else:
+                return fg_mod.ExternalFeatureGroup.from_response_json(fg_json)
+
     def delete_content(
         self,
         feature_group_instance: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
