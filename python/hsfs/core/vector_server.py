@@ -1011,6 +1011,7 @@ class VectorServer:
         )
         self._default_online_store_client = default_online_store_client
 
+    @property
     def transformed_feature_vector_col_name(self):
         if self._transformed_feature_vector_col_name is None:
             transformation_features = []
