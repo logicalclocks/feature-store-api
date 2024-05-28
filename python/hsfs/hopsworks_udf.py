@@ -35,9 +35,10 @@ def hopsworks_udf(output_type: Union[List[type], type]) -> "HopsworksUdf":
     Create an User Defined Function that can be and used within the Hopsworks Feature Store.
 
     Hopsworks UDF's are user defined functions that executes as 'pandas_udf' when executing
-    in spark engine and as pandas functions in the python engine. A Hopsworks udf is defined
-    using the `hopsworks_udf` decorator. The outputs of the defined UDF must be mentioned in the
-    decorator as a list of python types.
+    in spark engine and as pandas functions in the python engine. The pandas udf/pandas functions
+    gets as inputs pandas Series's and can provide as output a pandas Series or a pandas DataFrame.
+    A Hopsworks udf is defined using the `hopsworks_udf` decorator. The outputs of the defined UDF
+    must be mentioned in the decorator as a list of python types.
 
 
     !!! example

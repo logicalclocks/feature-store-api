@@ -1128,6 +1128,7 @@ class VectorServer:
         _logger.debug(f"Default Online Store Client is set to {default_client}.")
         self._default_client = default_client
 
+    @property
     def transformed_feature_vector_col_name(self):
         if self._transformed_feature_vector_col_name is None:
             transformation_features = []
