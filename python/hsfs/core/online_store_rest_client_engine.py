@@ -61,13 +61,12 @@ class OnlineStoreRestClientEngine:
         self._feature_view_version = feature_view_version
         self._features = features
         self._ordered_feature_names = []
+        self._inference_helpers_feature_names = []
+        self._no_helpers_feature_names = []
+        self._is_inference_helpers_list = []
         self._feature_names_per_fg_id: Dict[int, List[str]] = {}
         for feat in features:
-            if not (
-                feat.label
-                or feat.inference_helper_column
-                or feat.training_helper_column
-            ):
+            if not feat.label:
                 self._ordered_feature_names.append(feat.name)
                 if feat.feature_group.id not in self._feature_names_per_fg_id.keys():
                     self._feature_names_per_fg_id[feat.feature_group.id] = [feat.name]
@@ -75,6 +74,10 @@ class OnlineStoreRestClientEngine:
                     self._feature_names_per_fg_id[feat.feature_group.id].append(
                         feat.name
                     )
+                if feat.inference_helper_column:
+                    self._is_inference_helpers_list.append(True)
+                elif not feat.training_helper_column:
+                    self._is_inference_helpers_list.append(False)
         _logger.debug(
             f"Mapping fg_id to feature names: {self._feature_names_per_fg_id}."
         )
@@ -131,6 +134,7 @@ class OnlineStoreRestClientEngine:
         passed_features: Optional[Dict[str, Any]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
         drop_missing: bool = False,
+        inference_helpers_only: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> Union[
         Tuple[Union[List[Any], Dict[str, Any]], Optional[List[Dict[str, Any]]]],
@@ -147,6 +151,7 @@ class OnlineStoreRestClientEngine:
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
             drop_missing: Whether to drop missing features from the feature vector. Requires including detailed status.
+            inference_helpers_only: Whether to return only the inference helper columns.
             return_type: The type of the return value. Either "feature_value_dict", "feature_value_list" or "response_json".
 
         # Returns:
@@ -186,6 +191,7 @@ class OnlineStoreRestClientEngine:
                 row_feature_values=response["features"],
                 detailed_status=response.get("detailedStatus", None),
                 drop_missing=drop_missing,
+                inference_helpers_only=inference_helpers_only,
                 return_type=return_type,
             )
         else:
@@ -197,6 +203,7 @@ class OnlineStoreRestClientEngine:
         passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
         drop_missing: bool = False,
+        inference_helpers_only: bool = False,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> Union[
         Tuple[List[Union[List[Any], Dict[str, Any]]], List[Dict[str, Any]]],
@@ -214,6 +221,7 @@ class OnlineStoreRestClientEngine:
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
             drop_missing: Whether to drop missing features from the feature vector. Requires including detailed status.
+            helpers_only: Whether to return only the inference helper columns.
             return_type: The type of the return value. Either "feature_value_dict", "feature_value_list" or "response_json".
 
         # Returns:
@@ -267,6 +275,7 @@ class OnlineStoreRestClientEngine:
                     detailed_status=detailed_status,
                     drop_missing=drop_missing,
                     return_type=return_type,
+                    inference_helpers_only=inference_helpers_only,
                 )
                 for row, detailed_status in itertools.zip_longest(
                     response["features"], response.get("detailedStatus", []) or []
@@ -281,6 +290,7 @@ class OnlineStoreRestClientEngine:
         drop_missing: bool,
         detailed_status: List[Dict[str, Any]] = None,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_LIST,
+        inference_helpers_only: bool = False,
     ) -> Union[List[Any], Dict[str, Any]]:
         """Convert the response from the RonDB Rest Server Feature Store API to a feature:value dict.
 
@@ -292,6 +302,7 @@ class OnlineStoreRestClientEngine:
             drop_missing: Whether to drop missing features from the feature vector. Relies on detailed status.
             detailed_status: A list of dictionaries with detailed status information for each read operations.
                 Keys include operationId, featureGroupId, httpStatus and message.
+            helpers_only: Whether to return only the inference helper columns.
             return_type: The type of the return value. Either "feature_value_dict" or "feature_value_list".
 
         # Returns:
@@ -323,17 +334,26 @@ class OnlineStoreRestClientEngine:
                 _logger.debug(
                     "Feature vector is null, returning None for all features."
                 )
-                return [None for _ in self.ordered_feature_names]
+                return [
+                    None
+                    for is_helper in self.is_inference_helpers_list
+                    if is_helper != inference_helpers_only
+                ]
             elif drop_missing:
                 _logger.debug(
                     "Dropping missing features from the feature vector and return as list."
                 )
                 return [
                     value
-                    for (name, value) in zip(
-                        self.ordered_feature_names, row_feature_values
+                    for (name, value, is_helper) in zip(
+                        self.ordered_feature_names,
+                        row_feature_values,
+                        self.is_inference_helpers_list,
                     )
-                    if name not in failed_read_feature_names
+                    if (
+                        name not in failed_read_feature_names
+                        and is_helper is inference_helpers_only
+                    )
                 ]
             _logger.debug("Returning feature vector as list.")
             return row_feature_values
@@ -346,21 +366,42 @@ class OnlineStoreRestClientEngine:
                 _logger.debug(
                     "Feature vector is null, returning None for all features."
                 )
-                return {name: None for name in self.ordered_feature_names}
+                return {
+                    name: None
+                    for (name, is_helper) in zip(
+                        self.ordered_feature_names, self.is_inference_helpers_list
+                    )
+                    if is_helper is inference_helpers_only
+                }
             elif drop_missing:
                 _logger.debug(
                     "Dropping missing features from the feature vector and return as dict."
                 )
                 return {
                     name: value
-                    for (name, value) in zip(
-                        self.ordered_feature_names, row_feature_values
+                    for (name, value, is_helper) in zip(
+                        self.ordered_feature_names,
+                        row_feature_values,
+                        self.is_inference_helpers_list,
                     )
-                    if name not in failed_read_feature_names
+                    if (
+                        name not in failed_read_feature_names
+                        and is_helper is inference_helpers_only
+                    )
                 }
             else:
                 _logger.debug("Returning feature vector as dict.")
-                return dict(zip(self.ordered_feature_names, row_feature_values))
+                return dict(
+                    {
+                        name: value
+                        for (name, value, is_helper) in zip(
+                            self.ordered_feature_names,
+                            row_feature_values,
+                            self.is_inference_helpers_list,
+                        )
+                        if is_helper is inference_helpers_only
+                    }
+                )
 
     @property
     def feature_store_name(self) -> str:
@@ -381,6 +422,10 @@ class OnlineStoreRestClientEngine:
     @property
     def ordered_feature_names(self) -> List[str]:
         return self._ordered_feature_names
+
+    @property
+    def is_inference_helpers_list(self) -> List[bool]:
+        return self._is_inference_helpers_list
 
     @property
     def feature_names_per_fg_id(self) -> Dict[int, List[str]]:

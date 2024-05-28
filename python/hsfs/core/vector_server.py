@@ -488,11 +488,31 @@ class VectorServer:
             )
 
     def get_inference_helper(
-        self, entry: Dict[str, Any], return_type: str
+        self,
+        entry: Dict[str, Any],
+        return_type: Union[Literal["dict", "pandas", "polars"]],
+        force_rest_client: bool,
+        force_sql_client: bool,
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
-        _logger.debug("Retrieve inference helper values for single entry.")
+        default_client = self.which_client_and_ensure_initialised(
+            force_rest_client, force_sql_client
+        )
+        _logger.debug(
+            f"Retrieve inference helper values for single entry via {default_client.upper()} client."
+        )
         _logger.debug(f"entry: {entry} as return type: {return_type}")
+        if default_client == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+            return self.handle_feature_vector_return_type(
+                self.online_store_rest_client_engine.get_single_feature_vector(
+                    entry,
+                    return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+                    inference_helpers_only=True,
+                ),
+                batch=False,
+                inference_helper=True,
+                return_type=return_type,
+            )
         return self.handle_feature_vector_return_type(
             self.online_store_sql_client.get_inference_helper_vector(entry),
             batch=False,
@@ -504,27 +524,43 @@ class VectorServer:
         self,
         feature_view_object: feature_view.FeatureView,
         entries: List[Dict[str, Any]],
-        return_type: str,
+        return_type: Union[Literal["dict", "pandas", "polars"]],
+        force_rest_client: bool,
+        force_sql_client: bool,
     ) -> Union[pd.DataFrame, pl.DataFrame, List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
-        _logger.debug("Retrieve inference helper values for batch entries.")
+        default_client = self.which_client_and_ensure_initialised(
+            force_rest_client, force_sql_client
+        )
+        _logger.debug(
+            f"Retrieve inference helper values for batch entries via {default_client.upper()} client."
+        )
         _logger.debug(f"entries: {entries} as return type: {return_type}")
-        batch_results, serving_keys = (
-            self.online_store_sql_client.get_batch_inference_helper_vectors(entries)
-        )
-        # drop serving and primary key names from the result dict
-        drop_list = serving_keys + list(feature_view_object.primary_keys)
 
-        _ = list(
-            map(
-                lambda results_dict: [
-                    results_dict.pop(x, None)
-                    for x in drop_list
-                    if x not in feature_view_object.inference_helper_columns
-                ],
-                batch_results,
+        if default_client == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+            batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
+                entries,
+                return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+                inference_helpers_only=True,
             )
-        )
+        else:
+            batch_results, serving_keys = (
+                self.online_store_sql_client.get_batch_inference_helper_vectors(entries)
+            )
+            # drop serving and primary key names from the result dict
+            drop_list = serving_keys + list(feature_view_object.primary_keys)
+
+            _ = list(
+                map(
+                    lambda results_dict: [
+                        results_dict.pop(x, None)
+                        for x in drop_list
+                        if x not in feature_view_object.inference_helper_columns
+                    ],
+                    batch_results,
+                )
+            )
+
         return self.handle_feature_vector_return_type(
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
