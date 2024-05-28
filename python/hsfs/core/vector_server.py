@@ -182,7 +182,7 @@ class VectorServer:
         inference_helper_columns: bool,
         options: Optional[Dict[str, Any]] = None,
     ) -> None:
-        _logger.info("Initialising Vector Server Online Store SQL client")
+        _logger.debug("Initialising Vector Server Online Store SQL client")
         self._online_store_sql_client = online_store_sql_engine.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
@@ -201,7 +201,7 @@ class VectorServer:
         options: Optional[Dict[str, Any]] = None,
     ):
         # naming is off here, but it avoids confusion with the argument init_online_store_rest_client
-        _logger.info("Initialising Vector Server Online Store REST client")
+        _logger.debug("Initialising Vector Server Online Store REST client")
         self._online_store_rest_client_engine = (
             online_store_rest_client_engine.OnlineStoreRestClientEngine(
                 feature_store_name=self._feature_store_name,
@@ -488,11 +488,31 @@ class VectorServer:
             )
 
     def get_inference_helper(
-        self, entry: Dict[str, Any], return_type: str
+        self,
+        entry: Dict[str, Any],
+        return_type: Union[Literal["dict", "pandas", "polars"]],
+        force_rest_client: bool,
+        force_sql_client: bool,
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
-        _logger.debug("Retrieve inference helper values for single entry.")
+        default_client = self.which_client_and_ensure_initialised(
+            force_rest_client, force_sql_client
+        )
+        _logger.debug(
+            f"Retrieve inference helper values for single entry via {default_client.upper()} client."
+        )
         _logger.debug(f"entry: {entry} as return type: {return_type}")
+        if default_client == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+            return self.handle_feature_vector_return_type(
+                self.online_store_rest_client_engine.get_single_feature_vector(
+                    entry,
+                    return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+                    inference_helpers_only=True,
+                ),
+                batch=False,
+                inference_helper=True,
+                return_type=return_type,
+            )
         return self.handle_feature_vector_return_type(
             self.online_store_sql_client.get_inference_helper_vector(entry),
             batch=False,
@@ -504,27 +524,43 @@ class VectorServer:
         self,
         feature_view_object: feature_view.FeatureView,
         entries: List[Dict[str, Any]],
-        return_type: str,
+        return_type: Union[Literal["dict", "pandas", "polars"]],
+        force_rest_client: bool,
+        force_sql_client: bool,
     ) -> Union[pd.DataFrame, pl.DataFrame, List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
-        _logger.debug("Retrieve inference helper values for batch entries.")
+        default_client = self.which_client_and_ensure_initialised(
+            force_rest_client, force_sql_client
+        )
+        _logger.debug(
+            f"Retrieve inference helper values for batch entries via {default_client.upper()} client."
+        )
         _logger.debug(f"entries: {entries} as return type: {return_type}")
-        batch_results, serving_keys = (
-            self.online_store_sql_client.get_batch_inference_helper_vectors(entries)
-        )
-        # drop serving and primary key names from the result dict
-        drop_list = serving_keys + list(feature_view_object.primary_keys)
 
-        _ = list(
-            map(
-                lambda results_dict: [
-                    results_dict.pop(x, None)
-                    for x in drop_list
-                    if x not in feature_view_object.inference_helper_columns
-                ],
-                batch_results,
+        if default_client == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+            batch_results = self.online_store_rest_client_engine.get_batch_feature_vectors(
+                entries,
+                return_type=self.online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+                inference_helpers_only=True,
             )
-        )
+        else:
+            batch_results, serving_keys = (
+                self.online_store_sql_client.get_batch_inference_helper_vectors(entries)
+            )
+            # drop serving and primary key names from the result dict
+            drop_list = serving_keys + list(feature_view_object.primary_keys)
+
+            _ = list(
+                map(
+                    lambda results_dict: [
+                        results_dict.pop(x, None)
+                        for x in drop_list
+                        if x not in feature_view_object.inference_helper_columns
+                    ],
+                    batch_results,
+                )
+            )
+
         return self.handle_feature_vector_return_type(
             batch_results, batch=True, inference_helper=True, return_type=return_type
         )
@@ -697,13 +733,20 @@ class VectorServer:
 
     def set_return_feature_value_handlers(
         self, features: List[tdf_mod.TrainingDatasetFeature]
-    ) -> List[Callable]:
+    ):
         """Build a dictionary of functions to convert/deserialize/transform the feature values returned from RonDB Server.
 
         Re-using the current logic from the vector server means that we currently iterate over the feature vectors
         and values multiple times, as well as converting the feature values to a dictionary and then back to a list.
         """
+        if (
+            hasattr(self, "_return_feature_value_handlers")
+            and len(self._return_feature_value_handlers) > 0
+        ):
+            return
         self._return_feature_value_handlers = {}
+        if len(features) == 0:
+            return
         _logger.debug(
             f"Setting return feature value handlers for Feature View {self._feature_view_name},"
             f" version: {self._feature_view_version} in Feature Store {self._feature_store_name}."

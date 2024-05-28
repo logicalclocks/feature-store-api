@@ -616,7 +616,9 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
+            self.init_serving(
+                external=external, init_online_store_rest_client=force_rest_client
+            )
         vector_db_features = []
         if self._vector_db_client:
             for _entry in entry:
@@ -636,7 +638,9 @@ class FeatureView:
         self,
         entry: Dict[str, Any],
         external: Optional[bool] = None,
-        return_type: Optional[str] = "pandas",
+        return_type: Literal["pandas", "dict", "polars"] = "pandas",
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Returns assembled inference helper column vectors from online feature store.
         !!! example
@@ -672,14 +676,20 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
-        return self._vector_server.get_inference_helper(entry, return_type)
+            self.init_serving(
+                external=external, init_online_store_rest_client=force_rest_client
+            )
+        return self._vector_server.get_inference_helper(
+            entry, return_type, force_rest_client, force_sql_client
+        )
 
     def get_inference_helpers(
         self,
         entry: List[Dict[str, Any]],
         external: Optional[bool] = None,
-        return_type: Optional[str] = "pandas",
+        return_type: Literal["pandas", "dict", "polars"] = "pandas",
+        force_sql_client: bool = False,
+        force_rest_client: bool = False,
     ) -> Union[List[Dict[str, Any]], pd.DataFrame, pl.DataFrame]:
         """Returns assembled inference helper column vectors in batches from online feature store.
         !!! warning "Missing primary key entries"
@@ -729,8 +739,12 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
-        return self._vector_server.get_inference_helpers(self, entry, return_type)
+            self.init_serving(
+                external=external, init_online_store_rest_client=force_rest_client
+            )
+        return self._vector_server.get_inference_helpers(
+            self, entry, return_type, force_rest_client, force_sql_client
+        )
 
     def _get_vector_db_result(
         self,
@@ -3580,6 +3594,7 @@ class FeatureView:
                     batch=False,
                     inference_helper_columns=False,
                 ),
+                feature_store_id=self.featurestore_id,
                 ignore_prefix=True,  # if serving_keys have to be built it is because feature_view older than 3.3, this ensure compatibility
             )
         return self._serving_keys
