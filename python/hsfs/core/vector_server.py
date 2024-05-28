@@ -182,7 +182,7 @@ class VectorServer:
         inference_helper_columns: bool,
         options: Optional[Dict[str, Any]] = None,
     ) -> None:
-        _logger.info("Initialising Vector Server Online Store SQL client")
+        _logger.debug("Initialising Vector Server Online Store SQL client")
         self._online_store_sql_client = online_store_sql_engine.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
@@ -201,7 +201,7 @@ class VectorServer:
         options: Optional[Dict[str, Any]] = None,
     ):
         # naming is off here, but it avoids confusion with the argument init_online_store_rest_client
-        _logger.info("Initialising Vector Server Online Store REST client")
+        _logger.debug("Initialising Vector Server Online Store REST client")
         self._online_store_rest_client_engine = (
             online_store_rest_client_engine.OnlineStoreRestClientEngine(
                 feature_store_name=self._feature_store_name,
@@ -697,13 +697,20 @@ class VectorServer:
 
     def set_return_feature_value_handlers(
         self, features: List[tdf_mod.TrainingDatasetFeature]
-    ) -> List[Callable]:
+    ):
         """Build a dictionary of functions to convert/deserialize/transform the feature values returned from RonDB Server.
 
         Re-using the current logic from the vector server means that we currently iterate over the feature vectors
         and values multiple times, as well as converting the feature values to a dictionary and then back to a list.
         """
+        if (
+            hasattr(self, "_return_feature_value_handlers")
+            and len(self._return_feature_value_handlers) > 0
+        ):
+            return
         self._return_feature_value_handlers = {}
+        if len(features) == 0:
+            return
         _logger.debug(
             f"Setting return feature value handlers for Feature View {self._feature_view_name},"
             f" version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
