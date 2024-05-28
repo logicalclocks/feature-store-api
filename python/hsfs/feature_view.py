@@ -3580,6 +3580,7 @@ class FeatureView:
                     batch=False,
                     inference_helper_columns=False,
                 ),
+                feature_store_id=self.featurestore_id,
                 ignore_prefix=True,  # if serving_keys have to be built it is because feature_view older than 3.3, this ensure compatibility
             )
         return self._serving_keys
