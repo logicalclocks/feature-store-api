@@ -337,7 +337,7 @@ class OnlineStoreRestClientEngine:
                 return [
                     None
                     for is_helper in self.is_inference_helpers_list
-                    if is_helper != inference_helpers_only
+                    if is_helper is inference_helpers_only
                 ]
             elif drop_missing:
                 _logger.debug(
