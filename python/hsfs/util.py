@@ -25,13 +25,14 @@ from datetime import date, datetime, timezone
 from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, Union
 from urllib.parse import urljoin, urlparse
 
+import numpy as np
 import pandas as pd
 from aiomysql.sa import create_engine as async_create_engine
 from hsfs import client, feature, feature_group, serving_key
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import serving_prepared_statement
-from hsfs.core import variable_api
+from hsfs.core import feature_group_api, variable_api
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
 
@@ -509,10 +510,13 @@ def get_feature_group_url(feature_store_id: int, feature_group_id: int) -> str:
 
 def build_serving_keys_from_prepared_statements(
     prepared_statements: List[serving_prepared_statement.ServingPreparedStatement],
+    feature_store_id: int,
     ignore_prefix: bool = False,
 ) -> Set[serving_key.ServingKey]:
     serving_keys = set()
+    fg_api = feature_group_api.FeatureGroupApi()
     for statement in prepared_statements:
+        fg = fg_api.get_by_id(feature_store_id, statement.feature_group_id)
         for param in statement.prepared_statement_parameters:
             serving_keys.add(
                 serving_key.ServingKey(
@@ -520,9 +524,28 @@ def build_serving_keys_from_prepared_statements(
                     join_index=statement.prepared_statement_index,
                     prefix=statement.prefix,
                     ignore_prefix=ignore_prefix,
+                    feature_group=fg,
                 )
             )
     return serving_keys
+
+
+class NpDatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        dtypes = (np.datetime64, np.complexfloating)
+        if isinstance(obj, (datetime, date)):
+            return convert_event_time_to_timestamp(obj)
+        elif isinstance(obj, dtypes):
+            return str(obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            if any([np.issubdtype(obj.dtype, i) for i in dtypes]):
+                return obj.astype(str).tolist()
+            return obj.tolist()
+        return super(NpDatetimeEncoder, self).default(obj)
 
 
 class VersionWarning(Warning):

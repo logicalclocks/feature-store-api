@@ -20,7 +20,7 @@ import json
 import logging
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
 
 import humps
 import numpy as np
@@ -225,7 +225,7 @@ class FeatureView:
             feature_view_name, feature_view_version
         )
 
-    def update(self) -> "FeatureView":
+    def update(self) -> FeatureView:
         """Update the description of the feature view.
 
         !!! example "Update the feature view with a new description."
@@ -257,6 +257,8 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
+        init_online_store_sql_client: Optional[bool] = None,
+        init_online_store_rest_client: bool = False,
     ) -> None:
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
@@ -312,12 +314,17 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+            feature_store_name=self._feature_store_name,
         )
         self._vector_server.init_serving(
             entity=self,
             external=external,
             inference_helper_columns=True,
             options=options,
+            init_online_store_sql_client=init_online_store_sql_client,
+            init_online_store_rest_client=init_online_store_rest_client,
         )
 
         self._prefix_serving_key_map = dict(
@@ -362,6 +369,9 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+            feature_store_name=self._feature_store_name,
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -417,8 +427,10 @@ class FeatureView:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = None,
         external: Optional[bool] = None,
-        return_type: Optional[str] = "list",
-        allow_missing: Optional[bool] = False,
+        return_type: Literal["list", "polars", "numpy", "pandas"] = "list",
+        allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -503,12 +515,16 @@ class FeatureView:
             self.init_serving(external=external)
 
         vector_db_features = None
-        td_embedding_feature_names = set()
         if self._vector_db_client:
             vector_db_features = self._get_vector_db_result(entry)
-            td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
         return self._vector_server.get_feature_vector(
-            entry, return_type, passed_features, vector_db_features, td_embedding_feature_names, allow_missing
+            entry=entry,
+            return_type=return_type,
+            passed_features=passed_features,
+            allow_missing=allow_missing,
+            vector_db_features=vector_db_features,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_feature_vectors(
@@ -516,8 +532,10 @@ class FeatureView:
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         external: Optional[bool] = None,
-        return_type: Optional[str] = "list",
-        allow_missing: Optional[bool] = False,
+        return_type: Literal["list", "polars", "numpy", "pandas"] = "list",
+        allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -598,25 +616,31 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
+            self.init_serving(
+                external=external, init_online_store_rest_client=force_rest_client
+            )
         vector_db_features = []
-        td_embedding_feature_names = set()
         if self._vector_db_client:
             for _entry in entry:
-                vector_db_features.append(
-                    self._get_vector_db_result(_entry)
-                )
-            td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
+                vector_db_features.append(self._get_vector_db_result(_entry))
 
         return self._vector_server.get_feature_vectors(
-            entry, return_type, passed_features, vector_db_features, td_embedding_feature_names, allow_missing
+            entries=entry,
+            return_type=return_type,
+            passed_features=passed_features,
+            allow_missing=allow_missing,
+            vector_db_features=vector_db_features,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_inference_helper(
         self,
         entry: Dict[str, Any],
         external: Optional[bool] = None,
-        return_type: Optional[str] = "pandas",
+        return_type: Literal["pandas", "dict", "polars"] = "pandas",
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Returns assembled inference helper column vectors from online feature store.
         !!! example
@@ -652,14 +676,20 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
-        return self._vector_server.get_inference_helper(entry, return_type)
+            self.init_serving(
+                external=external, init_online_store_rest_client=force_rest_client
+            )
+        return self._vector_server.get_inference_helper(
+            entry, return_type, force_rest_client, force_sql_client
+        )
 
     def get_inference_helpers(
         self,
         entry: List[Dict[str, Any]],
         external: Optional[bool] = None,
-        return_type: Optional[str] = "pandas",
+        return_type: Literal["pandas", "dict", "polars"] = "pandas",
+        force_sql_client: bool = False,
+        force_rest_client: bool = False,
     ) -> Union[List[Dict[str, Any]], pd.DataFrame, pl.DataFrame]:
         """Returns assembled inference helper column vectors in batches from online feature store.
         !!! warning "Missing primary key entries"
@@ -709,8 +739,12 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
-        return self._vector_server.get_inference_helpers(self, entry, return_type)
+            self.init_serving(
+                external=external, init_online_store_rest_client=force_rest_client
+            )
+        return self._vector_server.get_inference_helpers(
+            self, entry, return_type, force_rest_client, force_sql_client
+        )
 
     def _get_vector_db_result(
         self,
@@ -727,7 +761,10 @@ class FeatureView:
                 # Not retrieving from vector db if entry is not completed
                 continue
             vector_db_features = self._vector_db_client.read(
-                fg.id, fg.features, keys=fg_entry, index_name=fg.embedding_index.index_name
+                fg.id,
+                fg.features,
+                keys=fg_entry,
+                index_name=fg.embedding_index.index_name,
             )
 
             # if result is not empty
@@ -809,7 +846,7 @@ class FeatureView:
             return_type="list",
             vector_db_features=[res[1] for res in results],
             td_embedding_feature_names=td_embedding_feature_names,
-            allow_missing=True
+            allow_missing=True,
         )
 
     def _extract_primary_key(self, result_key: Dict[str, str]) -> Dict[str, str]:
@@ -3557,6 +3594,7 @@ class FeatureView:
                     batch=False,
                     inference_helper_columns=False,
                 ),
+                feature_store_id=self.featurestore_id,
                 ignore_prefix=True,  # if serving_keys have to be built it is because feature_view older than 3.3, this ensure compatibility
             )
         return self._serving_keys

@@ -1,0 +1,291 @@
+{
+  "get_single_vector_response_json_complete": {
+    "features": [
+      "APPL",
+      "2022-01-01 00:00:00",
+      21.3,
+      10
+    ],
+    "metadata": [
+      {
+        "featureName": "ticker",
+        "featureType": "string"
+      },
+      {
+        "featureName": "when",
+        "featureType": "timestamp"
+      },
+      {
+        "featureName": "price",
+        "featureType": "float"
+      },
+      {
+        "featureName": "volume",
+        "featureType": "bigint"
+      }
+    ],
+    "status": "COMPLETE"
+  },
+  "get_single_vector_response_json_complete_no_metadata": {
+    "features": [
+      "APPL",
+      "2022-01-01 00:00:00",
+      21.3,
+      10
+    ],
+    "metadata": null,
+    "status": "COMPLETE"
+  },
+  "get_single_vector_response_json_pk_value_no_match": {
+    "features": [
+      "APPL",
+      null,
+      null,
+      null
+    ],
+    "metadata": null,
+    "status": "MISSING",
+    "detailedStatus": [
+      {
+        "featureGroupId": 15,
+        "operationId": "0 | 15",
+        "httpStatus": 404,
+        "message": "Failed pk read."
+      }
+    ]
+  },
+  "get_single_vector_response_json_pk_value_no_match_with_passed_price": {
+    "features": [
+      "APPL",
+      null,
+      12.4,
+      null
+    ],
+    "metadata": null,
+    "status": "MISSING",
+    "detailedStatus": [
+      {
+        "featureGroupId": 15,
+        "operationId": "0 | 15",
+        "httpStatus": 404,
+        "message": "Failed pk read."
+      }
+    ]
+  },
+  "get_single_vector_payload": {
+    "featureStoreName": "test_store",
+    "featureViewName": "test_feature_view",
+    "featureViewVersion": 2,
+    "entry": {
+      "ticker": "APPL"
+    },
+    "passedFeatures": {
+      "price": 21.3
+    },
+    "options": {
+      "validatePassedFeatures": false,
+      "includeDetailedStatus": true
+    }
+  },
+  "get_batch_vector_payload": {
+    "featureStoreName": "test_store",
+    "featureViewName": "test_feature_view",
+    "featureViewVersion": 2,
+    "entries": [
+      {
+        "ticker": "APPL"
+      },
+      {
+        "ticker": "GOOG"
+      }
+    ],
+    "passedFeatures": [
+      {
+        "price": 21.3
+      },
+      {
+        "volume": 43
+      }
+    ],
+    "options": {
+      "validatePassedFeatures": false,
+      "includeDetailedStatus": true
+    }
+  },
+  "get_batch_vector_response_json_complete": {
+    "features": [
+      [
+        "APPL",
+        "2022-01-01 00:00:00",
+        21.3,
+        10
+      ],
+      [
+        "GOOG",
+        "2022-01-01 00:00:00",
+        12.3,
+        43
+      ]
+    ],
+    "metadata": [
+      {
+        "featureName": "ticker",
+        "featureType": "string"
+      },
+      {
+        "featureName": "when",
+        "featureType": "timestamp"
+      },
+      {
+        "featureName": "price",
+        "featureType": "float"
+      },
+      {
+        "featureName": "volume",
+        "featureType": "bigint"
+      }
+    ],
+    "status": [
+      "COMPLETE",
+      "COMPLETE"
+    ]
+  },
+  "get_batch_vector_response_json_complete_no_metadata": {
+    "features": [
+      [
+        "APPL",
+        "2022-01-01 00:00:00",
+        21.3,
+        10
+      ],
+      [
+        "GOOG",
+        "2022-01-01 00:00:00",
+        12.3,
+        43
+      ]
+    ],
+    "status": [
+      "COMPLETE",
+      "COMPLETE"
+    ]
+  },
+  "get_batch_vector_response_json_partial_pk_value_no_match": {
+    "features": [
+      [
+        "APPL",
+        null,
+        null,
+        null
+      ],
+      [
+        "GOOG",
+        "2022-01-01 00:00:00",
+        12.3,
+        43
+      ]
+    ],
+    "status": [
+      "MISSING",
+      "COMPLETE"
+    ],
+    "detailedStatus": [
+      [
+        {
+          "featureGroupId": 15,
+          "operationId": "0 | 15",
+          "httpStatus": 404,
+          "message": "Failed pk read."
+        },
+        {
+          "featureGroupId": 15,
+          "operationId": "1 | 15",
+          "httpStatus": 200,
+          "message": "Ok"
+        }
+      ],
+      [
+        {
+          "featureGroupId": 15,
+          "operationId": "0 | 15",
+          "httpStatus": 200,
+          "message": "Failed pk read."
+        },
+        {
+          "featureGroupId": 15,
+          "operationId": "1 | 15",
+          "httpStatus": 200,
+          "message": "Ok"
+        }
+      ]
+    ]
+  },
+  "get_batch_vector_response_json_partial_error": {
+    "features": [
+      [
+        "APPL",
+        "2022-01-01 00:00:00",
+        21.3,
+        10
+      ],
+      null,
+      [
+        "GOOG",
+        "2022-01-01 00:00:00",
+        12.3,
+        43
+      ]
+    ],
+    "status": [
+      "COMPLETE",
+      "ERROR",
+      "COMPLETE"
+    ],
+    "detailedStatus": [
+      [
+        {
+          "featureGroupId": 15,
+          "operationId": "0 | 15",
+          "httpStatus": 200,
+          "message": "Ok"
+        }
+      ],
+      [
+        {
+          "featureGroupId": 15,
+          "operationId": "1 | 15",
+          "httpStatus": 500,
+          "message": "Internal server error."
+        }
+      ],
+      [
+        {
+          "featureGroupId": 15,
+          "operationId": "2 | 15",
+          "httpStatus": 200,
+          "message": "Ok"
+        }
+      ]
+    ]
+  },
+  "bad_request_primary_key_or_passed_features_error": {
+    "code": 12,
+    "message": "Wrong primay-key column. Column: ts",
+    "reason": "Incorrect primary key."
+  },
+  "bad_request_feature_store_view_not_exist": {
+    "code": 2,
+    "message": "",
+    "reason": "Feature View/Store does not exist."
+  },
+  "unauthorized_request_error": {
+    "code": 17,
+    "message": "",
+    "reason": "Accessing unshared feature store failed"
+  },
+  "internal_server_error": {
+    "code": 13,
+    "message": "Internal server error",
+    "reason": "Internal server error"
+  }
+}

@@ -188,6 +188,13 @@ For general questions about the usage of Hopsworks and the Feature Store please 
 
 Please report any issue using [Github issue tracking](https://github.com/logicalclocks/feature-store-api/issues).
 
+Please attach the client environment from the output below in the issue:
+```python
+import hopsworks
+import hsfs
+hopsworks.login().get_feature_store()
+print(hsfs.get_env())
+```
 
 ## Contributing
 
