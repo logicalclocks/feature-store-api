@@ -2051,7 +2051,6 @@ class FeatureGroup(FeatureGroupBase):
         self._created = created
         self._creator = user.User.from_response_json(creator)
 
-        self.check_features(features)
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -2068,6 +2067,7 @@ class FeatureGroup(FeatureGroupBase):
         self._materialization_job: "Job" = None
 
         if self._id:
+            self.check_features(features)
             # initialized by backend
             self.primary_key: List[str] = [
                 feat.name for feat in self._features if feat.primary is True
@@ -3476,7 +3476,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._data_format = data_format.upper() if data_format else None
         self._path = path
 
-        self.check_features(features)
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -3487,6 +3486,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
 
         if self._id:
+            self.check_features(features)
             # Got from Hopsworks, deserialize features and storage connector
             self._features = (
                 [
@@ -4009,7 +4009,6 @@ class SpineGroup(FeatureGroupBase):
         self._created = created
         self._creator = user.User.from_response_json(creator)
 
-        self.check_features(features)
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -4021,6 +4020,7 @@ class SpineGroup(FeatureGroupBase):
         self._statistics_config = None
 
         if self._id:
+            self.check_features(features)
             # Got from Hopsworks, deserialize features and storage connector
             self._features = (
                 [
