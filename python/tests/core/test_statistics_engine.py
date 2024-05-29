@@ -19,6 +19,7 @@ import json
 import pytest
 from hsfs import (
     engine,
+    feature,
     feature_group,
     feature_view,
     statistics_config,
@@ -395,6 +396,12 @@ class TestStatisticsEngine:
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
+        features = [
+            feature.Feature(name="pk", type="int"),
+            feature.Feature(name="et", type="timestamp"),
+            feature.Feature(name="feat", type="int"),
+        ]
+
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
@@ -402,6 +409,7 @@ class TestStatisticsEngine:
             primary_key=[],
             partition_key=[],
             id=10,
+            features=features,
         )
 
         feature_dataframe = mocker.Mock()
