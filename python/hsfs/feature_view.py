@@ -779,7 +779,6 @@ class FeatureView:
         feature: Optional[Feature] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0,
         external: Optional[bool] = None,
     ) -> List[List[Any]]:
         """
@@ -795,7 +794,6 @@ class FeatureView:
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
-            min_score: The minimum similarity score for neighbors to be considered (default is 0).
 
         # Returns
             A list of feature values
@@ -834,7 +832,6 @@ class FeatureView:
             feature=(feature if feature else None),
             k=k,
             filter=filter,
-            min_score=min_score,
         )
         if len(results) == 0:
             return []

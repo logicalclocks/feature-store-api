@@ -2300,7 +2300,6 @@ class FeatureGroup(FeatureGroupBase):
         col: Optional[str] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0,
         options: Optional[dict] = None,
     ) -> List[Tuple[float, List[Any]]]:
         """
@@ -2316,7 +2315,6 @@ class FeatureGroup(FeatureGroupBase):
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
-            min_score: The minimum similarity score for neighbors to be considered (default is 0).
             options: The options used for the request to the vector database.
                 The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
 
@@ -2356,7 +2354,6 @@ class FeatureGroup(FeatureGroupBase):
             feature=(self.__getattr__(col) if col else None),
             k=k,
             filter=filter,
-            min_score=min_score,
             options=options,
         )
         return [
@@ -3777,7 +3774,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         col: Optional[str] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0,
         options: Optional[dict] = None,
     ) -> List[Tuple[float, List[Any]]]:
         """
@@ -3793,7 +3789,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
-            min_score: The minimum similarity score for neighbors to be considered (default is 0).
             options: The options used for the request to the vector database.
                 The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
         # Returns
@@ -3832,7 +3827,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
             feature=(self.__getattr__(col) if col else None),
             k=k,
             filter=filter,
-            min_score=min_score,
             options=options,
         )
         return [

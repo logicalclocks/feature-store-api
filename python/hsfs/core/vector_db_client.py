@@ -111,7 +111,6 @@ class VectorDbClient:
         index_name=None,
         k=10,
         filter: Union[Filter, Logic] = None,
-        min_score=0,
         options=None,
     ):
         if not feature:
