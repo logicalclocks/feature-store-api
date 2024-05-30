@@ -907,7 +907,10 @@ class VectorServer:
                 [
                     f.name
                     for f in features
-                    if f.feature_group.name == serving_key.feature_group.name
+                    if (
+                        f.feature_group.name == serving_key.feature_group.name
+                        and not f.label
+                    )
                 ]
             )
         return per_serving_key_features
