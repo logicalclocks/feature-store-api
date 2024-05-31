@@ -78,7 +78,7 @@ class OnlineStoreRestClientSingleton:
     SERVER_API_VERSION = "server_api_version"
     API_KEY = "api_key"
     _DEFAULT_ONLINE_STORE_REST_CLIENT_PORT = 4406
-    _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS = 2000
+    _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_SECOND = 2
     _DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS = True
     _DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL = True
     _DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION = "0.1.0"
@@ -212,7 +212,7 @@ class OnlineStoreRestClientSingleton:
             "Retrieving default static configuration for Online Store REST Client."
         )
         return {
-            self.TIMEOUT: self._DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS,
+            self.TIMEOUT: self._DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_SECOND,
             self.VERIFY_CERTS: self._DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS,
             self.USE_SSL: self._DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL,
             self.SERVER_API_VERSION: self._DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION,
@@ -292,9 +292,11 @@ class OnlineStoreRestClientSingleton:
                 method, url=url.url, headers=headers, data=data, auth=self.auth
             )
         )
+        timeout = self._current_config[self.TIMEOUT]
         return self._session.send(
             prepped_request,
-            timeout=self._current_config[self.TIMEOUT] / 1000,
+            # compatibility with 3.7
+            timeout=timeout if timeout < 500 else timeout / 1000,
         )
 
     def _check_hopsworks_connection(self) -> None:
