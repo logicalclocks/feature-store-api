@@ -784,7 +784,7 @@ class FeatureView:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
-        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        If `filter` is specified, or if embedding feature is stored in default project index,
         the number of results returned may be less than k. Try using a large value of k and extract the top k
         items from the results if needed.
 
