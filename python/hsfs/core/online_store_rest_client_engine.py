@@ -323,7 +323,7 @@ class OnlineStoreRestClientEngine:
                         self.feature_names_per_fg_id[operation_status["featureGroupId"]]
                     )
             _logger.debug(
-                f"Features names which failed on read: {failed_read_feature_names}."
+                f"Feature names which failed on read: {failed_read_feature_names}."
             )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
