@@ -173,13 +173,6 @@ class FeatureGroupBase:
                 stacklevel=1,
             )
 
-    def check_features(self) -> None:
-        if self._features:
-            warnings.warn(
-                f"Feature Group `{self._name}`, version `{self._version}` has no features",
-                stacklevel=1,
-            )
-
     def delete(self) -> None:
         """Drop the entire feature group along with its feature data.
 

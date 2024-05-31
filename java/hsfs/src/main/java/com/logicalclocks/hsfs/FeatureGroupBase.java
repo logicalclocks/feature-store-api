@@ -144,12 +144,6 @@ public abstract class FeatureGroupBase<T> {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
-  public void checkFeatures() {
-    if (this.features == null || this.features.isEmpty()) {
-      LOGGER.warn(String.format("Feature Group `%s`, version `%s` has no features", this.name, this.version));
-    }
-  }
-
   public void setDeprecated(Boolean deprecated) {
     this.deprecated = deprecated;
     checkDeprecated();

@@ -199,7 +199,29 @@
       "featurestoreId": 67,
       "id": 15,
       "name": "fg_test",
-      "version": 1
+      "version": 1,
+      "features": [
+        {
+          "defaultValue": null,
+          "featureGroupId": 15,
+          "hudiPrecombineKey": true,
+          "name": "intt",
+          "onlineType": "int",
+          "partition": false,
+          "primary": true,
+          "type": "int"
+        },
+        {
+          "defaultValue": null,
+          "featureGroupId": 15,
+          "hudiPrecombineKey": false,
+          "name": "stringt",
+          "onlineType": "varchar(1000)",
+          "partition": false,
+          "primary": false,
+          "type": "string"
+        }
+      ]
     },
     "method": "GET",
     "path_params": [
