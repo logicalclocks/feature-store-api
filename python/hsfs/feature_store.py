@@ -164,6 +164,7 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         feature_group_object = self._feature_group_api.get(self.id, name, version)
         feature_group_object.feature_store = self
+        feature_group_object.check_features()
         return feature_group_object
 
     def get_feature_groups(
@@ -203,6 +204,7 @@ class FeatureStore:
         feature_group_object = self._feature_group_api.get(self.id, name, None)
         for fg_object in feature_group_object:
             fg_object.feature_store = self
+            fg_object.check_features()
         return feature_group_object
 
     @usage.method_logger
@@ -275,6 +277,7 @@ class FeatureStore:
             version,
         )
         feature_group_object.feature_store = self
+        feature_group_object.check_features()
         return feature_group_object
 
     @usage.method_logger
@@ -333,6 +336,7 @@ class FeatureStore:
         )
         for fg_object in feature_group_object:
             fg_object.feature_store = self
+            fg_object.check_features()
         return feature_group_object
 
     def get_training_dataset(
@@ -618,6 +622,7 @@ class FeatureStore:
             notification_topic_name=notification_topic_name,
         )
         feature_group_object.feature_store = self
+        feature_group_object.check_features()
         return feature_group_object
 
     @usage.method_logger
@@ -733,6 +738,7 @@ class FeatureStore:
         try:
             feature_group_object = self._feature_group_api.get(self.id, name, version)
             feature_group_object.feature_store = self
+            feature_group_object.check_features()
             return feature_group_object
         except exceptions.RestAPIError as e:
             if (
@@ -1145,6 +1151,7 @@ class FeatureStore:
             spine = self._feature_group_api.get(self.id, name, version)
             spine.feature_store = self
             spine.dataframe = dataframe
+            spine.check_features()
             return spine
         except exceptions.RestAPIError as e:
             if (
