@@ -1439,7 +1439,8 @@ class Engine:
         elif not isinstance(
             feature_group, ExternalFeatureGroup
         ) and self._start_offline_materialization(offline_write_options):
-            if not offline_write_options.get("skip_offsets", False):
+            if (not offline_write_options.get("skip_offsets", False)
+                and self._job_api.last_execution(feature_group.materialization_job)): # always skip offsets if executing job for the first time
                 # don't provide the current offsets (read from where the job last left off)
                 initial_check_point = ""
             # provide the initial_check_point as it will reduce the read amplification of materialization job

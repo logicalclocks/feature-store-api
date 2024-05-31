@@ -256,9 +256,13 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
-        options: Optional[dict] = None,
-        init_online_store_sql_client: Optional[bool] = None,
-        init_online_store_rest_client: bool = False,
+        options: Optional[Dict[str, Any]] = None,
+        init_sql_client: Optional[bool] = None,
+        init_rest_client: bool = False,
+        reset_rest_client: bool = False,
+        config_rest_client: Optional[Dict[str, Any]] = None,
+        default_client: Optional[Literal["sql", "rest"]] = None,
+        **kwargs,
     ) -> None:
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
@@ -283,9 +287,28 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used which relies on the private IP.
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
+            init_sql_client: boolean, optional. By default the sql client is initialised if no
+                client is specified to match legacy behaviour. If set to True, this ensure the online store
+                sql client is initialised, otherwise if init_rest_client is set to true it will
+                skip initialising the sql client.
+            init_rest_client: boolean, defaults to False. By default the rest client is not initialised.
+                If set to True, this ensure the online store rest client is initialised. Pass additional configuration
+                options via the rest_config parameter. Set reset_rest_client to True to reset the rest client.
+            default_client: string, optional. Which client to default to if both are initialised. Defaults to None.
             options: Additional options as key/value pairs for configuring online serving engine.
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
+            reset_rest_client: boolean, defaults to False. If set to True, the rest client will be reset and reinitialised with provided configuration.
+            config_rest_client: dictionary, optional. Additional configuration options for the rest client. If the client is already initialised,
+                this will be ignored. Options include:
+                * `host`: string, optional. The host of the online store. Dynamically set if not provided.
+                * `port`: int, optional. The port of the online store. Defaults to 4406.
+                * `verify_certs`: boolean, optional. Verify the certificates of the online store server. Defaults to True.
+                * `api_key`: string, optional. The API key to authenticate with the online store. The api key must be
+                    provided if initialising the rest client in an internal environment.
+                * `timeout`: int, optional. The timeout for the rest client in seconds. Defaults to 2.
+                * `use_ssl`: boolean, optional. Use SSL to connect to the online store. Defaults to True.
+
         """
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
@@ -298,6 +321,12 @@ class FeatureView:
                 self.init_batch_scoring(1)
             else:
                 raise e
+
+        # Compatibility with 3.7
+        if init_sql_client is None:
+            init_sql_client = kwargs.get("init_online_store_sql_client", None)
+        if init_rest_client is False:
+            init_rest_client = kwargs.get("init_online_store_rest_client", False)
 
         if training_dataset_version is None:
             training_dataset_version = 1
@@ -323,8 +352,11 @@ class FeatureView:
             external=external,
             inference_helper_columns=True,
             options=options,
-            init_online_store_sql_client=init_online_store_sql_client,
-            init_online_store_rest_client=init_online_store_rest_client,
+            init_sql_client=init_sql_client,
+            init_rest_client=init_rest_client,
+            reset_rest_client=reset_rest_client,
+            config_rest_client=config_rest_client,
+            default_client=default_client,
         )
 
         self._prefix_serving_key_map = dict(
@@ -499,6 +531,10 @@ class FeatureView:
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
+            force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the REST client if initialised.
+            force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
@@ -602,6 +638,10 @@ class FeatureView:
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
+            force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the SQL client if initialised.
+            force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
@@ -616,9 +656,7 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(
-                external=external, init_online_store_rest_client=force_rest_client
-            )
+            self.init_serving(external=external, init_rest_client=force_rest_client)
         vector_db_features = []
         if self._vector_db_client:
             for _entry in entry:
@@ -676,9 +714,7 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(
-                external=external, init_online_store_rest_client=force_rest_client
-            )
+            self.init_serving(external=external, init_rest_client=force_rest_client)
         return self._vector_server.get_inference_helper(
             entry, return_type, force_rest_client, force_sql_client
         )
@@ -739,9 +775,7 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(
-                external=external, init_online_store_rest_client=force_rest_client
-            )
+            self.init_serving(external=external, init_rest_client=force_rest_client)
         return self._vector_server.get_inference_helpers(
             self, entry, return_type, force_rest_client, force_sql_client
         )
