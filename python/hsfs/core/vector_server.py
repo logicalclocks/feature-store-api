@@ -1021,12 +1021,13 @@ class VectorServer:
                 f.name
                 for f in self._features
                 if (
-                    f.type == "timestamp"
-                    or f.feature_group.id in self._skip_fg_ids
+                    (
+                        f.type == "timestamp"
+                        or (f.feature_group.id in self._skip_fg_ids and f.is_complex())
+                    )
                     and not (
                         f.label or f.training_helper_column or f.inference_helper_column
                     )
-                    and f.is_complex()
                 )
             }
         return self._feature_to_handle_if_rest
