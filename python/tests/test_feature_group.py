@@ -145,13 +145,13 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == ""
         assert fg.partition_key == []
-        assert fg.primary_key == []
+        assert fg.primary_key == ['intt']
         assert fg.hudi_precombine_key is None
         assert fg._feature_store_name is None
         assert fg.created is None
         assert fg.creator is None
         assert fg.id == 15
-        assert len(fg.features) == 0
+        assert len(fg.features) == 2
         assert fg.location is None
         assert fg.online_enabled is False
         assert fg.time_travel_format is None
