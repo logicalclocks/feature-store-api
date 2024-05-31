@@ -123,8 +123,11 @@ class FeatureGroupApi:
                 )
 
         if version is not None:
+            fg_objs[0].check_features()
             return fg_objs[0]
         else:
+            for fg_obj in fg_objs:
+                fg_obj.check_features()
             return fg_objs
 
     def get_by_id(
