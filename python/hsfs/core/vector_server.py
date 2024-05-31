@@ -120,8 +120,8 @@ class VectorServer:
         self._init_rest_client: Optional[bool] = None
         self._init_sql_client: Optional[bool] = None
         self._default_client: Optional[Literal["rest", "sql"]] = None
-
-        self.set_return_feature_value_handlers(features=self._features)
+        self._return_feature_value_handlers: Dict[str, Callable] = {}
+        self._feature_to_handle_if_rest: Optional[Set[str]] = None
 
     def init_serving(
         self,
@@ -278,6 +278,7 @@ class VectorServer:
             passed_values=passed_features or {},
             vector_db_result=vector_db_features or {},
             allow_missing=allow_missing,
+            client=online_client_choice,
         )
 
         return self.handle_feature_vector_return_type(
@@ -379,6 +380,7 @@ class VectorServer:
                 passed_values=passed_values,
                 vector_db_result=vector_db_result,
                 allow_missing=allow_missing,
+                client=online_client_choice,
             )
 
             if vector is not None:
@@ -394,6 +396,7 @@ class VectorServer:
         passed_values: Optional[Dict[str, Any]],
         vector_db_result: Optional[Dict[str, Any]],
         allow_missing: bool,
+        client: Literal["rest", "sql"],
     ) -> Optional[List[Any]]:
         """Assembles serving vector from online feature store."""
         # Errors in batch requests are returned as None values
@@ -429,7 +432,7 @@ class VectorServer:
             )
 
         if len(self.return_feature_value_handlers) > 0:
-            self.apply_return_value_handlers(result_dict)
+            self.apply_return_value_handlers(result_dict, client=client)
         if len(self.transformation_functions) > 0:
             self.apply_transformation(result_dict)
 
@@ -642,12 +645,18 @@ class VectorServer:
             ].transformation_fn(row_dict[feature_name])
         return row_dict
 
-    def apply_return_value_handlers(self, row_dict: Dict[str, Any]):
-        matching_keys = set(self.return_feature_value_handlers.keys()).intersection(
-            row_dict.keys()
-        )
+    def apply_return_value_handlers(
+        self, row_dict: Dict[str, Any], client: Literal["rest", "sql"]
+    ):
+        if client == self.DEFAULT_REST_CLIENT:
+            matching_keys = self.feature_to_handle_if_rest.intersection(row_dict.keys())
+        else:
+            matching_keys = set(self.return_feature_value_handlers.keys()).intersection(
+                row_dict.keys()
+            )
         _logger.debug("Applying return value handlers to : %s", matching_keys)
         for fname in matching_keys:
+            _logger.debug("Applying return value handler to feature: %s", fname)
             row_dict[fname] = self.return_feature_value_handlers[fname](row_dict[fname])
         return row_dict
 
@@ -734,7 +743,6 @@ class VectorServer:
             and len(self._return_feature_value_handlers) > 0
         ):
             return
-        self._return_feature_value_handlers = {}
         if len(features) == 0:
             return
         _logger.debug(
@@ -1002,6 +1010,26 @@ class VectorServer:
         self,
     ) -> tf_engine_mod.TransformationFunctionEngine:
         return self._transformation_function_engine
+
+    @property
+    def feature_to_handle_if_rest(self) -> Set[str]:
+        # RonDB REST client already deserialize complex features
+        # Only timestamp need converting to datetime obj and
+        # complex features retrieved via opensearch need to be deserialized
+        if self._feature_to_handle_if_rest is None:
+            self._feature_to_handle_if_rest = {
+                f.name
+                for f in self._features
+                if (
+                    f.type == "timestamp"
+                    or f.feature_group.id in self._skip_fg_ids
+                    and not (
+                        f.label or f.training_helper_column or f.inference_helper_column
+                    )
+                    and f.is_complex()
+                )
+            }
+        return self._feature_to_handle_if_rest
 
     @property
     def default_client(self) -> str:
