@@ -347,7 +347,6 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     // There has to be one otherwise an exception would have been thrown.
     FeatureGroup resultFg = offlineFeatureGroups[0];
     resultFg.setFeatureStore(featureStore);
-    resultFg.checkFeatures();
     return resultFg;
   }
 
@@ -356,9 +355,6 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     FeatureGroup[] offlineFeatureGroups =
         featureGroupApi.getInternal(featureStore, fgName, null, FeatureGroup[].class);
 
-    for (FeatureGroup resultFg: offlineFeatureGroups) {
-      resultFg.checkFeatures();
-    }
     return Arrays.asList(offlineFeatureGroups);
   }
 
@@ -406,7 +402,6 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     // There has to be one otherwise an exception would have been thrown.
     StreamFeatureGroup resultFg = streamFeatureGroups[0];
     resultFg.setFeatureStore(featureStore);
-    resultFg.checkFeatures();
     return resultFg;
   }
 
@@ -415,9 +410,6 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     StreamFeatureGroup[] streamFeatureGroups =
         featureGroupApi.getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
 
-    for (StreamFeatureGroup resultFg: streamFeatureGroups) {
-      resultFg.checkFeatures();
-    }
     return Arrays.asList(streamFeatureGroups);
   }
 
@@ -500,9 +492,6 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     ExternalFeatureGroup[] offlineFeatureGroups =
         featureGroupApi.getInternal(featureStore, fgName, null, ExternalFeatureGroup[].class);
 
-    for (ExternalFeatureGroup resultFg: offlineFeatureGroups) {
-      resultFg.checkFeatures();
-    }
     return Arrays.asList(offlineFeatureGroups);
   }
 
@@ -515,7 +504,6 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     // There has to be one otherwise an exception would have been thrown.
     ExternalFeatureGroup resultFg = offlineFeatureGroups[0];
     resultFg.setFeatureStore(featureStore);
-    resultFg.checkFeatures();
     return resultFg;
   }
 

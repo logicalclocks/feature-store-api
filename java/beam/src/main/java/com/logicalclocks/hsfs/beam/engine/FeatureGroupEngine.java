@@ -44,7 +44,6 @@ public class FeatureGroupEngine extends FeatureGroupEngineBase {
     // There has to be one otherwise an exception would have been thrown.
     StreamFeatureGroup resultFg = streamFeatureGroups[0];
     resultFg.setFeatureStore(featureStore);
-    resultFg.checkFeatures();
     return resultFg;
   }
 
@@ -53,9 +52,6 @@ public class FeatureGroupEngine extends FeatureGroupEngineBase {
     StreamFeatureGroup[] streamFeatureGroups =
       featureGroupApi.getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
 
-    for (StreamFeatureGroup resultFg: streamFeatureGroups) {
-      resultFg.checkFeatures();
-    }
     return Arrays.asList(streamFeatureGroups);
   }
 }

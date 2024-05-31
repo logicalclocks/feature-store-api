@@ -71,6 +71,13 @@ public class FeatureGroupApi {
 
     LOGGER.info("Sending metadata request: " + uriString);
     T[] featureGroups = hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
+    if (fgVersion != null) {
+      featureGroups[0].checkFeatures();
+    } else {
+      for (T resultFg: featureGroups) {
+        resultFg.checkFeatures();
+      }
+    }
     return featureGroups;
   }
 
