@@ -532,7 +532,7 @@ class FeatureGroupApi:
             explicit_provenance.Links.Direction.DOWNSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
-    
+
     def _check_features(self, feature_group_instance) -> None:
         if not feature_group_instance._features:
             warnings.warn(
