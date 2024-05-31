@@ -622,7 +622,6 @@ class FeatureStore:
             notification_topic_name=notification_topic_name,
         )
         feature_group_object.feature_store = self
-        feature_group_object.check_features()
         return feature_group_object
 
     @usage.method_logger

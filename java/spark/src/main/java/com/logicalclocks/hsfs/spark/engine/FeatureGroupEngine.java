@@ -356,7 +356,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     FeatureGroup[] offlineFeatureGroups =
         featureGroupApi.getInternal(featureStore, fgName, null, FeatureGroup[].class);
 
-    for(FeatureGroup resultFg: offlineFeatureGroups) {
+    for (FeatureGroup resultFg: offlineFeatureGroups) {
       resultFg.checkFeatures();
     }
     return Arrays.asList(offlineFeatureGroups);
@@ -415,7 +415,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     StreamFeatureGroup[] streamFeatureGroups =
         featureGroupApi.getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
 
-    for(StreamFeatureGroup resultFg: streamFeatureGroups) {
+    for (StreamFeatureGroup resultFg: streamFeatureGroups) {
       resultFg.checkFeatures();
     }
     return Arrays.asList(streamFeatureGroups);
@@ -500,7 +500,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
     ExternalFeatureGroup[] offlineFeatureGroups =
         featureGroupApi.getInternal(featureStore, fgName, null, ExternalFeatureGroup[].class);
 
-    for(ExternalFeatureGroup resultFg: offlineFeatureGroups) {
+    for (ExternalFeatureGroup resultFg: offlineFeatureGroups) {
       resultFg.checkFeatures();
     }
     return Arrays.asList(offlineFeatureGroups);

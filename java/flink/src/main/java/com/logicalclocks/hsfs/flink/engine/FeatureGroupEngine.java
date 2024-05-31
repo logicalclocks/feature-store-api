@@ -57,7 +57,7 @@ public class FeatureGroupEngine extends FeatureGroupEngineBase {
     StreamFeatureGroup[] streamFeatureGroups =
       featureGroupApi.getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
 
-    for(StreamFeatureGroup resultFg: streamFeatureGroups) {
+    for (StreamFeatureGroup resultFg: streamFeatureGroups) {
       resultFg.checkFeatures();
     }
     return Arrays.asList(streamFeatureGroups);
