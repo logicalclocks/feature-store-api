@@ -813,13 +813,12 @@ class FeatureView:
         feature: Optional[Feature] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0,
         external: Optional[bool] = None,
     ) -> List[List[Any]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
-        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        If `filter` is specified, or if embedding feature is stored in default project index,
         the number of results returned may be less than k. Try using a large value of k and extract the top k
         items from the results if needed.
 
@@ -829,7 +828,6 @@ class FeatureView:
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
-            min_score: The minimum similarity score for neighbors to be considered (default is 0).
 
         # Returns
             A list of feature values
@@ -868,7 +866,6 @@ class FeatureView:
             feature=(feature if feature else None),
             k=k,
             filter=filter,
-            min_score=min_score,
         )
         if len(results) == 0:
             return []
