@@ -170,9 +170,9 @@ class EmbeddingIndex:
     ):
         self._index_name = index_name
         if features is None:
-            self._features = {}
+            self._features = []
         else:
-            self._features = dict([(feat.name, feat) for feat in features])
+            self._features = features
         self._feature_group = None
         self._col_prefix = col_prefix
 
@@ -198,8 +198,8 @@ class EmbeddingIndex:
             dimension: The dimensionality of the embedding feature.
             similarity_function_type: The type of similarity function to be used.
         """
-        self._features[name] = EmbeddingFeature(
-            name, dimension, similarity_function_type
+        self._features.append(
+            EmbeddingFeature(name, dimension, similarity_function_type)
         )
 
     def get_embedding(self, name):
@@ -221,10 +221,10 @@ class EmbeddingIndex:
         # Returns
             A list of `hsfs.embedding.EmbeddingFeature` objects
         """
-        for feat in self._features.values():
+        for feat in self._features:
             feat.feature_group = self._feature_group
             feat.embedding_index = self
-        return self._features.values()
+        return self._features
 
     @classmethod
     def from_json_response(cls, json_dict):
@@ -271,7 +271,7 @@ class EmbeddingIndex:
         """
         return {
             "indexName": self._index_name,
-            "features": list(self._features.values()),
+            "features": self._features,
             "colPrefix": self._col_prefix,
         }
 
