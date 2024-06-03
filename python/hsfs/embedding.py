@@ -15,7 +15,8 @@
 #
 
 from dataclasses import dataclass
-
+from hsfs import client
+from hsfs.client.exceptions import FeatureStoreException
 import json
 from typing import Optional, List
 import humps
@@ -26,6 +27,15 @@ from hsfs import (
 
 
 class SimilarityFunctionType:
+    """
+    Enumeration class representing different types of similarity functions.
+
+    # Attributes
+        L2 (str): Represents L2 norm similarity function.
+        COSINE (str): Represents cosine similarity function.
+        DOT_PRODUCT (str): Represents dot product similarity function.
+    """
+
     L2 = "l2_norm"
     COSINE = "cosine"
     DOT_PRODUCT = "dot_product"
@@ -41,19 +51,27 @@ class EmbeddingFeature:
         dimension: The dimensionality of the embedding feature.
         similarity_function_type: The type of similarity function used for the embedding feature.
           Available functions are `L2`, `COSINE`, and `DOT_PRODUCT`.
-          (default is SimilarityFunctionType.L2).
+          (default is `SimilarityFunctionType.L2`).
         feature_group: The feature group object that contains the embedding feature.
-        embedding_index: The name of the index in the vector database that will store the embedding feature.
+        embedding_index: `EmbeddingIndex` The index for managing embedding features.
     """
 
-    name: str
-    dimension: int
-    similarity_function_type: SimilarityFunctionType = SimilarityFunctionType.L2
-    feature_group = None
-    embedding_index = None
+    def __init__(
+        self,
+        name: str = None,
+        dimension: int = None,
+        similarity_function_type: SimilarityFunctionType = SimilarityFunctionType.L2,
+        feature_group=None,
+        embedding_index=None,
+    ):
+        self._name = name
+        self._dimension = dimension
+        self._similarity_function_type = similarity_function_type
+        self._feature_group = feature_group
+        self._embedding_index = embedding_index
 
     @classmethod
-    def from_json_response(cls, json_dict):
+    def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         return cls(
             name=json_decamelized.get("name"),
@@ -61,14 +79,64 @@ class EmbeddingFeature:
             similarity_function_type=json_decamelized.get("similarity_function_type"),
         )
 
+    @property
+    def name(self):
+        """str: The name of the embedding feature."""
+        return self._name
+
+    @property
+    def dimenstion(self):
+        """int: The dimensionality of the embedding feature."""
+        return self._dimension
+
+    @property
+    def similarity_function_type(self):
+        """SimilarityFunctionType: The type of similarity function used for the embedding feature."""
+        return self._similarity_function_type
+
+    @property
+    def feature_group(self):
+        """FeatureGroup: The feature group object that contains the embedding feature."""
+        return self._feature_group
+
+    @feature_group.setter
+    def feature_group(self, feature_group):
+        """Set the feature group object that contains the embedding feature.
+
+        Args:
+            feature_group (FeatureGroup): The feature group object.
+        """
+        self._feature_group = feature_group
+
+    @property
+    def embedding_index(self):
+        """EmbeddingIndex: The index for managing embedding features."""
+        return self._embedding_index
+
+    @embedding_index.setter
+    def embedding_index(self, embedding_index):
+        """Set the index for managing embedding features.
+
+        Args:
+            embedding_index (EmbeddingIndex): The embedding index object.
+        """
+        self._embedding_index = embedding_index
+
     def json(self):
+        """Serialize the EmbeddingFeature object to a JSON string."""
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
+        """
+        Convert the EmbeddingFeature object to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the EmbeddingFeature object.
+        """
         return {
-            "name": self.name,
-            "dimension": self.dimension,
-            "similarityFunctionType": self.similarity_function_type,
+            "name": self._name,
+            "dimension": self._dimension,
+            "similarityFunctionType": self._similarity_function_type,
         }
 
     def __repr__(self):
@@ -77,13 +145,14 @@ class EmbeddingFeature:
 
 class EmbeddingIndex:
     """
-    Represents an index for managing embeddings with associated features.
+    Represents an index for managing embedding features.
 
     # Arguments
-        index_name: The name of the embedding index.
-        features: A list of EmbeddingFeature objects for the features that
+        index_name: The name of the embedding index. The name of the project index is used if not provided.
+        features: A list of `EmbeddingFeature` objects for the features that
             contain embeddings that should be indexed for similarity search.
-        col_prefix: The prefix to be added to column names.
+        col_prefix: The prefix to be added to column names when using project index.
+            It is managed by Hopsworks and should not be provided.
 
     !!! Example
         ```
@@ -101,9 +170,9 @@ class EmbeddingIndex:
     ):
         self._index_name = index_name
         if features is None:
-            self._features = []
+            self._features = {}
         else:
-            self._features = features
+            self._features = dict([(feat.name, feat) for feat in features])
         self._feature_group = None
         self._col_prefix = col_prefix
 
@@ -129,9 +198,21 @@ class EmbeddingIndex:
             dimension: The dimensionality of the embedding feature.
             similarity_function_type: The type of similarity function to be used.
         """
-        self._features.append(
-            EmbeddingFeature(name, dimension, similarity_function_type)
+        self._features[name] = EmbeddingFeature(
+            name, dimension, similarity_function_type
         )
+
+    def get_embedding(self, name):
+        """
+        Returns the `hsfs.embedding.EmbeddingFeature` object associated with the feature name.
+
+        # Arguments
+            name (str): The name of the embedding feature.
+
+        # Returns
+            `hsfs.embedding.EmbeddingFeature` object
+        """
+        return self._features.get(name)
 
     def get_embeddings(self):
         """
@@ -140,18 +221,18 @@ class EmbeddingIndex:
         # Returns
             A list of `hsfs.embedding.EmbeddingFeature` objects
         """
-        for feat in self._features:
+        for feat in self._features.values():
             feat.feature_group = self._feature_group
             feat.embedding_index = self
-        return self._features
+        return self._features.values()
 
     @classmethod
-    def from_json_response(cls, json_dict):
+    def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         return cls(
             index_name=json_decamelized.get("index_name"),
             features=[
-                EmbeddingFeature.from_json_response(f)
+                EmbeddingFeature.from_response_json(f)
                 for f in json_decamelized.get("features")
             ],
             col_prefix=json_decamelized.get("col_prefix"),
@@ -159,27 +240,38 @@ class EmbeddingIndex:
 
     @property
     def feature_group(self):
+        """FeatureGroup: The feature group object that contains the embedding feature."""
         return self._feature_group
 
     @feature_group.setter
     def feature_group(self, feature_group):
+        """Setter for the feature group object."""
         self._feature_group = feature_group
 
     @property
     def index_name(self):
+        """str: The name of the embedding index."""
         return self._index_name
 
     @property
     def col_prefix(self):
+        """str: The prefix to be added to column names."""
         return self._col_prefix
 
     def json(self):
+        """Serialize the EmbeddingIndex object to a JSON string."""
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
+        """
+        Convert the EmbeddingIndex object to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the EmbeddingIndex object.
+        """
         return {
             "indexName": self._index_name,
-            "features": self._features,
+            "features": list(self._features.values()),
             "colPrefix": self._col_prefix,
         }
 
