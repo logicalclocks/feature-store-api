@@ -71,7 +71,7 @@ class EmbeddingFeature:
         self._embedding_index = embedding_index
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_json_response(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         return cls(
             name=json_decamelized.get("name"),
@@ -227,12 +227,12 @@ class EmbeddingIndex:
         return self._features.values()
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_json_response(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         return cls(
             index_name=json_decamelized.get("index_name"),
             features=[
-                EmbeddingFeature.from_response_json(f)
+                EmbeddingFeature.from_json_response(f)
                 for f in json_decamelized.get("features")
             ],
             col_prefix=json_decamelized.get("col_prefix"),
