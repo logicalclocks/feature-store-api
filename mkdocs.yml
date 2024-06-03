@@ -71,6 +71,8 @@ extra:
     provider: google
     property: G-64FEEXPSDN
   generator: false
+  version:
+    default: latest
   social:
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/logicalclocks
@@ -93,6 +95,8 @@ extra_javascript:
 
 plugins:
     - search
+    - mike:
+        canonical_version: latest
 
 markdown_extensions:
     - admonition
