@@ -15,8 +15,6 @@
 #
 
 from dataclasses import dataclass
-from hsfs import client
-from hsfs.client.exceptions import FeatureStoreException
 import json
 from typing import Optional, List
 import humps
@@ -201,18 +199,6 @@ class EmbeddingIndex:
         self._features.append(
             EmbeddingFeature(name, dimension, similarity_function_type)
         )
-
-    def get_embedding(self, name):
-        """
-        Returns the `hsfs.embedding.EmbeddingFeature` object associated with the feature name.
-
-        # Arguments
-            name (str): The name of the embedding feature.
-
-        # Returns
-            `hsfs.embedding.EmbeddingFeature` object
-        """
-        return self._features.get(name)
 
     def get_embeddings(self):
         """
