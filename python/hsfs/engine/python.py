@@ -804,6 +804,9 @@ class Engine:
         self,
         dataframe: Union[pd.DataFrame, pl.DataFrame],
         time_travel_format: Optional[str] = None,
+        transformation_functions: Optional[
+            List[transformation_function.TransformationFunction]
+        ] = None,
     ) -> List[feature.Feature]:
         if isinstance(dataframe, pd.DataFrame):
             arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
@@ -812,6 +815,20 @@ class Engine:
         ):
             arrow_schema = dataframe.to_arrow().schema
         features = []
+        transformed_features = []
+        dropped_features = []
+
+        if transformation_functions:
+            for tf in transformation_functions:
+                transformed_features.append(
+                    feature.Feature(
+                        tf.hopsworks_udf.output_column_names[0],
+                        tf.hopsworks_udf.output_types[0],
+                        on_demand=True,
+                    )
+                )
+                dropped_features.extend(tf.hopsworks_udf.dropped_features)
+
         for feat_name in arrow_schema.names:
             name = util.autofix_feature_name(feat_name)
             try:
@@ -820,8 +837,10 @@ class Engine:
                 )
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}") from e
-            features.append(feature.Feature(name, converted_type))
-        return features
+            if name not in dropped_features:
+                features.append(feature.Feature(name, converted_type))
+
+        return features + transformed_features
 
     def parse_schema_training_dataset(
         self, dataframe: Union[pd.DataFrame, pl.DataFrame]
@@ -842,6 +861,11 @@ class Engine:
         online_write_options: Dict[str, Any],
         validation_id: Optional[int] = None,
     ) -> Optional[job.Job]:
+        if feature_group.transformation_functions:
+            dataframe = self._apply_transformation_function(
+                feature_group.transformation_functions, dataframe
+            )
+
         if (
             isinstance(feature_group, ExternalFeatureGroup)
             and feature_group.online_enabled
@@ -1319,7 +1343,7 @@ class Engine:
         # Raises
             `FeatureStoreException`: If any of the features mentioned in the transformation function is not present in the Feature View.
         """
-        transformed_features = set()
+        dropped_features = set()
 
         if isinstance(dataset, pl.DataFrame) or isinstance(
             dataset, pl.dataframe.frame.DataFrame
@@ -1342,7 +1366,7 @@ class Engine:
                     f"Features {missing_features} specified in the transformation function '{hopsworks_udf.function_name}' are not present in the feature view. Please specify the feature required correctly."
                 )
 
-            transformed_features.update(tf.hopsworks_udf.transformation_features)
+            dropped_features.update(tf.hopsworks_udf.dropped_features)
             dataset = pd.concat(
                 [
                     dataset,
@@ -1357,7 +1381,8 @@ class Engine:
                 ],
                 axis=1,
             )
-        dataset = dataset.drop(transformed_features, axis=1)
+        # TODO : Change this to dropped features
+        dataset = dataset.drop(dropped_features, axis=1)
         return dataset
 
     @staticmethod

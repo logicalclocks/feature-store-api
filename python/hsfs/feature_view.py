@@ -54,7 +54,7 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
 from hsfs.feature import Feature
-from hsfs.hopsworks_udf import HopsworksUdf
+from hsfs.hopsworks_udf import HopsworksUdf, UDFType
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -126,6 +126,7 @@ class FeatureView:
                     self.featurestore_id,
                     hopsworks_udf=transformation_function,
                     version=1,
+                    transformation_type=UDFType.MODEL_DEPENDENT,
                 )
                 if not isinstance(transformation_function, TransformationFunction)
                 else transformation_function
@@ -3378,6 +3379,7 @@ class FeatureView:
                 skm.ServingKey.from_response_json(sk) for sk in serving_keys
             ]
         transformation_functions = json_decamelized.get("transformation_functions", {})
+
         fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
@@ -3388,7 +3390,12 @@ class FeatureView:
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
             transformation_functions=[
-                TransformationFunction.from_response_json(transformation_function)
+                TransformationFunction.from_response_json(
+                    {
+                        **transformation_function,
+                        "transformation_type": UDFType.MODEL_DEPENDENT,
+                    }
+                )
                 for transformation_function in transformation_functions
             ]
             if transformation_functions

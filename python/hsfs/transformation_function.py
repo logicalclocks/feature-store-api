@@ -23,7 +23,7 @@ from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_engine
 from hsfs.decorators import typechecked
-from hsfs.hopsworks_udf import HopsworksUdf
+from hsfs.hopsworks_udf import HopsworksUdf, UDFType
 
 
 @typechecked
@@ -44,6 +44,7 @@ class TransformationFunction:
         hopsworks_udf: HopsworksUdf,
         version: Optional[int] = None,
         id: Optional[int] = None,
+        transformation_type: Optional[UDFType] = None,
         type=None,
         items=None,
         count=None,
@@ -65,6 +66,7 @@ class TransformationFunction:
             )
 
         self._hopsworks_udf: HopsworksUdf = hopsworks_udf
+        self._hopsworks_udf.udf_type = transformation_type
 
     def save(self) -> None:
         """Save a transformation function into the backend.
