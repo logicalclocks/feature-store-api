@@ -18,7 +18,7 @@ from __future__ import annotations
 import warnings
 from typing import List, Optional, Union
 
-from hsfs import client, feature_group_commit
+from hsfs import client, feature_group_commit, util
 from hsfs import feature_group as fg_mod
 from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf
 
@@ -537,5 +537,6 @@ class FeatureGroupApi:
         if not feature_group_instance._features:
             warnings.warn(
                 f"Feature Group `{feature_group_instance._name}`, version `{feature_group_instance._version}` has no features",
+                util.FeatureGroupWarning,
                 stacklevel=1,
             )
