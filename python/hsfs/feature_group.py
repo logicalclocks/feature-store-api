@@ -173,13 +173,6 @@ class FeatureGroupBase:
                 stacklevel=1,
             )
 
-    def check_features(self, features) -> None:
-        if not features:
-            warnings.warn(
-                f"Feature Group `{self._name}`, version `{self._version}` returned no features",
-                stacklevel=1,
-            )
-
     def delete(self) -> None:
         """Drop the entire feature group along with its feature data.
 
@@ -2067,7 +2060,6 @@ class FeatureGroup(FeatureGroupBase):
         self._materialization_job: "Job" = None
 
         if self._id:
-            self.check_features(features)
             # initialized by backend
             self.primary_key: List[str] = [
                 feat.name for feat in self._features if feat.primary is True
@@ -3483,7 +3475,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
 
         if self._id:
-            self.check_features(features)
             # Got from Hopsworks, deserialize features and storage connector
             self._features = (
                 [
@@ -4014,7 +4005,6 @@ class SpineGroup(FeatureGroupBase):
         self._statistics_config = None
 
         if self._id:
-            self.check_features(features)
             # Got from Hopsworks, deserialize features and storage connector
             self._features = (
                 [

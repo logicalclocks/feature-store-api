@@ -15,9 +15,10 @@
 #
 from __future__ import annotations
 
+import warnings
 from typing import List, Optional, Union
 
-from hsfs import client, feature_group_commit
+from hsfs import client, feature_group_commit, util
 from hsfs import feature_group as fg_mod
 from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf
 
@@ -123,8 +124,11 @@ class FeatureGroupApi:
                 )
 
         if version is not None:
+            self._check_features(fg_objs[0])
             return fg_objs[0]
         else:
+            for fg_obj in fg_objs:
+                self._check_features(fg_obj)
             return fg_objs
 
     def get_by_id(
@@ -528,3 +532,11 @@ class FeatureGroupApi:
             explicit_provenance.Links.Direction.DOWNSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
+
+    def _check_features(self, feature_group_instance) -> None:
+        if not feature_group_instance._features:
+            warnings.warn(
+                f"Feature Group `{feature_group_instance._name}`, version `{feature_group_instance._version}` has no features (to resolve this issue contact the admin or delete and recreate the feature group)",
+                util.FeatureGroupWarning,
+                stacklevel=1,
+            )
