@@ -300,8 +300,7 @@ public class FeatureGroupApi {
   private <T extends FeatureGroupBase> void checkFeatures(T fg) {
     if (fg.getFeatures() == null || fg.getFeatures().isEmpty()) {
       LOGGER.warn(String.format("Feature Group `%s`, version `%s` has no features " +
-          "(to resolve this issue contact the admin or delete and recreate the feature group)",
-        fg.getName(), fg.getVersion()));
+          "(to resolve this issue contact the admin or delete and recreate the feature group)", fg.getName(), fg.getVersion()));
     }
   }
 }
