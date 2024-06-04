@@ -536,7 +536,7 @@ class FeatureGroupApi:
     def _check_features(self, feature_group_instance) -> None:
         if not feature_group_instance._features:
             warnings.warn(
-                f"Feature Group `{feature_group_instance._name}`, version `{feature_group_instance._version}` has no features",
+                f"Feature Group `{feature_group_instance._name}`, version `{feature_group_instance._version}` has no features (to resolve this issue contact the admin or delete and recreate the feature group)",
                 util.FeatureGroupWarning,
                 stacklevel=1,
             )
