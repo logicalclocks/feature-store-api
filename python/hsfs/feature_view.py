@@ -814,6 +814,7 @@ class FeatureView:
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
         external: Optional[bool] = None,
+        return_type: Literal["list", "polars", "pandas"] = "list",
     ) -> List[List[Any]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
@@ -828,9 +829,17 @@ class FeatureView:
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"list"`, `"pandas"` or `"polars"`. Defaults to `"list"`.
 
         # Returns
-            A list of feature values
+            `list`, `pd.DataFrame` or `polars.DataFrame` if `return type` is set to `"list"`, `"pandas"` or
+            `"polars"` respectively. Defaults to `list`.
 
         !!! Example
             ```
@@ -874,7 +883,7 @@ class FeatureView:
 
         return self._vector_server.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
-            return_type="list",
+            return_type=return_type,
             vector_db_features=[res[1] for res in results],
             td_embedding_feature_names=td_embedding_feature_names,
             allow_missing=True,
