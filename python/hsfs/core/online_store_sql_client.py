@@ -557,8 +557,6 @@ class OnlineStoreSqlClient:
             hostname=self._hostname,
         )
 
-        return self._connection_pool
-
     async def _query_async_sql(self, stmt, bind_params):
         """Query prepared statement together with bind params using aiomysql connection pool"""
         if self._connection_pool is None:
