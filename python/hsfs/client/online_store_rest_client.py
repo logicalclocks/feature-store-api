@@ -56,7 +56,7 @@ def init_or_reset_online_store_rest_client(
         )
 
 
-def get_instance() -> "OnlineStoreRestClientSingleton":
+def get_instance() -> OnlineStoreRestClientSingleton:
     global _online_store_rest_client
     if _online_store_rest_client is None:
         _logger.warning(
@@ -78,7 +78,7 @@ class OnlineStoreRestClientSingleton:
     SERVER_API_VERSION = "server_api_version"
     API_KEY = "api_key"
     _DEFAULT_ONLINE_STORE_REST_CLIENT_PORT = 4406
-    _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS = 600
+    _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_SECOND = 2
     _DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS = True
     _DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL = True
     _DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION = "0.1.0"
@@ -91,7 +91,7 @@ class OnlineStoreRestClientSingleton:
         ] = None,
         optional_config: Optional[Dict[str, Any]] = None,
     ):
-        _logger.info(
+        _logger.debug(
             f"Initialising Online Store Rest Client {'with optional configuration' if optional_config else ''}."
         )
         if optional_config:
@@ -116,7 +116,7 @@ class OnlineStoreRestClientSingleton:
         ] = None,
         optional_config: Optional[Dict[str, Any]] = None,
     ):
-        _logger.info(
+        _logger.debug(
             f"Resetting Online Store Rest Client {'with optional configuration' if optional_config else ''}."
         )
         if optional_config:
@@ -140,7 +140,7 @@ class OnlineStoreRestClientSingleton:
         optional_config: Optional[Dict[str, Any]] = None,
         use_current_config: bool = True,
     ):
-        _logger.info("Setting up Online Store Rest Client.")
+        _logger.debug("Setting up Online Store Rest Client.")
         if optional_config and not isinstance(optional_config, dict):
             raise ValueError(
                 "optional_config must be a dictionary. See documentation for allowed keys and values."
@@ -212,7 +212,7 @@ class OnlineStoreRestClientSingleton:
             "Retrieving default static configuration for Online Store REST Client."
         )
         return {
-            self.TIMEOUT: self._DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS,
+            self.TIMEOUT: self._DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_SECOND,
             self.VERIFY_CERTS: self._DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS,
             self.USE_SSL: self._DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL,
             self.SERVER_API_VERSION: self._DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION,
@@ -284,7 +284,7 @@ class OnlineStoreRestClientSingleton:
     ) -> requests.Response:
         url = self._base_url.copy()
         url.path.segments.extend(path_params)
-        _logger.info(f"Sending {method} request to {url.url}.")
+        _logger.debug(f"Sending {method} request to {url.url}.")
         _logger.debug(f"Provided Data: {data}")
         _logger.debug(f"Provided Headers: {headers}")
         prepped_request = self._session.prepare_request(
@@ -292,9 +292,11 @@ class OnlineStoreRestClientSingleton:
                 method, url=url.url, headers=headers, data=data, auth=self.auth
             )
         )
+        timeout = self._current_config[self.TIMEOUT]
         return self._session.send(
             prepped_request,
-            timeout=self._current_config[self.TIMEOUT] / 1000,
+            # compatibility with 3.7
+            timeout=timeout if timeout < 500 else timeout / 1000,
         )
 
     def _check_hopsworks_connection(self) -> None:

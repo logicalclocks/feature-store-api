@@ -2043,6 +2043,7 @@ class FeatureGroup(FeatureGroupBase):
         self._description: Optional[str] = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
+
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -2291,13 +2292,12 @@ class FeatureGroup(FeatureGroupBase):
         col: Optional[str] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0,
         options: Optional[dict] = None,
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
-        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        If `filter` is specified, or if embedding feature is stored in default project index,
         the number of results returned may be less than k. Try using a large value of k and extract the top k
         items from the results if needed.
 
@@ -2307,7 +2307,6 @@ class FeatureGroup(FeatureGroupBase):
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
-            min_score: The minimum similarity score for neighbors to be considered (default is 0).
             options: The options used for the request to the vector database.
                 The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
 
@@ -2347,7 +2346,6 @@ class FeatureGroup(FeatureGroupBase):
             feature=(self.__getattr__(col) if col else None),
             k=k,
             filter=filter,
-            min_score=min_score,
             options=options,
         )
         return [
@@ -3767,13 +3765,12 @@ class ExternalFeatureGroup(FeatureGroupBase):
         col: Optional[str] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0,
         options: Optional[dict] = None,
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
-        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        If `filter` is specified, or if embedding feature is stored in default project index,
         the number of results returned may be less than k. Try using a large value of k and extract the top k
         items from the results if needed.
 
@@ -3783,7 +3780,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
-            min_score: The minimum similarity score for neighbors to be considered (default is 0).
             options: The options used for the request to the vector database.
                 The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
         # Returns
@@ -3822,7 +3818,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
             feature=(self.__getattr__(col) if col else None),
             k=k,
             filter=filter,
-            min_score=min_score,
             options=options,
         )
         return [

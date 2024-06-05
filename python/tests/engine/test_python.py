@@ -3668,6 +3668,10 @@ class TestPython:
             "hsfs.engine.python.Engine._kafka_get_offsets",
             return_value=" tests_offsets",
         )
+        mocker.patch(
+            "hsfs.core.job_api.JobApi.last_execution",
+            return_value=["", ""],
+        )
 
         python_engine = python.Engine()
 
@@ -3702,6 +3706,61 @@ class TestPython:
         assert mock_python_engine_kafka_produce.call_count == 4
         job_mock.run.assert_called_once_with(
             args="defaults",
+            await_termination=False,
+        )
+
+    def test_materialization_kafka_first_job_execution(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
+        mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
+        mocker.patch("hsfs.engine.python.Engine._get_encoder_func")
+        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
+        mock_python_engine_kafka_produce = mocker.patch(
+            "hsfs.engine.python.Engine._kafka_produce"
+        )
+        mocker.patch("hsfs.util.get_job_url")
+        mocker.patch(
+            "hsfs.engine.python.Engine._kafka_get_offsets",
+            return_value=" tests_offsets",
+        )
+        mocker.patch(
+            "hsfs.core.job_api.JobApi.last_execution",
+            return_value=[],
+        )
+
+        python_engine = python.Engine()
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+            time_travel_format="HUDI",
+        )
+
+        mocker.patch.object(fg, "commit_details", return_value={"commit1": 1})
+
+        fg._online_topic_name = "test_topic"
+        job_mock = mocker.MagicMock()
+        job_mock.config = {"defaultArgs": "defaults"}
+        fg._materialization_job = job_mock
+
+        df = pd.DataFrame(data={"col1": [1, 2, 2, 3]})
+
+        # Act
+        python_engine._write_dataframe_kafka(
+            feature_group=fg,
+            dataframe=df,
+            offline_write_options={"start_offline_materialization": True},
+        )
+
+        # Assert
+        assert mock_python_engine_kafka_produce.call_count == 4
+        job_mock.run.assert_called_once_with(
+            args="defaults tests_offsets",
             await_termination=False,
         )
     

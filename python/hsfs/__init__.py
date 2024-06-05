@@ -52,4 +52,8 @@ def disable_usage_logging():
     usage.disable()
 
 
-__all__ = ["connection", "disable_usage_logging"]
+def get_sdk_info():
+    return usage.get_env()
+
+
+__all__ = ["connection", "disable_usage_logging", "get_sdk_info"]

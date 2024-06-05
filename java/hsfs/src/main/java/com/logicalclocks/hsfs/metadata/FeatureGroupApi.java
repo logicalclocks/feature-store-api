@@ -71,6 +71,16 @@ public class FeatureGroupApi {
 
     LOGGER.info("Sending metadata request: " + uriString);
     T[] featureGroups = hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
+
+    // check features
+    if (fgVersion != null) {
+      checkFeatures(featureGroups[0]);
+    } else {
+      for (T resultFg: featureGroups) {
+        checkFeatures(resultFg);
+      }
+    }
+    
     return featureGroups;
   }
 
@@ -285,5 +295,13 @@ public class FeatureGroupApi {
     }
 
     return featureGroup;
+  }
+
+  private <T extends FeatureGroupBase> void checkFeatures(T fg) {
+    if (fg.getFeatures() == null || fg.getFeatures().isEmpty()) {
+      LOGGER.warn(String.format("Feature Group `%s`, version `%s` has no features "
+          + "(to resolve this issue contact the admin or delete and recreate the feature group)",
+          fg.getName(), fg.getVersion()));
+    }
   }
 }

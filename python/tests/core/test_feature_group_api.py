@@ -13,6 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+
+import warnings
+
 from hsfs import feature_group as fg_mod
 from hsfs.core import feature_group_api
 from mock import Mock
@@ -47,3 +50,33 @@ class TestFeatureGroupApi:
         assert isinstance(stream_fg, fg_mod.FeatureGroup)
         assert isinstance(external_fg, fg_mod.ExternalFeatureGroup)
         assert isinstance(spine_fg, fg_mod.SpineGroup)
+
+    def test_check_features(self, mocker, backend_fixtures):
+        # Arrange
+        fg_api = feature_group_api.FeatureGroupApi()
+        json = backend_fixtures["feature_group"]["get_basic_info"][
+            "response"
+        ]
+        fg = fg_mod.FeatureGroup.from_response_json(json)
+
+        # Act
+        with warnings.catch_warnings(record=True) as warning_record:
+            fg_api._check_features(fg)
+
+        # Assert
+        assert len(warning_record) == 0
+
+    def test_check_features_no_features(self, mocker, backend_fixtures):
+        # Arrange
+        fg_api = feature_group_api.FeatureGroupApi()
+        json = backend_fixtures["feature_group"]["get_basic_info_no_features"][
+            "response"
+        ]
+        fg = fg_mod.FeatureGroup.from_response_json(json)
+
+        # Act
+        with warnings.catch_warnings(record=True) as warning_record:
+            fg_api._check_features(fg)
+
+        # Assert
+        assert len(warning_record) == 1

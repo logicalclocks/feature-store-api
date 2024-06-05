@@ -23,7 +23,8 @@ from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 import humps
 import numpy as np
 import pandas as pd
-from hsfs import engine, feature_group, storage_connector, util
+from hsfs import engine, storage_connector, util
+from hsfs import feature_group as fg_mod
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
@@ -54,9 +55,9 @@ class Query:
     def __init__(
         self,
         left_feature_group: Union[
-            "feature_group.FeatureGroup",
-            "feature_group.ExternalFeatureGroup",
-            "feature_group.SpineGroup",
+            fg_mod.FeatureGroup,
+            fg_mod.ExternalFeatureGroup,
+            fg_mod.SpineGroup,
         ],
         left_features: List[Union[str, "Feature"]],
         feature_store_name: Optional[str] = None,
@@ -107,7 +108,7 @@ class Query:
             else:
                 sql_query = self._to_string(fs_query, online)
                 # Register on demand feature groups as temporary tables
-                if isinstance(self._left_feature_group, feature_group.SpineGroup):
+                if isinstance(self._left_feature_group, fg_mod.SpineGroup):
                     fs_query.register_external(self._left_feature_group.dataframe)
                 else:
                     fs_query.register_external()
@@ -229,9 +230,7 @@ class Query:
         self._check_read_supported(online)
         read_options = {}
         if online and self._left_feature_group.embedding_index:
-            return engine.get_instance().read_vector_db(
-                self._left_feature_group, n
-            )
+            return engine.get_instance().read_vector_db(self._left_feature_group, n)
         else:
             sql_query, online_conn = self._prep_read(online, read_options)
             return engine.get_instance().show(
@@ -508,18 +507,16 @@ class Query:
             feature_group_json["type"] == "onDemandFeaturegroupDTO"
             and not feature_group_json["spine"]
         ):
-            feature_group_obj = feature_group.ExternalFeatureGroup.from_response_json(
+            feature_group_obj = fg_mod.ExternalFeatureGroup.from_response_json(
                 feature_group_json
             )
         elif (
             feature_group_json["type"] == "onDemandFeaturegroupDTO"
             and feature_group_json["spine"]
         ):
-            feature_group_obj = feature_group.SpineGroup.from_response_json(
-                feature_group_json
-            )
+            feature_group_obj = fg_mod.SpineGroup.from_response_json(feature_group_json)
         else:
-            feature_group_obj = feature_group.FeatureGroup.from_response_json(
+            feature_group_obj = fg_mod.FeatureGroup.from_response_json(
                 feature_group_json
             )
         return cls(
@@ -663,16 +660,14 @@ class Query:
 
     def is_cache_feature_group_only(self) -> bool:
         """Query contains only cached feature groups"""
-        return all(
-            [isinstance(fg, feature_group.FeatureGroup) for fg in self.featuregroups]
-        )
+        return all([isinstance(fg, fg_mod.FeatureGroup) for fg in self.featuregroups])
 
     def _get_featuregroup_by_feature(
         self, feature: Feature
     ) -> Union[
-        "feature_group.FeatureGroup",
-        "feature_group.ExternalFeatureGroup",
-        "feature_group.SpineGroup",
+        fg_mod.FeatureGroup,
+        fg_mod.ExternalFeatureGroup,
+        fg_mod.SpineGroup,
     ]:
         # search for feature by id, and return the fg object
         fg_id = feature._feature_group_id
@@ -711,9 +706,9 @@ class Query:
         "Feature",
         Optional[str],
         Union[
-            "feature_group.FeatureGroup",
-            "feature_group.ExternalFeatureGroup",
-            "feature_group.SpineGroup",
+            fg_mod.FeatureGroup,
+            fg_mod.ExternalFeatureGroup,
+            fg_mod.SpineGroup,
         ],
     ]:
         # collect a dict that maps feature names -> (feature, prefix, fg)
@@ -770,9 +765,9 @@ class Query:
         self,
     ) -> List[
         Union[
-            "feature_group.FeatureGroup",
-            "feature_group.ExternalFeatureGroup",
-            "feature_group.SpineGroup",
+            fg_mod.FeatureGroup,
+            fg_mod.ExternalFeatureGroup,
+            fg_mod.SpineGroup,
         ]
     ]:
         """List of feature groups used in the query"""
