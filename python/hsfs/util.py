@@ -191,6 +191,14 @@ async def create_async_engine(
     loop: Any | None = None,
     hostname: Optional[str] = None,
 ) -> Any:
+    try:
+        if loop is None:
+            loop = asyncio.get_running_loop()
+    except RuntimeError as er:
+        raise RuntimeError(
+            "Event loop is not running. Please provide an event loop to create the engine."
+        ) from er
+
     online_options = online_conn.spark_options()
     # read the keys user, password from online_conn as use them while creating the connection pool
     url = make_url(online_options["url"].replace("jdbc:", ""))
@@ -199,14 +207,6 @@ async def create_async_engine(
             hostname = get_host_name()
         else:
             hostname = url.host
-
-    try:
-        if loop is None:
-            loop = asyncio.get_running_loop()
-    except RuntimeError as er:
-        raise RuntimeError(
-            "Event loop is not running. Please provide an event loop to create the engine."
-        ) from er
 
     # create a aiomysql connection pool
     pool = await async_create_engine(
