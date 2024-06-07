@@ -1,5 +1,4 @@
 import random
-from time import sleep
 
 from common.hopsworks_client import HopsworksClient
 from common.stop_watch import stopwatch
@@ -26,7 +25,6 @@ def on_locust_quitting(environment, **kwargs):
     if isinstance(environment.runner, MasterRunner):
         # clean up
         environment.hopsworks_client.get_or_create_fv(None).delete()
-        sleep(5)
         environment.hopsworks_client.close()
 
 
@@ -64,7 +62,7 @@ class RESTFeatureVectorLookup(HttpUser):
 
 class MySQLFeatureVectorLookup(User):
     wait_time = constant(0)
-    # weight = 5
+    weight = 5
     # fixed_count = 1
 
     def __init__(self, environment):
@@ -76,26 +74,23 @@ class MySQLFeatureVectorLookup(User):
     def on_start(self):
         print("Init user")
         self.fv.init_serving(external=self.client.external)
-        sleep(2)
         nest_asyncio.apply()
 
     def on_stop(self):
         print("Closing user")
-        # self.client.close()
 
     @task
     def get_feature_vector(self):
         self._get_feature_vector({"ip": random.randint(0, self.client.rows - 1)})
-        # print(v)
 
     @stopwatch
     def _get_feature_vector(self, pk):
-        return self.fv.get_feature_vector(pk)
+        self.fv.get_feature_vector(pk)
 
 
 class MySQLFeatureVectorBatchLookup(User):
     wait_time = constant(0)
-    # weight = 1
+    weight = 1
     # fixed_count = 1
 
     def __init__(self, environment):
@@ -111,7 +106,6 @@ class MySQLFeatureVectorBatchLookup(User):
 
     def on_stop(self):
         print("Closing user")
-        # self.client.close()
 
     @task
     def get_feature_vector_batch(self):
@@ -119,7 +113,6 @@ class MySQLFeatureVectorBatchLookup(User):
             {"ip": random.randint(0, self.client.rows - 1)}
             for i in range(self.client.batch_size)
         ]
-
         self._get_feature_vectors(pks)
 
     @stopwatch

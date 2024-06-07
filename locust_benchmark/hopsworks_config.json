@@ -1,9 +1,9 @@
 {
     "host": "localhost",
-    "port": 8181,
-    "project": "acme",
+    "port": 443,
+    "project": "test",
     "external": true,
-    "rows": 10000,
+    "rows": 100000,
     "schema_repetitions": 1,
     "recreate_feature_group": true,
     "batch_size": 100

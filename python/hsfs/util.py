@@ -216,6 +216,7 @@ async def create_async_engine(
         user=online_options["user"],
         password=online_options["password"],
         db=url.database,
+        loop=loop,
         minsize=(
             options.get("minsize", default_min_size) if options else default_min_size
         ),
@@ -223,9 +224,7 @@ async def create_async_engine(
             options.get("maxsize", default_min_size) if options else default_min_size
         ),
         pool_recycle=(options.get("pool_recycle", -1) if options else -1),
-        loop=loop,
     )
-
     return pool
 
 

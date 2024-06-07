@@ -307,24 +307,11 @@ class OnlineStoreSqlClient:
         _logger.debug(
             f"Executing prepared statements for serving vector with entries: {bind_entries}"
         )
-        try:
-            _logger.debug("Acquiring or starting event loop for async engine.")
-            loop = asyncio.get_event_loop()
-            asyncio.set_event_loop(loop)
-        except RuntimeError as ex:
-            if "There is no current event loop in thread" in str(ex):
-                _logger.debug(
-                    "No existing running event loop. Creating new event loop."
-                )
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-
+        loop = self._get_or_create_event_loop()
         results_dict = loop.run_until_complete(
             self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
-
         _logger.debug(f"Retrieved feature vectors: {results_dict}")
-
         _logger.debug("Constructing serving vector from results")
         for key in results_dict:
             for row in results_dict[key]:
@@ -388,18 +375,7 @@ class OnlineStoreSqlClient:
             f"Executing prepared statements for batch vector with entries: {entry_values}"
         )
         # run all the prepared statements in parallel using aiomysql engine
-        try:
-            _logger.debug("Acquiring or starting event loop for async engine.")
-            loop = asyncio.get_event_loop()
-            asyncio.set_event_loop(loop)
-        except RuntimeError as ex:
-            if "There is no current event loop in thread" in str(ex):
-                _logger.debug(
-                    "No existing running event loop. Creating new event loop."
-                )
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-
+        loop = self._get_or_create_event_loop()
         parallel_results = loop.run_until_complete(
             self._execute_prep_statements(prepared_stmts_to_execute, entry_values)
         )
@@ -446,6 +422,20 @@ class OnlineStoreSqlClient:
                     )
                 )
         return batch_results, serving_keys_all_fg
+
+    def _get_or_create_event_loop(self):
+        try:
+            _logger.debug("Acquiring or starting event loop for async engine.")
+            loop = asyncio.get_event_loop()
+            asyncio.set_event_loop(loop)
+        except RuntimeError as ex:
+            if "There is no current event loop in thread" in str(ex):
+                _logger.debug(
+                    "No existing running event loop. Creating new event loop."
+                )
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+        return loop
 
     def refresh_mysql_connection(self):
         _logger.debug("Refreshing MySQL connection.")
@@ -584,6 +574,7 @@ class OnlineStoreSqlClient:
     ):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
+
         # validate if prepared_statements and entries have the same keys
         if prepared_statements.keys() != entries.keys():
             # iterate over prepared_statements and entries to find the missing key
@@ -603,12 +594,12 @@ class OnlineStoreSqlClient:
             # Run the queries in parallel using asyncio.gather
             results = await asyncio.gather(*tasks)
         except asyncio.CancelledError as e:
-            _logger.error(f"Error executing prepared statements: {e}")
+            _logger.error(f"Failed executing prepared statements: {e}")
             raise e
 
         # Create a dict of results with the prepared statement index as key
         results_dict = {}
-        for i, key in enumerate(entries):
+        for i, key in enumerate(prepared_statements):
             results_dict[key] = results[i]
 
         return results_dict
