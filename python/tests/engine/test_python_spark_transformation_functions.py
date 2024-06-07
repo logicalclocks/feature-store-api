@@ -31,7 +31,7 @@ from hsfs import (
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs.engine import python, spark
-from hsfs.hopsworks_udf import HopsworksUdf, hopsworks_udf
+from hsfs.hopsworks_udf import HopsworksUdf, udf
 from pyspark.sql.types import (
     BooleanType,
     DateType,
@@ -148,15 +148,18 @@ class TestPythonSparkTransformationFunctions:
 
         # Arrange
         tf_fun_source = (
-            "import pandas as pd\nfrom hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics\n"
-            "from hsfs.hopsworks_udf import hopsworks_udf\n"
-            "@hopsworks_udf(float)\ndef min_max_scaler(feature : pd.Series, statistics_feature : FeatureDescriptiveStatistics) -> pd.Series:\n"
-            "    return (feature - statistics_feature.min)/(statistics_feature.max-statistics_feature.min)\n"
+            "import numpy as np\nimport pandas as pd\nfrom hsfs.transformation_statistics import TransformationStatistics\n"
+            "from hsfs.hopsworks_udf import udf\n"
+            'feature_statistics = TransformationStatistics("feature")\n'
+            "@udf(float)\n"
+            "def min_max_scaler(feature: pd.Series, statistics = feature_statistics) -> pd.Series:\n"
+            "    return (feature - statistics.feature.min) / (statistics.feature.max - statistics.feature.min)"
         )
         udf_response = {
             "sourceCode": tf_fun_source,
             "outputTypes": "double",
             "transformationFeatures": "",
+            "statisticsArgumentNames": "feature",
             "name": "min_max_scaler",
         }
 
@@ -283,15 +286,18 @@ class TestPythonSparkTransformationFunctions:
 
         # Arrange
         tf_fun_source = (
-            "import pandas as pd\nfrom hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics\n"
-            "from hsfs.hopsworks_udf import hopsworks_udf\n"
-            "@hopsworks_udf(float)\ndef standard_scaler(feature : pd.Series, statistics_feature : FeatureDescriptiveStatistics) -> pd.Series:\n"
-            "    return (feature - statistics_feature.mean)/statistics_feature.stddev\n"
+            "import numpy as np\nimport pandas as pd\nfrom hsfs.transformation_statistics import TransformationStatistics\n"
+            "from hsfs.hopsworks_udf import udf\n"
+            'feature_statistics = TransformationStatistics("feature")\n'
+            "@udf(float)\n"
+            "def standard_scaler(feature: pd.Series, statistics = feature_statistics) -> pd.Series:\n"
+            "    return (feature - statistics.feature.mean) / statistics.feature.stddev"
         )
         udf_response = {
             "sourceCode": tf_fun_source,
             "outputTypes": "double",
             "transformationFeatures": "",
+            "statisticsArgumentNames": "feature",
             "name": "standard_scaler",
         }
 
@@ -421,15 +427,19 @@ class TestPythonSparkTransformationFunctions:
 
         # Arrange
         tf_fun_source = (
-            "import pandas as pd\nfrom hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics\n"
-            "from hsfs.hopsworks_udf import hopsworks_udf\n"
-            "@hopsworks_udf(float)\ndef robust_scaler(feature : pd.Series, statistics_feature : FeatureDescriptiveStatistics) -> pd.Series:\n"
-            "    return (feature - statistics_feature.percentiles[49])/(statistics_feature.percentiles[74]-statistics_feature.percentiles[24])\n"
+            "import numpy as np\nimport pandas as pd\nfrom hsfs.transformation_statistics import TransformationStatistics\n"
+            "from hsfs.hopsworks_udf import udf\n"
+            'feature_statistics = TransformationStatistics("feature")\n'
+            "@udf(float)\n"
+            "def robust_scaler(feature: pd.Series, statistics = feature_statistics) -> pd.Series:\n"
+            "    return (feature - statistics.feature.percentiles[49]) / (statistics.feature.percentiles[74] - "
+            "statistics.feature.percentiles[24])"
         )
         udf_response = {
             "sourceCode": tf_fun_source,
             "outputTypes": "double",
             "transformationFeatures": "",
+            "statisticsArgumentNames": "feature",
             "name": "robust_scaler",
         }
 
@@ -561,7 +571,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @hopsworks_udf(int)
+        @udf(int)
         def tf_fun(col_0):
             return col_0 + 1
 
@@ -619,7 +629,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @hopsworks_udf(str)
+        @udf(str)
         def tf_fun(col_0):
             return col_0 + "1"
 
@@ -676,7 +686,7 @@ class TestPythonSparkTransformationFunctions:
         spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
 
         # Arrange
-        @hopsworks_udf(float)
+        @udf(float)
         def tf_fun(col_0):
             return col_0 + 1.0
 
@@ -748,7 +758,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @hopsworks_udf(datetime.datetime)
+        @udf(datetime.datetime)
         def tf_fun(col_0):
             import datetime
 
@@ -823,7 +833,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @hopsworks_udf(datetime.datetime)
+        @udf(datetime.datetime)
         def tf_fun(col_0) -> datetime.datetime:
             import datetime
 
@@ -901,7 +911,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @hopsworks_udf(datetime.datetime)
+        @udf(datetime.datetime)
         def tf_fun(col_0) -> datetime.datetime:
             import datetime
 
@@ -979,7 +989,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @hopsworks_udf(datetime.datetime)
+        @udf(datetime.datetime)
         def tf_fun(col_0) -> datetime.datetime:
             import datetime
 
@@ -1053,7 +1063,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @hopsworks_udf(datetime.date)
+        @udf(datetime.date)
         def tf_fun(col_0):
             import datetime
 
@@ -1079,7 +1089,7 @@ class TestPythonSparkTransformationFunctions:
         # Arrange
         with pytest.raises(FeatureStoreException) as e_info:
 
-            @hopsworks_udf(list)
+            @udf(list)
             def tf_fun(a):
                 return a + 1
 

@@ -1290,7 +1290,7 @@ class Engine:
             output_col_names.append(output_col_name)
             transformation_features.append(hopsworks_udf.transformation_features)
 
-            if len(hopsworks_udf.output_types) > 1:
+            if len(hopsworks_udf.return_types) > 1:
                 explode_name.append(f"{output_col_name}.*")
             else:
                 explode_name.append(output_col_name)

@@ -29,7 +29,7 @@ from hsfs.constructor import fs_query
 from hsfs.constructor.query import Query
 from hsfs.core import arrow_flight_client, feature_view_engine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.hopsworks_udf import hopsworks_udf
+from hsfs.hopsworks_udf import udf
 from hsfs.storage_connector import BigQueryConnector, StorageConnector
 from hsfs.transformation_function import TransformationFunction
 
@@ -565,7 +565,7 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def test2(col1):
             return col1 + 1
 
@@ -593,7 +593,7 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def test1(col1):
             return col1 + 1
 
@@ -602,7 +602,7 @@ class TestFeatureViewEngine:
             hopsworks_udf=test1,
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def test2(col1):
             return col1 + 2
 

@@ -17,7 +17,7 @@
 
 import pytest
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.hopsworks_udf import hopsworks_udf
+from hsfs.hopsworks_udf import udf
 from hsfs.transformation_function import TransformationFunction
 
 
@@ -36,13 +36,14 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 2
         assert tf.hopsworks_udf.function_name == "add_one_fs"
-        assert tf.hopsworks_udf.output_types == ["double"]
+        assert tf.hopsworks_udf.return_types == ["double"]
         assert not tf.hopsworks_udf.statistics_required
         assert tf.hopsworks_udf.transformation_features == ["col1"]
         assert tf.hopsworks_udf.statistics_features == []
+        assert tf.hopsworks_udf._statistics_argument_names == []
         assert (
             tf.hopsworks_udf._function_source
-            == "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
+            == "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
         )
 
     def test_from_response_json_one_argument_with_statistics(self, backend_fixtures):
@@ -59,13 +60,14 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 2
         assert tf.hopsworks_udf.function_name == "add_mean_fs"
-        assert tf.hopsworks_udf.output_types == ["double"]
+        assert tf.hopsworks_udf.return_types == ["double"]
         assert tf.hopsworks_udf.statistics_required
         assert tf.hopsworks_udf.transformation_features == ["data"]
         assert tf.hopsworks_udf.statistics_features == ["data"]
+        assert tf.hopsworks_udf._statistics_argument_names == ["data1"]
         assert (
             tf.hopsworks_udf._function_source
-            == "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n"
+            == "\n@udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics=stats):\n    return data1 + statistics.data1.mean\n"
         )
 
     def test_from_response_json_multiple_argument_with_statistics(
@@ -84,7 +86,7 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 2
         assert tf.hopsworks_udf.function_name == "test_func"
-        assert tf.hopsworks_udf.output_types == ["string"]
+        assert tf.hopsworks_udf.return_types == ["string"]
         assert tf.hopsworks_udf.statistics_required
         assert tf.hopsworks_udf.transformation_features == [
             "feature1",
@@ -92,9 +94,10 @@ class TestTransformationFunction:
             "feature3",
         ]
         assert tf.hopsworks_udf.statistics_features == ["feature1", "feature2"]
+        assert tf.hopsworks_udf._statistics_argument_names == ["data1", "data2"]
         assert (
             tf.hopsworks_udf._function_source
-            == "\n@hopsworks_udf(str)\ndef test_func(data1 : pd.Series, statistics_data1, data2, statistics_data2, data3):\n    return data1 + statistics_data1.mean\n"
+            == "\n@udf(str)\ndef test_func(data1 : pd.Series, data2, data3, statistics=stats):\n    return data1 + statistics.data1.mean\n"
         )
 
     def test_from_response_json_multiple_return_type_functions(self, backend_fixtures):
@@ -111,7 +114,7 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 2
         assert tf.hopsworks_udf.function_name == "test_func"
-        assert tf.hopsworks_udf.output_types == ["string", "double"]
+        assert tf.hopsworks_udf.return_types == ["string", "double"]
         assert tf.hopsworks_udf.statistics_required
         assert tf.hopsworks_udf.transformation_features == [
             "feature1",
@@ -119,9 +122,10 @@ class TestTransformationFunction:
             "feature3",
         ]
         assert tf.hopsworks_udf.statistics_features == ["feature1", "feature2"]
+        assert tf.hopsworks_udf._statistics_argument_names == ["data1", "data2"]
         assert (
             tf.hopsworks_udf._function_source
-            == "\n@hopsworks_udf(str, float)\ndef test_func(data1 : pd.Series, statistics_data1, data2, statistics_data2, data3):\n    return pd.DataFrame('col1': ['a', 'b'], 'col2':[1,2])\n"
+            == "\n@udf(str, float)\ndef test_func(data1 : pd.Series, data2, data3, statistics=stats):\n    return pd.DataFrame('col1': ['a', 'b'], 'col2':[1,2])\n"
         )
 
     def test_from_response_json_list_empty(self, backend_fixtures):
@@ -148,13 +152,14 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 2
         assert tf.hopsworks_udf.function_name == "add_mean_fs"
-        assert tf.hopsworks_udf.output_types == ["double"]
+        assert tf.hopsworks_udf.return_types == ["double"]
         assert tf.hopsworks_udf.statistics_required
         assert tf.hopsworks_udf.transformation_features == ["data"]
         assert tf.hopsworks_udf.statistics_features == ["data"]
+        assert tf.hopsworks_udf._statistics_argument_names == ["data1"]
         assert (
             tf.hopsworks_udf._function_source
-            == "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n"
+            == "\n@udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics=stats):\n    return data1 + statistics.data1.mean\n"
         )
 
         tf = tf_list[1]
@@ -162,13 +167,14 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 1
         assert tf.hopsworks_udf.function_name == "add_one_fs"
-        assert tf.hopsworks_udf.output_types == ["double"]
+        assert tf.hopsworks_udf.return_types == ["double"]
         assert not tf.hopsworks_udf.statistics_required
         assert tf.hopsworks_udf.transformation_features == ["col1"]
         assert tf.hopsworks_udf.statistics_features == []
+        assert tf.hopsworks_udf._statistics_argument_names == []
         assert (
             tf.hopsworks_udf._function_source
-            == "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
+            == "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
         )
 
     def test_from_response_json_list_one_argument(self, backend_fixtures):
@@ -186,13 +192,14 @@ class TestTransformationFunction:
         assert tf._featurestore_id == 11
         assert tf.version == 2
         assert tf.hopsworks_udf.function_name == "add_mean_fs"
-        assert tf.hopsworks_udf.output_types == ["double"]
+        assert tf.hopsworks_udf.return_types == ["double"]
         assert tf.hopsworks_udf.statistics_required
         assert tf.hopsworks_udf.transformation_features == ["data"]
         assert tf.hopsworks_udf.statistics_features == ["data"]
+        assert tf.hopsworks_udf._statistics_argument_names == ["data1"]
         assert (
             tf.hopsworks_udf._function_source
-            == "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n"
+            == "\n@udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics=stats):\n    return data1 + statistics.data1.mean\n"
         )
 
     def test_transformation_function_definition_no_hopworks_udf(self):
@@ -211,7 +218,7 @@ class TestTransformationFunction:
         )
 
     def test_transformation_function_definition_with_hopworks_udf(self):
-        @hopsworks_udf(int)
+        @udf(int)
         def test2(col1):
             return col1 + 1
 

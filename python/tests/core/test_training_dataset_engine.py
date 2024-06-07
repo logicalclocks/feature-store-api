@@ -23,7 +23,7 @@ from hsfs import (
 )
 from hsfs.constructor import query
 from hsfs.core import training_dataset_engine
-from hsfs.hopsworks_udf import hopsworks_udf
+from hsfs.hopsworks_udf import udf
 
 
 class TestTrainingDatasetEngine:
@@ -118,7 +118,7 @@ class TestTrainingDatasetEngine:
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
-        @hopsworks_udf(int)
+        @udf(int)
         def plus_one(a):
             return a + 1
 

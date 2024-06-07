@@ -19,7 +19,7 @@ from datetime import date, datetime, time
 import pandas as pd
 import pytest
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.hopsworks_udf import HopsworksUdf, TransformationFeature, hopsworks_udf
+from hsfs.hopsworks_udf import HopsworksUdf, TransformationFeature, udf
 
 
 class TestHopsworksUdf:
@@ -95,14 +95,14 @@ class TestHopsworksUdf:
             "python/tests/test_helpers/transformation_test_helper.py"
         ) == [
             "import pandas as pd",
-            "from hsfs.statistics import FeatureDescriptiveStatistics",
+            "from hsfs.transformation_statistics import TransformationStatistics",
         ]
 
     def test_extract_source_code(self):
         from test_helpers.transformation_test_helper import test_function
 
         assert """import pandas as pd
-from hsfs.statistics import FeatureDescriptiveStatistics
+from hsfs.transformation_statistics import TransformationStatistics
 def test_function():
     return True""" == HopsworksUdf._extract_source_code(test_function).strip()
 
@@ -110,8 +110,7 @@ def test_function():
         from test_helpers.transformation_test_helper import test_function
 
         with pytest.raises(FeatureStoreException) as exception:
-            function_source = HopsworksUdf._extract_source_code(test_function)
-            HopsworksUdf._extract_function_arguments(function_source)
+            HopsworksUdf._extract_function_arguments(test_function)
 
         assert (
             str(exception.value)
@@ -121,8 +120,9 @@ def test_function():
     def test_extract_function_arguments_one_argument(self):
         from test_helpers.transformation_test_helper import test_function_one_argument
 
-        function_source = HopsworksUdf._extract_source_code(test_function_one_argument)
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
+        function_argument = HopsworksUdf._extract_function_arguments(
+            test_function_one_argument
+        )
 
         assert function_argument == [
             TransformationFeature(feature_name="arg1", statistic_argument_name=None)
@@ -133,15 +133,12 @@ def test_function():
             test_function_one_argument_with_statistics,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_one_argument_with_statistics
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
-            TransformationFeature(
-                feature_name="arg1", statistic_argument_name="statistics_arg1"
-            )
+            TransformationFeature(feature_name="arg1", statistic_argument_name="arg1")
         ]
 
     def test_extract_function_arguments_one_argument_with_typehint(self):
@@ -149,10 +146,9 @@ def test_function():
             test_function_one_argument_with_typehints,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_one_argument_with_typehints
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
             TransformationFeature(feature_name="arg1", statistic_argument_name=None)
@@ -165,15 +161,12 @@ def test_function():
             test_function_one_argument_with_statistics_and_typehints,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_one_argument_with_statistics_and_typehints
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
-            TransformationFeature(
-                feature_name="arg1", statistic_argument_name="statistics_arg1"
-            )
+            TransformationFeature(feature_name="arg1", statistic_argument_name="arg1")
         ]
 
     def test_extract_function_arguments_multiple_argument(self):
@@ -181,10 +174,9 @@ def test_function():
             test_function_multiple_argument,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_multiple_argument
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
             TransformationFeature(feature_name="arg1", statistic_argument_name=None),
@@ -196,19 +188,14 @@ def test_function():
             test_function_multiple_argument_with_statistics,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_multiple_argument_with_statistics
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
-            TransformationFeature(
-                feature_name="arg1", statistic_argument_name="statistics_arg1"
-            ),
+            TransformationFeature(feature_name="arg1", statistic_argument_name="arg1"),
             TransformationFeature(feature_name="arg2", statistic_argument_name=None),
-            TransformationFeature(
-                feature_name="arg3", statistic_argument_name="statistics_arg3"
-            ),
+            TransformationFeature(feature_name="arg3", statistic_argument_name="arg3"),
         ]
 
     def test_extract_function_arguments_multiple_argument_with_typehints(self):
@@ -216,10 +203,9 @@ def test_function():
             test_function_multiple_argument_with_typehints,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_multiple_argument_with_typehints
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
             TransformationFeature(feature_name="arg1", statistic_argument_name=None),
@@ -233,18 +219,13 @@ def test_function():
             test_function_multiple_argument_with_statistics_and_typehints,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_multiple_argument_with_statistics_and_typehints
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
-            TransformationFeature(
-                feature_name="arg1", statistic_argument_name="statistics_arg1"
-            ),
-            TransformationFeature(
-                feature_name="arg2", statistic_argument_name="statistics_arg2"
-            ),
+            TransformationFeature(feature_name="arg1", statistic_argument_name="arg1"),
+            TransformationFeature(feature_name="arg2", statistic_argument_name="arg2"),
         ]
 
     def test_extract_function_arguments_multiple_argument_with_mixed_statistics_and_typehints(
@@ -254,19 +235,14 @@ def test_function():
             test_function_multiple_argument_with_mixed_statistics_and_typehints,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_multiple_argument_with_mixed_statistics_and_typehints
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
-            TransformationFeature(
-                feature_name="arg1", statistic_argument_name="statistics_arg1"
-            ),
+            TransformationFeature(feature_name="arg1", statistic_argument_name="arg1"),
             TransformationFeature(feature_name="arg2", statistic_argument_name=None),
-            TransformationFeature(
-                feature_name="arg3", statistic_argument_name="statistics_arg3"
-            ),
+            TransformationFeature(feature_name="arg3", statistic_argument_name="arg3"),
         ]
 
     def test_extract_function_arguments_multiple_argument_all_parameter_with_spaces(
@@ -276,18 +252,13 @@ def test_function():
             test_function_multiple_argument_all_parameter_with_spaces,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_multiple_argument_all_parameter_with_spaces
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
-            TransformationFeature(
-                feature_name="arg1", statistic_argument_name="statistics_arg1"
-            ),
-            TransformationFeature(
-                feature_name="arg2", statistic_argument_name="statistics_arg2"
-            ),
+            TransformationFeature(feature_name="arg1", statistic_argument_name="arg1"),
+            TransformationFeature(feature_name="arg2", statistic_argument_name="arg2"),
         ]
 
     def test_extract_function_arguments_multiple_argument_all_parameter_multiline(self):
@@ -295,19 +266,14 @@ def test_function():
             test_function_multiple_argument_all_parameter_multiline,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_multiple_argument_all_parameter_multiline
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
-            TransformationFeature(
-                feature_name="arg1", statistic_argument_name="statistics_arg1"
-            ),
+            TransformationFeature(feature_name="arg1", statistic_argument_name="arg1"),
             TransformationFeature(feature_name="arg2", statistic_argument_name=None),
-            TransformationFeature(
-                feature_name="arg3", statistic_argument_name="statistics_arg3"
-            ),
+            TransformationFeature(feature_name="arg3", statistic_argument_name="arg3"),
         ]
 
     def test_extract_function_arguments_multiple_argumen_all_parameter_multiline_with_comments(
@@ -317,19 +283,14 @@ def test_function():
             test_function_multiple_argument_all_parameter_multiline_with_comments,
         )
 
-        function_source = HopsworksUdf._extract_source_code(
+        function_argument = HopsworksUdf._extract_function_arguments(
             test_function_multiple_argument_all_parameter_multiline_with_comments
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
 
         assert function_argument == [
-            TransformationFeature(
-                feature_name="arg1", statistic_argument_name="statistics_arg1"
-            ),
+            TransformationFeature(feature_name="arg1", statistic_argument_name="arg1"),
             TransformationFeature(feature_name="arg2", statistic_argument_name=None),
-            TransformationFeature(
-                feature_name="arg3", statistic_argument_name="statistics_arg3"
-            ),
+            TransformationFeature(feature_name="arg3", statistic_argument_name="arg3"),
         ]
 
     def test_extract_function_arguments_statistics_invalid(self):
@@ -338,14 +299,11 @@ def test_function():
         )
 
         with pytest.raises(FeatureStoreException) as exception:
-            function_source = HopsworksUdf._extract_source_code(
-                test_function_statistics_invalid
-            )
-            HopsworksUdf._extract_function_arguments(function_source)
+            HopsworksUdf._extract_function_arguments(test_function_statistics_invalid)
 
         assert (
             str(exception.value)
-            == "No argument corresponding to statistics parameter 'statistics_arg3' present in function definition."
+            == "No argument corresponding to statistics parameter 'arg3' present in function definition."
         )
 
     def test_format_source_code(self):
@@ -356,13 +314,11 @@ def test_function():
         function_source = HopsworksUdf._extract_source_code(
             test_function_multiple_argument_all_parameter_multiline_with_comments
         )
-        function_argument = HopsworksUdf._extract_function_arguments(function_source)
-        print("\n")
-        print(function_argument)
+
         formated_source, module_imports = HopsworksUdf._format_source_code(
-            function_source, function_argument
+            function_source
         )
-        print(formated_source)
+
         assert (
             formated_source.strip()
             == """def test_function_multiple_argument_all_parameter_multiline_with_comments(arg1, arg2, arg3):
@@ -370,21 +326,21 @@ def test_function():
         )
 
     def test_generate_output_column_names_one_argument_one_output_type(self):
-        @hopsworks_udf(int)
+        @udf(int)
         def test_func(col1):
             return col1 + 1
 
         assert test_func._get_output_column_names() == ["test_func_col1_"]
 
     def test_generate_output_column_names_multiple_argument_one_output_type(self):
-        @hopsworks_udf(int)
+        @udf(int)
         def test_func(col1, col2, col3):
             return col1 + 1
 
         assert test_func._get_output_column_names() == ["test_func_col1-col2-col3_"]
 
     def test_generate_output_column_names_single_argument_multiple_output_type(self):
-        @hopsworks_udf([int, float, int])
+        @udf([int, float, int])
         def test_func(col1):
             return pd.DataFrame(
                 {"col1": [col1 + 1], "col2": [col1 + 1], "col3": [col1 + 1]}
@@ -397,7 +353,7 @@ def test_function():
         ]
 
     def test_generate_output_column_names_multiple_argument_multiple_output_type(self):
-        @hopsworks_udf([int, float, int])
+        @udf([int, float, int])
         def test_func(col1, col2, col3):
             return pd.DataFrame(
                 {"col1": [col1 + 1], "col2": [col2 + 1], "col3": [col3 + 1]}
@@ -410,7 +366,7 @@ def test_function():
         ]
 
     def test_create_pandas_udf_return_schema_from_list_one_output_type(self):
-        @hopsworks_udf(int)
+        @udf(int)
         def test_func(col1):
             return col1 + 1
 
@@ -419,7 +375,7 @@ def test_function():
     def test_create_pandas_udf_return_schema_from_list_one_argument_multiple_output_type(
         self,
     ):
-        @hopsworks_udf([int, float, str, date, datetime, time, bool])
+        @udf([int, float, str, date, datetime, time, bool])
         def test_func(col1):
             return pd.DataFrame(
                 {
@@ -438,7 +394,7 @@ def test_function():
         )
 
     def test_hopsworks_wrapper_single_output(self):
-        @hopsworks_udf(int)
+        @udf(int)
         def test_func(col1):
             return col1 + 1
 
@@ -452,7 +408,7 @@ def test_function():
         assert result.values.tolist() == [2, 3, 4, 5]
 
     def test_hopsworks_wrapper_multiple_output(self):
-        @hopsworks_udf([int, float])
+        @udf([int, float])
         def test_func(col1, col2):
             return pd.DataFrame({"out1": col1 + 1, "out2": col2 + 2})
 
@@ -470,7 +426,7 @@ def test_function():
         assert result.values.tolist() == [[2, 12], [3, 22], [4, 32], [5, 42]]
 
     def test_HopsworkUDf_call_one_argument(self):
-        @hopsworks_udf(int)
+        @udf(int)
         def test_func(col1):
             return col1 + 1
 
@@ -481,23 +437,37 @@ def test_function():
         assert test_func("new_feature").statistics_features == []
 
     def test_HopsworkUDf_call_one_argument_statistics(self):
-        @hopsworks_udf(int)
-        def test_func(col1, statistics_col1):
-            return col1 + statistics_col1
+        from hsfs.transformation_statistics import TransformationStatistics
+
+        stats = TransformationStatistics("col1")
+
+        @udf(int)
+        def test_func(col1, statistics=stats):
+            return col1 + statistics.col1.mean
 
         assert test_func.transformation_features == ["col1"]
         assert test_func.statistics_features == ["col1"]
+        assert test_func._statistics_argument_names == ["col1"]
 
         assert test_func("new_feature").transformation_features == ["new_feature"]
         assert test_func("new_feature").statistics_features == ["new_feature"]
+        assert test_func("new_feature")._statistics_argument_names == ["col1"]
 
     def test_HopsworkUDf_call_multiple_argument_statistics(self):
-        @hopsworks_udf(int)
-        def test_func(col1, statistics_col1, col2, col3, statistics_col3):
-            return col1 + statistics_col1
+        from hsfs.transformation_statistics import TransformationStatistics
+
+        stats = TransformationStatistics("col1", "col3")
+
+        @udf(int)
+        def test_func(col1, col2, col3, statistics=stats):
+            return col1 + statistics.col1.mean + statistics.col3.mean
 
         assert test_func.transformation_features == ["col1", "col2", "col3"]
         assert test_func.statistics_features == ["col1", "col3"]
 
         assert test_func("f1", "f2", "f3").transformation_features == ["f1", "f2", "f3"]
         assert test_func("f1", "f2", "f3").statistics_features == ["f1", "f3"]
+        assert test_func("f1", "f2", "f3")._statistics_argument_names == [
+            "col1",
+            "col3",
+        ]

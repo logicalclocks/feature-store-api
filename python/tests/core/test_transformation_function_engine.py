@@ -24,7 +24,7 @@ from hsfs import (
     transformation_function,
 )
 from hsfs.core import transformation_function_engine
-from hsfs.hopsworks_udf import hopsworks_udf
+from hsfs.hopsworks_udf import udf
 
 
 fg1 = feature_group.FeatureGroup(
@@ -91,7 +91,7 @@ class TestTransformationFunctionEngine:
             feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def testFunction(col1):
             return col1 + 1
 
@@ -118,7 +118,7 @@ class TestTransformationFunctionEngine:
             feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def testFunction1(col1):
             return col1 + 1
 
@@ -127,7 +127,7 @@ class TestTransformationFunctionEngine:
             hopsworks_udf=testFunction1,
         )
 
-        @hopsworks_udf(float)
+        @udf(float)
         def testFunction2(data2, statistics_data2):
             return data2 + 1
 
@@ -159,7 +159,7 @@ class TestTransformationFunctionEngine:
             feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def testFunction1(col1):
             return col1 + 1
 
@@ -168,7 +168,7 @@ class TestTransformationFunctionEngine:
             hopsworks_udf=testFunction1,
         )
 
-        @hopsworks_udf(float)
+        @udf(float)
         def testFunction2(data2, statistics_data2):
             return data2 + 1
 
@@ -200,7 +200,7 @@ class TestTransformationFunctionEngine:
             feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def testFunction1(col1):
             return col1 + 1
 
@@ -259,7 +259,7 @@ class TestTransformationFunctionEngine:
             feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def testFunction1(col1):
             return col1 + 1
 
@@ -318,7 +318,7 @@ class TestTransformationFunctionEngine:
             feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def testFunction1(col1):
             return col1 + 1
 
@@ -376,7 +376,7 @@ class TestTransformationFunctionEngine:
             feature_store_id
         )
 
-        @hopsworks_udf(int)
+        @udf(int)
         def testFunction1(col1):
             return col1 + 1
 
@@ -428,10 +428,13 @@ class TestTransformationFunctionEngine:
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
             feature_store_id
         )
+        from hsfs.transformation_statistics import TransformationStatistics
 
-        @hopsworks_udf(int)
-        def testFunction1(col1, statistics_col1):
-            return col1 + statistics_col1.mean
+        stats = TransformationStatistics("col1")
+
+        @udf(int)
+        def testFunction1(col1, statistics=stats):
+            return col1 + statistics.col1.mean
 
         tf1 = transformation_function.TransformationFunction(
             feature_store_id,

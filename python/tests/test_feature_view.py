@@ -18,7 +18,7 @@ import warnings
 from hsfs import feature_view, training_dataset_feature
 from hsfs.constructor import fs_query, query
 from hsfs.feature_store import FeatureStore
-from hsfs.hopsworks_udf import hopsworks_udf
+from hsfs.hopsworks_udf import udf
 
 
 class TestFeatureView:
@@ -100,11 +100,11 @@ class TestFeatureView:
         )
         assert (
             fv.transformation_functions[0].hopsworks_udf._function_source
-            == "\n@hopsworks_udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics_data1):\n    return data1 + statistics_data1.mean\n"
+            == "\n@udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics=stats):\n    return data1 + statistics.data1.mean\n"
         )
         assert (
             fv.transformation_functions[1].hopsworks_udf._function_source
-            == "\n@hopsworks_udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
+            == "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
         )
         assert len(fv.schema) == 2
         assert isinstance(fv.schema[0], training_dataset_feature.TrainingDatasetFeature)
@@ -144,7 +144,7 @@ class TestFeatureView:
         # Act
         q = fs_query.FsQuery.from_response_json(json)
 
-        @hopsworks_udf(int)
+        @udf(int)
         def test(col1):
             return col1 + 1
 
