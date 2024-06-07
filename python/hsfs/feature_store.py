@@ -18,9 +18,8 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
 
-import great_expectations as ge
 import humps
 import numpy
 import numpy as np
@@ -51,6 +50,10 @@ from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
+
+
+if TYPE_CHECKING:
+    import great_expectations
 
 
 @typechecked
@@ -505,7 +508,10 @@ class FeatureStore:
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
         expectation_suite: Optional[
-            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+            Union[
+                expectation_suite.ExpectationSuite,
+                great_expectations.core.ExpectationSuite,
+            ]
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
@@ -635,7 +641,10 @@ class FeatureStore:
         features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         expectation_suite: Optional[
-            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+            Union[
+                expectation_suite.ExpectationSuite,
+                great_expectations.core.ExpectationSuite,
+            ]
         ] = None,
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
@@ -781,7 +790,10 @@ class FeatureStore:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
-            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+            Union[
+                expectation_suite.ExpectationSuite,
+                great_expectations.core.ExpectationSuite,
+            ]
         ] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
@@ -890,9 +902,12 @@ class FeatureStore:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
-            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+            Union[
+                expectation_suite.ExpectationSuite,
+                great_expectations.core.ExpectationSuite,
+            ]
         ] = None,
-        online_enabled: Optional[bool] = False,
+        online_enabled: bool = False,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
     ) -> "feature_group.ExternalFeatureGroup":
@@ -1039,7 +1054,7 @@ class FeatureStore:
             np.ndarray,
             List[list],
         ] = None,
-    ) -> "feature_group.SpineGroup":
+    ) -> feature_group.SpineGroup:
         """Create a spine group metadata object.
 
         Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels.

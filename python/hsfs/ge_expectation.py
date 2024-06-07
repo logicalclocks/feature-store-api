@@ -16,11 +16,14 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-import great_expectations as ge
 import humps
 from hsfs import util
+
+
+if TYPE_CHECKING:
+    import great_expectations
 
 
 class GeExpectation:
@@ -63,7 +66,9 @@ class GeExpectation:
             return cls(**json_decamelized)
 
     @classmethod
-    def from_ge_type(cls, ge_expectation: ge.core.ExpectationConfiguration):
+    def from_ge_type(
+        cls, ge_expectation: great_expectations.core.ExpectationConfiguration
+    ):
         return cls(**ge_expectation.to_json_dict())
 
     def to_dict(self) -> Dict[str, Any]:
@@ -100,8 +105,8 @@ class GeExpectation:
             + f"kwargs={self._kwargs}, meta={self._meta})"
         )
 
-    def to_ge_type(self) -> ge.core.ExpectationConfiguration:
-        return ge.core.ExpectationConfiguration(
+    def to_ge_type(self) -> great_expectations.core.ExpectationConfiguration:
+        return great_expectations.core.ExpectationConfiguration(
             expectation_type=self.expectation_type, kwargs=self.kwargs, meta=self.meta
         )
 

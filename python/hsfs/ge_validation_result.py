@@ -17,12 +17,15 @@ from __future__ import annotations
 
 import datetime
 import json
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
 import dateutil
-import great_expectations as ge
 import humps
 from hsfs import util
+
+
+if TYPE_CHECKING:
+    import great_expectations
 
 
 class ValidationResult:
@@ -40,7 +43,9 @@ class ValidationResult:
         expectation_id: Optional[int] = None,
         validation_report_id: Optional[int] = None,
         validation_time: Optional[int] = None,
-        ingestion_result: Optional[str] = "UNKNOWN",
+        ingestion_result: Literal[
+            "unknown", "ingested", "rejected", "fg_data", "experiment"
+        ] = "UNKNOWN",
         href=None,
         expand=None,
         items=None,
@@ -101,8 +106,8 @@ class ValidationResult:
             "meta": self._meta,
         }
 
-    def to_ge_type(self) -> ge.core.ExpectationValidationResult:
-        return ge.core.ExpectationValidationResult(
+    def to_ge_type(self) -> great_expectations.core.ExpectationValidationResult:
+        return great_expectations.core.ExpectationValidationResult(
             success=self.success,
             exception_info=self.exception_info,
             expectation_config=self.expectation_config,
