@@ -137,7 +137,7 @@ class GreatExpectationEngine:
         validation_options: Dict[str, Any],
         ingestion_result: Literal[
             "unknown", "ingested", "rejected", "fg_data", "experiment"
-        ],
+        ] = "unknown",
     ) -> Union[
         great_expectations.core.ExpectationSuiteValidationResult,
         validation_report.ValidationReport,
