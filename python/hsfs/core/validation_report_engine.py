@@ -15,12 +15,15 @@
 #
 from __future__ import annotations
 
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 
-import great_expectations as ge
 from hsfs import client, util
 from hsfs.core import validation_report_api
 from hsfs.validation_report import ValidationReport
+
+
+if TYPE_CHECKING:
+    import great_expectations
 
 
 class ValidationReportEngine:
@@ -51,7 +54,9 @@ class ValidationReportEngine:
 
     def get_last(
         self, ge_type: bool = True
-    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
+    ) -> Union[
+        ValidationReport, great_expectations.core.ExpectationSuiteValidationResult, None
+    ]:
         """Get the most recent Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
@@ -68,7 +73,10 @@ class ValidationReportEngine:
 
     def get_all(
         self, ge_type: bool = True
-    ) -> Union[List[ValidationReport], List[ge.core.ExpectationSuiteValidationResult]]:
+    ) -> Union[
+        List[ValidationReport],
+        List[great_expectations.core.ExpectationSuiteValidationResult],
+    ]:
         """Get all Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(

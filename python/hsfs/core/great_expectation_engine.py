@@ -15,11 +15,14 @@
 #
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
-import great_expectations as ge
 from hsfs import engine, validation_report
 from hsfs import expectation_suite as es
+
+
+if TYPE_CHECKING:
+    import great_expectations
 
 
 class GreatExpectationEngine:
@@ -38,14 +41,16 @@ class GreatExpectationEngine:
         feature_group,
         dataframe,
         expectation_suite: Union[
-            ge.core.ExpectationSuite, es.ExpectationSuite, None
+            great_expectations.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
         save_report: bool = False,
         validation_options: Dict[str, Any] = None,
         ge_type: bool = True,
-        ingestion_result: str = "UNKNOWN",
+        ingestion_result: Literal[
+            "unknown", "ingested", "rejected", "fg_data", "experiment"
+        ] = "unknown",
     ) -> Union[
-        ge.core.ExpectationSuiteValidationResult,
+        great_expectations.core.ExpectationSuiteValidationResult,
         validation_report.ValidationReport,
         None,
     ]:
@@ -91,7 +96,7 @@ class GreatExpectationEngine:
         self,
         feature_group,
         expectation_suite: Union[
-            ge.core.ExpectationSuite, es.ExpectationSuite, None
+            great_expectations.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
         validation_options: dict = None,
     ) -> Optional[es.ExpectationSuite]:
@@ -124,13 +129,16 @@ class GreatExpectationEngine:
     def save_or_convert_report(
         self,
         feature_group,
-        report: ge.core.ExpectationSuiteValidationResult,
+        report: great_expectations.core.ExpectationSuiteValidationResult,
         save_report: bool,
         ge_type: bool,
         validation_options: Dict[str, Any],
-        ingestion_result: str = "UNKNOWN",
+        ingestion_result: Literal[
+            "unknown", "ingested", "rejected", "fg_data", "experiment"
+        ],
     ) -> Union[
-        ge.core.ExpectationSuiteValidationResult, validation_report.ValidationReport
+        great_expectations.core.ExpectationSuiteValidationResult,
+        validation_report.ValidationReport,
     ]:
         save_report = validation_options.get("save_report", save_report)
         if save_report:

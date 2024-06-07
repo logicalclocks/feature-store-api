@@ -16,12 +16,15 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-import great_expectations as ge
 import humps
 from hsfs import util
 from hsfs.ge_validation_result import ValidationResult
+
+
+if TYPE_CHECKING:
+    import great_expectations
 
 
 class ValidationReport:
@@ -34,7 +37,7 @@ class ValidationReport:
             Union[
                 "ValidationResult",
                 Dict[str, Any],
-                ge.core.expectation_validation_result.ExpectationValidationResult,
+                great_expectations.core.expectation_validation_result.ExpectationValidationResult,
             ]
         ],
         meta: Optional[Union[Dict[str, Any], str]],
@@ -107,8 +110,8 @@ class ValidationReport:
             "meta": self._meta,
         }
 
-    def to_ge_type(self) -> ge.core.ExpectationSuiteValidationResult:
-        return ge.core.ExpectationSuiteValidationResult(
+    def to_ge_type(self) -> great_expectations.core.ExpectationSuiteValidationResult:
+        return great_expectations.core.ExpectationSuiteValidationResult(
             success=self.success,
             statistics=self.statistics,
             results=[result.to_ge_type() for result in self.results],
@@ -146,7 +149,7 @@ class ValidationReport:
             Union[
                 "ValidationResult",
                 Dict[str, Any],
-                ge.core.expectation_validation_result.ExpectationValidationResult,
+                great_expectations.core.expectation_validation_result.ExpectationValidationResult,
             ]
         ],
     ) -> None:
@@ -158,7 +161,7 @@ class ValidationReport:
             self._results = [ValidationResult(**result) for result in results]
         elif isinstance(
             results[0],
-            ge.core.expectation_validation_result.ExpectationValidationResult,
+            great_expectations.core.expectation_validation_result.ExpectationValidationResult,
         ):
             self._results = [
                 ValidationResult(**result.to_json_dict()) for result in results

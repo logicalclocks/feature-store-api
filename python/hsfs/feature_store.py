@@ -283,7 +283,7 @@ class FeatureStore:
     @usage.method_logger
     def get_on_demand_feature_groups(
         self, name: str
-    ) -> List["feature_group.ExternalFeatureGroup"]:
+    ) -> List[feature_group.ExternalFeatureGroup]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -307,7 +307,7 @@ class FeatureStore:
     @usage.method_logger
     def get_external_feature_groups(
         self, name: str
-    ) -> List["feature_group.ExternalFeatureGroup"]:
+    ) -> List[feature_group.ExternalFeatureGroup]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
