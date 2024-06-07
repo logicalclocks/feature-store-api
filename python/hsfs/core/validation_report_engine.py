@@ -19,13 +19,14 @@ from typing import TYPE_CHECKING, List, Union
 
 from hsfs import client, util
 from hsfs.core import validation_report_api
+from hsfs.core.optional_dependency_helper import is_package_installed_or_load
 from hsfs.validation_report import ValidationReport
 
 
 if TYPE_CHECKING:
     import great_expectations
 
-HAS_GREAT_EXPECTATIONS = util.is_package_installed_or_load("great_expectations")
+HAS_GREAT_EXPECTATIONS = is_package_installed_or_load("great_expectations")
 
 
 class ValidationReportEngine:

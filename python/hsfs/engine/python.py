@@ -80,6 +80,7 @@ from hsfs.core import (
     variable_api,
 )
 from hsfs.core.constants import great_expectations_not_installed_message
+from hsfs.core.optional_dependency_helper import is_package_installed_or_load
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
@@ -709,9 +710,9 @@ class Engine:
         expectation_suite: great_expectations.core.ExpectationSuite,
         ge_validate_kwargs: Optional[Dict[Any, Any]] = None,
     ) -> great_expectations.core.ExpectationSuiteValidationResult:
-        is_ge_installed = util.is_package_installed_or_load("great_expectations")
+        is_ge_installed = is_package_installed_or_load("great_expectations")
         if not is_ge_installed:
-            raise FeatureStoreException(great_expectations_not_installed_message)
+            raise ImportError(great_expectations_not_installed_message)
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
         if isinstance(dataframe, pl.DataFrame) or isinstance(

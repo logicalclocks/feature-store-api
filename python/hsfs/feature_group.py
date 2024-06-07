@@ -77,6 +77,7 @@ from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
 from hsfs.core.constants import great_expectations_not_installed_message
 from hsfs.core.job import Job
+from hsfs.core.optional_dependency_helper import is_package_installed_or_load
 from hsfs.core.variable_api import VariableApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
@@ -91,9 +92,7 @@ from hsfs.validation_report import ValidationReport
 if TYPE_CHECKING:
     import great_expectations
 
-HAS_GREAT_EXPECTATIONS = util.is_package_installed_or_load(
-    "great_expectations", load_if_found=False, raise_error=False
-)
+HAS_GREAT_EXPECTATIONS = is_package_installed_or_load("great_expectations")
 
 
 _logger = logging.getLogger(__name__)
@@ -977,9 +976,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        is_ge_installed = util.is_package_installed_or_load(
-            "great_expectations", load_if_found=False
-        )
+        is_ge_installed = is_package_installed_or_load("great_expectations")
         if is_ge_installed and isinstance(
             expectation_suite, great_expectations.core.ExpectationSuite
         ):
@@ -1152,9 +1149,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        is_ge_installed = util.is_package_installed_or_load(
-            "great_expectations", load_if_found=False, raise_error=False
-        )
+        is_ge_installed = is_package_installed_or_load("great_expectations")
         if self._id:
             if is_ge_installed and isinstance(
                 validation_report,
@@ -1292,9 +1287,9 @@ class FeatureGroupBase:
         # Returns
             A Validation Report produced by Great Expectations.
         """
-        is_ge_installed = util.is_package_installed_or_load("great_expectations")
+        is_ge_installed = is_package_installed_or_load("great_expectations")
         if not is_ge_installed:
-            raise FeatureStoreException(great_expectations_not_installed_message)
+            raise ImportError(great_expectations_not_installed_message)
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()

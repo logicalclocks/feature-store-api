@@ -22,8 +22,8 @@ from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 import dateutil
 import humps
 from hsfs import util
-from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.constants import great_expectations_not_installed_message
+from hsfs.core.optional_dependency_helper import is_package_installed_or_load
 
 
 if TYPE_CHECKING:
@@ -104,9 +104,9 @@ class ValidationResult:
         }
 
     def to_ge_type(self) -> great_expectations.core.ExpectationValidationResult:
-        is_ge_installed = util.is_package_installed_or_load("great_expectations")
+        is_ge_installed = is_package_installed_or_load("great_expectations")
         if not is_ge_installed:
-            raise FeatureStoreException(great_expectations_not_installed_message)
+            raise ImportError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationValidationResult(
             success=self.success,
             exception_info=self.exception_info,

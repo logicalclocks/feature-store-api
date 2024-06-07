@@ -16,12 +16,10 @@
 from __future__ import annotations
 
 import asyncio
-import importlib.util
 import itertools
 import json
 import logging
 import re
-import sys
 import threading
 import time
 from datetime import date, datetime, timezone
@@ -542,37 +540,6 @@ def build_serving_keys_from_prepared_statements(
                 )
             )
     return serving_keys
-
-
-def is_runtime_notebook():
-    if "ipykernel" in sys.modules:
-        return True
-    else:
-        return False
-
-
-def is_package_installed_or_load(
-    name: str, load_if_found: bool = True, raise_error: bool = False
-) -> bool:
-    if name in sys.modules:
-        _logger.debug(f"{name!r} is already imported")
-        return True
-    elif (spec := importlib.util.find_spec(name)) is not None:
-        # If you choose to perform the actual import ...
-        if load_if_found:
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[name] = module
-            spec.loader.exec_module(module)
-            _logger.info(f"{name!r} has been imported via find_spec")
-        _logger.debug(f"{name!r} was found but not imported")
-        return True
-    elif raise_error:
-        raise ImportError(
-            f"can't find {name!r} module, install it or add it to the path."
-        )
-    else:
-        _logger.debug(f"can't find {name!r} module, install it or add it to the path.")
-        return False
 
 
 class NpDatetimeEncoder(json.JSONEncoder):
