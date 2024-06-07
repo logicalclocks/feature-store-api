@@ -216,6 +216,6 @@ class TestUtil:
             online_connector = patch.object(util, "get_online_connector")
             with pytest.raises(
                 RuntimeError,
-                match="Event loop is not running. Please provide an event loop to create the engine.",
+                match="Event loop is not running. Please invoke this co-routine from a running loop or provide an event loop.",
             ):
                 asyncio.run(util.create_async_engine(online_connector, True, 1))
