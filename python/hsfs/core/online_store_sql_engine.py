@@ -19,10 +19,8 @@ import asyncio
 import json
 import logging
 import re
-import sys
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-import nest_asyncio
 from hsfs import feature_view, training_dataset, util
 from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
@@ -69,6 +67,8 @@ class OnlineStoreSqlClient:
         )
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
         self._online_connector = None
+        self._hostname = None
+        self._connection_options = None
 
     def fetch_prepared_statements(
         self,
@@ -209,12 +209,6 @@ class OnlineStoreSqlClient:
         return prepared_statements_dict
 
     def init_async_mysql_connection(self, options=None):
-        def is_runtime_notebook():
-            if "ipykernel" in sys.modules:
-                return True
-            else:
-                return False
-
         assert self._prepared_statements.get(self.SINGLE_VECTOR_KEY) is not None, (
             "Prepared statements are not initialized. "
             "Please call `init_prepared_statement` method first."
@@ -228,8 +222,10 @@ class OnlineStoreSqlClient:
         self._connection_options = options
         self._hostname = util.get_host_name() if self._external else None
 
-        if is_runtime_notebook():
+        if util.is_runtime_notebook():
             _logger.debug("Running in Jupyter notebook, applying nest_asyncio")
+            import nest_asyncio
+
             nest_asyncio.apply()
         else:
             _logger.debug("Running in python script. Not applying nest_asyncio")
@@ -730,3 +726,11 @@ class OnlineStoreSqlClient:
     @property
     def storage_connector_api(self) -> storage_connector_api.StorageConnectorApi:
         return self._storage_connector_api
+
+    @property
+    def hostname(self) -> str:
+        return self._hostname
+
+    @property
+    def connection_options(self) -> Dict[str, Any]:
+        return self._connection_options

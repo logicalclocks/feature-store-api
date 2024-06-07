@@ -19,6 +19,7 @@ import asyncio
 import itertools
 import json
 import re
+import sys
 import threading
 import time
 from datetime import date, datetime, timezone
@@ -197,7 +198,7 @@ async def create_async_engine(
             loop = asyncio.get_running_loop()
     except RuntimeError as er:
         raise RuntimeError(
-            "Event loop is not running. Please provide an event loop to create the engine."
+            "Event loop is not running. Please invoke this co-routine from a running loop or provide an event loop."
         ) from er
 
     online_options = online_conn.spark_options()
@@ -539,6 +540,13 @@ def build_serving_keys_from_prepared_statements(
                 )
             )
     return serving_keys
+
+
+def is_runtime_notebook():
+    if "ipykernel" in sys.modules:
+        return True
+    else:
+        return False
 
 
 class NpDatetimeEncoder(json.JSONEncoder):
