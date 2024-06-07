@@ -1873,6 +1873,8 @@ class FeatureGroupBase:
         ],
     ) -> None:
         is_ge_installed = is_package_installed_or_load("great_expectations")
+        if is_ge_installed:
+            import great_expectations
         if isinstance(expectation_suite, ExpectationSuite):
             tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
             tmp_expectation_suite["feature_group_id"] = self._id

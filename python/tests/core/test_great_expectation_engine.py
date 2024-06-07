@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-import great_expectations as ge
+import great_expectations
 import hsfs.expectation_suite as es
 from hsfs import feature_group, validation_report
 from hsfs.core import great_expectation_engine
@@ -189,7 +189,7 @@ class TestCodeEngine:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.engine.get_instance")
 
-        suite = ge.core.ExpectationSuite(
+        suite = great_expectations.core.ExpectationSuite(
             expectation_suite_name="suite_name",
         )
 
@@ -199,7 +199,7 @@ class TestCodeEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            expectation_suite=ge.core.ExpectationSuite(
+            expectation_suite=great_expectations.core.ExpectationSuite(
                 expectation_suite_name="attached_to_feature_group",
             ),
         )
@@ -238,7 +238,7 @@ class TestCodeEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            expectation_suite=ge.core.ExpectationSuite(
+            expectation_suite=great_expectations.core.ExpectationSuite(
                 expectation_suite_name="attached_to_feature_group",
             ),
         )
@@ -275,7 +275,7 @@ class TestCodeEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            expectation_suite=ge.core.ExpectationSuite(
+            expectation_suite=great_expectations.core.ExpectationSuite(
                 expectation_suite_name="attached_to_feature_group",
             ),
         )
@@ -310,7 +310,7 @@ class TestCodeEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            expectation_suite=ge.core.ExpectationSuite(
+            expectation_suite=great_expectations.core.ExpectationSuite(
                 expectation_suite_name="attached_to_feature_group",
             ),
         )
@@ -441,7 +441,7 @@ class TestCodeEngine:
             partition_key=[],
         )
 
-        report = ge.core.ExpectationSuiteValidationResult()
+        report = great_expectations.core.ExpectationSuiteValidationResult()
 
         mock_save_validation_report = mocker.patch(
             "hsfs.feature_group.FeatureGroup.save_validation_report"
@@ -482,7 +482,7 @@ class TestCodeEngine:
             partition_key=[],
         )
 
-        report = ge.core.ExpectationSuiteValidationResult()
+        report = great_expectations.core.ExpectationSuiteValidationResult()
 
         mock_save_validation_report = mocker.patch(
             "hsfs.feature_group.FeatureGroup.save_validation_report"
@@ -523,7 +523,7 @@ class TestCodeEngine:
             partition_key=[],
         )
 
-        report = ge.core.ExpectationSuiteValidationResult()
+        report = great_expectations.core.ExpectationSuiteValidationResult()
 
         mock_save_validation_report = mocker.patch(
             "hsfs.feature_group.FeatureGroup.save_validation_report"
@@ -539,5 +539,7 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert isinstance(converted_report, ge.core.ExpectationSuiteValidationResult)
+        assert isinstance(
+            converted_report, great_expectations.core.ExpectationSuiteValidationResult
+        )
         assert mock_save_validation_report.call_count == 0
