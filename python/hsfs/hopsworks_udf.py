@@ -280,7 +280,11 @@ class HopsworksUdf:
             ]
         )
         arg_list = signature.split("(")[1].split(")")[0].split(",")
-        arg_list = [arg.split(":")[0].split("=")[0].strip() for arg in arg_list]
+        arg_list = [
+            arg.split(":")[0].split("=")[0].strip()
+            for arg in arg_list
+            if not arg.strip() == ""
+        ]
         if "statistics" in arg_list:
             arg_list.remove("statistics")
         return arg_list, signature, signature_start_line, signature_end_line
