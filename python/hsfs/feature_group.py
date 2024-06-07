@@ -21,11 +21,20 @@ import logging
 import time
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import avro.schema
 import confluent_kafka
-import great_expectations as ge
 import humps
 import numpy as np
 import pandas as pd
@@ -78,6 +87,10 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
 
+if TYPE_CHECKING:
+    import great_expectations
+
+
 _logger = logging.getLogger(__name__)
 
 
@@ -94,7 +107,11 @@ class FeatureGroupBase:
         id: Optional[int] = None,
         embedding_index: Optional["EmbeddingIndex"] = None,
         expectation_suite: Optional[
-            Union["ExpectationSuite", "ge.core.ExpectationSuite", Dict[str, Any]]
+            Union[
+                "ExpectationSuite",
+                great_expectations.core.ExpectationSuite,
+                Dict[str, Any],
+            ]
         ] = None,
         online_topic_name: Optional[str] = None,
         topic_name: Optional[str] = None,
@@ -124,13 +141,13 @@ class FeatureGroupBase:
         self._feature_group_engine: Optional[
             feature_group_engine.FeatureGroupEngine
         ] = None
-        self._statistics_engine: "statistics_engine.StatisticsEngine" = (
+        self._statistics_engine: statistics_engine.StatisticsEngine = (
             statistics_engine.StatisticsEngine(featurestore_id, self.ENTITY_TYPE)
         )
-        self._code_engine: "code_engine.CodeEngine" = code_engine.CodeEngine(
+        self._code_engine: code_engine.CodeEngine = code_engine.CodeEngine(
             featurestore_id, self.ENTITY_TYPE
         )
-        self._great_expectation_engine: "great_expectation_engine.GreatExpectationEngine" = great_expectation_engine.GreatExpectationEngine(
+        self._great_expectation_engine: great_expectation_engine.GreatExpectationEngine = great_expectation_engine.GreatExpectationEngine(
             featurestore_id
         )
         if self._id is not None:
@@ -149,17 +166,17 @@ class FeatureGroupBase:
                 featurestore_id, self._id
             )
             self._validation_result_engine: Optional[
-                "validation_result_engine.ValidationResultEngine"
+                validation_result_engine.ValidationResultEngine
             ] = validation_result_engine.ValidationResultEngine(
                 featurestore_id, self._id
             )
             self._feature_monitoring_config_engine: Optional[
-                "feature_monitoring_config_engine.FeatureMonitoringConfigEngine"
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine
             ] = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
                 feature_store_id=featurestore_id,
                 feature_group_id=self._id,
             )
-            self._feature_monitoring_result_engine: "feature_monitoring_result_engine.FeatureMonitoringResultEngine" = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            self._feature_monitoring_result_engine: feature_monitoring_result_engine.FeatureMonitoringResultEngine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
                 feature_store_id=self._feature_store_id,
                 feature_group_id=self._id,
             )
@@ -543,8 +560,13 @@ class FeatureGroupBase:
         """
         storage_connector_provenance = self.get_storage_connector_provenance()
 
-        if storage_connector_provenance.inaccessible or storage_connector_provenance.deleted:
-            _logger.info("The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`")
+        if (
+            storage_connector_provenance.inaccessible
+            or storage_connector_provenance.deleted
+        ):
+            _logger.info(
+                "The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`"
+            )
 
         if storage_connector_provenance.accessible:
             return storage_connector_provenance.accessible[0]
@@ -879,7 +901,7 @@ class FeatureGroupBase:
 
     def get_expectation_suite(
         self, ge_type: bool = True
-    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
+    ) -> Union[ExpectationSuite, great_expectations.core.ExpectationSuite, None]:
         """Return the expectation suite attached to the feature group if it exists.
 
         !!! example
@@ -909,17 +931,25 @@ class FeatureGroupBase:
             self._expectation_suite = self._expectation_suite_engine.get()
 
         if self._expectation_suite is not None and ge_type is True:
-            return self._expectation_suite.to_ge_type()
+            is_ge_installed_or_loaded = util.is_package_installed_or_load(
+                "great_expectations"
+            )
+            if is_ge_installed_or_loaded:
+                return self._expectation_suite.to_ge_type()
+            else:
+                raise FeatureStoreException("")
         else:
             return self._expectation_suite
 
     def save_expectation_suite(
         self,
-        expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
+        expectation_suite: Union[
+            ExpectationSuite, great_expectations.core.ExpectationSuite
+        ],
         run_validation: bool = True,
-        validation_ingestion_policy: str = "ALWAYS",
+        validation_ingestion_policy: Literal["always", "strict"] = "always",
         overwrite: bool = False,
-    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
+    ) -> Union[ExpectationSuite, great_expectations.core.ExpectationSuite]:
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
         suite is already attached, it is replaced. Note that the provided expectation suite is modified
         inplace to include expectationId fields.
@@ -947,7 +977,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if isinstance(expectation_suite, ge.core.ExpectationSuite):
+        if isinstance(expectation_suite, great_expectations.core.ExpectationSuite):
             tmp_expectation_suite = ExpectationSuite.from_ge_type(
                 ge_expectation_suite=expectation_suite,
                 run_validation=run_validation,
@@ -1002,7 +1032,9 @@ class FeatureGroupBase:
 
     def get_latest_validation_report(
         self, ge_type: bool = True
-    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
+    ) -> Union[
+        ValidationReport, great_expectations.core.ExpectationSuiteValidationResult, None
+    ]:
         """Return the latest validation report attached to the Feature Group if it exists.
 
         !!! example
@@ -1031,7 +1063,11 @@ class FeatureGroupBase:
 
     def get_all_validation_reports(
         self, ge_type: bool = True
-    ) -> List[Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]]:
+    ) -> List[
+        Union[
+            ValidationReport, great_expectations.core.ExpectationSuiteValidationResult
+        ]
+    ]:
         """Return the latest validation report attached to the feature group if it exists.
 
         !!! example
@@ -1069,11 +1105,13 @@ class FeatureGroupBase:
         validation_report: Union[
             Dict[str, Any],
             ValidationReport,
-            ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
+            great_expectations.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
-        ingestion_result: str = "UNKNOWN",
+        ingestion_result: Literal["unknown", "experiment", "fg_data"] = "UNKNOWN",
         ge_type: bool = True,
-    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
+    ) -> Union[
+        ValidationReport, great_expectations.core.ExpectationSuiteValidationResult
+    ]:
         """Save validation report to hopsworks platform along previous reports of the same Feature Group.
 
         !!! example
@@ -1109,7 +1147,7 @@ class FeatureGroupBase:
         if self._id:
             if isinstance(
                 validation_report,
-                ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
+                great_expectations.core.expectation_validation_result.ExpectationSuiteValidationResult,
             ):
                 report = ValidationReport(
                     **validation_report.to_json_dict(),
@@ -1139,7 +1177,10 @@ class FeatureGroupBase:
         end_validation_time: Union[str, int, datetime, date, None] = None,
         filter_by: List[str] = None,
         ge_type: bool = True,
-    ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
+    ) -> Union[
+        List[ValidationResult],
+        List[great_expectations.core.ExpectationValidationResult],
+    ]:
         """Fetch validation history of an Expectation specified by its id.
 
         !!! example
@@ -1196,9 +1237,13 @@ class FeatureGroupBase:
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[str, Any]] = None,
-        ingestion_result: str = "UNKNOWN",
+        ingestion_result: Literal[
+            "unknown", "ingested", "rejected", "fg_data", "experiement"
+        ] = "unknown",
         ge_type: bool = True,
-    ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
+    ) -> Union[
+        great_expectations.core.ExpectationSuiteValidationResult, ValidationReport, None
+    ]:
         """Run validation based on the attached expectations.
 
         Runs any expectation attached with Deequ. But also runs attached Great Expectation
@@ -1240,7 +1285,7 @@ class FeatureGroupBase:
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
-            if ingestion_result == "UNKNOWN":
+            if ingestion_result.upper() == "UNKNOWN":
                 ingestion_result = "FG_DATA"
 
         return self._great_expectation_engine.validate(
@@ -1249,7 +1294,7 @@ class FeatureGroupBase:
             expectation_suite=expectation_suite,
             save_report=save_report,
             validation_options=validation_options or {},
-            ingestion_result=ingestion_result,
+            ingestion_result=ingestion_result.upper(),
             ge_type=ge_type,
         )
 
@@ -1813,7 +1858,10 @@ class FeatureGroupBase:
     def expectation_suite(
         self,
         expectation_suite: Union[
-            ExpectationSuite, ge.core.ExpectationSuite, Dict[str, Any], None
+            ExpectationSuite,
+            great_expectations.core.ExpectationSuite,
+            Dict[str, Any],
+            None,
         ],
     ) -> None:
         if isinstance(expectation_suite, ExpectationSuite):
@@ -1821,7 +1869,10 @@ class FeatureGroupBase:
             tmp_expectation_suite["feature_group_id"] = self._id
             tmp_expectation_suite["feature_store_id"] = self._feature_store_id
             self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
-        elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
+        elif isinstance(
+            expectation_suite,
+            great_expectations.core.expectation_suite.ExpectationSuite,
+        ):
             self._expectation_suite = ExpectationSuite(
                 **expectation_suite.to_json_dict(),
                 feature_store_id=self._feature_store_id,
@@ -2014,12 +2065,16 @@ class FeatureGroup(FeatureGroupBase):
         event_time: Optional[str] = None,
         stream: bool = False,
         expectation_suite: Optional[
-            Union["ge.core.ExpectationSuite", "ExpectationSuite", Dict[str, Any]]
+            Union[
+                great_expectations.core.ExpectationSuite,
+                ExpectationSuite,
+                Dict[str, Any],
+            ]
         ] = None,
-        parents: Optional[List["explicit_provenance.Links"]] = None,
+        parents: Optional[List[explicit_provenance.Links]] = None,
         href: Optional[str] = None,
         delta_streamer_job_conf: Optional[
-            Union[Dict[str, Any], "deltastreamer_jobconf.DeltaStreamerJobConf"]
+            Union[Dict[str, Any], deltastreamer_jobconf.DeltaStreamerJobConf]
         ] = None,
         deprecated: bool = False,
         **kwargs,
@@ -2394,7 +2449,10 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[str, Any]] = None,
         validation_options: Optional[Dict[str, Any]] = None,
         wait: bool = False,
-    ) -> Tuple[Optional["Job"], Optional["ge.core.ExpectationSuiteValidationResult"]]:
+    ) -> Tuple[
+        Optional["Job"],
+        Optional[great_expectations.core.ExpectationSuiteValidationResult],
+    ]:
         """Persist the metadata and materialize the feature group to the feature store.
 
         !!! warning "Changed in 3.3.0"
@@ -3410,7 +3468,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
 
     def __init__(
         self,
-        storage_connector: Union["sc.StorageConnector", Dict[str, Any]],
+        storage_connector: Union[sc.StorageConnector, Dict[str, Any]],
         query: Optional[str] = None,
         data_format: Optional[str] = None,
         path: Optional[str] = None,
@@ -3424,12 +3482,16 @@ class ExternalFeatureGroup(FeatureGroupBase):
         created: Optional[str] = None,
         creator: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
-        features: Optional[Union[List[Dict[str, Any]], List["feature.Feature"]]] = None,
+        features: Optional[Union[List[Dict[str, Any]], List[feature.Feature]]] = None,
         location: Optional[str] = None,
-        statistics_config: Optional[Union["StatisticsConfig", Dict[str, Any]]] = None,
+        statistics_config: Optional[Union[StatisticsConfig, Dict[str, Any]]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
-            Union["ExpectationSuite", "ge.core.ExpectationSuite", Dict[str, Any]]
+            Union[
+                ExpectationSuite,
+                great_expectations.core.ExpectationSuite,
+                Dict[str, Any],
+            ]
         ] = None,
         online_enabled: bool = False,
         href: Optional[str] = None,
@@ -3438,7 +3500,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         notification_topic_name: Optional[str] = None,
         spine: bool = False,
         deprecated: bool = False,
-        embedding_index: Optional["EmbeddingIndex"] = None,
+        embedding_index: Optional[EmbeddingIndex] = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -3552,7 +3614,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
         validation_options: Optional[Dict[str, Any]] = None,
         save_code: Optional[bool] = True,
         wait: bool = False,
-    ) -> Tuple[None, Optional["ge.core.ExpectationSuiteValidationResult"]]:
+    ) -> Tuple[
+        None, Optional[great_expectations.core.ExpectationSuiteValidationResult]
+    ]:
         """Insert the dataframe feature values ONLY in the online feature store.
 
         External Feature Groups contains metadata about feature data in an external storage system.
@@ -3959,12 +4023,12 @@ class SpineGroup(FeatureGroupBase):
         created: Optional[str] = None,
         creator: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
-        features: Optional[List[Union["feature.Feature", Dict[str, Any]]]] = None,
+        features: Optional[List[Union[feature.Feature, Dict[str, Any]]]] = None,
         location: Optional[str] = None,
-        statistics_config: Optional["StatisticsConfig"] = None,
+        statistics_config: Optional[StatisticsConfig] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
-            Union["ExpectationSuite", "ge.core.ExpectationSuite"]
+            Union[ExpectationSuite, great_expectations.core.ExpectationSuite]
         ] = None,
         online_enabled: bool = False,
         href: Optional[str] = None,

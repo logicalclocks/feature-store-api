@@ -16,8 +16,10 @@
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import itertools
 import json
+import logging
 import re
 import sys
 import threading
@@ -39,6 +41,8 @@ from sqlalchemy.engine.url import make_url
 
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
+
+_logger = logging.getLogger(__name__)
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -544,6 +548,22 @@ def is_runtime_notebook():
     if "ipykernel" in sys.modules:
         return True
     else:
+        return False
+
+
+def is_package_installed_or_load(name: str) -> bool:
+    if name in sys.modules:
+        _logger.debug(f"{name!r} is already imported")
+        return True
+    elif (spec := importlib.util.find_spec(name)) is not None:
+        # If you choose to perform the actual import ...
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+        _logger.info(f"{name!r} has been imported via find_spec")
+        return True
+    else:
+        _logger.debug(f"can't find {name!r} module, install it or add it to the path.")
         return False
 
 
