@@ -712,7 +712,7 @@ class Engine:
     ) -> great_expectations.core.ExpectationSuiteValidationResult:
         is_ge_installed = is_package_installed_or_load("great_expectations")
         if not is_ge_installed:
-            raise ImportError(great_expectations_not_installed_message)
+            raise ModuleNotFoundError(great_expectations_not_installed_message)
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
         if isinstance(dataframe, pl.DataFrame) or isinstance(

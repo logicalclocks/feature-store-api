@@ -110,7 +110,7 @@ class GeExpectation:
     def to_ge_type(self) -> great_expectations.core.ExpectationConfiguration:
         is_ge_installed = is_package_installed_or_load("great_expectations")
         if not is_ge_installed:
-            raise ImportError(great_expectations_not_installed_message)
+            raise ModuleNotFoundError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationConfiguration(
             expectation_type=self.expectation_type, kwargs=self.kwargs, meta=self.meta
         )

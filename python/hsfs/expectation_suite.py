@@ -159,7 +159,7 @@ class ExpectationSuite:
         """
         is_ge_installed = is_package_installed_or_load("great_expectations")
         if not is_ge_installed:
-            raise ImportError(great_expectations_not_installed_message)
+            raise ModuleNotFoundError(great_expectations_not_installed_message)
         suite_dict = ge_expectation_suite.to_json_dict()
         if id is None and "id" in suite_dict:
             id = suite_dict.pop("id")
@@ -213,7 +213,7 @@ class ExpectationSuite:
     def to_ge_type(self) -> great_expectations.core.ExpectationSuite:
         ge_installed = is_package_installed_or_load("great_expectations")
         if not ge_installed:
-            raise ImportError(great_expectations_not_installed_message)
+            raise ModuleNotFoundError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationSuite(
             expectation_suite_name=self._expectation_suite_name,
             ge_cloud_id=self._ge_cloud_id,

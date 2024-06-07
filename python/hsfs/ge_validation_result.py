@@ -106,7 +106,7 @@ class ValidationResult:
     def to_ge_type(self) -> great_expectations.core.ExpectationValidationResult:
         is_ge_installed = is_package_installed_or_load("great_expectations")
         if not is_ge_installed:
-            raise ImportError(great_expectations_not_installed_message)
+            raise ModuleNotFoundError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationValidationResult(
             success=self.success,
             exception_info=self.exception_info,

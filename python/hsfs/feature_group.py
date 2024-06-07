@@ -1289,7 +1289,7 @@ class FeatureGroupBase:
         """
         is_ge_installed = is_package_installed_or_load("great_expectations")
         if not is_ge_installed:
-            raise ImportError(great_expectations_not_installed_message)
+            raise ModuleNotFoundError(great_expectations_not_installed_message)
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
@@ -1872,12 +1872,13 @@ class FeatureGroupBase:
             None,
         ],
     ) -> None:
+        is_ge_installed = is_package_installed_or_load("great_expectations")
         if isinstance(expectation_suite, ExpectationSuite):
             tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
             tmp_expectation_suite["feature_group_id"] = self._id
             tmp_expectation_suite["feature_store_id"] = self._feature_store_id
             self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
-        elif isinstance(
+        elif is_ge_installed and isinstance(
             expectation_suite,
             great_expectations.core.expectation_suite.ExpectationSuite,
         ):
