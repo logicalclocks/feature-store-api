@@ -23,6 +23,10 @@ import humps
 from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import expectation_suite_engine
+from hsfs.core.constants import (
+    great_expectations_not_installed_message,
+    initialise_expectation_suite_for_single_expectation_api_message,
+)
 from hsfs.core.expectation_engine import ExpectationEngine
 from hsfs.core.variable_api import VariableApi
 from hsfs.ge_expectation import GeExpectation
@@ -30,6 +34,11 @@ from hsfs.ge_expectation import GeExpectation
 
 if TYPE_CHECKING:
     import great_expectations
+
+# if great_expectations is not installed, we will default to using native Hopsworks class as return values
+is_great_expectations_installed = util.is_package_installed_or_load(
+    "great_expectations", load_if_found=False
+)
 
 
 class ExpectationSuite:
@@ -43,24 +52,17 @@ class ExpectationSuite:
         ],
         meta: Dict[str, Any],
         id: Optional[int] = None,
-        data_asset_type: Optional[str] = None,
-        ge_cloud_id: Optional[int] = None,
         run_validation: bool = True,
         validation_ingestion_policy: Literal["always", " strict"] = "always",
         feature_store_id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
         href: Optional[str] = None,
-        expand: Optional[str] = None,
-        items: Optional[List[Dict[str, Any]]] = None,
-        count: Optional[int] = None,
-        type: Optional[str] = None,
-        created: Optional[int] = None,
         **kwargs,
     ) -> None:
         self._id = id
         self._expectation_suite_name = expectation_suite_name
-        self._ge_cloud_id = ge_cloud_id
-        self._data_asset_type = data_asset_type
+        self._ge_cloud_id = kwargs.get("ge_cloud_id", None)
+        self._data_asset_type = kwargs.get("data_asset_type", None)
         self._run_validation = run_validation
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         self._expectations = []
@@ -152,6 +154,9 @@ class ExpectationSuite:
         # Returns
             Hopsworks Expectation Suite instance.
         """
+        is_ge_installed = util.is_package_installed_or_load("great_expectations")
+        if not is_ge_installed:
+            raise FeatureStoreException(great_expectations_not_installed_message)
         suite_dict = ge_expectation_suite.to_json_dict()
         if id is None and "id" in suite_dict:
             id = suite_dict.pop("id")
@@ -175,7 +180,7 @@ class ExpectationSuite:
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
             "runValidation": self._run_validation,
-            "validationIngestionPolicy": self._validation_ingestion_policy,
+            "validationIngestionPolicy": self._validation_ingestion_policy.upper(),
         }
 
     def to_json_dict(self, decamelize: bool = False) -> Dict[str, Any]:
@@ -191,7 +196,7 @@ class ExpectationSuite:
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
             "runValidation": self._run_validation,
-            "validationIngestionPolicy": self._validation_ingestion_policy,
+            "validationIngestionPolicy": self._validation_ingestion_policy.upper(),
         }
 
         if decamelize:
@@ -205,10 +210,7 @@ class ExpectationSuite:
     def to_ge_type(self) -> great_expectations.core.ExpectationSuite:
         ge_installed = util.is_package_installed_or_load("great_expectations")
         if not ge_installed:
-            raise FeatureStoreException(
-                "Great Expectations package is not installed. Install via pip or use extras"
-                " hopsworks[great_expectations] or hopsworks[data_validation]."
-            )
+            raise FeatureStoreException(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationSuite(
             expectation_suite_name=self._expectation_suite_name,
             ge_cloud_id=self._ge_cloud_id,
@@ -238,7 +240,7 @@ class ExpectationSuite:
             )
         else:
             raise ValueError(
-                "Initialise the Expectation Suite first by attaching to a Feature Group"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     def _init_expectation_suite_engine(
@@ -282,7 +284,12 @@ class ExpectationSuite:
         # Raises
             `TypeError`
         """
-        if isinstance(expectation, great_expectations.core.ExpectationConfiguration):
+        is_ge_installed = util.is_package_installed_or_load(
+            "great_expectations", load_if_found=False
+        )
+        if is_ge_installed and isinstance(
+            expectation, great_expectations.core.ExpectationConfiguration
+        ):
             return GeExpectation(**expectation.to_json_dict())
         elif isinstance(expectation, GeExpectation):
             return expectation
@@ -294,7 +301,7 @@ class ExpectationSuite:
             )
 
     def get_expectation(
-        self, expectation_id: int, ge_type: bool = True
+        self, expectation_id: int, ge_type: bool = is_great_expectations_installed
     ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Fetch expectation with expectation_id from the backend.
@@ -313,7 +320,8 @@ class ExpectationSuite:
 
         # Arguments
             expectation_id: Id of the expectation to fetch from the backend.
-            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction,
+                defaults to True if great_expectations is installed else false.
 
         # Returns
             The expectation with expectation_id registered in the backend.
@@ -329,7 +337,7 @@ class ExpectationSuite:
                 return self._expectation_engine.get(expectation_id)
         else:
             raise FeatureStoreException(
-                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     def add_expectation(
@@ -337,7 +345,7 @@ class ExpectationSuite:
         expectation: Union[
             GeExpectation, great_expectations.core.ExpectationConfiguration
         ],
-        ge_type: bool = True,
+        ge_type: bool = is_great_expectations_installed,
     ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Append an expectation to the local suite or in the backend if attached to a Feature Group.
@@ -370,7 +378,8 @@ class ExpectationSuite:
             ```
         # Arguments
             expectation: The new expectation object.
-            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction,
+                defaults to True if great_expectations is installed else false.
 
         # Returns
             The new expectation attached to the Feature Group.
@@ -391,7 +400,7 @@ class ExpectationSuite:
                 return converted_expectation
         else:
             raise FeatureStoreException(
-                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     def replace_expectation(
@@ -399,7 +408,7 @@ class ExpectationSuite:
         expectation: Union[
             GeExpectation, great_expectations.core.ExpectationConfiguration
         ],
-        ge_type: bool = True,
+        ge_type: bool = is_great_expectations_installed,
     ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Update an expectation from the suite locally or from the backend if attached to a Feature Group.
@@ -411,7 +420,8 @@ class ExpectationSuite:
 
         # Arguments
             expectation: The updated expectation object. The meta field should contain an expectationId field.
-            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction,
+                defaults to True if great_expectations is installed else false.
 
         # Returns
             The updated expectation attached to the Feature Group.
@@ -436,7 +446,7 @@ class ExpectationSuite:
                 return converted_expectation
         else:
             raise FeatureStoreException(
-                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     def remove_expectation(self, expectation_id: Optional[int] = None) -> None:
@@ -460,7 +470,7 @@ class ExpectationSuite:
             self.expectations = self._expectation_engine.get_expectations_by_suite_id()
         else:
             raise FeatureStoreException(
-                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     # End of single expectation API
