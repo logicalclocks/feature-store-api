@@ -36,7 +36,7 @@ from hsfs.constructor import query
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
 from hsfs.core import inode, job
 from hsfs.engine import python
-from hsfs.hopsworks_udf import hopsworks_udf
+from hsfs.hopsworks_udf import udf
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from polars.testing import assert_frame_equal as polars_assert_frame_equal
 
@@ -3240,7 +3240,7 @@ class TestPython:
         engine._engine_type = "python"
         python_engine = python.Engine()
 
-        @hopsworks_udf(int)
+        @udf(int)
         def plus_one(col1):
             return col1 + 1
 
@@ -3280,7 +3280,7 @@ class TestPython:
         engine._engine_type = "python"
         python_engine = python.Engine()
 
-        @hopsworks_udf([int, int])
+        @udf([int, int])
         def plus_two(col1):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col1 + 2})
 
@@ -3324,7 +3324,7 @@ class TestPython:
         engine._engine_type = "python"
         python_engine = python.Engine()
 
-        @hopsworks_udf([int, int])
+        @udf([int, int])
         def plus_two(col1, col2):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
 
@@ -3368,7 +3368,7 @@ class TestPython:
         engine._engine_type = "python"
         python_engine = python.Engine()
 
-        @hopsworks_udf(int)
+        @udf(int)
         def plus_one(col1):
             return col1 + 1
 
@@ -3896,7 +3896,10 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_materialization": True, "skip_offsets": True},
+            offline_write_options={
+                "start_offline_materialization": True,
+                "skip_offsets": True,
+            },
         )
 
         # Assert

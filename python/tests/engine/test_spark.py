@@ -34,7 +34,7 @@ from hsfs.client import exceptions
 from hsfs.constructor import hudi_feature_group_alias, query
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
-from hsfs.hopsworks_udf import hopsworks_udf
+from hsfs.hopsworks_udf import udf
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from pyspark.sql import DataFrame
 from pyspark.sql.types import (
@@ -2668,7 +2668,7 @@ class TestSpark:
 
         spark_engine = spark.Engine()
 
-        @hopsworks_udf(int)
+        @udf(int)
         def plus_one(col1):
             return col1 + 1
 
@@ -2717,7 +2717,7 @@ class TestSpark:
 
         spark_engine = spark.Engine()
 
-        @hopsworks_udf(int)
+        @udf(int)
         def plus_one(col1):
             return col1 + 1
 
@@ -4328,7 +4328,7 @@ class TestSpark:
         engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        @hopsworks_udf(int)
+        @udf(int)
         def plus_one(col1):
             return col1 + 1
 
@@ -4388,7 +4388,7 @@ class TestSpark:
         engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        @hopsworks_udf([int, int])
+        @udf([int, int])
         def plus_two(col1):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col1 + 2})
 
@@ -4449,7 +4449,7 @@ class TestSpark:
         engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        @hopsworks_udf([int, int])
+        @udf([int, int])
         def test(col1, col2):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
 

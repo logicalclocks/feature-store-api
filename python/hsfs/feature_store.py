@@ -1286,7 +1286,7 @@ class FeatureStore:
         !!! example
             ```python
             # define the transformation function as a Hopsworks's UDF
-            @hopsworks_udf(int)
+            @udf(int)
             def plus_one(value):
                 return value + 1
 
@@ -1464,7 +1464,7 @@ class FeatureStore:
             query = fg1.select_all().join(fg2.select_all())
 
             # define the transformation function as a Hopsworks's UDF
-            @hopsworks_udf(int)
+            @udf(int)
             def plus_one(value):
                 return value + 1
 

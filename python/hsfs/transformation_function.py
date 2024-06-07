@@ -74,7 +74,7 @@ class TransformationFunction:
             # import hopsworks udf decorator
             from hsfs.hopsworks_udf import HopsworksUdf
             # define function
-            @hopsworks_udf(int)
+            @udf(int)
             def plus_one(value):
                 return value + 1
 
@@ -98,7 +98,7 @@ class TransformationFunction:
             # import hopsworks udf decorator
             from hsfs.hopsworks_udf import HopsworksUdf
             # define function
-            @hopsworks_udf(int)
+            @udf(int)
             def plus_one(value):
                 return value + 1
 
