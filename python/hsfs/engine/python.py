@@ -30,11 +30,20 @@ import warnings
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import avro
 import boto3
-import great_expectations as ge
 import hsfs
 import numpy as np
 import pandas as pd
@@ -70,6 +79,7 @@ from hsfs.core import (
     transformation_function_engine,
     variable_api,
 )
+from hsfs.core.constants import great_expectations_not_installed_message
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
@@ -92,6 +102,9 @@ try:
     HAS_FAST = True
 except ImportError:
     pass
+
+if TYPE_CHECKING:
+    import great_expectations
 
 # Decimal types are currently not supported
 _INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
@@ -206,7 +219,6 @@ class Engine:
         hive_config: Optional[Dict[str, Any]] = None,
         arrow_flight_config: Optional[Dict[str, Any]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
-
         self._validate_dataframe_type(dataframe_type)
         if isinstance(sql_query, dict) and "query_string" in sql_query:
             result_df = util.run_with_loading_animation(
@@ -510,7 +522,12 @@ class Engine:
             sql_query, feature_store, online_conn, "default", read_options or {}
         ).head(n)
 
-    def read_vector_db(self, feature_group: "hsfs.feature_group.FeatureGroup", n: int =None, dataframe_type: str="default") -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
+    def read_vector_db(
+        self,
+        feature_group: "hsfs.feature_group.FeatureGroup",
+        n: int = None,
+        dataframe_type: str = "default",
+    ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
         dataframe_type = dataframe_type.lower()
         self._validate_dataframe_type(dataframe_type)
 
@@ -689,9 +706,12 @@ class Engine:
     def validate_with_great_expectations(
         self,
         dataframe: Union[pl.DataFrame, pd.DataFrame],
-        expectation_suite: ge.core.ExpectationSuite,
+        expectation_suite: great_expectations.core.ExpectationSuite,
         ge_validate_kwargs: Optional[Dict[Any, Any]] = None,
-    ) -> ge.core.ExpectationSuiteValidationResult:
+    ) -> great_expectations.core.ExpectationSuiteValidationResult:
+        is_ge_installed = util.is_package_installed_or_load("great_expectations")
+        if not is_ge_installed:
+            raise FeatureStoreException(great_expectations_not_installed_message)
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
         if isinstance(dataframe, pl.DataFrame) or isinstance(
@@ -705,7 +725,7 @@ class Engine:
             dataframe = dataframe.to_pandas()
         if ge_validate_kwargs is None:
             ge_validate_kwargs = {}
-        report = ge.from_pandas(
+        report = great_expectations.from_pandas(
             dataframe, expectation_suite=expectation_suite
         ).validate(**ge_validate_kwargs)
         return report
@@ -1439,8 +1459,11 @@ class Engine:
         elif not isinstance(
             feature_group, ExternalFeatureGroup
         ) and self._start_offline_materialization(offline_write_options):
-            if (not offline_write_options.get("skip_offsets", False)
-                and self._job_api.last_execution(feature_group.materialization_job)): # always skip offsets if executing job for the first time
+            if not offline_write_options.get(
+                "skip_offsets", False
+            ) and self._job_api.last_execution(
+                feature_group.materialization_job
+            ):  # always skip offsets if executing job for the first time
                 # don't provide the current offsets (read from where the job last left off)
                 initial_check_point = ""
             # provide the initial_check_point as it will reduce the read amplification of materialization job
