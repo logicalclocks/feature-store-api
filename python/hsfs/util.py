@@ -552,7 +552,7 @@ def is_runtime_notebook():
 
 
 def is_package_installed_or_load(
-    name: str, load_if_found: bool = True, raise_error: bool = True
+    name: str, load_if_found: bool = True, raise_error: bool = False
 ) -> bool:
     if name in sys.modules:
         _logger.debug(f"{name!r} is already imported")

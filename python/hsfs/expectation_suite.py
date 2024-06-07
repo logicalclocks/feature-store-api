@@ -36,8 +36,8 @@ if TYPE_CHECKING:
     import great_expectations
 
 # if great_expectations is not installed, we will default to using native Hopsworks class as return values
-is_great_expectations_installed = util.is_package_installed_or_load(
-    "great_expectations", load_if_found=False
+HAS_GREAT_EXPECTATIONS = util.is_package_installed_or_load(
+    "great_expectations", load_if_found=False, raise_error=False
 )
 
 
@@ -285,7 +285,7 @@ class ExpectationSuite:
             `TypeError`
         """
         is_ge_installed = util.is_package_installed_or_load(
-            "great_expectations", load_if_found=False
+            "great_expectations", load_if_found=False, raise_error=False
         )
         if is_ge_installed and isinstance(
             expectation, great_expectations.core.ExpectationConfiguration
@@ -301,7 +301,7 @@ class ExpectationSuite:
             )
 
     def get_expectation(
-        self, expectation_id: int, ge_type: bool = is_great_expectations_installed
+        self, expectation_id: int, ge_type: bool = HAS_GREAT_EXPECTATIONS
     ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Fetch expectation with expectation_id from the backend.
@@ -345,7 +345,7 @@ class ExpectationSuite:
         expectation: Union[
             GeExpectation, great_expectations.core.ExpectationConfiguration
         ],
-        ge_type: bool = is_great_expectations_installed,
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
     ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Append an expectation to the local suite or in the backend if attached to a Feature Group.
@@ -408,7 +408,7 @@ class ExpectationSuite:
         expectation: Union[
             GeExpectation, great_expectations.core.ExpectationConfiguration
         ],
-        ge_type: bool = is_great_expectations_installed,
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
     ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Update an expectation from the suite locally or from the backend if attached to a Feature Group.

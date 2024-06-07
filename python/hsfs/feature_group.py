@@ -75,6 +75,7 @@ from hsfs.core import (
 )
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
+from hsfs.core.constants import great_expectations_not_installed_message
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core.vector_db_client import VectorDbClient
@@ -89,6 +90,10 @@ from hsfs.validation_report import ValidationReport
 
 if TYPE_CHECKING:
     import great_expectations
+
+HAS_GREAT_EXPECTATIONS = util.is_package_installed_or_load(
+    "great_expectations", load_if_found=False, raise_error=False
+)
 
 
 _logger = logging.getLogger(__name__)
@@ -105,10 +110,10 @@ class FeatureGroupBase:
         event_time: Optional[Union[str, int, date, datetime]] = None,
         online_enabled: bool = False,
         id: Optional[int] = None,
-        embedding_index: Optional["EmbeddingIndex"] = None,
+        embedding_index: Optional[EmbeddingIndex] = None,
         expectation_suite: Optional[
             Union[
-                "ExpectationSuite",
+                ExpectationSuite,
                 great_expectations.core.ExpectationSuite,
                 Dict[str, Any],
             ]
@@ -900,7 +905,7 @@ class FeatureGroupBase:
         return self
 
     def get_expectation_suite(
-        self, ge_type: bool = True
+        self, ge_type: bool = HAS_GREAT_EXPECTATIONS
     ) -> Union[ExpectationSuite, great_expectations.core.ExpectationSuite, None]:
         """Return the expectation suite attached to the feature group if it exists.
 
@@ -918,7 +923,8 @@ class FeatureGroupBase:
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
-                method on hopsworks type. Defaults to `True`.
+                method on hopsworks type. Defaults to `True` if Great Expectations is installed,
+                else `False`.
 
         # Returns
             `ExpectationSuite`. The expectation suite attached to the feature group.
@@ -931,13 +937,7 @@ class FeatureGroupBase:
             self._expectation_suite = self._expectation_suite_engine.get()
 
         if self._expectation_suite is not None and ge_type is True:
-            is_ge_installed_or_loaded = util.is_package_installed_or_load(
-                "great_expectations"
-            )
-            if is_ge_installed_or_loaded:
-                return self._expectation_suite.to_ge_type()
-            else:
-                raise FeatureStoreException("")
+            return self._expectation_suite.to_ge_type()
         else:
             return self._expectation_suite
 
@@ -977,7 +977,12 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if isinstance(expectation_suite, great_expectations.core.ExpectationSuite):
+        is_ge_installed = util.is_package_installed_or_load(
+            "great_expectations", load_if_found=False
+        )
+        if is_ge_installed and isinstance(
+            expectation_suite, great_expectations.core.ExpectationSuite
+        ):
             tmp_expectation_suite = ExpectationSuite.from_ge_type(
                 ge_expectation_suite=expectation_suite,
                 run_validation=run_validation,
@@ -1031,7 +1036,7 @@ class FeatureGroupBase:
         self._expectation_suite = None
 
     def get_latest_validation_report(
-        self, ge_type: bool = True
+        self, ge_type: bool = HAS_GREAT_EXPECTATIONS
     ) -> Union[
         ValidationReport, great_expectations.core.ExpectationSuiteValidationResult, None
     ]:
@@ -1051,7 +1056,8 @@ class FeatureGroupBase:
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
-                method on hopsworks type. Defaults to `True`.
+                method on hopsworks type. Defaults to `True` if Great Expectations is installed,
+                else `False`.
 
         # Returns
             `ValidationReport`. The latest validation report attached to the Feature Group.
@@ -1062,7 +1068,7 @@ class FeatureGroupBase:
         return self._validation_report_engine.get_last(ge_type=ge_type)
 
     def get_all_validation_reports(
-        self, ge_type: bool = True
+        self, ge_type: bool = HAS_GREAT_EXPECTATIONS
     ) -> List[
         Union[
             ValidationReport, great_expectations.core.ExpectationSuiteValidationResult
@@ -1084,7 +1090,8 @@ class FeatureGroupBase:
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
-                method on hopsworks type. Defaults to `True`.
+                method on hopsworks type. Defaults to `True` if Great Expectations is installed,
+                else `False`.
 
         # Returns
             Union[List[`ValidationReport`], `ValidationReport`]. All validation reports attached to the feature group.
@@ -1108,7 +1115,7 @@ class FeatureGroupBase:
             great_expectations.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
         ingestion_result: Literal["unknown", "experiment", "fg_data"] = "UNKNOWN",
-        ge_type: bool = True,
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
     ) -> Union[
         ValidationReport, great_expectations.core.ExpectationSuiteValidationResult
     ]:
@@ -1139,13 +1146,17 @@ class FeatureGroupBase:
                 already in the Feature Group.
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
-                method on hopsworks type. Defaults to `True`.
+                method on hopsworks type. Defaults to `True` if Great Expectations is installed,
+                else `False`.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
+        is_ge_installed = util.is_package_installed_or_load(
+            "great_expectations", load_if_found=False, raise_error=False
+        )
         if self._id:
-            if isinstance(
+            if is_ge_installed and isinstance(
                 validation_report,
                 great_expectations.core.expectation_validation_result.ExpectationSuiteValidationResult,
             ):
@@ -1175,8 +1186,10 @@ class FeatureGroupBase:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        filter_by: List[str] = None,
-        ge_type: bool = True,
+        filter_by: List[
+            Literal["ingested", "rejected", "unknown", "fg_data", "experiment"]
+        ] = None,
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
     ) -> Union[
         List[ValidationResult],
         List[great_expectations.core.ExpectationValidationResult],
@@ -1201,6 +1214,10 @@ class FeatureGroupBase:
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
             end_validation_time: fetch only validation result prior to the provided time, inclusive.
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
+            ge_type: If `True` returns a native Great Expectation type, Hopsworks
+                custom type otherwise. Conversion can be performed via the `to_ge_type()`
+                method on hopsworks type. Defaults to `True` if Great Expectations is installed,
+                else `False`.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
@@ -1208,14 +1225,6 @@ class FeatureGroupBase:
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
         """
-        major, minor = self._variable_api.parse_major_and_minor(
-            self._variable_api.get_version("hopsworks")
-        )
-        if major == "3" and minor == "0":
-            raise FeatureStoreException(
-                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
-            )
-
         if self._id:
             return self._validation_result_engine.get_validation_history(
                 expectation_id=expectation_id,
@@ -1240,14 +1249,14 @@ class FeatureGroupBase:
         ingestion_result: Literal[
             "unknown", "ingested", "rejected", "fg_data", "experiement"
         ] = "unknown",
-        ge_type: bool = True,
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
     ) -> Union[
         great_expectations.core.ExpectationSuiteValidationResult, ValidationReport, None
     ]:
         """Run validation based on the attached expectations.
 
-        Runs any expectation attached with Deequ. But also runs attached Great Expectation
-        Suites.
+        Runs the expectation suite attached to the feature group against the provided dataframe.
+        Raise an error if the great_expectations package is not installed.
 
         !!! example
             ```python
@@ -1277,11 +1286,15 @@ class FeatureGroupBase:
                 already in the Feature Group.
             save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
                 is initialised and attached to the Feature Group. Defaults to False.
-            ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
+            ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction.
+                Defaults to `True` if Great Expectations is installed, else `False`.
 
         # Returns
             A Validation Report produced by Great Expectations.
         """
+        is_ge_installed = util.is_package_installed_or_load("great_expectations")
+        if not is_ge_installed:
+            raise FeatureStoreException(great_expectations_not_installed_message)
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
