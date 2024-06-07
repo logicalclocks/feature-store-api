@@ -22,6 +22,8 @@ from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 import dateutil
 import humps
 from hsfs import util
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.constants import great_expectations_not_installed_message
 
 
 if TYPE_CHECKING:
@@ -46,11 +48,6 @@ class ValidationResult:
         ingestion_result: Literal[
             "unknown", "ingested", "rejected", "fg_data", "experiment"
         ] = "UNKNOWN",
-        href=None,
-        expand=None,
-        items=None,
-        count=None,
-        type=None,
         **kwargs,
     ):
         self._id = id
@@ -107,6 +104,9 @@ class ValidationResult:
         }
 
     def to_ge_type(self) -> great_expectations.core.ExpectationValidationResult:
+        is_ge_installed = util.is_package_installed_or_load("great_expectations")
+        if not is_ge_installed:
+            raise FeatureStoreException(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationValidationResult(
             success=self.success,
             exception_info=self.exception_info,
@@ -226,13 +226,20 @@ class ValidationResult:
             self._validation_time = None
 
     @property
-    def ingestion_result(self) -> str:
+    def ingestion_result(
+        self,
+    ) -> Literal["ingested", "rejected", "unknown", "experiment", "fg_data"]:
         return self._ingestion_result
 
     @ingestion_result.setter
-    def ingestion_result(self, ingestion_result: str = "UNKNOWN"):
-        allowed_values = ["INGESTED", "REJECTED", "UNKNOWN", "EXPERIMENT", "FG_DATA"]
-        if ingestion_result.upper() in allowed_values:
+    def ingestion_result(
+        self,
+        ingestion_result: Literal[
+            "ingested", "rejected", "unknown", "experiment", "fg_data"
+        ] = "unknown",
+    ):
+        allowed_values = ["ingested", "rejected", "unknown", "experiment", "fg_data"]
+        if ingestion_result.lower() in allowed_values:
             self._ingestion_result = ingestion_result
         else:
             raise ValueError(

@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import humps
 from hsfs import util
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.constants import great_expectations_not_installed_message
 
 
 if TYPE_CHECKING:
@@ -106,6 +108,9 @@ class GeExpectation:
         )
 
     def to_ge_type(self) -> great_expectations.core.ExpectationConfiguration:
+        is_ge_installed = util.is_module_available("great_expectations")
+        if not is_ge_installed:
+            raise FeatureStoreException(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationConfiguration(
             expectation_type=self.expectation_type, kwargs=self.kwargs, meta=self.meta
         )
