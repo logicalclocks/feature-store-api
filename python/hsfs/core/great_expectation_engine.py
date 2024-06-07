@@ -23,6 +23,8 @@ from hsfs import expectation_suite as es
 
 if TYPE_CHECKING:
     import great_expectations
+    import pandas as pd
+    from hsfs import feature_group as fg_mod
 
 
 class GreatExpectationEngine:
@@ -38,8 +40,8 @@ class GreatExpectationEngine:
 
     def validate(
         self,
-        feature_group,
-        dataframe,
+        feature_group: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
+        dataframe: pd.DataFrame,
         expectation_suite: Union[
             great_expectations.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
@@ -94,11 +96,11 @@ class GreatExpectationEngine:
 
     def fetch_or_convert_expectation_suite(
         self,
-        feature_group,
+        feature_group: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
         expectation_suite: Union[
             great_expectations.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
-        validation_options: dict = None,
+        validation_options: Optional[Dict[str, Any]] = None,
     ) -> Optional[es.ExpectationSuite]:
         """Convert provided expectation suite or fetch the one attached to the Feature Group from backend."""
         if expectation_suite is not None:
@@ -109,7 +111,7 @@ class GreatExpectationEngine:
             "fetch_expectation_suite", True
         ):
             return feature_group.expectation_suite
-        return feature_group.get_expectation_suite(False)
+        return feature_group.get_expectation_suite(ge_type=False)
 
     def should_run_validation(
         self,

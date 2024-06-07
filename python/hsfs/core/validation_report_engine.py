@@ -25,6 +25,8 @@ from hsfs.validation_report import ValidationReport
 if TYPE_CHECKING:
     import great_expectations
 
+HAS_GREAT_EXPECTATIONS = util.is_package_installed_or_load("great_expectations")
+
 
 class ValidationReportEngine:
     def __init__(self, feature_store_id: int, feature_group_id: int):
@@ -42,7 +44,9 @@ class ValidationReportEngine:
         )
 
     def save(
-        self, validation_report: ValidationReport, ge_type: bool = True
+        self,
+        validation_report: ValidationReport,
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
     ) -> ValidationReport:
         saved_report = self._validation_report_api.create(validation_report)
         url = self._get_validation_report_url()
@@ -53,7 +57,7 @@ class ValidationReportEngine:
             return saved_report
 
     def get_last(
-        self, ge_type: bool = True
+        self, ge_type: bool = HAS_GREAT_EXPECTATIONS
     ) -> Union[
         ValidationReport, great_expectations.core.ExpectationSuiteValidationResult, None
     ]:
@@ -72,7 +76,7 @@ class ValidationReportEngine:
             return reports[0]
 
     def get_all(
-        self, ge_type: bool = True
+        self, ge_type: bool = HAS_GREAT_EXPECTATIONS
     ) -> Union[
         List[ValidationReport],
         List[great_expectations.core.ExpectationSuiteValidationResult],
