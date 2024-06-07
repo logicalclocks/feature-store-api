@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import copy
+import importlib.util
 import json
 import logging
 import time
@@ -77,7 +78,6 @@ from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
 from hsfs.core.constants import great_expectations_not_installed_message
 from hsfs.core.job import Job
-from hsfs.core.optional_dependency_helper import is_package_installed_or_load
 from hsfs.core.variable_api import VariableApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
@@ -89,10 +89,11 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
 
-if TYPE_CHECKING:
+# if great_expectations is not installed, we will default to using native Hopsworks class as return values
+HAS_GREAT_EXPECTATIONS = False
+if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
+    HAS_GREAT_EXPECTATIONS = True
     import great_expectations
-
-HAS_GREAT_EXPECTATIONS = is_package_installed_or_load("great_expectations")
 
 
 _logger = logging.getLogger(__name__)
@@ -160,12 +161,12 @@ class FeatureGroupBase:
                     feature_store_id=featurestore_id, feature_group_id=self._id
                 )
             self._expectation_suite_engine: Optional[
-                "expectation_suite_engine.ExpectationSuiteEngine"
+                expectation_suite_engine.ExpectationSuiteEngine
             ] = expectation_suite_engine.ExpectationSuiteEngine(
                 feature_store_id=featurestore_id, feature_group_id=self._id
             )
             self._validation_report_engine: Optional[
-                "validation_report_engine.ValidationReportEngine"
+                validation_report_engine.ValidationReportEngine
             ] = validation_report_engine.ValidationReportEngine(
                 featurestore_id, self._id
             )
@@ -976,8 +977,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        is_ge_installed = is_package_installed_or_load("great_expectations")
-        if is_ge_installed and isinstance(
+        if HAS_GREAT_EXPECTATIONS and isinstance(
             expectation_suite, great_expectations.core.ExpectationSuite
         ):
             tmp_expectation_suite = ExpectationSuite.from_ge_type(
@@ -1149,9 +1149,8 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        is_ge_installed = is_package_installed_or_load("great_expectations")
         if self._id:
-            if is_ge_installed and isinstance(
+            if HAS_GREAT_EXPECTATIONS and isinstance(
                 validation_report,
                 great_expectations.core.expectation_validation_result.ExpectationSuiteValidationResult,
             ):
@@ -1287,8 +1286,7 @@ class FeatureGroupBase:
         # Returns
             A Validation Report produced by Great Expectations.
         """
-        is_ge_installed = is_package_installed_or_load("great_expectations")
-        if not is_ge_installed:
+        if HAS_GREAT_EXPECTATIONS is False:
             raise ModuleNotFoundError(great_expectations_not_installed_message)
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
@@ -1872,15 +1870,12 @@ class FeatureGroupBase:
             None,
         ],
     ) -> None:
-        is_ge_installed = is_package_installed_or_load("great_expectations")
-        if is_ge_installed:
-            import great_expectations
         if isinstance(expectation_suite, ExpectationSuite):
             tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
             tmp_expectation_suite["feature_group_id"] = self._id
             tmp_expectation_suite["feature_store_id"] = self._feature_store_id
             self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
-        elif is_ge_installed and isinstance(
+        elif HAS_GREAT_EXPECTATIONS and isinstance(
             expectation_suite,
             great_expectations.core.expectation_suite.ExpectationSuite,
         ):

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import ast
 import decimal
+import importlib.util
 import json
 import logging
 import math
@@ -80,7 +81,6 @@ from hsfs.core import (
     variable_api,
 )
 from hsfs.core.constants import great_expectations_not_installed_message
-from hsfs.core.optional_dependency_helper import is_package_installed_or_load
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
@@ -104,7 +104,9 @@ try:
 except ImportError:
     pass
 
-if TYPE_CHECKING:
+HAS_GREAT_EXPECTATIONS = False
+if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
+    HAS_GREAT_EXPECTATIONS = True
     import great_expectations
 
 # Decimal types are currently not supported
@@ -710,8 +712,7 @@ class Engine:
         expectation_suite: great_expectations.core.ExpectationSuite,
         ge_validate_kwargs: Optional[Dict[Any, Any]] = None,
     ) -> great_expectations.core.ExpectationSuiteValidationResult:
-        is_ge_installed = is_package_installed_or_load("great_expectations")
-        if not is_ge_installed:
+        if HAS_GREAT_EXPECTATIONS is False:
             raise ModuleNotFoundError(great_expectations_not_installed_message)
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.

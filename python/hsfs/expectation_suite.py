@@ -15,6 +15,7 @@
 #
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
@@ -28,16 +29,15 @@ from hsfs.core.constants import (
     initialise_expectation_suite_for_single_expectation_api_message,
 )
 from hsfs.core.expectation_engine import ExpectationEngine
-from hsfs.core.optional_dependency_helper import is_package_installed_or_load
 from hsfs.core.variable_api import VariableApi
 from hsfs.ge_expectation import GeExpectation
 
 
-if TYPE_CHECKING:
-    import great_expectations
-
 # if great_expectations is not installed, we will default to using native Hopsworks class as return values
-HAS_GREAT_EXPECTATIONS = is_package_installed_or_load("great_expectations")
+HAS_GREAT_EXPECTATIONS = False
+if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
+    HAS_GREAT_EXPECTATIONS = True
+    import great_expectations
 
 
 class ExpectationSuite:
@@ -157,8 +157,7 @@ class ExpectationSuite:
         # Returns
             Hopsworks Expectation Suite instance.
         """
-        is_ge_installed = is_package_installed_or_load("great_expectations")
-        if not is_ge_installed:
+        if HAS_GREAT_EXPECTATIONS is False:
             raise ModuleNotFoundError(great_expectations_not_installed_message)
         suite_dict = ge_expectation_suite.to_json_dict()
         if id is None and "id" in suite_dict:
@@ -211,8 +210,7 @@ class ExpectationSuite:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_ge_type(self) -> great_expectations.core.ExpectationSuite:
-        ge_installed = is_package_installed_or_load("great_expectations")
-        if not ge_installed:
+        if HAS_GREAT_EXPECTATIONS is False:
             raise ModuleNotFoundError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationSuite(
             expectation_suite_name=self._expectation_suite_name,
@@ -287,8 +285,7 @@ class ExpectationSuite:
         # Raises
             `TypeError`
         """
-        is_ge_installed = is_package_installed_or_load("great_expectations")
-        if is_ge_installed and isinstance(
+        if HAS_GREAT_EXPECTATIONS and isinstance(
             expectation, great_expectations.core.ExpectationConfiguration
         ):
             return GeExpectation(**expectation.to_json_dict())

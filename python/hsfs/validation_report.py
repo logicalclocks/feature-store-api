@@ -15,17 +15,19 @@
 #
 from __future__ import annotations
 
+import importlib.util
 import json
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
 import humps
 from hsfs import util
 from hsfs.core.constants import great_expectations_not_installed_message
-from hsfs.core.optional_dependency_helper import is_package_installed_or_load
 from hsfs.ge_validation_result import ValidationResult
 
 
-if TYPE_CHECKING:
+HAS_GREAT_EXPECTATIONS = False
+if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
+    HAS_GREAT_EXPECTATIONS = True
     import great_expectations
 
 
@@ -110,8 +112,7 @@ class ValidationReport:
         }
 
     def to_ge_type(self) -> great_expectations.core.ExpectationSuiteValidationResult:
-        is_ge_installed = is_package_installed_or_load("great_expectations")
-        if not is_ge_installed:
+        if HAS_GREAT_EXPECTATIONS is False:
             raise ModuleNotFoundError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationSuiteValidationResult(
             success=self.success,
