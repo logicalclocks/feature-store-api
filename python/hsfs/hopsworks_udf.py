@@ -696,9 +696,10 @@ def renaming_wrapper(*args):
     ) -> None:
         self._statistics = TransformationStatistics(*self._statistics_argument_names)
         for stat in statistics:
-            self._statistics.set_statistics(
-                self._statistics_argument_mapping[stat.feature_name], stat.to_dict()
-            )
+            if stat.feature_name in self._statistics_argument_mapping.keys():
+                self._statistics.set_statistics(
+                    self._statistics_argument_mapping[stat.feature_name], stat.to_dict()
+                )
 
     @output_column_names.setter
     def output_column_names(self, output_col_names: Union[str, List[str]]) -> None:
