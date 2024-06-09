@@ -44,9 +44,9 @@ def robust_scaler(feature: pd.Series, statistics=feature_statistics) -> pd.Serie
 
 @udf(int)
 def label_encoder(feature: pd.Series, statistics=feature_statistics) -> pd.Series:
-    unique_data = [
-        value for value in statistics.feature.extended_statistics["unique_values"]
-    ]
+    unique_data = sorted(
+        [value for value in statistics.feature.extended_statistics["unique_values"]]
+    )
     value_to_index = {value: index for index, value in enumerate(unique_data)}
     return pd.Series(
         [value_to_index[data] if not pd.isna(data) else np.nan for data in feature]
