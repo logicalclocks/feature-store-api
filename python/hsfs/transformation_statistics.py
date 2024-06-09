@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, Union
 
@@ -86,7 +87,11 @@ class FeatureTransformationStatistics:
         self.entropy = entropy
         self.uniqueness = uniqueness
         self.exact_num_distinct_values = exact_num_distinct_values
-        self.extended_statistics = extended_statistics
+        self.extended_statistics = (
+            extended_statistics
+            if not isinstance(extended_statistics, str)
+            else json.loads(extended_statistics)
+        )
 
     @classmethod
     def from_response_json(
