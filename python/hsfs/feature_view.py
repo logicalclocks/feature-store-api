@@ -879,13 +879,10 @@ class FeatureView:
         if len(results) == 0:
             return []
 
-        td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
-
         return self._vector_server.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
             return_type=return_type,
             vector_db_features=[res[1] for res in results],
-            td_embedding_feature_names=td_embedding_feature_names,
             allow_missing=True,
         )
 
