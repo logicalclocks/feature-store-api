@@ -15,9 +15,10 @@
 #
 from __future__ import annotations
 
+import importlib.util
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
-from hsfs import engine, validation_report
+from hsfs import engine, util, validation_report
 from hsfs import expectation_suite as es
 
 
@@ -66,6 +67,15 @@ class GreatExpectationEngine:
         if self.should_run_validation(
             expectation_suite=suite, validation_options=validation_options
         ):
+            if importlib.util.find_spec("great_expectations") is None:
+                raise ModuleNotFoundError(
+                    f"Feature Group {feature_group.name}, v{feature_group.version} is configured to run validation with Great Expectations, "
+                    "but Great Expectations is not installed. Please install it using `pip install great_expectations`.\n"
+                    "Alternatively you can disable Great Expectations validation by setting `run_validation=False`"
+                    "in the validation_options, or disable/delete the suite in the Feature Group Edit UI.\n"
+                    f"{util.get_feature_group_url(feature_group.feature_store_id, feature_group.id)}."
+                )
+
             report = engine.get_instance().validate_with_great_expectations(
                 dataframe=dataframe,
                 expectation_suite=suite.to_ge_type(),
