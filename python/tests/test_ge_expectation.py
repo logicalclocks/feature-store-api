@@ -15,7 +15,9 @@
 #
 
 
-import great_expectations
+import importlib.util
+
+import pytest
 from hsfs import ge_expectation
 
 
@@ -62,7 +64,13 @@ class TestGeExpectation:
         # Assert
         assert len(ge_list) == 0
 
+    @pytest.mark.skipif(
+        importlib.util.find_spec("great_expectations") is None,
+        reason="great_expectations not installed",
+    )
     def test_from_ge_object(self):
+        import great_expectations
+
         # Arrange
         expectationId = 32
         expectation_type = "expect_column_min_to_be_between"

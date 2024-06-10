@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
+import importlib.util
 import warnings
 
 import hsfs
@@ -145,7 +145,7 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == ""
         assert fg.partition_key == []
-        assert fg.primary_key == ['intt']
+        assert fg.primary_key == ["intt"]
         assert fg.hudi_precombine_key is None
         assert fg._feature_store_name is None
         assert fg.created is None
@@ -322,7 +322,7 @@ class TestFeatureGroup:
                 version=1,
                 description="fg_description",
                 event_time=["event_date"],
-                features=features
+                features=features,
             )
         with pytest.raises(FeatureStoreException):
             util.verify_attribute_key_names(new_fg, False)
@@ -810,6 +810,10 @@ class TestExternalFeatureGroup:
         assert fg.expectation_suite._feature_group_id == fg.id
         assert fg.expectation_suite._feature_store_id == fg.feature_store_id
 
+    @pytest.mark.skipif(
+        importlib.util.find_spec("great_expectations") is None,
+        reason="great_expectations not installed",
+    )
     def test_feature_group_save_expectation_suite_from_ge_type(
         self, mocker, backend_fixtures
     ):

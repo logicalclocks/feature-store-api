@@ -16,12 +16,15 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
 
-from great_expectations.core import ExpectationValidationResult
 from hsfs import util
 from hsfs.core import validation_result_api
 from hsfs.ge_validation_result import ValidationResult
+
+
+if TYPE_CHECKING:
+    from great_expectations.core import ExpectationValidationResult
 
 
 class ValidationResultEngine:

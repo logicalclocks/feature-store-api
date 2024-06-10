@@ -76,12 +76,6 @@ try:
 except ImportError:
     pass
 
-from great_expectations.core.batch import RuntimeBatchRequest
-from great_expectations.data_context import BaseDataContext
-from great_expectations.data_context.types.base import (
-    DataContextConfig,
-    InMemoryStoreBackendDefaults,
-)
 from hsfs import client, feature, training_dataset_feature, util
 from hsfs import feature_group as fg_mod
 from hsfs.client import hopsworks
@@ -96,6 +90,17 @@ from hsfs.core import (
 )
 from hsfs.storage_connector import StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
+
+
+HAS_GREAT_EXPECTATIONS = False
+if importlib.util.find_spec("great_expectations"):
+    HAS_GREAT_EXPECTATIONS = True
+    from great_expectations.core.batch import RuntimeBatchRequest
+    from great_expectations.data_context import BaseDataContext
+    from great_expectations.data_context.types.base import (
+        DataContextConfig,
+        InMemoryStoreBackendDefaults,
+    )
 
 
 class Engine:
@@ -152,7 +157,14 @@ class Engine:
             sql_query, feature_store, online_conn, "default", read_options
         ).show(n)
 
-    def read_vector_db(self, feature_group: fg_mod.FeatureGroup, n: int =None, dataframe_type: str="default") -> Union[pd.DataFrame, np.ndarray, List[List[Any]], TypeVar("pyspark.sql.DataFrame")]:
+    def read_vector_db(
+        self,
+        feature_group: fg_mod.FeatureGroup,
+        n: int = None,
+        dataframe_type: str = "default",
+    ) -> Union[
+        pd.DataFrame, np.ndarray, List[List[Any]], TypeVar("pyspark.sql.DataFrame")
+    ]:
         results = VectorDbClient.read_feature_group(feature_group, n)
         feature_names = [f.name for f in feature_group.features]
         dataframe_type = dataframe_type.lower()
