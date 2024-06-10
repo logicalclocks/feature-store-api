@@ -20,7 +20,7 @@ import logging
 from base64 import b64decode
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Literal, Optional, Set, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import avro.io
 import avro.schema
@@ -123,6 +123,7 @@ class VectorServer:
         self._return_feature_value_handlers: Dict[str, Callable] = {}
         self._feature_to_handle_if_rest: Optional[Set[str]] = None
         self._feature_to_handle_if_sql: Optional[Set[str]] = None
+        self._valid_serving_keys: Set[str] = set()
 
     def init_serving(
         self,
@@ -809,7 +810,7 @@ class VectorServer:
         """
         _logger.debug("Checking keys in entry are valid serving keys.")
         for key in entry.keys():
-            if key not in self.required_serving_keys:
+            if key not in self.valid_serving_keys:
                 raise exceptions.FeatureStoreException(
                     f"Provided key {key} is not a serving key. Required serving keys: {self.required_serving_keys}."
                 )
@@ -817,13 +818,15 @@ class VectorServer:
         _logger.debug("Checking entry has either all or none of composite serving keys")
         for composite_group in self.groups_of_composite_serving_keys.values():
             present_keys = [
-                True if sk_name in entry.keys() else False
-                for sk_name in composite_group
+                True
+                if (sk_required in entry.keys() or sk_name in entry.keys())
+                else False
+                for (sk_required, sk_name) in composite_group
             ]
             if not all(present_keys) and any(present_keys):
                 raise exceptions.FeatureStoreException(
                     "Provide either all composite serving keys or none. "
-                    f"Composite keys: {composite_group} in entry {entry}."
+                    f"Composite keys: {[prefix_key for (prefix_key, _) in composite_group]} or {[key for (_, key) in composite_group]} in entry {entry}."
                 )
 
         if allow_missing is False:
@@ -859,7 +862,10 @@ class VectorServer:
         )
         missing_features_per_serving_keys = {}
         has_missing = False
-        for sk_name, fetched_features in self.per_serving_key_features.items():
+        for sk_name, (
+            sk_no_prefix,
+            fetched_features,
+        ) in self.per_serving_key_features.items():
             passed_feature_names = (
                 set(passed_features.keys()) if passed_features else set()
             )
@@ -876,9 +882,9 @@ class VectorServer:
             )
             # if not present and all corresponding features are not passed via passed_features
             # or vector_db_features
-            if sk_name not in entry.keys() and not fetched_features.issubset(
-                passed_feature_names
-            ):
+            if (
+                sk_name not in entry.keys() and sk_no_prefix not in entry.keys()
+            ) and not fetched_features.issubset(passed_feature_names):
                 _logger.debug(
                     f"Missing serving key {sk_name} and corresponding features {neither_fetched_nor_passed}."
                 )
@@ -898,19 +904,22 @@ class VectorServer:
         self,
         serving_keys: List[sk_mod.ServingKey],
         features: List[tdf_mod.TrainingDatasetFeature],
-    ) -> Dict[str, set[str]]:
+    ) -> Dict[str, Tuple[str, Set[str]]]:
         """Build a dictionary of feature names which will be fetched per serving key."""
         per_serving_key_features = {}
         for serving_key in serving_keys:
-            per_serving_key_features[serving_key.required_serving_key] = set(
-                [
-                    f.name
-                    for f in features
-                    if (
-                        f.feature_group.name == serving_key.feature_group.name
-                        and not f.label
-                    )
-                ]
+            per_serving_key_features[serving_key.required_serving_key] = (
+                serving_key.name,
+                set(
+                    [
+                        f.name
+                        for f in features
+                        if (
+                            f.feature_group.name == serving_key.feature_group.name
+                            and not f.label
+                        )
+                    ]
+                ),
             )
         return per_serving_key_features
 
@@ -946,11 +955,13 @@ class VectorServer:
     def groups_of_composite_serving_keys(self) -> Dict[int, List[str]]:
         if not hasattr(self, "_groups_of_composite_serving_keys"):
             self._groups_of_composite_serving_keys = {
-                sk.feature_group.id: [
-                    sk_match.required_serving_key
-                    for sk_match in self.serving_keys
-                    if sk_match.feature_group.id == sk.feature_group.id
-                ]
+                sk.feature_group.id: (
+                    [
+                        (sk_match.required_serving_key, sk_match.name)
+                        for sk_match in self.serving_keys
+                        if sk_match.feature_group.id == sk.feature_group.id
+                    ]
+                )
                 for sk in self.serving_keys
             }
             _logger.debug(
@@ -1049,6 +1060,15 @@ class VectorServer:
                 )
             }
         return self._feature_to_handle_if_sql
+
+    @property
+    def valid_serving_keys(self):
+        if not self._valid_serving_keys or len(self._valid_serving_keys) == 0:
+            self._valid_serving_keys = set(
+                [sk.required_serving_key for sk in self.serving_keys]
+                + [sk.name for sk in self.serving_keys]
+            )
+        return self._valid_serving_keys
 
     @property
     def default_client(self) -> str:
