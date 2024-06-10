@@ -122,6 +122,7 @@ class VectorServer:
         self._default_client: Optional[Literal["rest", "sql"]] = None
         self._return_feature_value_handlers: Dict[str, Callable] = {}
         self._feature_to_handle_if_rest: Optional[Set[str]] = None
+        self._feature_to_handle_if_sql: Optional[Set[str]] = None
 
     def init_serving(
         self,
