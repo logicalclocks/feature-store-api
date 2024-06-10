@@ -44,7 +44,7 @@ class OnlineStoreSqlClient:
         external: bool,
         serving_keys: Optional[Set[ServingKey]] = None,
     ):
-        _logger.info("Initialising Online Store Sql Client")
+        _logger.debug("Initialising Online Store Sql Client")
         self._feature_store_id = feature_store_id
         self._skip_fg_ids: Set[int] = skip_fg_ids or set()
         self._external = external
