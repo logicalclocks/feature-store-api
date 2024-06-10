@@ -651,7 +651,7 @@ class VectorServer:
         if client == self.DEFAULT_REST_CLIENT:
             matching_keys = self.feature_to_handle_if_rest.intersection(row_dict.keys())
         else:
-            matching_keys = set(self.return_feature_value_handlers.keys()).intersection(
+            matching_keys = set(self.feature_to_handle_if_sql).intersection(
                 row_dict.keys()
             )
         _logger.debug("Applying return value handlers to : %s", matching_keys)
@@ -1031,6 +1031,23 @@ class VectorServer:
                 )
             }
         return self._feature_to_handle_if_rest
+
+    @property
+    def feature_to_handle_if_sql(self) -> Set[str]:
+        # Unlike REST client, SQL client does not deserialize complex features
+        # however, it does convert timestamp to datetime obj
+        if self._feature_to_handle_if_sql is None:
+            self._feature_to_handle_if_sql = {
+                f.name
+                for f in self._features
+                if (
+                    f.is_complex()
+                    and not (
+                        f.label or f.training_helper_column or f.inference_helper_column
+                    )
+                )
+            }
+        return self._feature_to_handle_if_sql
 
     @property
     def default_client(self) -> str:
