@@ -823,6 +823,10 @@ class FeatureView:
         the number of results returned may be less than k. Try using a large value of k and extract the top k
         items from the results if needed.
 
+        !!! warning "Duplicate column error in Polars"
+            If the feature view has duplicate column names, attempting to create a polars DataFrame
+            will raise an error. To avoid this, set `return_type` to `"list"` or `"pandas"`.
+
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
             feature: The feature used to compute similarity score. Required only if there
@@ -879,13 +883,10 @@ class FeatureView:
         if len(results) == 0:
             return []
 
-        td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
-
         return self._vector_server.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
             return_type=return_type,
             vector_db_features=[res[1] for res in results],
-            td_embedding_feature_names=td_embedding_feature_names,
             allow_missing=True,
         )
 
