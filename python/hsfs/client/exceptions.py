@@ -38,6 +38,8 @@ class RestAPIError(Exception):
     def __init__(self, url: str, response: requests.Response) -> None:
         try:
             error_object = response.json()
+            if isinstance(error_object, str):
+                error_object = {"errorMsg": error_object}
         except Exception:
             error_object = {}
         message = (
