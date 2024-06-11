@@ -140,6 +140,7 @@ class FeatureGroupBase:
         self._notification_topic_name = notification_topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
+        self._feature_store = None
         self._variable_api: VariableApi = VariableApi()
 
         self._multi_part_insert: bool = False

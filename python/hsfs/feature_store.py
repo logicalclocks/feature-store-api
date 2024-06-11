@@ -1476,6 +1476,7 @@ class FeatureStore:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
+        enabled_logging: bool = False,
     ) -> feature_view.FeatureView:
         """Create a feature view metadata object and saved it to hopsworks.
 
@@ -1578,6 +1579,7 @@ class FeatureStore:
             training_helper_columns=training_helper_columns or [],
             transformation_functions=transformation_functions or {},
             featurestore_name=self._name,
+            enabled_logging=enabled_logging,
         )
         return self._feature_view_engine.save(feat_view)
 
@@ -1592,6 +1594,7 @@ class FeatureStore:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
+        enabled_logging: bool = False,
     ) -> feature_view.FeatureView:
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
         existing feature view metadata object.
@@ -1661,6 +1664,7 @@ class FeatureStore:
                     inference_helper_columns=inference_helper_columns or [],
                     training_helper_columns=training_helper_columns or [],
                     transformation_functions=transformation_functions or {},
+                    enabled_logging=enabled_logging,
                 )
             else:
                 raise e
