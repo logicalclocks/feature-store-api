@@ -21,7 +21,9 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from hsfs import feature_view, training_dataset, util
+import aiomysql
+import aiomysql.utils
+from hsfs import feature_view, storage_connector, training_dataset, util
 from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
 from hsfs.serving_key import ServingKey
@@ -533,13 +535,12 @@ class OnlineStoreSqlClient:
             OnlineStoreSqlClient.BATCH_VECTOR_KEY,
         ]
 
-    async def _get_connection_pool(self, default_min_size: int, loop=None) -> None:
+    async def _get_connection_pool(self, default_min_size: int) -> None:
         self._connection_pool = await util.create_async_engine(
             self._online_connector,
             self._external,
             default_min_size,
             options=self._connection_options,
-            loop=loop,
             hostname=self._hostname,
         )
 
@@ -734,3 +735,11 @@ class OnlineStoreSqlClient:
     @property
     def connection_options(self) -> Dict[str, Any]:
         return self._connection_options
+
+    @property
+    def online_connector(self) -> storage_connector.StorageConnector:
+        return self._online_connector
+
+    @property
+    def connection_pool(self) -> aiomysql.utils._ConnectionContextManager:
+        return self._connection_pool

@@ -190,12 +190,10 @@ async def create_async_engine(
     external: bool,
     default_min_size: int,
     options: Optional[Dict[str, Any]] = None,
-    loop: Any | None = None,
     hostname: Optional[str] = None,
 ) -> Any:
     try:
-        if loop is None:
-            loop = asyncio.get_running_loop()
+        loop = asyncio.get_running_loop()
     except RuntimeError as er:
         raise RuntimeError(
             "Event loop is not running. Please invoke this co-routine from a running loop or provide an event loop."
