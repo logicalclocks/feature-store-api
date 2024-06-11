@@ -102,6 +102,7 @@ class FeatureView:
         ] = None,
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[skm.ServingKey]] = None,
+        enabled_logging: bool = False,
         **kwargs,
     ) -> None:
         self._name = name
@@ -144,6 +145,7 @@ class FeatureView:
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
+        self._enabled_logging = enabled_logging
 
         if self._id:
             self._init_feature_monitoring_engine()
@@ -3379,6 +3381,7 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
+            enabled_logging=json_decamelized['enabled_logging'],
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3413,10 +3416,69 @@ class FeatureView:
             "training_helper_columns",
             "schema",
             "serving_keys",
+            "enabled_logging",
         ]:
             self._update_attribute_if_present(self, other, key)
         self._init_feature_monitoring_engine()
         return self
+
+    def enable_logging(self) -> None:
+        return self._feature_view_engine.enable_feature_logging(self)
+
+    def log(self,
+            features: Union[pd.Dataframe, list[list], np.ndarray],
+            prediction: Union[pd.Dataframe, list[list], np.ndarray]=None,
+            transformed_features: Optional[bool]=False,
+            write_options: Optional[Dict[str, Any]] = None,
+            training_dataset_version=None,
+            hsml_model=None,
+            ):
+        if not self.enabled_logging:
+            self.enable_logging()
+        return self._feature_view_engine.log_features(
+            self, features, prediction, transformed_features,
+            write_options,
+            training_dataset_version=(
+                training_dataset_version or self.get_last_accessed_training_dataset()
+            ),
+            hsml_model=hsml_model
+        )
+
+    def get_log_timeline(self,
+                         wallclock_time: Optional[
+                             Union[str, int, datetime, datetime.date]] = None,
+                         limit: Optional[int] = None,
+                         transformed: Optional[bool] = False,
+                         ):
+        return self._feature_view_engine.get_log_timeline(
+            self, wallclock_time, limit, transformed
+        )
+
+    def read_log(self,
+                 start_time: Optional[
+                     Union[str, int, datetime, datetime.date]] = None,
+                 end_time: Optional[
+                     Union[str, int, datetime, datetime.date]] = None,
+                 filter: Optional[Union[Filter, Logic]] = None,
+                 transformed: Optional[bool] = False,
+                 training_dataset_version=None,
+                 hsml_model=None,
+                 ):
+        return self._feature_view_engine.read_log(
+            self, start_time, end_time, filter, transformed, training_dataset_version, hsml_model
+        )
+
+    def pause_logging(self):
+        self._feature_view_engine.pause_logging(self)
+
+    def resume_logging(self):
+        self._feature_view_engine.resume_logging(self)
+
+    def materialize_log(self, wait=False):
+        return self._feature_view_engine.materialize_log(self, wait)
+
+    def delete_log(self, transformed=None):
+        return self._feature_view_engine.delete_log(self, transformed)
 
     @staticmethod
     def _update_attribute_if_present(this: "FeatureView", new: Any, key: str) -> None:
@@ -3450,6 +3512,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
+            "enabledLogging": self._enabled_logging,
             "type": "featureViewDTO",
         }
 
@@ -3619,3 +3682,11 @@ class FeatureView:
     @serving_keys.setter
     def serving_keys(self, serving_keys: List[skm.ServingKey]) -> None:
         self._serving_keys = serving_keys
+
+    @property
+    def enabled_logging(self) -> bool:
+        return self._enabled_logging
+
+    @enabled_logging.setter
+    def enabled_logging(self, enable_logging) -> None:
+        self._enabled_logging = enable_logging

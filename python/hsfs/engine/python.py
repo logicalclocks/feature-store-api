@@ -82,10 +82,13 @@ from hsfs.core import (
     transformation_function_engine,
 )
 from hsfs.core.constants import HAS_AIOMYSQL, HAS_GREAT_EXPECTATIONS, HAS_SQLALCHEMY
+from hsfs.core.feature_view_engine import FeatureViewEngine
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import uses_great_expectations
+from hsfs.feature import Feature
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
+from hsfs.training_dataset_feature import TrainingDatasetFeature
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from sqlalchemy import sql
 from tqdm.auto import tqdm
@@ -1633,13 +1636,13 @@ class Engine:
                     if (x is not None and x != "")
                     else None
                 )
-        elif offline_type == "string":
-            if isinstance(feature_column, pl.Series):
-                return feature_column.map_elements(
-                    lambda x: str(x) if x is not None else None
-                )
-            else:
-                return feature_column.apply(lambda x: str(x) if x is not None else None)
+        # elif offline_type == "string":
+        #     if isinstance(feature_column, pl.Series):
+        #         return feature_column.map_elements(
+        #             lambda x: str(x) if x is not None else None
+        #         )
+        #     else:
+        #         return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif offline_type.startswith("decimal"):
             if isinstance(feature_column, pl.Series):
                 return feature_column.map_elements(
@@ -1658,6 +1661,7 @@ class Engine:
                     "tinyint": pl.Int8,
                     "float": pl.Float32,
                     "double": pl.Float64,
+                    "string": pl.Utf8,
                 }
             else:
                 offline_dtype_mapping = {
@@ -1667,6 +1671,7 @@ class Engine:
                     "tinyint": pd.Int8Dtype(),
                     "float": np.dtype("float32"),
                     "double": np.dtype("float64"),
+                    "string": pd.StringDtype(),
                 }
             if offline_type in offline_dtype_mapping:
                 if isinstance(feature_column, pl.Series):
@@ -1754,3 +1759,55 @@ class Engine:
                 return True
         else:
             return True
+
+    @staticmethod
+    def _convert_feature_log_to_df(feature_log, cols):
+        if feature_log is None and cols:
+            return pd.DataFrame(columns=cols)
+        if not (isinstance(feature_log, (list, np.ndarray, pd.DataFrame, pl.DataFrame))):
+            assert False, f"type '{type(feature_log)}' not accepted"
+        if isinstance(feature_log, list) or isinstance(feature_log, np.ndarray):
+            if isinstance(feature_log[0], list) or isinstance(feature_log[0],
+                                                           np.ndarray):
+                provided_len = len(feature_log[0])
+            else:
+                provided_len = 1
+            assert  provided_len == len(cols), f"Expecting {len(cols)} features/labels but {provided_len} provided."
+
+            return pd.DataFrame(feature_log, columns=cols)
+        else:
+            return feature_log
+
+    @staticmethod
+    def get_feature_logging_df(fg,
+                               features,
+                               fg_features: List[TrainingDatasetFeature],
+                               td_predictions: List[TrainingDatasetFeature],
+                               td_col_name,
+                               time_col_name,
+                               model_col_name,
+                               prediction=None,
+                               training_dataset_version=None,
+                               hsml_model=None,
+                               ) -> pd.DataFrame:
+        import uuid
+        features = Engine._convert_feature_log_to_df(features, [f.name for f in fg_features])
+        if td_predictions:
+            prediction = Engine._convert_feature_log_to_df(prediction, [f.name for f in td_predictions])
+            for f in td_predictions:
+                prediction[f.name] = Engine._cast_column_to_offline_type(prediction[f.name], f.type)
+            if not set(prediction.columns).intersection(set(features.columns)):
+                features = pd.concat([features, prediction], axis=1)
+        # need to case the column type as if it is None, type cannot be inferred.
+        features[td_col_name] = Engine._cast_column_to_offline_type(
+            pd.Series([training_dataset_version for _ in range(len(features))]), fg.get_feature(td_col_name).type
+        )
+        features[model_col_name] = Engine._cast_column_to_offline_type(
+            pd.Series([FeatureViewEngine.get_hsml_model_value(hsml_model) if hsml_model else None for _ in range(len(features))]), fg.get_feature(model_col_name).type
+        )
+        now = datetime.now()
+        features[time_col_name] = Engine._cast_column_to_offline_type(
+            pd.Series([now for _ in range(len(features))]), fg.get_feature(time_col_name).type
+        )
+        features["log_id"] = [str(uuid.uuid4()) for _ in range(len(features))]
+        return features

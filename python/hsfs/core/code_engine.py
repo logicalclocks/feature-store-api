@@ -18,7 +18,7 @@ from __future__ import annotations
 import datetime
 import os
 
-from hsfs import code
+from hsfs import hsfs_code
 from hsfs.core import code_api
 
 
