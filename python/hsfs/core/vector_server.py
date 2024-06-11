@@ -909,7 +909,7 @@ class VectorServer:
         per_serving_key_features = {}
         for serving_key in serving_keys:
             per_serving_key_features[serving_key.required_serving_key] = (
-                serving_key.name,
+                serving_key.feature_name,
                 set(
                     [
                         f.name
@@ -957,7 +957,7 @@ class VectorServer:
             self._groups_of_composite_serving_keys = {
                 sk.feature_group.id: (
                     [
-                        (sk_match.required_serving_key, sk_match.name)
+                        (sk_match.required_serving_key, sk_match.feature_name)
                         for sk_match in self.serving_keys
                         if sk_match.feature_group.id == sk.feature_group.id
                     ]
@@ -1066,7 +1066,7 @@ class VectorServer:
         if not self._valid_serving_keys or len(self._valid_serving_keys) == 0:
             self._valid_serving_keys = set(
                 [sk.required_serving_key for sk in self.serving_keys]
-                + [sk.name for sk in self.serving_keys]
+                + [sk.feature_name for sk in self.serving_keys]
             )
         return self._valid_serving_keys
 
