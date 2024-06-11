@@ -17,6 +17,9 @@
 
 package com.logicalclocks.hsfs.spark.engine.hudi;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import org.apache.avro.generic.GenericRecord;
 
 import org.apache.hudi.DataSourceWriteOptions;
@@ -82,8 +85,10 @@ public class DeltaStreamerKafkaSource extends AvroSource {
     OffsetRange[] offsetRanges = this.offsetGen.getNextOffsetRanges(lastCheckpointStr, sourceLimit, this.metrics);
     long totalNewMsgs = KafkaOffsetGen.CheckpointUtils.totalNewMessages(offsetRanges);
     LOG.info("About to read " + totalNewMsgs + " from Kafka for topic: " + this.offsetGen.getTopicName()
-        + " from lastCheckpointStr " + lastCheckpointStr + " Offset range: "
-        + KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
+        + " from offsets: " + Arrays.stream(offsetRanges)
+            .map(r -> String.format("%s:%d", r.partition(), r.fromOffset())).collect(Collectors.joining(","))
+        + " until offsets: " + Arrays.stream(offsetRanges)
+            .map(r -> String.format("%s:%d", r.partition(), r.untilOffset())).collect(Collectors.joining(",")));
     if (totalNewMsgs <= 0L) {
       return new InputBatch(Option.empty(), KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     } else {
@@ -103,6 +108,7 @@ public class DeltaStreamerKafkaSource extends AvroSource {
   public void onCommit(String lastCkptStr) {
     if (this.props.getBoolean(KafkaOffsetGen.Config.ENABLE_KAFKA_COMMIT_OFFSET.key(),
         KafkaOffsetGen.Config.ENABLE_KAFKA_COMMIT_OFFSET.defaultValue())) {
+      LOG.info("Committing offset: " + lastCkptStr);
       offsetGen.commitOffsetToKafka(lastCkptStr);
     }
   }

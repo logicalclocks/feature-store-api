@@ -383,6 +383,9 @@ public class HudiEngine {
     hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY,
         hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
 
+    // set consumer group id
+    hudiWriteOpts.put(ConsumerConfig.GROUP_ID_CONFIG, String.valueOf(streamFeatureGroup.getId()));
+
     // check if table was initiated and if not initiate
     Path basePath = new Path(streamFeatureGroup.getLocation());
     FileSystem fs = basePath.getFileSystem(sparkSession.sparkContext().hadoopConfiguration());
