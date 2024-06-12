@@ -16,21 +16,25 @@
 from __future__ import annotations
 
 import json
+from typing import Any, Dict, List, Optional, Union
 
 import humps
+from hsfs import feature_group as fg_mod
 from hsfs import util
 
 
 class ServingKey:
     def __init__(
         self,
-        feature_name,
-        join_index,
-        feature_group=None,
-        required=True,
-        prefix="",
-        join_on=None,
-        ignore_prefix=False,
+        feature_name: str,
+        join_index: int,
+        feature_group: Optional[
+            Union[Dict[str, Any], fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup]
+        ] = None,
+        required: bool = True,
+        prefix: str = "",
+        join_on: Optional[Union[List[str], str]] = None,
+        ignore_prefix: bool = False,
         **kwargs,
     ):
         self._feature_name = feature_name
@@ -42,7 +46,7 @@ class ServingKey:
         self._ignore_prefix = ignore_prefix
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict) -> Optional[ServingKey]:
         # late import, otherwise will result circular import
         from hsfs.feature_group import FeatureGroupBase
 
@@ -61,7 +65,7 @@ class ServingKey:
         )
         return serving_key
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "feature_name": self._feature_name,
             "join_index": self._join_index,
@@ -79,11 +83,11 @@ class ServingKey:
             "join_on": self._join_on,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     @property
-    def required_serving_key(self):
+    def required_serving_key(self) -> str:
         if self._required:
             if self._ignore_prefix:
                 return self._feature_name
@@ -93,25 +97,25 @@ class ServingKey:
             return self._join_on
 
     @property
-    def feature_name(self):
+    def feature_name(self) -> str:
         return self._feature_name
 
     @property
-    def join_index(self):
+    def join_index(self) -> int:
         return self._join_index
 
     @property
-    def feature_group(self):
+    def feature_group(self) -> Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup]:
         return self._feature_group
 
     @property
-    def required(self):
+    def required(self) -> bool:
         return self._required
 
     @property
-    def prefix(self):
+    def prefix(self) -> str:
         return self._prefix
 
     @property
-    def join_on(self):
+    def join_on(self) -> Union[List[str], str]:
         return self._join_on

@@ -20,7 +20,7 @@ import json
 import logging
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
 
 import humps
 import numpy as np
@@ -225,7 +225,7 @@ class FeatureView:
             feature_view_name, feature_view_version
         )
 
-    def update(self) -> "FeatureView":
+    def update(self) -> FeatureView:
         """Update the description of the feature view.
 
         !!! example "Update the feature view with a new description."
@@ -256,7 +256,13 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
-        options: Optional[dict] = None,
+        options: Optional[Dict[str, Any]] = None,
+        init_sql_client: Optional[bool] = None,
+        init_rest_client: bool = False,
+        reset_rest_client: bool = False,
+        config_rest_client: Optional[Dict[str, Any]] = None,
+        default_client: Optional[Literal["sql", "rest"]] = None,
+        **kwargs,
     ) -> None:
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
@@ -281,9 +287,28 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used which relies on the private IP.
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
+            init_sql_client: boolean, optional. By default the sql client is initialised if no
+                client is specified to match legacy behaviour. If set to True, this ensure the online store
+                sql client is initialised, otherwise if init_rest_client is set to true it will
+                skip initialising the sql client.
+            init_rest_client: boolean, defaults to False. By default the rest client is not initialised.
+                If set to True, this ensure the online store rest client is initialised. Pass additional configuration
+                options via the rest_config parameter. Set reset_rest_client to True to reset the rest client.
+            default_client: string, optional. Which client to default to if both are initialised. Defaults to None.
             options: Additional options as key/value pairs for configuring online serving engine.
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
+            reset_rest_client: boolean, defaults to False. If set to True, the rest client will be reset and reinitialised with provided configuration.
+            config_rest_client: dictionary, optional. Additional configuration options for the rest client. If the client is already initialised,
+                this will be ignored. Options include:
+                * `host`: string, optional. The host of the online store. Dynamically set if not provided.
+                * `port`: int, optional. The port of the online store. Defaults to 4406.
+                * `verify_certs`: boolean, optional. Verify the certificates of the online store server. Defaults to True.
+                * `api_key`: string, optional. The API key to authenticate with the online store. The api key must be
+                    provided if initialising the rest client in an internal environment.
+                * `timeout`: int, optional. The timeout for the rest client in seconds. Defaults to 2.
+                * `use_ssl`: boolean, optional. Use SSL to connect to the online store. Defaults to True.
+
         """
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
@@ -296,6 +321,12 @@ class FeatureView:
                 self.init_batch_scoring(1)
             else:
                 raise e
+
+        # Compatibility with 3.7
+        if init_sql_client is None:
+            init_sql_client = kwargs.get("init_online_store_sql_client", None)
+        if init_rest_client is False:
+            init_rest_client = kwargs.get("init_online_store_rest_client", False)
 
         if training_dataset_version is None:
             training_dataset_version = 1
@@ -312,12 +343,20 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+            feature_store_name=self._feature_store_name,
         )
         self._vector_server.init_serving(
             entity=self,
             external=external,
             inference_helper_columns=True,
             options=options,
+            init_sql_client=init_sql_client,
+            init_rest_client=init_rest_client,
+            reset_rest_client=reset_rest_client,
+            config_rest_client=config_rest_client,
+            default_client=default_client,
         )
 
         self._prefix_serving_key_map = dict(
@@ -362,6 +401,9 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+            feature_store_name=self._feature_store_name,
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -417,8 +459,10 @@ class FeatureView:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = None,
         external: Optional[bool] = None,
-        return_type: Optional[str] = "list",
-        allow_missing: Optional[bool] = False,
+        return_type: Literal["list", "polars", "numpy", "pandas"] = "list",
+        allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -487,6 +531,10 @@ class FeatureView:
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
+            force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the REST client if initialised.
+            force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
@@ -503,12 +551,16 @@ class FeatureView:
             self.init_serving(external=external)
 
         vector_db_features = None
-        td_embedding_feature_names = set()
         if self._vector_db_client:
             vector_db_features = self._get_vector_db_result(entry)
-            td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
         return self._vector_server.get_feature_vector(
-            entry, return_type, passed_features, vector_db_features, td_embedding_feature_names, allow_missing
+            entry=entry,
+            return_type=return_type,
+            passed_features=passed_features,
+            allow_missing=allow_missing,
+            vector_db_features=vector_db_features,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_feature_vectors(
@@ -516,8 +568,10 @@ class FeatureView:
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         external: Optional[bool] = None,
-        return_type: Optional[str] = "list",
-        allow_missing: Optional[bool] = False,
+        return_type: Literal["list", "polars", "numpy", "pandas"] = "list",
+        allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -584,6 +638,10 @@ class FeatureView:
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
+            force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the SQL client if initialised.
+            force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
@@ -598,25 +656,29 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
+            self.init_serving(external=external, init_rest_client=force_rest_client)
         vector_db_features = []
-        td_embedding_feature_names = set()
         if self._vector_db_client:
             for _entry in entry:
-                vector_db_features.append(
-                    self._get_vector_db_result(_entry)
-                )
-            td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
+                vector_db_features.append(self._get_vector_db_result(_entry))
 
         return self._vector_server.get_feature_vectors(
-            entry, return_type, passed_features, vector_db_features, td_embedding_feature_names, allow_missing
+            entries=entry,
+            return_type=return_type,
+            passed_features=passed_features,
+            allow_missing=allow_missing,
+            vector_db_features=vector_db_features,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_inference_helper(
         self,
         entry: Dict[str, Any],
         external: Optional[bool] = None,
-        return_type: Optional[str] = "pandas",
+        return_type: Literal["pandas", "dict", "polars"] = "pandas",
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Returns assembled inference helper column vectors from online feature store.
         !!! example
@@ -652,14 +714,18 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
-        return self._vector_server.get_inference_helper(entry, return_type)
+            self.init_serving(external=external, init_rest_client=force_rest_client)
+        return self._vector_server.get_inference_helper(
+            entry, return_type, force_rest_client, force_sql_client
+        )
 
     def get_inference_helpers(
         self,
         entry: List[Dict[str, Any]],
         external: Optional[bool] = None,
-        return_type: Optional[str] = "pandas",
+        return_type: Literal["pandas", "dict", "polars"] = "pandas",
+        force_sql_client: bool = False,
+        force_rest_client: bool = False,
     ) -> Union[List[Dict[str, Any]], pd.DataFrame, pl.DataFrame]:
         """Returns assembled inference helper column vectors in batches from online feature store.
         !!! warning "Missing primary key entries"
@@ -709,8 +775,10 @@ class FeatureView:
                 feature view.
         """
         if self._vector_server is None:
-            self.init_serving(external=external)
-        return self._vector_server.get_inference_helpers(self, entry, return_type)
+            self.init_serving(external=external, init_rest_client=force_rest_client)
+        return self._vector_server.get_inference_helpers(
+            self, entry, return_type, force_rest_client, force_sql_client
+        )
 
     def _get_vector_db_result(
         self,
@@ -727,7 +795,10 @@ class FeatureView:
                 # Not retrieving from vector db if entry is not completed
                 continue
             vector_db_features = self._vector_db_client.read(
-                fg.id, fg.features, keys=fg_entry, index_name=fg.embedding_index.index_name
+                fg.id,
+                fg.features,
+                keys=fg_entry,
+                index_name=fg.embedding_index.index_name,
             )
 
             # if result is not empty
@@ -742,15 +813,19 @@ class FeatureView:
         feature: Optional[Feature] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0,
         external: Optional[bool] = None,
+        return_type: Literal["list", "polars", "pandas"] = "list",
     ) -> List[List[Any]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
-        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        If `filter` is specified, or if embedding feature is stored in default project index,
         the number of results returned may be less than k. Try using a large value of k and extract the top k
         items from the results if needed.
+
+        !!! warning "Duplicate column error in Polars"
+            If the feature view has duplicate column names, attempting to create a polars DataFrame
+            will raise an error. To avoid this, set `return_type` to `"list"` or `"pandas"`.
 
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
@@ -758,10 +833,17 @@ class FeatureView:
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
-            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"list"`, `"pandas"` or `"polars"`. Defaults to `"list"`.
 
         # Returns
-            A list of feature values
+            `list`, `pd.DataFrame` or `polars.DataFrame` if `return type` is set to `"list"`, `"pandas"` or
+            `"polars"` respectively. Defaults to `list`.
 
         !!! Example
             ```
@@ -797,19 +879,15 @@ class FeatureView:
             feature=(feature if feature else None),
             k=k,
             filter=filter,
-            min_score=min_score,
         )
         if len(results) == 0:
             return []
 
-        td_embedding_feature_names = self._vector_db_client.td_embedding_feature_names
-
         return self._vector_server.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
-            return_type="list",
+            return_type=return_type,
             vector_db_features=[res[1] for res in results],
-            td_embedding_feature_names=td_embedding_feature_names,
-            allow_missing=True
+            allow_missing=True,
         )
 
     def _extract_primary_key(self, result_key: Dict[str, str]) -> Dict[str, str]:
@@ -3557,6 +3635,7 @@ class FeatureView:
                     batch=False,
                     inference_helper_columns=False,
                 ),
+                feature_store_id=self.featurestore_id,
                 ignore_prefix=True,  # if serving_keys have to be built it is because feature_view older than 3.3, this ensure compatibility
             )
         return self._serving_keys

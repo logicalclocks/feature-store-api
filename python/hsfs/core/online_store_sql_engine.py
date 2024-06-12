@@ -44,14 +44,13 @@ class OnlineStoreSqlClient:
         external: bool,
         serving_keys: Optional[Set[ServingKey]] = None,
     ):
-        _logger.info("Initialising Online Store Sql Client")
+        _logger.debug("Initialising Online Store Sql Client")
         self._feature_store_id = feature_store_id
         self._skip_fg_ids: Set[int] = skip_fg_ids or set()
         self._external = external
 
         self._prefix_by_serving_index = None
         self._pkname_by_serving_index = None
-        self._valid_serving_keys: Set[str] = set()
         self._serving_key_by_serving_index: Dict[str, ServingKey] = {}
         self._async_pool = None
         self._serving_keys: Set[ServingKey] = set(serving_keys or [])
@@ -259,7 +258,6 @@ class OnlineStoreSqlClient:
                 "`training_dataset.init_prepared_statement()` "
                 "or `feature_view.init_serving()`"
             )
-        self._validate_serving_keys(entry)
         # Initialize the set of values
         serving_vector = {}
         bind_entries = {}
@@ -435,15 +433,6 @@ class OnlineStoreSqlClient:
         self._prepared_statement_engine = util.create_mysql_engine(
             online_conn, self._external, options=options
         )
-
-    def _validate_serving_keys(self, entry: Dict[str, Any]):
-        _logger.debug(f"Validating serving key {entry}")
-        for key in entry:
-            if key not in self.valid_serving_keys:
-                raise ValueError(
-                    f"'{key}' is not a correct serving key. Expect one of the"
-                    f" followings: [{', '.join(self._valid_serving_keys)}]"
-                )
 
     @staticmethod
     def _parametrize_query(name: str, query_online: str) -> str:
@@ -676,16 +665,6 @@ class OnlineStoreSqlClient:
                 ignore_prefix=True,  # if serving_keys are not set it is because the feature view is anterior to 3.3, this ensures compatibility
             )
         return self._serving_keys
-
-    @property
-    def valid_serving_keys(self) -> Set[str]:
-        if len(self._valid_serving_keys) == 0:
-            self._valid_serving_keys = set(
-                [sk.feature_name for sk in self.serving_keys]
-                + [sk.required_serving_key for sk in self.serving_keys]
-            )
-            _logger.debug(f"Set valid serving keys: {self.valid_serving_keys}")
-        return self._valid_serving_keys
 
     @property
     def training_dataset_api(self) -> training_dataset_api.TrainingDatasetApi:

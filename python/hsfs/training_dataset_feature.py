@@ -75,7 +75,7 @@ class TrainingDatasetFeature:
     def is_complex(self):
         """Returns true if the feature has a complex type."""
         return any(
-            map(self._type.upper().startswith, feature_mod.Feature.COMPLEX_TYPES)
+            map(str(self._type).upper().startswith, feature_mod.Feature.COMPLEX_TYPES)
         )
 
     @property

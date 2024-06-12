@@ -54,7 +54,11 @@ def disable_usage_logging():
     usage.disable()
 
 
-__all__ = ["connection", "disable_usage_logging"]
+def get_sdk_info():
+    return usage.get_env()
+
+
+__all__ = ["connection", "disable_usage_logging", "get_sdk_info"]
 # running async code in jupyter throws "RuntimeError: This event loop is already running"
 # with tornado 6. This fixes the issue without downgrade to tornado==4.5.3
 nest_asyncio.apply()

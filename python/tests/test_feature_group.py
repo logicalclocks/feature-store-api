@@ -145,13 +145,13 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == ""
         assert fg.partition_key == []
-        assert fg.primary_key == []
+        assert fg.primary_key == ['intt']
         assert fg.hudi_precombine_key is None
         assert fg._feature_store_name is None
         assert fg.created is None
         assert fg.creator is None
         assert fg.id == 15
-        assert len(fg.features) == 0
+        assert len(fg.features) == 2
         assert fg.location is None
         assert fg.online_enabled is False
         assert fg.time_travel_format is None
@@ -178,13 +178,13 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == ""
         assert fg.partition_key == []
-        assert fg.primary_key == []
+        assert fg.primary_key == ["intt"]
         assert fg.hudi_precombine_key is None
         assert fg._feature_store_name is None
         assert fg.created is None
         assert fg.creator is None
         assert fg.id == 15
-        assert len(fg.features) == 0
+        assert len(fg.features) == 2
         assert fg.location is None
         assert fg.online_enabled is False
         assert fg.time_travel_format is None
@@ -308,6 +308,12 @@ class TestFeatureGroup:
         mocker.patch("hsfs.engine.get_type")
         json = backend_fixtures["feature_store"]["get"]["response"]
 
+        features = [
+            feature.Feature(name="pk", type="int"),
+            feature.Feature(name="et", type="timestamp"),
+            feature.Feature(name="feat", type="int"),
+        ]
+
         # Act
         fs = feature_store.FeatureStore.from_response_json(json)
         with warnings.catch_warnings(record=True) as warning_record:
@@ -316,6 +322,7 @@ class TestFeatureGroup:
                 version=1,
                 description="fg_description",
                 event_time=["event_date"],
+                features=features
             )
         with pytest.raises(FeatureStoreException):
             util.verify_attribute_key_names(new_fg, False)
