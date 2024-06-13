@@ -96,7 +96,7 @@ class FeatureTransformationStatistics:
     @classmethod
     def from_response_json(
         cls: FeatureTransformationStatistics, json_dict: Dict[str, Any]
-    ):
+    ) -> FeatureTransformationStatistics:
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 
@@ -106,16 +106,16 @@ class TransformationStatistics:
     Class that stores statistics of all features required for a transformation function.
     """
 
-    def __init__(self, *features):
+    def __init__(self, *features: str):
         self._features = features
         self.__dict__.update(
             {feature: self.init_statistics(feature) for feature in features}
         )
 
-    def init_statistics(self, feature_name):
+    def init_statistics(self, feature_name: str) -> FeatureTransformationStatistics:
         return FeatureTransformationStatistics(feature_name=feature_name)
 
-    def set_statistics(self, feature_name, statistics: Dict[str, Any]):
+    def set_statistics(self, feature_name: str, statistics: Dict[str, Any]) -> None:
         self.__dict__[feature_name] = (
             FeatureTransformationStatistics.from_response_json(statistics)
         )
