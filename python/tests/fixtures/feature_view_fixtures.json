@@ -692,9 +692,9 @@
             "hopsworksUdf":{
               "sourceCode": "\n@udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics=stats):\n    return data1 + statistics.data1.mean\n",
               "name": "add_mean_fs",
-              "outputTypes":"double",
-              "transformationFeatures":"data",
-              "statisticsArgumentNames":"data1"
+              "outputTypes":["double"],
+              "transformationFeatures":["data"],
+              "statisticsArgumentNames":["data1"]
             }
           },
           {
@@ -704,8 +704,8 @@
             "hopsworksUdf":{
               "sourceCode": "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
               "name": "add_one_fs",
-              "outputTypes":"double",
-              "transformationFeatures":"col1"
+              "outputTypes":["double"],
+              "transformationFeatures":["col1"]
             }
           }
       ],
@@ -932,9 +932,9 @@
               "hopsworksUdf":{
                 "sourceCode": "\n@udf(float)\ndef add_mean_fs(data1 : pd.Series, statistics=stats):\n    return data1 + statistics.data1.mean\n",
                 "name": "add_mean_fs",
-                "outputTypes":"double",
-                "transformationFeatures":"data",
-                "statisticsArgumentNames":"data1"
+                "outputTypes":["double"],
+                "transformationFeatures":["data"],
+                "statisticsArgumentNames":["data1"]
               }
             },
             {
@@ -944,8 +944,8 @@
               "hopsworksUdf":{
                 "sourceCode": "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
                 "name": "add_one_fs",
-                "outputTypes":"double",
-                "transformationFeatures":"col1"
+                "outputTypes":["double"],
+                "transformationFeatures":["col1"]
               }
             }
         ],
