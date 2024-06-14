@@ -157,9 +157,9 @@ class TestPythonSparkTransformationFunctions:
         )
         udf_response = {
             "sourceCode": tf_fun_source,
-            "outputTypes": "double",
-            "transformationFeatures": "",
-            "statisticsArgumentNames": "feature",
+            "outputTypes": ["double"],
+            "transformationFeatures": [],
+            "statisticsArgumentNames": ["feature"],
             "name": "min_max_scaler",
         }
 
@@ -295,9 +295,9 @@ class TestPythonSparkTransformationFunctions:
         )
         udf_response = {
             "sourceCode": tf_fun_source,
-            "outputTypes": "double",
-            "transformationFeatures": "",
-            "statisticsArgumentNames": "feature",
+            "outputTypes": ["double"],
+            "transformationFeatures": [],
+            "statisticsArgumentNames": ["feature"],
             "name": "standard_scaler",
         }
 
@@ -437,9 +437,9 @@ class TestPythonSparkTransformationFunctions:
         )
         udf_response = {
             "sourceCode": tf_fun_source,
-            "outputTypes": "double",
-            "transformationFeatures": "",
-            "statisticsArgumentNames": "feature",
+            "outputTypes": ["double"],
+            "transformationFeatures": [],
+            "statisticsArgumentNames": ["feature"],
             "name": "robust_scaler",
         }
 

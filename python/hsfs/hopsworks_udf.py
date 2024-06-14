@@ -590,6 +590,10 @@ def renaming_wrapper(*args):
         # Reconstructing statistics arguments.
         arg_list, _, _, _ = HopsworksUdf._parse_function_signature(function_source_code)
 
+        transformation_features = (
+            arg_list if not transformation_features else transformation_features
+        )
+
         if statistics_features:
             transformation_features = [
                 TransformationFeature(
