@@ -573,17 +573,15 @@ def renaming_wrapper(*args):
         function_source_code = json_decamelized["source_code"]
         function_name = json_decamelized["name"]
         output_types = [
-            output_type.strip()
-            for output_type in json_decamelized["output_types"].split(",")
+            output_type.strip() for output_type in json_decamelized["output_types"]
         ]
         transformation_features = [
-            feature.strip()
-            for feature in json_decamelized["transformation_features"].split(",")
+            feature.strip() for feature in json_decamelized["transformation_features"]
         ]
         statistics_features = (
             [
                 feature.strip()
-                for feature in json_decamelized["statistics_argument_names"].split(",")
+                for feature in json_decamelized["statistics_argument_names"]
             ]
             if "statistics_argument_names" in json_decamelized
             else None
