@@ -366,7 +366,7 @@ class HopsworksUdf:
             `List[str]`: List of feature names for the transformed columns
         """
         _BASE_COLUMN_NAME = (
-            f'{self.function_name}_{"-".join(self.transformation_features)}_'
+            f'{self.function_name}_{"_".join(self.transformation_features)}_'
         )
         if len(self.return_types) > 1:
             return [f"{_BASE_COLUMN_NAME}{i}" for i in range(len(self.return_types))]
