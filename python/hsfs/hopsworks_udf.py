@@ -44,9 +44,9 @@ def udf(return_type: Union[List[type], type]) -> "HopsworksUdf":
 
     !!! example
         ```python
-        from hsfs.hopsworks_udf import udf
+        from hopsworks import udf
 
-       @udf(float)
+        @udf(float)
         def add_one(data1 : pd.Series):
             return data1 + 1
         ```
