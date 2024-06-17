@@ -337,7 +337,7 @@ def test_function():
         def test_func(col1, col2, col3):
             return col1 + 1
 
-        assert test_func._get_output_column_names() == ["test_func_col1-col2-col3_"]
+        assert test_func._get_output_column_names() == ["test_func_col1_col2_col3_"]
 
     def test_generate_output_column_names_single_argument_multiple_output_type(self):
         @udf([int, float, int])
@@ -360,9 +360,9 @@ def test_function():
             )
 
         assert test_func._get_output_column_names() == [
-            "test_func_col1-col2-col3_0",
-            "test_func_col1-col2-col3_1",
-            "test_func_col1-col2-col3_2",
+            "test_func_col1_col2_col3_0",
+            "test_func_col1_col2_col3_1",
+            "test_func_col1_col2_col3_2",
         ]
 
     def test_create_pandas_udf_return_schema_from_list_one_output_type(self):
@@ -422,7 +422,7 @@ def test_function():
             test_dataframe["column1"], test_dataframe["column2"]
         )
 
-        assert all(result.columns == ["test_func_col1-col2_0", "test_func_col1-col2_1"])
+        assert all(result.columns == ["test_func_col1_col2_0", "test_func_col1_col2_1"])
         assert result.values.tolist() == [[2, 12], [3, 22], [4, 32], [5, 42]]
 
     def test_HopsworkUDf_call_one_argument(self):

@@ -3331,12 +3331,12 @@ class TestPython:
         )
 
         # Assert
-        assert all(result.columns == ["plus_two_col1-col2_0", "plus_two_col1-col2_1"])
+        assert all(result.columns == ["plus_two_col1_col2_0", "plus_two_col1_col2_1"])
         assert len(result) == 2
-        assert result["plus_two_col1-col2_0"][0] == 2
-        assert result["plus_two_col1-col2_0"][1] == 3
-        assert result["plus_two_col1-col2_1"][0] == 12
-        assert result["plus_two_col1-col2_1"][1] == 13
+        assert result["plus_two_col1_col2_0"][0] == 2
+        assert result["plus_two_col1_col2_0"][1] == 3
+        assert result["plus_two_col1_col2_1"][0] == 12
+        assert result["plus_two_col1_col2_1"][1] == 13
 
     def test_apply_transformation_function_polars(self, mocker):
         # Arrange

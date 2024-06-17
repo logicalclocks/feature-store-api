@@ -5,7 +5,7 @@
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
 #
-#       http://www.apache.org/licenses/LICENSE-2.0
+#       http://www.apache.org/licenses/LICENSE_2.0
 #
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
@@ -938,7 +938,7 @@ class TestSpark:
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
             ][1]
-            == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}-checkpoint"
+            == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}_checkpoint"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
@@ -1054,7 +1054,7 @@ class TestSpark:
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
             ][1]
-            == "/Projects/test_project_name/Resources/test_query_name-checkpoint"
+            == "/Projects/test_project_name/Resources/test_query_name_checkpoint"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
@@ -1294,7 +1294,7 @@ class TestSpark:
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
             ][1]
-            == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}-checkpoint"
+            == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}_checkpoint"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
@@ -2457,7 +2457,7 @@ class TestSpark:
         d = {
             "col_0": [1, 2],
             "col_1": ["test_1", "test_2"],
-            "event_time": ["2017-03-04", "2017-03-05"],
+            "event_time": ["2017_03_04", "2017_03_05"],
         }
         df = pd.DataFrame(data=d)
 
@@ -2517,7 +2517,7 @@ class TestSpark:
         d = {
             "col_0": [1, 2],
             "col_1": ["test_1", "test_2"],
-            "event_time": ["2017-03-04", "2017-03-05"],
+            "event_time": ["2017_03_04", "2017_03_05"],
         }
         df = pd.DataFrame(data=d)
 
@@ -3814,7 +3814,7 @@ class TestSpark:
             "double": ["1"],
             "timestamp": [1641340800000],
             "boolean": ["False"],
-            "date": ["2022-01-27"],
+            "date": ["2022_01_27"],
             "binary": ["1"],
             "array<string>": [["123"]],
             "struc": [LabelIndex("0", "1")],
@@ -4217,11 +4217,11 @@ class TestSpark:
             "fs.s3a.secret.key", s3_connector.secret_key
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
-            "fs.s3a.server-side-encryption-algorithm",
+            "fs.s3a.server_side_encryption_algorithm",
             s3_connector.server_encryption_algorithm,
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
-            "fs.s3a.server-side-encryption-key", s3_connector.server_encryption_key
+            "fs.s3a.server_side_encryption_key", s3_connector.server_encryption_key
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.s3a.aws.credentials.provider",
@@ -4492,8 +4492,8 @@ class TestSpark:
         expected_df = pd.DataFrame(
             data={
                 "col_1": ["test_1", "test_2"],
-                "test_col_0-col_2_0": [2, 3],
-                "test_col_0-col_2_1": [12, 13],
+                "test_col_0_col_2_0": [2, 3],
+                "test_col_0_col_2_1": [12, 13],
             }
         )  # todo why it doesnt return int?
 
@@ -4519,7 +4519,7 @@ class TestSpark:
 
         content = (
             '{"type": "service_account", "project_id": "test", "private_key_id": "123456", '
-            '"private_key": "-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----", '
+            '"private_key": "_____BEGIN PRIVATE KEY_____test_____END PRIVATE KEY_____", '
             '"client_email": "test@project.iam.gserviceaccount.com"}'
         )
         credentialsFile = "keyFile.json"
@@ -4568,7 +4568,7 @@ class TestSpark:
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.gs.auth.service.account.private.key",
-            "-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----",
+            "_____BEGIN PRIVATE KEY_____test_____END PRIVATE KEY_____",
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
             "fs.gs.encryption.algorithm"
@@ -4591,7 +4591,7 @@ class TestSpark:
 
         content = (
             '{"type": "service_account", "project_id": "test", "private_key_id": "123456", '
-            '"private_key": "-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----", '
+            '"private_key": "_____BEGIN PRIVATE KEY_____test_____END PRIVATE KEY_____", '
             '"client_email": "test@project.iam.gserviceaccount.com"}'
         )
         credentialsFile = "keyFile.json"
@@ -4655,7 +4655,7 @@ class TestSpark:
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.gs.auth.service.account.private.key",
-            "-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----",
+            "_____BEGIN PRIVATE KEY_____test_____END PRIVATE KEY_____",
         )
 
     def test_get_unique_values(self):
