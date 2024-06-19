@@ -21,7 +21,9 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from hsfs import feature_view, training_dataset, util
+import aiomysql
+import aiomysql.utils
+from hsfs import feature_view, storage_connector, training_dataset, util
 from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
 from hsfs.serving_key import ServingKey
@@ -43,6 +45,7 @@ class OnlineStoreSqlClient:
         skip_fg_ids: Optional[Set[int]],
         external: bool,
         serving_keys: Optional[Set[ServingKey]] = None,
+        connection_options: Optional[Dict[str, Any]] = None,
     ):
         _logger.debug("Initialising Online Store Sql Client")
         self._feature_store_id = feature_store_id
@@ -52,7 +55,7 @@ class OnlineStoreSqlClient:
         self._prefix_by_serving_index = None
         self._pkname_by_serving_index = None
         self._serving_key_by_serving_index: Dict[str, ServingKey] = {}
-        self._async_pool = None
+        self._connection_pool = None
         self._serving_keys: Set[ServingKey] = set(serving_keys or [])
 
         self._prepared_statements: Dict[str, List[ServingPreparedStatement]] = {}
@@ -64,6 +67,9 @@ class OnlineStoreSqlClient:
             feature_store_id
         )
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
+        self._online_connector = None
+        self._hostname = None
+        self._connection_options = None
 
     def fetch_prepared_statements(
         self,
@@ -208,14 +214,22 @@ class OnlineStoreSqlClient:
             "Prepared statements are not initialized. "
             "Please call `init_prepared_statement` method first."
         )
-        _logger.debug("Acquiring or starting event loop for async engine.")
-        loop = asyncio.get_event_loop()
-        _logger.debug(f"Setting up aiomysql connection, with options : {options}")
-        loop.run_until_complete(
-            self._set_aiomysql_connection(
-                len(self._prepared_statements[self.SINGLE_VECTOR_KEY]), options=options
-            )
+        _logger.debug(
+            "Fetching storage connector for sql connection to Online Feature Store."
         )
+        self._online_connector = self._storage_connector_api.get_online_connector(
+            self._feature_store_id
+        )
+        self._connection_options = options
+        self._hostname = util.get_host_name() if self._external else None
+
+        if util.is_runtime_notebook():
+            _logger.debug("Running in Jupyter notebook, applying nest_asyncio")
+            import nest_asyncio
+
+            nest_asyncio.apply()
+        else:
+            _logger.debug("Running in python script. Not applying nest_asyncio")
 
     def get_single_feature_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
@@ -289,12 +303,11 @@ class OnlineStoreSqlClient:
         _logger.debug(
             f"Executing prepared statements for serving vector with entries: {bind_entries}"
         )
-        loop = asyncio.get_event_loop()
+        loop = self._get_or_create_event_loop()
         results_dict = loop.run_until_complete(
             self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
         _logger.debug(f"Retrieved feature vectors: {results_dict}")
-
         _logger.debug("Constructing serving vector from results")
         for key in results_dict:
             for row in results_dict[key]:
@@ -358,7 +371,7 @@ class OnlineStoreSqlClient:
             f"Executing prepared statements for batch vector with entries: {entry_values}"
         )
         # run all the prepared statements in parallel using aiomysql engine
-        loop = asyncio.get_event_loop()
+        loop = self._get_or_create_event_loop()
         parallel_results = loop.run_until_complete(
             self._execute_prep_statements(prepared_stmts_to_execute, entry_values)
         )
@@ -405,6 +418,20 @@ class OnlineStoreSqlClient:
                     )
                 )
         return batch_results, serving_keys_all_fg
+
+    def _get_or_create_event_loop(self):
+        try:
+            _logger.debug("Acquiring or starting event loop for async engine.")
+            loop = asyncio.get_event_loop()
+            asyncio.set_event_loop(loop)
+        except RuntimeError as ex:
+            if "There is no current event loop in thread" in str(ex):
+                _logger.debug(
+                    "No existing running event loop. Creating new event loop."
+                )
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+        return loop
 
     def refresh_mysql_connection(self):
         _logger.debug("Refreshing MySQL connection.")
@@ -497,26 +524,22 @@ class OnlineStoreSqlClient:
             OnlineStoreSqlClient.BATCH_VECTOR_KEY,
         ]
 
-    async def _set_aiomysql_connection(
-        self, default_min_size: int, options: Optional[Dict[str, Any]] = None
-    ) -> None:
-        _logger.debug(
-            "Fetching storage connector for sql connection to Online Feature Store."
-        )
-        online_connector = self._storage_connector_api.get_online_connector(
-            self._feature_store_id
-        )
-        _logger.debug(
-            f"Creating async engine with options: {options} and default min size: {default_min_size}"
-        )
-        self._async_pool = await util.create_async_engine(
-            online_connector, self._external, default_min_size, options=options
+    async def _get_connection_pool(self, default_min_size: int) -> None:
+        self._connection_pool = await util.create_async_engine(
+            self._online_connector,
+            self._external,
+            default_min_size,
+            options=self._connection_options,
+            hostname=self._hostname,
         )
 
     async def _query_async_sql(self, stmt, bind_params):
         """Query prepared statement together with bind params using aiomysql connection pool"""
-        # Get a connection from the pool
-        async with self._async_pool.acquire() as conn:
+        if self._connection_pool is None:
+            await self._get_connection_pool(
+                len(self._prepared_statements[self.SINGLE_VECTOR_KEY])
+            )
+        async with self._connection_pool.acquire() as conn:
             # Execute the prepared statement
             _logger.debug(
                 f"Executing prepared statement: {stmt} with bind params: {bind_params}"
@@ -546,16 +569,22 @@ class OnlineStoreSqlClient:
                 if key not in entries:
                     prepared_statements.pop(key)
 
-        tasks = [
-            asyncio.ensure_future(
-                self._query_async_sql(prepared_statements[key], entries[key])
-            )
-            for key in prepared_statements
-        ]
-        # Run the queries in parallel using asyncio.gather
-        results = await asyncio.gather(*tasks)
-        results_dict = {}
+        try:
+            tasks = [
+                asyncio.create_task(
+                    self._query_async_sql(prepared_statements[key], entries[key]),
+                    name="query_prep_statement_key" + str(key),
+                )
+                for key in prepared_statements
+            ]
+            # Run the queries in parallel using asyncio.gather
+            results = await asyncio.gather(*tasks)
+        except asyncio.CancelledError as e:
+            _logger.error(f"Failed executing prepared statements: {e}")
+            raise e
+
         # Create a dict of results with the prepared statement index as key
+        results_dict = {}
         for i, key in enumerate(prepared_statements):
             results_dict[key] = results[i]
 
@@ -677,3 +706,19 @@ class OnlineStoreSqlClient:
     @property
     def storage_connector_api(self) -> storage_connector_api.StorageConnectorApi:
         return self._storage_connector_api
+
+    @property
+    def hostname(self) -> str:
+        return self._hostname
+
+    @property
+    def connection_options(self) -> Dict[str, Any]:
+        return self._connection_options
+
+    @property
+    def online_connector(self) -> storage_connector.StorageConnector:
+        return self._online_connector
+
+    @property
+    def connection_pool(self) -> aiomysql.utils._ConnectionContextManager:
+        return self._connection_pool
