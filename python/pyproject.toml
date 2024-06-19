@@ -45,7 +45,7 @@ dependencies = [
     "tzlocal",
     "fsspec",
     "retrying",
-    "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql",
+    "hopsworks_aiomysql[sa]==0.2.1",
     "polars>=0.20.18,<=0.21.0",
     "opensearch-py>=1.1.0,<=2.4.2",
 ]
@@ -67,19 +67,6 @@ dev-pandas1 = [
     "moto[s3]==5.0.0",
     "pandas<=1.5.3",
     "sqlalchemy<=1.4.48",
-]
-docs = [
-    "mkdocs==1.5.3",
-    "mkdocs-material==9.5.17",
-    "mike==2.0.0",
-    "sphinx==7.2.6",
-    "keras_autodoc @ git+https://git@github.com/logicalclocks/keras-autodoc",
-    "markdown-include==0.8.1",
-    "mkdocs-jupyter==0.24.3",
-    "markdown==3.6",
-    "pymdown-extensions==10.7.1",
-    "mkdocs-macros-plugin==1.0.4",
-    "mkdocs-minify-plugin>=0.2.0",
 ]
 hive = [
     "pyhopshive[thrift]",
