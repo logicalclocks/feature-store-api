@@ -19,6 +19,7 @@ import asyncio
 import itertools
 import json
 import re
+import sys
 import threading
 import time
 from datetime import date, datetime, timezone
@@ -189,23 +190,32 @@ async def create_async_engine(
     external: bool,
     default_min_size: int,
     options: Optional[Dict[str, Any]] = None,
+    hostname: Optional[str] = None,
 ) -> Any:
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError as er:
+        raise RuntimeError(
+            "Event loop is not running. Please invoke this co-routine from a running loop or provide an event loop."
+        ) from er
+
     online_options = online_conn.spark_options()
-    # create a aiomysql connection pool
     # read the keys user, password from online_conn as use them while creating the connection pool
     url = make_url(online_options["url"].replace("jdbc:", ""))
-    if external:
-        hostname = get_host_name()
-    else:
-        hostname = url.host
+    if hostname is None:
+        if external:
+            hostname = get_host_name()
+        else:
+            hostname = url.host
 
+    # create a aiomysql connection pool
     pool = await async_create_engine(
         host=hostname,
         port=3306,
         user=online_options["user"],
         password=online_options["password"],
         db=url.database,
-        loop=asyncio.get_running_loop(),
+        loop=loop,
         minsize=(
             options.get("minsize", default_min_size) if options else default_min_size
         ),
@@ -528,6 +538,13 @@ def build_serving_keys_from_prepared_statements(
                 )
             )
     return serving_keys
+
+
+def is_runtime_notebook():
+    if "ipykernel" in sys.modules:
+        return True
+    else:
+        return False
 
 
 class NpDatetimeEncoder(json.JSONEncoder):
