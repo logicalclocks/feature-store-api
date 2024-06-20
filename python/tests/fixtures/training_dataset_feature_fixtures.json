@@ -62,26 +62,7 @@
         "timeTravelFormat": "HUDI"
       },
       "feature_group_feature_name": "test_feature_group_feature_name",
-      "label": "test_label",
-      "transformation_function": {
-        "count": 1,
-        "items": [
-          {
-            "featurestore_id": 11,
-            "transformation_fn": null,
-            "version": 1,
-            "name": "test_name",
-            "source_code_content": "test_source_code_content",
-            "builtin_source_code": "test_builtin_source_code",
-            "output_type": "float",
-            "id": 43,
-            "type": "transformationFunctionTDO",
-            "items": [],
-            "count": 0,
-            "href": "test_href"
-          }
-        ]
-      }
+      "label": "test_label"
     }
   },
   "get_fraud_online_training_dataset_features": {

@@ -56,7 +56,6 @@ FIXTURES = [
     "training_dataset_feature",
     "training_dataset",
     "training_dataset_split",
-    "transformation_function_attached",
     "transformation_function",
     "user",
     "validation_report",

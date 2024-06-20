@@ -15,7 +15,6 @@
 #
 from __future__ import annotations
 
-import copy
 import json
 import logging
 import warnings
@@ -36,7 +35,6 @@ from hsfs import (
     util,
 )
 from hsfs import serving_key as skm
-from hsfs import transformation_function as tfm
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
@@ -56,9 +54,11 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
 from hsfs.feature import Feature
+from hsfs.hopsworks_udf import HopsworksUdf
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.transformation_function import TransformationFunction
 
 
 _logger = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ class FeatureView:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[
-            Dict[str, tfm.TransformationFunction]
+            List[Union[TransformationFunction, HopsworksUdf]]
         ] = None,
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[skm.ServingKey]] = None,
@@ -119,14 +119,27 @@ class FeatureView:
         self._training_helper_columns = (
             training_helper_columns if training_helper_columns else []
         )
-        self._transformation_functions = (
-            {
-                ft_name: copy.deepcopy(transformation_functions[ft_name])
-                for ft_name in transformation_functions
-            }
+
+        self._transformation_functions: List[TransformationFunction] = (
+            [
+                TransformationFunction(
+                    self.featurestore_id,
+                    hopsworks_udf=transformation_function,
+                    version=1,
+                )
+                if not isinstance(transformation_function, TransformationFunction)
+                else transformation_function
+                for transformation_function in transformation_functions
+            ]
             if transformation_functions
-            else {}
+            else []
         )
+
+        if self._transformation_functions:
+            self._transformation_functions = FeatureView._sort_transformation_functions(
+                self._transformation_functions
+            )
+
         self._features = []
         self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
             feature_view_engine.FeatureViewEngine(featurestore_id)
@@ -369,6 +382,23 @@ class FeatureView:
             self._vector_db_client = VectorDbClient(
                 self.query, serving_keys=self._serving_keys
             )
+
+    @staticmethod
+    def _sort_transformation_functions(
+        transformation_functions: List[TransformationFunction],
+    ) -> List[TransformationFunction]:
+        """
+        Function that sorts transformation functions in the order of the output column names.
+
+        The list of transformation functions are sorted based on the output columns names to maintain consistent ordering.
+
+        # Arguments
+            transformation_functions:  `List[TransformationFunction]`. List of transformation functions to be sorted
+
+        # Returns
+            `List[TransformationFunction]`: List of transformation functions to be sorted
+        """
+        return sorted(transformation_functions, key=lambda x: x.output_column_names[0])
 
     def init_batch_scoring(
         self,
@@ -3387,6 +3417,14 @@ class FeatureView:
 
     @classmethod
     def from_response_json(cls, json_dict: Dict[str, Any]) -> "FeatureView":
+        """
+        Function that constructs the class object from its json serialization.
+
+        # Arguments
+            json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
+        # Returns
+            `TransformationFunction`: Json deserialized class object.
+        """
         json_decamelized = humps.decamelize(json_dict)
 
         serving_keys = json_decamelized.get("serving_keys", None)
@@ -3394,6 +3432,7 @@ class FeatureView:
             serving_keys = [
                 skm.ServingKey.from_response_json(sk) for sk in serving_keys
             ]
+        transformation_functions = json_decamelized.get("transformation_functions", {})
         fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
@@ -3403,6 +3442,12 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
+            transformation_functions=[
+                TransformationFunction.from_response_json(transformation_function)
+                for transformation_function in transformation_functions
+            ]
+            if transformation_functions
+            else [],
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3424,6 +3469,14 @@ class FeatureView:
         return fv
 
     def update_from_response_json(self, json_dict: Dict[str, Any]) -> "FeatureView":
+        """
+        Function that updates the class object from its json serialization.
+
+        # Arguments
+            json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
+        # Returns
+            `TransformationFunction`: Json deserialized class object.
+        """
         other = self.from_response_json(json_dict)
         for key in [
             "name",
@@ -3435,6 +3488,7 @@ class FeatureView:
             "labels",
             "inference_helper_columns",
             "training_helper_columns",
+            "transformation_functions",
             "schema",
             "serving_keys",
         ]:
@@ -3464,9 +3518,21 @@ class FeatureView:
         )
 
     def json(self) -> str:
+        """
+        Convert class into its json serialized form.
+
+        # Returns
+            `str`: Json serialized object.
+        """
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert class into a dictionary.
+
+        # Returns
+            `Dict`: Dictionary that contains all data required to json serialize the object.
+        """
         return {
             "featurestoreId": self._featurestore_id,
             "name": self._name,
@@ -3474,6 +3540,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
+            "transformationFunctions": self._transformation_functions,
             "type": "featureViewDTO",
         }
 
@@ -3579,14 +3646,14 @@ class FeatureView:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, tfm.TransformationFunction]:
+    ) -> List[TransformationFunction]:
         """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
     def transformation_functions(
         self,
-        transformation_functions: Dict[str, tfm.TransformationFunction],
+        transformation_functions: List[TransformationFunction],
     ) -> None:
         self._transformation_functions = transformation_functions
 
@@ -3643,3 +3710,18 @@ class FeatureView:
     @serving_keys.setter
     def serving_keys(self, serving_keys: List[skm.ServingKey]) -> None:
         self._serving_keys = serving_keys
+
+    @property
+    def transformed_features(self) -> List[str]:
+        """Name of features of a feature view after transformation functions have been applied"""
+        transformation_features = set()
+        transformed_column_names = []
+        for tf in self.transformation_functions:
+            transformed_column_names.extend(tf.output_column_names)
+            transformation_features.update(tf.hopsworks_udf.transformation_features)
+
+        return [
+            feature.name
+            for feature in self.features
+            if feature.name not in transformation_features
+        ] + transformed_column_names

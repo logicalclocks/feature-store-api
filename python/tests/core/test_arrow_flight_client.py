@@ -77,9 +77,6 @@ class TestArrowFlightClient:
             "hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query",
             return_value=fg.select_all(),
         )
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions"
-        )
         mocker.patch("hsfs.engine.python.Engine._apply_transformation_function")
 
         # required for batch query
