@@ -24,17 +24,15 @@ import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.beam.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngineBase;
 import org.apache.beam.sdk.values.PCollection;
-
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, StreamFeatureGroup,
     PCollection<Object>> {
+
   @Override
   public FeatureView update(FeatureView featureView) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+    featureViewApi.update(featureView, FeatureView.class);
+    return featureView;
   }
 
   @Override
@@ -43,29 +41,5 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
     FeatureView featureView = get(featureStore, name, version, FeatureView.class);
     featureView.setFeatureStore(featureStore);
     return featureView;
-  }
-
-  @Override
-  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
-      Integer trainingDataVersion) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version, Query query,
-      String description, List<String> labels) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public PCollection<Object> getBatchData(FeatureView featureView, Date startTime, Date endTime,
-      Map<String, String> readOptions, Integer trainingDataVersion) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Beam");
   }
 }

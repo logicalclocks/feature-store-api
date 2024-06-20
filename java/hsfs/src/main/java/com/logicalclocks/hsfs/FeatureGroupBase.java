@@ -19,10 +19,8 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngineBase;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
-import com.logicalclocks.hsfs.metadata.Statistics;
 import com.logicalclocks.hsfs.metadata.Subject;
 import com.logicalclocks.hsfs.metadata.User;
 
@@ -34,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -273,163 +270,9 @@ public abstract class FeatureGroupBase<T> {
         this.getClass());
   }
 
-  public abstract T read() throws FeatureStoreException, IOException;
-
-  public abstract T read(boolean online) throws FeatureStoreException, IOException;
-
-  public abstract T read(Map<String, String> readOptions) throws FeatureStoreException, IOException;
-
-  public abstract T read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
-
-  public abstract T read(String wallclockTime) throws FeatureStoreException, IOException, ParseException;
-
-  public abstract T read(String wallclockTime, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract QueryBase asOf(String wallclockTime) throws FeatureStoreException, ParseException;
-
-  public abstract QueryBase asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException,
-      ParseException;
-
-  public abstract void show(int numRows) throws FeatureStoreException, IOException;
-
-  public abstract void show(int numRows, boolean online) throws FeatureStoreException, IOException;
-
-  public abstract void insert(T featureData) throws IOException, FeatureStoreException, ParseException;
-
-  public abstract void insert(T featureData,  Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract void insert(T featureData, Storage storage)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract void insert(T featureData, boolean overwrite)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract void insert(T featureData, Storage storage, boolean overwrite)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract void insert(T featureData, boolean overwrite, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract void insert(T featureData, HudiOperationType operation)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract void insert(T featureData, Storage storage, boolean overwrite, HudiOperationType operation,
-                     Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException;
-
-  public abstract void insert(T  featureData, JobConfiguration jobConfiguration)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract void insert(T featureData, boolean overwrite, Map<String, String> writeOptions,
-                              JobConfiguration jobConfiguration)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract void commitDeleteRecord(T featureData)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract void commitDeleteRecord(T featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract Map<Long, Map<String, String>> commitDetails()
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Map<Long, Map<String, String>> commitDetails(Integer limit)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Map<Long, Map<String, String>> commitDetails(String wallclockTime)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract QueryBase selectFeatures(List<Feature> features);
-
-  public abstract QueryBase select(List<String> features);
-
-  public abstract QueryBase selectAll();
-
-  public abstract QueryBase selectExceptFeatures(List<Feature> features);
-
-  public abstract QueryBase selectExcept(List<String> features);
-
   public abstract Object insertStream(T featureData) throws Exception;
 
-  public abstract Object insertStream(T featureData, String queryName) throws Exception;
-
   public abstract Object insertStream(T featureData, Map<String, String> writeOptions) throws Exception;
-
-  public abstract Object insertStream(T featureData, String queryName, Map<String, String> writeOptions)
-      throws Exception;
-
-  public abstract Object insertStream(T featureData, String queryName, String outputMode) throws Exception;
-
-  public abstract Object insertStream(T featureData, String queryName, String outputMode,
-                                     String checkpointLocation) throws Exception;
-
-  public abstract Object insertStream(T featureData, String queryName, String outputMode,
-                                     boolean awaitTermination, Long timeout) throws Exception;
-
-  public abstract Object insertStream(T featureData, String queryName, String outputMode,
-                                     boolean awaitTermination, Long timeout, String checkpointLocation)
-      throws Exception;
-
-  public abstract Object insertStream(T featureData, String queryName, String outputMode,
-                                     boolean awaitTermination, Long timeout,  String checkpointLocation,
-                                     Map<String, String> writeOptions) throws Exception;
-
-  public abstract Object insertStream(T featureData, String queryName, String outputMode, boolean awaitTermination,
-                                      String checkpointLocation) throws Exception;
-
-  public abstract Object insertStream(T featureData, String queryName, String outputMode,
-                                     boolean awaitTermination, Long timeout,  String checkpointLocation,
-                                     Map<String, String> writeOptions, JobConfiguration jobConfiguration)
-      throws Exception;
-
-
-  /**
-   * Update the metadata of multiple features.
-   * Currently only feature description updates are supported.
-   *
-   * @param features List of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
-  public abstract void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException;
-
-  /**
-   * Update the metadata of multiple features.
-   * Currently only feature description updates are supported.
-   *
-   * @param feature Feature metadata object
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
-  public abstract void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException;
-
-  /**
-   * Append features to the schema of the feature group.
-   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
-   *
-   * @param features list of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
-  public abstract void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException;
-
-  /**
-   * Append a single feature to the schema of the feature group.
-   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
-   *
-   * @param features List of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
-  public abstract void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException;
 
   /**
    * Update the statistics configuration of the feature group.
@@ -442,28 +285,6 @@ public abstract class FeatureGroupBase<T> {
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
     featureGroupEngineBase.updateStatisticsConfig(this, this.getClass());
   }
-
-  /**
-   * Recompute the statistics for the feature group and save them to the feature store.
-   *
-   * @return statistics object of computed statistics
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   */
-  public abstract Statistics computeStatistics() throws FeatureStoreException, IOException, ParseException;
-
-  public abstract Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException,
-      ParseException;
-
-  /**
-   * Get the last statistics commit for the feature group.
-   *
-   * @return statistics object of latest commit
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   */
-  @JsonIgnore
-  public abstract Statistics getStatistics() throws FeatureStoreException, IOException;
 
   @JsonIgnore
   public Subject getSubject() throws FeatureStoreException, IOException {
@@ -530,6 +351,4 @@ public abstract class FeatureGroupBase<T> {
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     return utils.getDeserializedAvroSchema(getAvroSchema());
   }
-
-
 }
