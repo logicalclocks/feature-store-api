@@ -15,6 +15,8 @@
 #
 from __future__ import annotations
 
+import importlib.util
+
 import numpy
 import pandas as pd
 import pytest
@@ -3392,6 +3394,10 @@ class TestSpark:
             == 1
         )
 
+    @pytest.mark.skipif(
+        importlib.util.find_spec("great_expectations") is None,
+        reason="Great Expectations is not installed",
+    )
     def test_validate_with_great_expectations(self, mocker):
         # Arrange
         spark_engine = spark.Engine()

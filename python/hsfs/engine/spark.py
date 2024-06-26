@@ -23,9 +23,10 @@ import re
 import shutil
 import warnings
 from datetime import date, datetime, timezone
-from typing import Any, List, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, List, Optional, TypeVar, Union
 
 import avro
+import great_expectations.data_context
 import numpy as np
 import pandas as pd
 import tzlocal
@@ -88,19 +89,14 @@ from hsfs.core import (
     storage_connector_api,
     transformation_function_engine,
 )
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+from hsfs.decorators import uses_great_expectations
 from hsfs.storage_connector import StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
-HAS_GREAT_EXPECTATIONS = False
-if importlib.util.find_spec("great_expectations"):
-    HAS_GREAT_EXPECTATIONS = True
-    from great_expectations.core.batch import RuntimeBatchRequest
-    from great_expectations.data_context import BaseDataContext
-    from great_expectations.data_context.types.base import (
-        DataContextConfig,
-        InMemoryStoreBackendDefaults,
-    )
+if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
+    import great_expectations
 
 
 class Engine:
@@ -974,21 +970,28 @@ class Engine:
             exact_uniqueness,
         )
 
+    @uses_great_expectations
     def validate_with_great_expectations(
         self,
         dataframe: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-        expectation_suite: TypeVar("ge.core.ExpectationSuite"),  # noqa: F821
+        expectation_suite: great_expectations.core.ExpectationSuite,  # noqa: F821
         ge_validate_kwargs: Optional[dict],
     ):
         # NOTE: InMemoryStoreBackendDefaults SHOULD NOT BE USED in normal settings. You
         # may experience data loss as it persists nothing. It is used here for testing.
         # Please refer to docs to learn how to instantiate your DataContext.
-        store_backend_defaults = InMemoryStoreBackendDefaults()
-        data_context_config = DataContextConfig(
-            store_backend_defaults=store_backend_defaults,
-            checkpoint_store_name=store_backend_defaults.checkpoint_store_name,
+        store_backend_defaults = (
+            great_expectations.data_context.types.base.InMemoryStoreBackendDefaults()
         )
-        context = BaseDataContext(project_config=data_context_config)
+        data_context_config = (
+            great_expectations.data_context.types.base.DataContextConfig(
+                store_backend_defaults=store_backend_defaults,
+                checkpoint_store_name=store_backend_defaults.checkpoint_store_name,
+            )
+        )
+        context = great_expectations.data_context.BaseDataContext(
+            project_config=data_context_config
+        )
 
         datasource = {
             "name": "my_spark_dataframe",
@@ -1007,7 +1010,7 @@ class Engine:
         context.add_datasource(**datasource)
 
         # Here is a RuntimeBatchRequest using a dataframe
-        batch_request = RuntimeBatchRequest(
+        batch_request = great_expectations.core.batch.RuntimeBatchRequest(
             datasource_name="my_spark_dataframe",
             data_connector_name="default_runtime_data_connector_name",
             data_asset_name="<YOUR_MEANGINGFUL_NAME>",  # This can be anything that identifies this data_asset for you
