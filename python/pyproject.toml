@@ -81,7 +81,7 @@ dev-pandas1 = [
     "pandas<=1.5.3",
     "sqlalchemy<=1.4.48",
 ]
-dev = ["hsfs[dev-no-opt]", "hsfs[great_expectations]"]
+dev = ["hsfs[dev-no-opt]", "hsfs[great-expectations]"]
 
 
 [build-system]
