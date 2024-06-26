@@ -26,7 +26,6 @@ from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any, List, Optional, TypeVar, Union
 
 import avro
-import great_expectations.data_context
 import numpy as np
 import pandas as pd
 import tzlocal
