@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import copy
-import importlib.util
 import json
 import logging
 import time
@@ -76,11 +75,15 @@ from hsfs.core import (
 )
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
-from hsfs.core.constants import great_expectations_not_installed_message
+from hsfs.core.constants import (
+    HAS_GREAT_EXPECTATIONS,
+)
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core.vector_db_client import VectorDbClient
-from hsfs.decorators import typechecked
+
+# if great_expectations is not installed, we will default to using native Hopsworks class as return values
+from hsfs.decorators import typechecked, uses_great_expectations
 from hsfs.embedding import EmbeddingIndex
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.ge_validation_result import ValidationResult
@@ -89,10 +92,7 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
 
-# if great_expectations is not installed, we will default to using native Hopsworks class as return values
-HAS_GREAT_EXPECTATIONS = False
-if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
-    HAS_GREAT_EXPECTATIONS = True
+if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 
@@ -1232,6 +1232,7 @@ class FeatureGroupBase:
                 "Only Feature Group registered with Hopsworks can fetch validation history."
             )
 
+    @uses_great_expectations
     def validate(
         self,
         dataframe: Optional[
@@ -1243,7 +1244,7 @@ class FeatureGroupBase:
         ingestion_result: Literal[
             "unknown", "ingested", "rejected", "fg_data", "experiement"
         ] = "unknown",
-        ge_type: bool = HAS_GREAT_EXPECTATIONS,
+        ge_type: bool = True,
     ) -> Union[
         great_expectations.core.ExpectationSuiteValidationResult, ValidationReport, None
     ]:
@@ -1286,8 +1287,6 @@ class FeatureGroupBase:
         # Returns
             A Validation Report produced by Great Expectations.
         """
-        if HAS_GREAT_EXPECTATIONS is False:
-            raise ModuleNotFoundError(great_expectations_not_installed_message)
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()

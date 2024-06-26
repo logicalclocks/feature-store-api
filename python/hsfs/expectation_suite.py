@@ -15,7 +15,6 @@
 #
 from __future__ import annotations
 
-import importlib.util
 import json
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
@@ -25,18 +24,18 @@ from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import expectation_suite_engine
 from hsfs.core.constants import (
-    great_expectations_not_installed_message,
+    HAS_GREAT_EXPECTATIONS,
     initialise_expectation_suite_for_single_expectation_api_message,
 )
 from hsfs.core.expectation_engine import ExpectationEngine
 from hsfs.core.variable_api import VariableApi
+
+# if great_expectations is not installed, we will default to using native Hopsworks class as return values
+from hsfs.decorators import uses_great_expectations
 from hsfs.ge_expectation import GeExpectation
 
 
-# if great_expectations is not installed, we will default to using native Hopsworks class as return values
-HAS_GREAT_EXPECTATIONS = False
-if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
-    HAS_GREAT_EXPECTATIONS = True
+if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 
@@ -128,6 +127,7 @@ class ExpectationSuite:
             return cls(**json_decamelized)
 
     @classmethod
+    @uses_great_expectations
     def from_ge_type(
         cls,
         ge_expectation_suite: great_expectations.core.ExpectationSuite,
@@ -157,8 +157,6 @@ class ExpectationSuite:
         # Returns
             Hopsworks Expectation Suite instance.
         """
-        if HAS_GREAT_EXPECTATIONS is False:
-            raise ModuleNotFoundError(great_expectations_not_installed_message)
         suite_dict = ge_expectation_suite.to_json_dict()
         if id is None and "id" in suite_dict:
             id = suite_dict.pop("id")
@@ -209,9 +207,8 @@ class ExpectationSuite:
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
+    @uses_great_expectations
     def to_ge_type(self) -> great_expectations.core.ExpectationSuite:
-        if HAS_GREAT_EXPECTATIONS is False:
-            raise ModuleNotFoundError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationSuite(
             expectation_suite_name=self._expectation_suite_name,
             ge_cloud_id=self._ge_cloud_id,

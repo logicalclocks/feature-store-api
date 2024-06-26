@@ -15,11 +15,11 @@
 #
 from __future__ import annotations
 
-import importlib.util
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
 from hsfs import engine, util, validation_report
 from hsfs import expectation_suite as es
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ class GreatExpectationEngine:
             great_expectations.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
         save_report: bool = False,
-        validation_options: Dict[str, Any] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
         ge_type: bool = True,
         ingestion_result: Literal[
             "unknown", "ingested", "rejected", "fg_data", "experiment"
@@ -67,7 +67,7 @@ class GreatExpectationEngine:
         if self.should_run_validation(
             expectation_suite=suite, validation_options=validation_options
         ):
-            if importlib.util.find_spec("great_expectations") is None:
+            if not HAS_GREAT_EXPECTATIONS:
                 raise ModuleNotFoundError(
                     f"Feature Group {feature_group.name}, v{feature_group.version} is configured to run validation with Great Expectations, "
                     "but Great Expectations is not installed. Please install it using `pip install great_expectations`.\n"

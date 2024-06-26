@@ -15,18 +15,16 @@
 #
 from __future__ import annotations
 
-import importlib.util
 import json
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import humps
 from hsfs import util
-from hsfs.core.constants import great_expectations_not_installed_message
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+from hsfs.decorators import uses_great_expectations
 
 
-HAS_GREAT_EXPECTATIONS = False
-if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
-    HAS_GREAT_EXPECTATIONS = True
+if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 
@@ -109,9 +107,8 @@ class GeExpectation:
             + f"kwargs={self._kwargs}, meta={self._meta})"
         )
 
+    @uses_great_expectations
     def to_ge_type(self) -> great_expectations.core.ExpectationConfiguration:
-        if not HAS_GREAT_EXPECTATIONS:
-            raise ModuleNotFoundError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationConfiguration(
             expectation_type=self.expectation_type, kwargs=self.kwargs, meta=self.meta
         )

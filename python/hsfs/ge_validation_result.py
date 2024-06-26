@@ -16,19 +16,17 @@
 from __future__ import annotations
 
 import datetime
-import importlib.util
 import json
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
 import dateutil
 import humps
 from hsfs import util
-from hsfs.core.constants import great_expectations_not_installed_message
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+from hsfs.decorators import uses_great_expectations
 
 
-HAS_GREAT_EXPECTATIONS = False
-if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
-    HAS_GREAT_EXPECTATIONS = True
+if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 
@@ -105,9 +103,8 @@ class ValidationResult:
             "meta": self._meta,
         }
 
+    @uses_great_expectations
     def to_ge_type(self) -> great_expectations.core.ExpectationValidationResult:
-        if HAS_GREAT_EXPECTATIONS is False:
-            raise ModuleNotFoundError(great_expectations_not_installed_message)
         return great_expectations.core.ExpectationValidationResult(
             success=self.success,
             exception_info=self.exception_info,

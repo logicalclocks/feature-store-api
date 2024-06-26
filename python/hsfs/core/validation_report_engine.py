@@ -15,17 +15,15 @@
 #
 from __future__ import annotations
 
-import importlib.util
 from typing import TYPE_CHECKING, List, Union
 
 from hsfs import client, util
 from hsfs.core import validation_report_api
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.validation_report import ValidationReport
 
 
-HAS_GREAT_EXPECTATIONS = False
-if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
-    HAS_GREAT_EXPECTATIONS = True
+if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 

@@ -18,6 +18,11 @@ from __future__ import annotations
 import functools
 import os
 
+from hsfs.core.constants import (
+    HAS_GREAT_EXPECTATIONS,
+    great_expectations_not_installed_message,
+)
+
 
 def not_connected(fn):
     @functools.wraps(fn)
@@ -68,3 +73,13 @@ else:
         target: _T,
     ) -> _T:
         return target if target else typechecked
+
+
+def uses_great_expectations(f):
+    @functools.wraps(f)
+    def g(*args, **kwds):
+        if not HAS_GREAT_EXPECTATIONS:
+            raise ModuleNotFoundError(great_expectations_not_installed_message)
+        return f(*args, **kwds)
+
+    return g

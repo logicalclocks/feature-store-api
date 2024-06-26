@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import ast
 import decimal
-import importlib.util
 import json
 import logging
 import math
@@ -80,8 +79,9 @@ from hsfs.core import (
     transformation_function_engine,
     variable_api,
 )
-from hsfs.core.constants import great_expectations_not_installed_message
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.core.vector_db_client import VectorDbClient
+from hsfs.decorators import uses_great_expectations
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -104,9 +104,8 @@ try:
 except ImportError:
     pass
 
-HAS_GREAT_EXPECTATIONS = False
-if importlib.util.find_spec("great_expectations") or TYPE_CHECKING:
-    HAS_GREAT_EXPECTATIONS = True
+
+if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 # Decimal types are currently not supported
@@ -706,14 +705,13 @@ class Engine:
             "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
         )
 
+    @uses_great_expectations
     def validate_with_great_expectations(
         self,
         dataframe: Union[pl.DataFrame, pd.DataFrame],
         expectation_suite: great_expectations.core.ExpectationSuite,
         ge_validate_kwargs: Optional[Dict[Any, Any]] = None,
     ) -> great_expectations.core.ExpectationSuiteValidationResult:
-        if HAS_GREAT_EXPECTATIONS is False:
-            raise ModuleNotFoundError(great_expectations_not_installed_message)
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
         if isinstance(dataframe, pl.DataFrame) or isinstance(
