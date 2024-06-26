@@ -779,11 +779,6 @@ class TestPython:
         assert mock_python_engine_sql.call_count == 1
 
     def test_cast_columns(self, mocker):
-        class LabelIndex:
-            def __init__(self, label, index):
-                self.label = label
-                self.index = index
-
         python_engine = python.Engine()
         d = {
             "string": ["s", "s"],
@@ -844,7 +839,7 @@ class TestPython:
         for col in cast_df.columns:
             assert cast_df[col].dtype == expected[col]
 
-    def test_register_external_temporary_table(self, mocker):
+    def test_register_external_temporary_table(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1322,6 +1317,10 @@ class TestPython:
         # Assert
         assert mock_ge_from_pandas.call_count == 1
 
+    @pytest.mark.skipif(
+        importlib.util.find_spec("great_expectations") is not None,
+        reason="Great Expectations is installed.",
+    )
     def test_validate_with_great_expectations_raise_module_not_found(self):
         # Arrange
         python_engine = python.Engine()
