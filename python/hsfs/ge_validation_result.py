@@ -19,15 +19,17 @@ import datetime
 import json
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
+
+if TYPE_CHECKING:
+    import great_expectations
+
+
 import dateutil
 import humps
 from hsfs import util
 from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.decorators import uses_great_expectations
 
-
-if TYPE_CHECKING:
-    import great_expectations
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations

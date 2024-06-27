@@ -19,6 +19,10 @@ import json
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
+
+if TYPE_CHECKING:
+    import great_expectations
+
 import humps
 from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
@@ -34,9 +38,6 @@ from hsfs.core.variable_api import VariableApi
 from hsfs.decorators import uses_great_expectations
 from hsfs.ge_expectation import GeExpectation
 
-
-if TYPE_CHECKING:
-    import great_expectations
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations

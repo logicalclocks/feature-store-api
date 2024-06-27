@@ -4,8 +4,6 @@ import shutil
 
 import keras_autodoc
 
-os.environ["SPHINX_AUTODOC_RELOAD_MODULES"] = "1"
-
 PAGES = {
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],

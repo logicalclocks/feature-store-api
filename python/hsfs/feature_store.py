@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import humps
 import numpy
@@ -50,10 +50,6 @@ from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
-
-
-if TYPE_CHECKING:
-    import great_expectations
 
 
 @typechecked
@@ -510,7 +506,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[
                 expectation_suite.ExpectationSuite,
-                great_expectations.core.ExpectationSuite,
+                TypeVar("great_expectations.core.ExpectationSuite"),
             ]
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = None,
@@ -582,7 +578,7 @@ class FeatureStore:
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
 
-                !!!note "Event time data type restriction"
+                !!! note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
 
@@ -643,7 +639,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[
                 expectation_suite.ExpectationSuite,
-                great_expectations.core.ExpectationSuite,
+                TypeVar("great_expectations.core.ExpectationSuite"),
             ]
         ] = None,
         event_time: Optional[str] = None,
@@ -722,7 +718,7 @@ class FeatureStore:
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
 
-                !!!note "Event time data type restriction"
+                !!! note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
 
@@ -792,12 +788,12 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[
                 expectation_suite.ExpectationSuite,
-                great_expectations.core.ExpectationSuite,
+                TypeVar("great_expectations.core.ExpectationSuite"),
             ]
         ] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ) -> "feature_group.ExternalFeatureGroup":
+    ) -> feature_group.ExternalFeatureGroup:
         """Create a external feature group metadata object.
 
         !!! warning "Deprecated"
@@ -847,18 +843,19 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
+                !!! note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
-
-                !!!note "Event time data type restriction"
-                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
-
-
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
+
+
+
+
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
@@ -904,13 +901,13 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[
                 expectation_suite.ExpectationSuite,
-                great_expectations.core.ExpectationSuite,
+                TypeVar("great_expectations.core.ExpectationSuite"),
             ]
         ] = None,
         online_enabled: bool = False,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ) -> "feature_group.ExternalFeatureGroup":
+    ) -> feature_group.ExternalFeatureGroup:
         """Create a external feature group metadata object.
 
         !!! example
@@ -1000,12 +997,11 @@ class FeatureStore:
                 !!! note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
-
+            online_enabled: Define whether it should be possible to sync the feature group to
+                the online feature store for low latency access, defaults to `False`.
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
-            online_enabled: Define whether it should be possible to sync the feature group to
-                the online feature store for low latency access, defaults to `False`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
@@ -1146,7 +1142,7 @@ class FeatureStore:
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
 
-                !!!note "Event time data type restriction"
+                !!! note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
 
@@ -1310,7 +1306,7 @@ class FeatureStore:
             bool,
         ],
         version: Optional[int] = None,
-    ) -> "TransformationFunction":
+    ) -> TransformationFunction:
         """Create a transformation function metadata object.
 
         !!! example
@@ -1354,7 +1350,7 @@ class FeatureStore:
         self,
         name: str,
         version: Optional[int] = None,
-    ) -> "TransformationFunction":
+    ) -> TransformationFunction:
         """Get  transformation function metadata object.
 
         !!! example "Get transformation function by name. This will default to version 1"
@@ -1452,7 +1448,7 @@ class FeatureStore:
         return self._transformation_function_engine.get_transformation_fn(name, version)
 
     @usage.method_logger
-    def get_transformation_functions(self) -> List["TransformationFunction"]:
+    def get_transformation_functions(self) -> List[TransformationFunction]:
         """Get  all transformation functions metadata objects.
 
         !!! example "Get all transformation functions"
@@ -1672,7 +1668,7 @@ class FeatureStore:
     @usage.method_logger
     def get_feature_view(
         self, name: str, version: int = None
-    ) -> "feature_view.FeatureView":
+    ) -> feature_view.FeatureView:
         """Get a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1712,7 +1708,7 @@ class FeatureStore:
         return self._feature_view_engine.get(name, version)
 
     @usage.method_logger
-    def get_feature_views(self, name: str) -> List["feature_view.FeatureView"]:
+    def get_feature_views(self, name: str) -> List[feature_view.FeatureView]:
         """Get a list of all versions of a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.

@@ -33,6 +33,10 @@ from typing import (
     Union,
 )
 
+
+if TYPE_CHECKING:
+    import great_expectations
+
 import avro.schema
 import confluent_kafka
 import humps
@@ -91,9 +95,6 @@ from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
-
-if TYPE_CHECKING:
-    import great_expectations
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations

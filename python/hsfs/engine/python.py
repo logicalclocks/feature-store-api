@@ -42,6 +42,10 @@ from typing import (
     Union,
 )
 
+
+if TYPE_CHECKING:
+    import great_expectations
+
 import avro
 import boto3
 import hsfs
@@ -103,10 +107,6 @@ try:
     HAS_FAST = True
 except ImportError:
     pass
-
-
-if TYPE_CHECKING:
-    import great_expectations
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations

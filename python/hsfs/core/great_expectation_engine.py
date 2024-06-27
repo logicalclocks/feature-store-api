@@ -17,15 +17,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
-from hsfs import engine, util, validation_report
-from hsfs import expectation_suite as es
-from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
-
 
 if TYPE_CHECKING:
     import great_expectations
     import pandas as pd
-    from hsfs import feature_group as fg_mod
+
+
+from hsfs import engine, util, validation_report
+from hsfs import expectation_suite as es
+from hsfs import feature_group as fg_mod
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 
 
 class GreatExpectationEngine:

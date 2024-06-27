@@ -18,15 +18,16 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
+
+if TYPE_CHECKING:
+    import great_expectations
+
 import humps
 from hsfs import util
 from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.decorators import uses_great_expectations
 from hsfs.ge_validation_result import ValidationResult
 
-
-if TYPE_CHECKING:
-    import great_expectations
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations

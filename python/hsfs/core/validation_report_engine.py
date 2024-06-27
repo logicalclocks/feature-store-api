@@ -17,14 +17,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Union
 
+
+if TYPE_CHECKING:
+    import great_expectations
+
 from hsfs import client, util
 from hsfs.core import validation_report_api
 from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.validation_report import ValidationReport
 
-
-if TYPE_CHECKING:
-    import great_expectations
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations

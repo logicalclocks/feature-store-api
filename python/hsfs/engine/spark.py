@@ -25,6 +25,10 @@ import warnings
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any, List, Optional, TypeVar, Union
 
+
+if TYPE_CHECKING:
+    import great_expectations
+
 import avro
 import numpy as np
 import pandas as pd
@@ -93,9 +97,6 @@ from hsfs.decorators import uses_great_expectations
 from hsfs.storage_connector import StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
-
-if TYPE_CHECKING:
-    import great_expectations
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations
