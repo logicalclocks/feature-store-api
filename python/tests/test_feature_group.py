@@ -13,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import importlib.util
 import warnings
 
 import hsfs
@@ -31,6 +30,7 @@ from hsfs import (
     util,
 )
 from hsfs.client.exceptions import FeatureStoreException, RestAPIError
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.engine import python
 
 
@@ -811,7 +811,7 @@ class TestExternalFeatureGroup:
         assert fg.expectation_suite._feature_store_id == fg.feature_store_id
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="great_expectations not installed",
     )
     def test_feature_group_save_expectation_suite_from_ge_type(

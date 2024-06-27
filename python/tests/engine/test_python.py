@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 import decimal
-import importlib.util
 from datetime import date, datetime
 
 import numpy as np
@@ -36,6 +35,7 @@ from hsfs.client import exceptions
 from hsfs.constructor import query
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
 from hsfs.core import inode, job
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.engine import python
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.training_dataset_feature import TrainingDatasetFeature
@@ -1300,7 +1300,7 @@ class TestPython:
         )
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed.",
     )
     def test_validate_with_great_expectations(self, mocker):
@@ -1318,7 +1318,7 @@ class TestPython:
         assert mock_ge_from_pandas.call_count == 1
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is not None,
+        HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is installed.",
     )
     def test_validate_with_great_expectations_raise_module_not_found(self):

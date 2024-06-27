@@ -13,19 +13,17 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import importlib.util
 
 import hsfs.expectation_suite as es
 import pandas as pd
 import pytest
 from hsfs import feature_group, validation_report
 from hsfs.core import great_expectation_engine
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 
 
-HAS_GREAT_EXPECTATIONS = False
-if importlib.util.find_spec("great_expectations"):
-    HAS_GREAT_EXPECTATIONS = True
-    import great_expectations.core
+if HAS_GREAT_EXPECTATIONS:
+    import great_expectations
 
 
 class TestCodeEngine:
@@ -105,7 +103,7 @@ class TestCodeEngine:
         assert mock_vr.call_count == 0
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed",
     )
     def test_validate_suite_validation_options(self, mocker):
@@ -150,7 +148,7 @@ class TestCodeEngine:
         assert mock_vr.call_count == 0
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed",
     )
     def test_validate_suite_validation_options_save_report(self, mocker):
@@ -196,7 +194,7 @@ class TestCodeEngine:
         assert mock_vr.call_count == 0
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed",
     )
     def test_convert_expectation_suite(self, mocker):
@@ -239,7 +237,7 @@ class TestCodeEngine:
         assert mock_fg_get_expectation_suite.call_count == 0
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed.",
     )
     def test_fake_convert_expectation_suite(self, mocker):
@@ -282,7 +280,7 @@ class TestCodeEngine:
         assert mock_fg_get_expectation_suite.call_count == 0
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed.",
     )
     def test_fetch_expectation_suite(self, mocker):
@@ -321,7 +319,7 @@ class TestCodeEngine:
         assert mock_fg_get_expectation_suite.call_count == 1
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed.",
     )
     def test_fetch_expectation_suite_false(self, mocker):
@@ -452,7 +450,7 @@ class TestCodeEngine:
         assert run_validation is True
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed",
     )
     def test_not_save_but_convert_report(self, mocker):
@@ -497,7 +495,7 @@ class TestCodeEngine:
         assert mock_save_validation_report.call_count == 0
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed",
     )
     def test_save_but_not_convert_report(self, mocker):
@@ -541,7 +539,7 @@ class TestCodeEngine:
         assert mock_save_validation_report.call_count == 1
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is not installed",
     )
     def test_not_save_and_not_convert_report(self, mocker):
@@ -589,7 +587,7 @@ class TestCodeEngine:
         assert mock_save_validation_report.call_count == 0
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is not None,
+        HAS_GREAT_EXPECTATIONS,
         reason="Great Expectations is installed, do not check for module not found error",
     )
     def test_raise_module_not_found_error(self, mocker):

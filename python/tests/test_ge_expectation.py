@@ -13,12 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
-
-import importlib.util
-
 import pytest
 from hsfs import ge_expectation
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 
 
 class TestGeExpectation:
@@ -65,7 +62,7 @@ class TestGeExpectation:
         assert len(ge_list) == 0
 
     @pytest.mark.skipif(
-        importlib.util.find_spec("great_expectations") is None,
+        not HAS_GREAT_EXPECTATIONS,
         reason="great_expectations not installed",
     )
     def test_from_ge_object(self):
