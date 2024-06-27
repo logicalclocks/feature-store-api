@@ -15,12 +15,20 @@
 #
 from __future__ import annotations
 
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 
-import great_expectations as ge
+
+if TYPE_CHECKING:
+    import great_expectations
+
 from hsfs import client, util
 from hsfs.core import validation_report_api
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.validation_report import ValidationReport
+
+
+if HAS_GREAT_EXPECTATIONS:
+    import great_expectations
 
 
 class ValidationReportEngine:
@@ -39,7 +47,9 @@ class ValidationReportEngine:
         )
 
     def save(
-        self, validation_report: ValidationReport, ge_type: bool = True
+        self,
+        validation_report: ValidationReport,
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
     ) -> ValidationReport:
         saved_report = self._validation_report_api.create(validation_report)
         url = self._get_validation_report_url()
@@ -50,8 +60,10 @@ class ValidationReportEngine:
             return saved_report
 
     def get_last(
-        self, ge_type: bool = True
-    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
+        self, ge_type: bool = HAS_GREAT_EXPECTATIONS
+    ) -> Union[
+        ValidationReport, great_expectations.core.ExpectationSuiteValidationResult, None
+    ]:
         """Get the most recent Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
@@ -67,8 +79,11 @@ class ValidationReportEngine:
             return reports[0]
 
     def get_all(
-        self, ge_type: bool = True
-    ) -> Union[List[ValidationReport], List[ge.core.ExpectationSuiteValidationResult]]:
+        self, ge_type: bool = HAS_GREAT_EXPECTATIONS
+    ) -> Union[
+        List[ValidationReport],
+        List[great_expectations.core.ExpectationSuiteValidationResult],
+    ]:
         """Get all Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(

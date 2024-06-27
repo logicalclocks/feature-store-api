@@ -907,7 +907,7 @@ class FeatureView:
 
     def _get_embedding_fgs(
         self,
-    ) -> Set["feature_group.FeatureGroup"]:
+    ) -> Set[feature_group.FeatureGroup]:
         return set([fg for fg in self.query.featuregroups if fg.embedding_index])
 
     @usage.method_logger

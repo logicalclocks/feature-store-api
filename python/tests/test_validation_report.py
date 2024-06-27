@@ -56,7 +56,7 @@ class TestValidationReport:
         assert vr._validation_time is None
         assert vr._featurestore_id is None
         assert vr._featuregroup_id is None
-        assert vr.ingestion_result == "UNKNOWN"
+        assert vr.ingestion_result == "unknown"
         assert len(vr.results) == 1
         assert isinstance(vr.results[0], ge_validation_result.ValidationResult)
         assert vr.meta == {"meta_key": "meta_value"}

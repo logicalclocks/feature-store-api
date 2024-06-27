@@ -344,13 +344,13 @@ class FeatureMonitoringConfigEngine:
 
     def run_feature_monitoring(
         self,
-        entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
+        entity: Union[feature_group.FeatureGroup, "feature_view.FeatureView"],
         config_name: str,
     ) -> List[FeatureMonitoringResult]:
         """Main function used by the job to actually perform the monitoring.
 
         Args:
-            entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"]
+            entity: Union[feature_group.FeatureGroup, "feature_view.FeatureView"]
                 Featuregroup or Featureview object containing the feature to monitor.
             config_name: str: name of the monitoring config.
 

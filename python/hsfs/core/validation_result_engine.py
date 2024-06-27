@@ -16,9 +16,13 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
 
-from great_expectations.core import ExpectationValidationResult
+
+if TYPE_CHECKING:
+    import great_expectations
+
+
 from hsfs import util
 from hsfs.core import validation_result_api
 from hsfs.ge_validation_result import ValidationResult
@@ -44,7 +48,10 @@ class ValidationResultEngine:
         end_validation_time: Union[str, int, datetime, date, None] = None,
         filter_by: List[str] = None,
         ge_type: bool = True,
-    ) -> Union[List[ValidationResult], List[ExpectationValidationResult]]:
+    ) -> Union[
+        List[ValidationResult],
+        List[great_expectations.core.ExpectationValidationResult],
+    ]:
         """Get Validation Results relevant to an Expectation specified by expectation_id.
 
         :param expectation_id: id of the expectation for which to fetch the validation history

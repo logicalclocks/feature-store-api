@@ -18,8 +18,8 @@ from __future__ import annotations
 import asyncio
 import itertools
 import json
+import logging
 import re
-import sys
 import threading
 import time
 from datetime import date, datetime, timezone
@@ -39,6 +39,8 @@ from sqlalchemy.engine.url import make_url
 
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
+
+_logger = logging.getLogger(__name__)
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -538,13 +540,6 @@ def build_serving_keys_from_prepared_statements(
                 )
             )
     return serving_keys
-
-
-def is_runtime_notebook():
-    if "ipykernel" in sys.modules:
-        return True
-    else:
-        return False
 
 
 class NpDatetimeEncoder(json.JSONEncoder):

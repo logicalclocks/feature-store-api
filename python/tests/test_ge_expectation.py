@@ -13,10 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
-
-import great_expectations as ge
+import pytest
 from hsfs import ge_expectation
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 
 
 class TestGeExpectation:
@@ -62,13 +61,19 @@ class TestGeExpectation:
         # Assert
         assert len(ge_list) == 0
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="great_expectations not installed",
+    )
     def test_from_ge_object(self):
+        import great_expectations
+
         # Arrange
         expectationId = 32
         expectation_type = "expect_column_min_to_be_between"
         kwargs = {"kwargs_key": "kwargs_value"}
         meta = {"meta_key": "meta_value", "expectationId": expectationId}
-        ge_object = ge.core.ExpectationConfiguration(
+        ge_object = great_expectations.core.ExpectationConfiguration(
             expectation_type=expectation_type,
             kwargs=kwargs,
             meta=meta,

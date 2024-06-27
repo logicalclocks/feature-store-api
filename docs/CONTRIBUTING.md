@@ -81,7 +81,7 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
 2. Install HSFS with `docs` extras:
 
    ```bash
-   pip install -e ".[python,dev,docs]"
+   pip install -e ".[python,dev]" && pip install -r ../requirements-docs.txt
    ```
 
 3. To build the docs, first run the auto doc script:

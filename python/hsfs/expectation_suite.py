@@ -17,16 +17,30 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
-import great_expectations as ge
+
+if TYPE_CHECKING:
+    import great_expectations
+
 import humps
 from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import expectation_suite_engine
+from hsfs.core.constants import (
+    HAS_GREAT_EXPECTATIONS,
+    initialise_expectation_suite_for_single_expectation_api_message,
+)
 from hsfs.core.expectation_engine import ExpectationEngine
 from hsfs.core.variable_api import VariableApi
+
+# if great_expectations is not installed, we will default to using native Hopsworks class as return values
+from hsfs.decorators import uses_great_expectations
 from hsfs.ge_expectation import GeExpectation
+
+
+if HAS_GREAT_EXPECTATIONS:
+    import great_expectations
 
 
 class ExpectationSuite:
@@ -36,28 +50,25 @@ class ExpectationSuite:
         self,
         expectation_suite_name: str,
         expectations: List[
-            Union[ge.core.ExpectationConfiguration, dict, GeExpectation]
+            Union[
+                great_expectations.core.ExpectationConfiguration,
+                Dict[str, Any],
+                GeExpectation,
+            ]
         ],
         meta: Dict[str, Any],
         id: Optional[int] = None,
-        data_asset_type: Optional[str] = None,
-        ge_cloud_id: Optional[int] = None,
         run_validation: bool = True,
-        validation_ingestion_policy: str = "ALWAYS",
+        validation_ingestion_policy: Literal["always", " strict"] = "always",
         feature_store_id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
         href: Optional[str] = None,
-        expand: Optional[str] = None,
-        items: Optional[List[Dict[str, Any]]] = None,
-        count: Optional[int] = None,
-        type: Optional[str] = None,
-        created: Optional[int] = None,
         **kwargs,
     ) -> None:
         self._id = id
         self._expectation_suite_name = expectation_suite_name
-        self._ge_cloud_id = ge_cloud_id
-        self._data_asset_type = data_asset_type
+        self._ge_cloud_id = kwargs.get("ge_cloud_id", None)
+        self._data_asset_type = kwargs.get("data_asset_type", None)
         self._run_validation = run_validation
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         self._expectations = []
@@ -72,15 +83,15 @@ class ExpectationSuite:
             self._feature_group_id = None
             self._feature_store_id = None
 
-        self._variable_api: "VariableApi" = VariableApi()
+        self._variable_api: VariableApi = VariableApi()
 
         # use setters because these need to be transformed from stringified json
         self.expectations = expectations
         self.meta = meta
 
-        self._expectation_engine: Optional["ExpectationEngine"] = None
+        self._expectation_engine: Optional[ExpectationEngine] = None
         self._expectation_suite_engine: Optional[
-            "expectation_suite_engine.ExpectationSuiteEngine"
+            expectation_suite_engine.ExpectationSuiteEngine
         ] = None
 
         if self.id:
@@ -105,13 +116,13 @@ class ExpectationSuite:
     @classmethod
     def from_response_json(
         cls, json_dict: Dict[str, Any]
-    ) -> Union["ExpectationSuite", List["ExpectationSuite"]]:
+    ) -> Optional[Union[ExpectationSuite, List[ExpectationSuite]]]:
         json_decamelized = humps.decamelize(json_dict)
         if (
             "count" in json_decamelized
         ):  # todo count is expected also when providing dict
             if json_decamelized["count"] == 0:
-                return None  # todo sometimes empty list returns [] others None
+                return None
             return [
                 cls(**expectation_suite)
                 for expectation_suite in json_decamelized["items"]
@@ -120,19 +131,20 @@ class ExpectationSuite:
             return cls(**json_decamelized)
 
     @classmethod
+    @uses_great_expectations
     def from_ge_type(
         cls,
-        ge_expectation_suite: ge.core.ExpectationSuite,
+        ge_expectation_suite: great_expectations.core.ExpectationSuite,
         run_validation: bool = True,
-        validation_ingestion_policy: str = "ALWAYS",
+        validation_ingestion_policy: Literal["ALWAYS", "STRICT"] = "ALWAYS",
         id: Optional[int] = None,
         feature_store_id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
-    ) -> "ExpectationSuite":
+    ) -> ExpectationSuite:
         """Used to create a Hopsworks Expectation Suite instance from a great_expectations instance.
 
         # Arguments
-            ge_expectation_suite: great_expectations.ExpectationSuite
+            ge_expectation_suite: great_expectations.core.ExpectationSuite
                 The great_expectations ExpectationSuite instance to convert to a Hopsworks ExpectationSuite.
             run_validation: bool
                 Whether to run validation on inserts when the expectation suite is attached.
@@ -172,7 +184,7 @@ class ExpectationSuite:
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
             "runValidation": self._run_validation,
-            "validationIngestionPolicy": self._validation_ingestion_policy,
+            "validationIngestionPolicy": self._validation_ingestion_policy.upper(),
         }
 
     def to_json_dict(self, decamelize: bool = False) -> Dict[str, Any]:
@@ -188,7 +200,7 @@ class ExpectationSuite:
             "geCloudId": self._ge_cloud_id,
             "dataAssetType": self._data_asset_type,
             "runValidation": self._run_validation,
-            "validationIngestionPolicy": self._validation_ingestion_policy,
+            "validationIngestionPolicy": self._validation_ingestion_policy.upper(),
         }
 
         if decamelize:
@@ -199,8 +211,9 @@ class ExpectationSuite:
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_ge_type(self) -> ge.core.ExpectationSuite:
-        return ge.core.ExpectationSuite(
+    @uses_great_expectations
+    def to_ge_type(self) -> great_expectations.core.ExpectationSuite:
+        return great_expectations.core.ExpectationSuite(
             expectation_suite_name=self._expectation_suite_name,
             ge_cloud_id=self._ge_cloud_id,
             data_asset_type=self._data_asset_type,
@@ -229,7 +242,7 @@ class ExpectationSuite:
             )
         else:
             raise ValueError(
-                "Initialise the Expectation Suite first by attaching to a Feature Group"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     def _init_expectation_suite_engine(
@@ -256,7 +269,12 @@ class ExpectationSuite:
 
     # Emulate GE single expectation api to edit list of expectations
     def _convert_expectation(
-        self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration, dict]
+        self,
+        expectation: Union[
+            GeExpectation,
+            great_expectations.core.ExpectationConfiguration,
+            Dict[str, Any],
+        ],
     ) -> GeExpectation:
         """
         Convert different representation of expectation to Hopsworks GeExpectation type.
@@ -270,7 +288,9 @@ class ExpectationSuite:
         # Raises
             `TypeError`
         """
-        if isinstance(expectation, ge.core.ExpectationConfiguration):
+        if HAS_GREAT_EXPECTATIONS and isinstance(
+            expectation, great_expectations.core.ExpectationConfiguration
+        ):
             return GeExpectation(**expectation.to_json_dict())
         elif isinstance(expectation, GeExpectation):
             return expectation
@@ -282,8 +302,8 @@ class ExpectationSuite:
             )
 
     def get_expectation(
-        self, expectation_id: int, ge_type: bool = True
-    ) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        self, expectation_id: int, ge_type: bool = HAS_GREAT_EXPECTATIONS
+    ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Fetch expectation with expectation_id from the backend.
 
@@ -301,7 +321,8 @@ class ExpectationSuite:
 
         # Arguments
             expectation_id: Id of the expectation to fetch from the backend.
-            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction,
+                defaults to True if great_expectations is installed else false.
 
         # Returns
             The expectation with expectation_id registered in the backend.
@@ -310,13 +331,6 @@ class ExpectationSuite:
             `hsfs.client.exceptions.RestAPIError`
             `hsfs.client.exceptions.FeatureStoreException`
         """
-        major, minor = self._variable_api.parse_major_and_minor(
-            self._variable_api.get_version("hopsworks")
-        )
-        if major == "3" and minor == "0":
-            raise FeatureStoreException(
-                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
-            )
         if self.id and self._expectation_engine:
             if ge_type:
                 return self._expectation_engine.get(expectation_id).to_ge_type()
@@ -324,14 +338,16 @@ class ExpectationSuite:
                 return self._expectation_engine.get(expectation_id)
         else:
             raise FeatureStoreException(
-                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     def add_expectation(
         self,
-        expectation: Union[GeExpectation, ge.core.ExpectationConfiguration],
-        ge_type: bool = True,
-    ) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        expectation: Union[
+            GeExpectation, great_expectations.core.ExpectationConfiguration
+        ],
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
+    ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Append an expectation to the local suite or in the backend if attached to a Feature Group.
 
@@ -363,7 +379,8 @@ class ExpectationSuite:
             ```
         # Arguments
             expectation: The new expectation object.
-            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction,
+                defaults to True if great_expectations is installed else false.
 
         # Returns
             The new expectation attached to the Feature Group.
@@ -372,14 +389,6 @@ class ExpectationSuite:
             `hsfs.client.exceptions.RestAPIError`
             `hsfs.client.exceptions.FeatureStoreException`
         """
-        major, minor = self._variable_api.parse_major_and_minor(
-            self._variable_api.get_version("hopsworks")
-        )
-        if major == "3" and minor == "0":
-            raise FeatureStoreException(
-                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
-            )
-
         if self.id:
             converted_expectation = self._convert_expectation(expectation=expectation)
             converted_expectation = self._expectation_engine.create(
@@ -392,14 +401,16 @@ class ExpectationSuite:
                 return converted_expectation
         else:
             raise FeatureStoreException(
-                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     def replace_expectation(
         self,
-        expectation: Union[GeExpectation, ge.core.ExpectationConfiguration],
-        ge_type: bool = True,
-    ) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        expectation: Union[
+            GeExpectation, great_expectations.core.ExpectationConfiguration
+        ],
+        ge_type: bool = HAS_GREAT_EXPECTATIONS,
+    ) -> Union[GeExpectation, great_expectations.core.ExpectationConfiguration]:
         """
         Update an expectation from the suite locally or from the backend if attached to a Feature Group.
 
@@ -410,7 +421,8 @@ class ExpectationSuite:
 
         # Arguments
             expectation: The updated expectation object. The meta field should contain an expectationId field.
-            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction,
+                defaults to True if great_expectations is installed else false.
 
         # Returns
             The updated expectation attached to the Feature Group.
@@ -419,14 +431,6 @@ class ExpectationSuite:
             `hsfs.client.exceptions.RestAPIError`
             `hsfs.client.exceptions.FeatureStoreException`
         """
-        major, minor = self._variable_api.parse_major_and_minor(
-            self._variable_api.get_version("hopsworks")
-        )
-        if major == "3" and minor == "0":
-            raise FeatureStoreException(
-                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
-            )
-
         if self.id:
             converted_expectation = self._convert_expectation(expectation=expectation)
             # To update an expectation we need an id either from meta field or from self.id
@@ -443,7 +447,7 @@ class ExpectationSuite:
                 return converted_expectation
         else:
             raise FeatureStoreException(
-                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     def remove_expectation(self, expectation_id: Optional[int] = None) -> None:
@@ -462,20 +466,12 @@ class ExpectationSuite:
             `hsfs.client.exceptions.RestAPIError`
             `hsfs.client.exceptions.FeatureStoreException`
         """
-        major, minor = self._variable_api.parse_major_and_minor(
-            self._variable_api.get_version("hopsworks")
-        )
-        if major == "3" and minor == "0":
-            raise FeatureStoreException(
-                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
-            )
-
         if self.id:
             self._expectation_engine.delete(expectation_id=expectation_id)
             self.expectations = self._expectation_engine.get_expectations_by_suite_id()
         else:
             raise FeatureStoreException(
-                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+                initialise_expectation_suite_for_single_expectation_api_message
             )
 
     # End of single expectation API
@@ -558,16 +554,18 @@ class ExpectationSuite:
             )
 
     @property
-    def validation_ingestion_policy(self) -> str:
+    def validation_ingestion_policy(self) -> Literal["always", "strict"]:
         """Whether to ingest a df based on the validation result.
 
-        "STRICT" : ingest df only if all expectations succeed,
-        "ALWAYS" : always ingest df, even if one or more expectations fail
+        "strict" : ingest df only if all expectations succeed,
+        "always" : always ingest df, even if one or more expectations fail
         """
         return self._validation_ingestion_policy
 
     @validation_ingestion_policy.setter
-    def validation_ingestion_policy(self, validation_ingestion_policy: str) -> None:
+    def validation_ingestion_policy(
+        self, validation_ingestion_policy: Literal["always", "strict"]
+    ) -> None:
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         if self.id:
             self._expectation_suite_engine.update_metadata_from_fields(
@@ -583,7 +581,7 @@ class ExpectationSuite:
     def expectations(
         self,
         expectations: Union[
-            List[ge.core.ExpectationConfiguration],
+            List[great_expectations.core.ExpectationConfiguration],
             List[GeExpectation],
             List[dict],
             None,

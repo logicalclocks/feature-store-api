@@ -14,10 +14,16 @@
 #   limitations under the License.
 #
 
-import great_expectations as ge
 import hsfs.expectation_suite as es
+import pandas as pd
+import pytest
 from hsfs import feature_group, validation_report
 from hsfs.core import great_expectation_engine
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+
+
+if HAS_GREAT_EXPECTATIONS:
+    import great_expectations
 
 
 class TestCodeEngine:
@@ -96,6 +102,10 @@ class TestCodeEngine:
         assert mock_fg_save_validation_report.call_count == 0
         assert mock_vr.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed",
+    )
     def test_validate_suite_validation_options(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -137,6 +147,10 @@ class TestCodeEngine:
         assert mock_fg_save_validation_report.call_count == 0
         assert mock_vr.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed",
+    )
     def test_validate_suite_validation_options_save_report(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -179,6 +193,10 @@ class TestCodeEngine:
         assert mock_fg_save_validation_report.call_count == 1
         assert mock_vr.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed",
+    )
     def test_convert_expectation_suite(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -189,7 +207,7 @@ class TestCodeEngine:
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.engine.get_instance")
 
-        suite = ge.core.ExpectationSuite(
+        suite = great_expectations.core.ExpectationSuite(
             expectation_suite_name="suite_name",
         )
 
@@ -199,7 +217,7 @@ class TestCodeEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            expectation_suite=ge.core.ExpectationSuite(
+            expectation_suite=great_expectations.core.ExpectationSuite(
                 expectation_suite_name="attached_to_feature_group",
             ),
         )
@@ -218,6 +236,10 @@ class TestCodeEngine:
         assert converted_suite.expectation_suite_name == "suite_name"
         assert mock_fg_get_expectation_suite.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed.",
+    )
     def test_fake_convert_expectation_suite(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -238,7 +260,7 @@ class TestCodeEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            expectation_suite=ge.core.ExpectationSuite(
+            expectation_suite=great_expectations.core.ExpectationSuite(
                 expectation_suite_name="attached_to_feature_group",
             ),
         )
@@ -257,6 +279,10 @@ class TestCodeEngine:
         assert converted_suite.expectation_suite_name == "suite_name"
         assert mock_fg_get_expectation_suite.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed.",
+    )
     def test_fetch_expectation_suite(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -275,7 +301,7 @@ class TestCodeEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            expectation_suite=ge.core.ExpectationSuite(
+            expectation_suite=great_expectations.core.ExpectationSuite(
                 expectation_suite_name="attached_to_feature_group",
             ),
         )
@@ -292,6 +318,10 @@ class TestCodeEngine:
         # Assert
         assert mock_fg_get_expectation_suite.call_count == 1
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed.",
+    )
     def test_fetch_expectation_suite_false(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -310,7 +340,7 @@ class TestCodeEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             partition_key=[],
-            expectation_suite=ge.core.ExpectationSuite(
+            expectation_suite=great_expectations.core.ExpectationSuite(
                 expectation_suite_name="attached_to_feature_group",
             ),
         )
@@ -331,7 +361,7 @@ class TestCodeEngine:
         assert result.expectation_suite_name == "attached_to_feature_group"
         assert isinstance(result, es.ExpectationSuite)
 
-    def test_should_run_validation_based_on_suite(self, mocker):
+    def test_should_run_validation_based_on_suite(self):
         # Arrange
         feature_store_id = 99
         ge_engine = great_expectation_engine.GreatExpectationEngine(
@@ -353,7 +383,7 @@ class TestCodeEngine:
         # Assert
         assert run_validation is True
 
-    def test_should_not_run_validation_based_on_suite(self, mocker):
+    def test_should_not_run_validation_based_on_suite(self):
         # Arrange
         feature_store_id = 99
         ge_engine = great_expectation_engine.GreatExpectationEngine(
@@ -397,7 +427,7 @@ class TestCodeEngine:
         # Assert
         assert run_validation is False
 
-    def test_should_not_run_validation_based_validation_options(self, mocker):
+    def test_should_not_run_validation_based_validation_options(self):
         # Arrange
         feature_store_id = 99
         ge_engine = great_expectation_engine.GreatExpectationEngine(
@@ -419,6 +449,10 @@ class TestCodeEngine:
         # Assert
         assert run_validation is True
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed",
+    )
     def test_not_save_but_convert_report(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -441,7 +475,7 @@ class TestCodeEngine:
             partition_key=[],
         )
 
-        report = ge.core.ExpectationSuiteValidationResult()
+        report = great_expectations.core.ExpectationSuiteValidationResult()
 
         mock_save_validation_report = mocker.patch(
             "hsfs.feature_group.FeatureGroup.save_validation_report"
@@ -460,6 +494,10 @@ class TestCodeEngine:
         assert isinstance(converted_report, validation_report.ValidationReport)
         assert mock_save_validation_report.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed",
+    )
     def test_save_but_not_convert_report(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -482,7 +520,7 @@ class TestCodeEngine:
             partition_key=[],
         )
 
-        report = ge.core.ExpectationSuiteValidationResult()
+        report = great_expectations.core.ExpectationSuiteValidationResult()
 
         mock_save_validation_report = mocker.patch(
             "hsfs.feature_group.FeatureGroup.save_validation_report"
@@ -500,6 +538,10 @@ class TestCodeEngine:
         # Assert
         assert mock_save_validation_report.call_count == 1
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed",
+    )
     def test_not_save_and_not_convert_report(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -523,7 +565,7 @@ class TestCodeEngine:
             partition_key=[],
         )
 
-        report = ge.core.ExpectationSuiteValidationResult()
+        report = great_expectations.core.ExpectationSuiteValidationResult()
 
         mock_save_validation_report = mocker.patch(
             "hsfs.feature_group.FeatureGroup.save_validation_report"
@@ -539,5 +581,40 @@ class TestCodeEngine:
         )
 
         # Assert
-        assert isinstance(converted_report, ge.core.ExpectationSuiteValidationResult)
+        assert isinstance(
+            converted_report, great_expectations.core.ExpectationSuiteValidationResult
+        )
         assert mock_save_validation_report.call_count == 0
+
+    @pytest.mark.skipif(
+        HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is installed, do not check for module not found error",
+    )
+    def test_raise_module_not_found_error(self, mocker):
+        # Arrange
+        ge_engine = great_expectation_engine.GreatExpectationEngine(feature_store_id=11)
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=11,
+            partition_key=[],
+            primary_key=["id"],
+        )
+        df = pd.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"]})
+        suite = es.ExpectationSuite(
+            expectation_suite_name="suite_name",
+            expectations=[],
+            meta={},
+            run_validation=True,
+        )
+        mocker.patch("hsfs.util.get_feature_group_url", return_value="https://url")
+
+        # Act
+        with pytest.raises(ModuleNotFoundError):
+            ge_engine.validate(
+                feature_group=fg,
+                dataframe=df,
+                expectation_suite=suite,
+            )

@@ -20,7 +20,6 @@ import datetime
 import warnings
 from typing import Any, Dict, List, Optional, TypeVar, Union
 
-import great_expectations as ge
 import humps
 import numpy
 import numpy as np
@@ -208,7 +207,7 @@ class FeatureStore:
     @usage.method_logger
     def get_on_demand_feature_group(
         self, name: str, version: int = None
-    ) -> "feature_group.ExternalFeatureGroup":
+    ) -> feature_group.ExternalFeatureGroup:
         """Get a external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -234,7 +233,7 @@ class FeatureStore:
     @usage.method_logger
     def get_external_feature_group(
         self, name: str, version: int = None
-    ) -> "feature_group.ExternalFeatureGroup":
+    ) -> feature_group.ExternalFeatureGroup:
         """Get a external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -280,7 +279,7 @@ class FeatureStore:
     @usage.method_logger
     def get_on_demand_feature_groups(
         self, name: str
-    ) -> List["feature_group.ExternalFeatureGroup"]:
+    ) -> List[feature_group.ExternalFeatureGroup]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -304,7 +303,7 @@ class FeatureStore:
     @usage.method_logger
     def get_external_feature_groups(
         self, name: str
-    ) -> List["feature_group.ExternalFeatureGroup"]:
+    ) -> List[feature_group.ExternalFeatureGroup]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -337,7 +336,7 @@ class FeatureStore:
 
     def get_training_dataset(
         self, name: str, version: int = None
-    ) -> "training_dataset.TrainingDataset":
+    ) -> training_dataset.TrainingDataset:
         """Get a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -376,7 +375,7 @@ class FeatureStore:
 
     def get_training_datasets(
         self, name: str
-    ) -> List["training_dataset.TrainingDataset"]:
+    ) -> List[training_dataset.TrainingDataset]:
         """Get a list of all versions of a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -397,7 +396,7 @@ class FeatureStore:
         return self._training_dataset_api.get(name, None)
 
     @usage.method_logger
-    def get_storage_connector(self, name: str) -> "storage_connector.StorageConnector":
+    def get_storage_connector(self, name: str) -> storage_connector.StorageConnector:
         """Get a previously created storage connector from the feature store.
 
         Storage connectors encapsulate all information needed for the execution engine
@@ -469,7 +468,7 @@ class FeatureStore:
         )
 
     @usage.method_logger
-    def get_online_storage_connector(self) -> "storage_connector.StorageConnector":
+    def get_online_storage_connector(self) -> storage_connector.StorageConnector:
         """Get the storage connector for the Online Feature Store of the respective
         project's feature store.
 
@@ -505,12 +504,15 @@ class FeatureStore:
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
         expectation_suite: Optional[
-            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+            Union[
+                expectation_suite.ExpectationSuite,
+                TypeVar("great_expectations.core.ExpectationSuite"),
+            ]
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ) -> "feature_group.FeatureGroup":
+    ) -> feature_group.FeatureGroup:
         """Create a feature group metadata object.
 
         !!! example
@@ -576,7 +578,7 @@ class FeatureStore:
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
 
-                !!!note "Event time data type restriction"
+                !!! note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
 
@@ -635,7 +637,10 @@ class FeatureStore:
         features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         expectation_suite: Optional[
-            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+            Union[
+                expectation_suite.ExpectationSuite,
+                TypeVar("great_expectations.core.ExpectationSuite"),
+            ]
         ] = None,
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
@@ -643,9 +648,9 @@ class FeatureStore:
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
     ) -> Union[
-        "feature_group.FeatureGroup",
-        "feature_group.ExternalFeatureGroup",
-        "feature_group.SpineGroup",
+        feature_group.FeatureGroup,
+        feature_group.ExternalFeatureGroup,
+        feature_group.SpineGroup,
     ]:
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
@@ -713,7 +718,7 @@ class FeatureStore:
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
 
-                !!!note "Event time data type restriction"
+                !!! note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
 
@@ -781,11 +786,14 @@ class FeatureStore:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
-            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+            Union[
+                expectation_suite.ExpectationSuite,
+                TypeVar("great_expectations.core.ExpectationSuite"),
+            ]
         ] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ) -> "feature_group.ExternalFeatureGroup":
+    ) -> feature_group.ExternalFeatureGroup:
         """Create a external feature group metadata object.
 
         !!! warning "Deprecated"
@@ -835,18 +843,19 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
+                !!! note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
-
-                !!!note "Event time data type restriction"
-                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
-
-
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
+
+
+
+
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
@@ -890,12 +899,15 @@ class FeatureStore:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
-            Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
+            Union[
+                expectation_suite.ExpectationSuite,
+                TypeVar("great_expectations.core.ExpectationSuite"),
+            ]
         ] = None,
-        online_enabled: Optional[bool] = False,
+        online_enabled: bool = False,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ) -> "feature_group.ExternalFeatureGroup":
+    ) -> feature_group.ExternalFeatureGroup:
         """Create a external feature group metadata object.
 
         !!! example
@@ -985,12 +997,11 @@ class FeatureStore:
                 !!! note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
-
+            online_enabled: Define whether it should be possible to sync the feature group to
+                the online feature store for low latency access, defaults to `False`.
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
-            online_enabled: Define whether it should be possible to sync the feature group to
-                the online feature store for low latency access, defaults to `False`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
@@ -1039,7 +1050,7 @@ class FeatureStore:
             np.ndarray,
             List[list],
         ] = None,
-    ) -> "feature_group.SpineGroup":
+    ) -> feature_group.SpineGroup:
         """Create a spine group metadata object.
 
         Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels.
@@ -1131,7 +1142,7 @@ class FeatureStore:
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
 
-                !!!note "Event time data type restriction"
+                !!! note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
 
@@ -1295,7 +1306,7 @@ class FeatureStore:
             bool,
         ],
         version: Optional[int] = None,
-    ) -> "TransformationFunction":
+    ) -> TransformationFunction:
         """Create a transformation function metadata object.
 
         !!! example
@@ -1339,7 +1350,7 @@ class FeatureStore:
         self,
         name: str,
         version: Optional[int] = None,
-    ) -> "TransformationFunction":
+    ) -> TransformationFunction:
         """Get  transformation function metadata object.
 
         !!! example "Get transformation function by name. This will default to version 1"
@@ -1437,7 +1448,7 @@ class FeatureStore:
         return self._transformation_function_engine.get_transformation_fn(name, version)
 
     @usage.method_logger
-    def get_transformation_functions(self) -> List["TransformationFunction"]:
+    def get_transformation_functions(self) -> List[TransformationFunction]:
         """Get  all transformation functions metadata objects.
 
         !!! example "Get all transformation functions"
@@ -1657,7 +1668,7 @@ class FeatureStore:
     @usage.method_logger
     def get_feature_view(
         self, name: str, version: int = None
-    ) -> "feature_view.FeatureView":
+    ) -> feature_view.FeatureView:
         """Get a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1697,7 +1708,7 @@ class FeatureStore:
         return self._feature_view_engine.get(name, version)
 
     @usage.method_logger
-    def get_feature_views(self, name: str) -> List["feature_view.FeatureView"]:
+    def get_feature_views(self, name: str) -> List[feature_view.FeatureView]:
         """Get a list of all versions of a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
