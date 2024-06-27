@@ -4,6 +4,8 @@ import shutil
 
 import keras_autodoc
 
+os.environ["SPHINX_AUTODOC_RELOAD_MODULES"] = "1"
+
 PAGES = {
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
@@ -11,37 +13,6 @@ PAGES = {
             "hsfs.connection.Connection"
         ),
         "connection_methods": keras_autodoc.get_methods("hsfs.connection.Connection"),
-    },
-    "api/feature_store_api.md": {
-        "fs": ["hsfs.feature_store.FeatureStore"],
-        "fs_get": ["hsfs.connection.Connection.get_feature_store"],
-        "fs_properties": keras_autodoc.get_properties(
-            "hsfs.feature_store.FeatureStore"
-        ),
-        "fs_methods": keras_autodoc.get_methods("hsfs.feature_store.FeatureStore"),
-    },
-    "api/feature_group_api.md": {
-        "fg": ["hsfs.feature_group.FeatureGroup"],
-        "fg_create": [
-            "hsfs.feature_store.FeatureStore.create_feature_group",
-            "hsfs.feature_store.FeatureStore.get_or_create_feature_group",
-        ],
-        "fg_get": ["hsfs.feature_store.FeatureStore.get_feature_group"],
-        "fg_properties": keras_autodoc.get_properties(
-            "hsfs.feature_group.FeatureGroup"
-        ),
-        "fg_methods": keras_autodoc.get_methods("hsfs.feature_group.FeatureGroup"),
-    },
-    "api/external_feature_group_api.md": {
-        "fg": ["hsfs.feature_group.ExternalFeatureGroup"],
-        "fg_create": ["hsfs.feature_store.FeatureStore.create_external_feature_group"],
-        "fg_get": ["hsfs.feature_store.FeatureStore.get_external_feature_group"],
-        "fg_properties": keras_autodoc.get_properties(
-            "hsfs.feature_group.ExternalFeatureGroup"
-        ),
-        "fg_methods": keras_autodoc.get_methods(
-            "hsfs.feature_group.ExternalFeatureGroup"
-        ),
     },
     "api/spine_group_api.md": {
         "fg": ["hsfs.feature_group.SpineGroup"],
@@ -117,6 +88,37 @@ PAGES = {
         ),
         "expectation_suite_methods": keras_autodoc.get_methods(
             "hsfs.expectation_suite.ExpectationSuite"
+        ),
+    },
+    "api/feature_store_api.md": {
+        "fs": ["hsfs.feature_store.FeatureStore"],
+        "fs_get": ["hsfs.connection.Connection.get_feature_store"],
+        "fs_properties": keras_autodoc.get_properties(
+            "hsfs.feature_store.FeatureStore"
+        ),
+        "fs_methods": keras_autodoc.get_methods("hsfs.feature_store.FeatureStore"),
+    },
+    "api/feature_group_api.md": {
+        "fg": ["hsfs.feature_group.FeatureGroup"],
+        "fg_create": [
+            "hsfs.feature_store.FeatureStore.create_feature_group",
+            "hsfs.feature_store.FeatureStore.get_or_create_feature_group",
+        ],
+        "fg_get": ["hsfs.feature_store.FeatureStore.get_feature_group"],
+        "fg_properties": keras_autodoc.get_properties(
+            "hsfs.feature_group.FeatureGroup"
+        ),
+        "fg_methods": keras_autodoc.get_methods("hsfs.feature_group.FeatureGroup"),
+    },
+    "api/external_feature_group_api.md": {
+        "fg": ["hsfs.feature_group.ExternalFeatureGroup"],
+        "fg_create": ["hsfs.feature_store.FeatureStore.create_external_feature_group"],
+        "fg_get": ["hsfs.feature_store.FeatureStore.get_external_feature_group"],
+        "fg_properties": keras_autodoc.get_properties(
+            "hsfs.feature_group.ExternalFeatureGroup"
+        ),
+        "fg_methods": keras_autodoc.get_methods(
+            "hsfs.feature_group.ExternalFeatureGroup"
         ),
     },
     "api/storage_connector_api.md": {
@@ -371,7 +373,6 @@ def generate(dest_dir):
             "hsfs.statistics_config.StatisticsConfig": "hsfs.StatisticsConfig",
             "hsfs.training_dataset_feature.TrainingDatasetFeature": "hsfs.TrainingDatasetFeature",
             "pandas.core.frame.DataFrame": "pandas.DataFrame",
-            "great_expectations": "gx",
         },
         max_signature_line_length=100,
     )

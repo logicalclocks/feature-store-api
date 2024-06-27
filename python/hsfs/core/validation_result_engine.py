@@ -24,7 +24,7 @@ from hsfs.ge_validation_result import ValidationResult
 
 
 if TYPE_CHECKING:
-    from great_expectations.core import ExpectationValidationResult
+    import great_expectations
 
 
 class ValidationResultEngine:
@@ -47,7 +47,10 @@ class ValidationResultEngine:
         end_validation_time: Union[str, int, datetime, date, None] = None,
         filter_by: List[str] = None,
         ge_type: bool = True,
-    ) -> Union[List[ValidationResult], List[ExpectationValidationResult]]:
+    ) -> Union[
+        List[ValidationResult],
+        List[great_expectations.core.ExpectationValidationResult],
+    ]:
         """Get Validation Results relevant to an Expectation specified by expectation_id.
 
         :param expectation_id: id of the expectation for which to fetch the validation history
