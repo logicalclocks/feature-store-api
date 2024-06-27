@@ -94,7 +94,10 @@ from hsfs.storage_connector import StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
-if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
+if TYPE_CHECKING:
+    import great_expectations
+
+if HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 

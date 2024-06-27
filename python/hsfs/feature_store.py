@@ -211,7 +211,7 @@ class FeatureStore:
     @usage.method_logger
     def get_on_demand_feature_group(
         self, name: str, version: int = None
-    ) -> "feature_group.ExternalFeatureGroup":
+    ) -> feature_group.ExternalFeatureGroup:
         """Get a external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -237,7 +237,7 @@ class FeatureStore:
     @usage.method_logger
     def get_external_feature_group(
         self, name: str, version: int = None
-    ) -> "feature_group.ExternalFeatureGroup":
+    ) -> feature_group.ExternalFeatureGroup:
         """Get a external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -340,7 +340,7 @@ class FeatureStore:
 
     def get_training_dataset(
         self, name: str, version: int = None
-    ) -> "training_dataset.TrainingDataset":
+    ) -> training_dataset.TrainingDataset:
         """Get a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -379,7 +379,7 @@ class FeatureStore:
 
     def get_training_datasets(
         self, name: str
-    ) -> List["training_dataset.TrainingDataset"]:
+    ) -> List[training_dataset.TrainingDataset]:
         """Get a list of all versions of a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -400,7 +400,7 @@ class FeatureStore:
         return self._training_dataset_api.get(name, None)
 
     @usage.method_logger
-    def get_storage_connector(self, name: str) -> "storage_connector.StorageConnector":
+    def get_storage_connector(self, name: str) -> storage_connector.StorageConnector:
         """Get a previously created storage connector from the feature store.
 
         Storage connectors encapsulate all information needed for the execution engine
@@ -472,7 +472,7 @@ class FeatureStore:
         )
 
     @usage.method_logger
-    def get_online_storage_connector(self) -> "storage_connector.StorageConnector":
+    def get_online_storage_connector(self) -> storage_connector.StorageConnector:
         """Get the storage connector for the Online Feature Store of the respective
         project's feature store.
 
@@ -516,7 +516,7 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ) -> "feature_group.FeatureGroup":
+    ) -> feature_group.FeatureGroup:
         """Create a feature group metadata object.
 
         !!! example
@@ -652,9 +652,9 @@ class FeatureStore:
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
     ) -> Union[
-        "feature_group.FeatureGroup",
-        "feature_group.ExternalFeatureGroup",
-        "feature_group.SpineGroup",
+        feature_group.FeatureGroup,
+        feature_group.ExternalFeatureGroup,
+        feature_group.SpineGroup,
     ]:
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 

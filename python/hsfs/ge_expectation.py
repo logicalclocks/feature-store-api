@@ -24,7 +24,10 @@ from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.decorators import uses_great_expectations
 
 
-if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
+if TYPE_CHECKING:
+    import great_expectations
+
+if HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 

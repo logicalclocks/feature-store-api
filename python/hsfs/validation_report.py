@@ -25,7 +25,10 @@ from hsfs.decorators import uses_great_expectations
 from hsfs.ge_validation_result import ValidationResult
 
 
-if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
+if TYPE_CHECKING:
+    import great_expectations
+
+if HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 

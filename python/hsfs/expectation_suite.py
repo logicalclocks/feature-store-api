@@ -35,7 +35,10 @@ from hsfs.decorators import uses_great_expectations
 from hsfs.ge_expectation import GeExpectation
 
 
-if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
+if TYPE_CHECKING:
+    import great_expectations
+
+if HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 
@@ -140,7 +143,7 @@ class ExpectationSuite:
         """Used to create a Hopsworks Expectation Suite instance from a great_expectations instance.
 
         # Arguments
-            ge_expectation_suite: great_expectations.ExpectationSuite
+            ge_expectation_suite: great_expectations.core.ExpectationSuite
                 The great_expectations ExpectationSuite instance to convert to a Hopsworks ExpectationSuite.
             run_validation: bool
                 Whether to run validation on inserts when the expectation suite is attached.
@@ -267,7 +270,9 @@ class ExpectationSuite:
     def _convert_expectation(
         self,
         expectation: Union[
-            GeExpectation, great_expectations.core.ExpectationConfiguration, dict
+            GeExpectation,
+            great_expectations.core.ExpectationConfiguration,
+            Dict[str, Any],
         ],
     ) -> GeExpectation:
         """

@@ -4,7 +4,6 @@ import shutil
 
 import keras_autodoc
 
-
 PAGES = {
     "api/connection_api.md": {
         "connection": ["hsfs.connection.Connection"],
@@ -12,23 +11,6 @@ PAGES = {
             "hsfs.connection.Connection"
         ),
         "connection_methods": keras_autodoc.get_methods("hsfs.connection.Connection"),
-    },
-    "api/expectation_suite_api.md": {
-        "expectation_suite": ["hsfs.expectation_suite.ExpectationSuite"],
-        "expectation_suite_attach": [
-            "hsfs.feature_group.FeatureGroup.save_expectation_suite"
-        ],
-        "single_expectation_api": [
-            "hsfs.expectation_suite.ExpectationSuite.add_expectation",
-            "hsfs.expectation_suite.ExpectationSuite.replace_expectation",
-            "hsfs.expectation_suite.ExpectationSuite.remove_expectation",
-        ],
-        "expectation_suite_properties": keras_autodoc.get_properties(
-            "hsfs.expectation_suite.ExpectationSuite"
-        ),
-        "expectation_suite_methods": keras_autodoc.get_methods(
-            "hsfs.expectation_suite.ExpectationSuite"
-        ),
     },
     "api/feature_store_api.md": {
         "fs": ["hsfs.feature_store.FeatureStore"],
@@ -119,6 +101,23 @@ PAGES = {
         "feature": ["hsfs.feature.Feature"],
         "feature_properties": keras_autodoc.get_properties("hsfs.feature.Feature"),
         "feature_methods": keras_autodoc.get_methods("hsfs.feature.Feature"),
+    },
+    "api/expectation_suite_api.md": {
+        "expectation_suite": ["hsfs.expectation_suite.ExpectationSuite"],
+        "expectation_suite_attach": [
+            "hsfs.feature_group.FeatureGroup.save_expectation_suite"
+        ],
+        "single_expectation_api": [
+            "hsfs.expectation_suite.ExpectationSuite.add_expectation",
+            "hsfs.expectation_suite.ExpectationSuite.replace_expectation",
+            "hsfs.expectation_suite.ExpectationSuite.remove_expectation",
+        ],
+        "expectation_suite_properties": keras_autodoc.get_properties(
+            "hsfs.expectation_suite.ExpectationSuite"
+        ),
+        "expectation_suite_methods": keras_autodoc.get_methods(
+            "hsfs.expectation_suite.ExpectationSuite"
+        ),
     },
     "api/storage_connector_api.md": {
         "sc_get": [
@@ -372,6 +371,7 @@ def generate(dest_dir):
             "hsfs.statistics_config.StatisticsConfig": "hsfs.StatisticsConfig",
             "hsfs.training_dataset_feature.TrainingDatasetFeature": "hsfs.TrainingDatasetFeature",
             "pandas.core.frame.DataFrame": "pandas.DataFrame",
+            "great_expectations": "gx",
         },
         max_signature_line_length=100,
     )

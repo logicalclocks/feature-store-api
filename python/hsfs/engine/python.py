@@ -105,7 +105,10 @@ except ImportError:
     pass
 
 
-if TYPE_CHECKING or HAS_GREAT_EXPECTATIONS:
+if TYPE_CHECKING:
+    import great_expectations
+
+if HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 # Decimal types are currently not supported
