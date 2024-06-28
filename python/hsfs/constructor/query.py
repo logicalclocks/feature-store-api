@@ -243,7 +243,7 @@ class Query:
         on: Optional[List[str]] = None,
         left_on: Optional[List[str]] = None,
         right_on: Optional[List[str]] = None,
-        join_type: Optional[str] = "inner",
+        join_type: Optional[str] = "left",
         prefix: Optional[str] = None,
     ) -> "Query":
         """Join Query with another Query.
@@ -773,7 +773,7 @@ class Query:
         """List of feature groups used in the query"""
         featuregroups = {self._left_feature_group}
         for join_obj in self.joins:
-            featuregroups.add(join_obj.query._left_feature_group)
+            self._fg_rec_add(join_obj, featuregroups)
         return list(featuregroups)
 
     @property
@@ -812,6 +812,18 @@ class Query:
             `Feature`. Feature object.
         """
         return self._get_feature_by_name(feature_name)[0]
+
+    def _fg_rec_add(self, join_object, featuregroups):
+        """
+        Recursively get a feature groups from nested join and add to featuregroups list.
+
+        # Arguments
+            join_object: `Join object`.
+        """
+        if len(join_object.query.joins) > 0:
+            for nested_join in join_object.query.joins:
+                self._fg_rec_add(nested_join, featuregroups)
+        featuregroups.add(join_object.query._left_feature_group)
 
     def __getattr__(self, name: str) -> Any:
         try:

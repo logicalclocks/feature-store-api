@@ -55,7 +55,7 @@ class TestJoin:
         assert len(j._on) == 0
         assert len(j._left_on) == 0
         assert len(j._right_on) == 0
-        assert j._join_type == "INNER"
+        assert j._join_type == "LEFT"
         assert j._prefix is None
 
     def test_from_response_json_left_join(self, mocker, backend_fixtures):
