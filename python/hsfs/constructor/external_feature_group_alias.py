@@ -26,7 +26,7 @@ class ExternalFeatureGroupAlias:
         self, on_demand_feature_group: Dict[str, Any], alias: str, **kwargs
     ) -> None:
         self._on_demand_feature_group: Union[
-            "feature_group.ExternalFeatureGroup", "feature_group.SpineGroup"
+            feature_group.ExternalFeatureGroup, "feature_group.SpineGroup"
         ]
         if not on_demand_feature_group["spine"]:
             self._on_demand_feature_group = (
@@ -48,7 +48,7 @@ class ExternalFeatureGroupAlias:
     @property
     def on_demand_feature_group(
         self,
-    ) -> Union["feature_group.ExternalFeatureGroup", "feature_group.SpineGroup"]:
+    ) -> Union[feature_group.ExternalFeatureGroup, "feature_group.SpineGroup"]:
         return self._on_demand_feature_group
 
     @property

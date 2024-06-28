@@ -35,7 +35,9 @@ from hsfs.client import exceptions
 from hsfs.constructor import query
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
 from hsfs.core import inode, job
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.engine import python
+from hsfs.expectation_suite import ExpectationSuite
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from polars.testing import assert_frame_equal as polars_assert_frame_equal
 
@@ -777,11 +779,6 @@ class TestPython:
         assert mock_python_engine_sql.call_count == 1
 
     def test_cast_columns(self, mocker):
-        class LabelIndex:
-            def __init__(self, label, index):
-                self.label = label
-                self.index = index
-
         python_engine = python.Engine()
         d = {
             "string": ["s", "s"],
@@ -842,7 +839,7 @@ class TestPython:
         for col in cast_df.columns:
             assert cast_df[col].dtype == expected[col]
 
-    def test_register_external_temporary_table(self, mocker):
+    def test_register_external_temporary_table(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1302,6 +1299,10 @@ class TestPython:
             == "Deequ data validation is only available with Spark Engine. Use validate_with_great_expectations"
         )
 
+    @pytest.mark.skipif(
+        not HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is not installed.",
+    )
     def test_validate_with_great_expectations(self, mocker):
         # Arrange
         mock_ge_from_pandas = mocker.patch("great_expectations.from_pandas")
@@ -1315,6 +1316,26 @@ class TestPython:
 
         # Assert
         assert mock_ge_from_pandas.call_count == 1
+
+    @pytest.mark.skipif(
+        HAS_GREAT_EXPECTATIONS,
+        reason="Great Expectations is installed.",
+    )
+    def test_validate_with_great_expectations_raise_module_not_found(self):
+        # Arrange
+        python_engine = python.Engine()
+        suite = ExpectationSuite(
+            expectation_suite_name="test_suite",
+            expectations=[],
+            meta={},
+            run_validation=True,
+        )
+
+        # Act
+        with pytest.raises(ModuleNotFoundError):
+            python_engine.validate_with_great_expectations(
+                dataframe=None, expectation_suite=suite, ge_validate_kwargs={}
+            )
 
     def test_set_job_group(self):
         # Arrange
@@ -3763,7 +3784,7 @@ class TestPython:
             args="defaults tests_offsets",
             await_termination=False,
         )
-    
+
     def test_materialization_kafka_skip_offsets(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
@@ -3805,7 +3826,10 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_materialization": True, "skip_offsets": True},
+            offline_write_options={
+                "start_offline_materialization": True,
+                "skip_offsets": True,
+            },
         )
 
         # Assert

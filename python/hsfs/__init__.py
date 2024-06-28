@@ -18,8 +18,6 @@ from __future__ import annotations
 import os
 import warnings
 
-import nest_asyncio
-
 
 # Setting polars skip cpu flag to suppress CPU false positive warning messages printed while importing hsfs
 os.environ["POLARS_SKIP_CPU_CHECK"] = "1"
@@ -59,6 +57,3 @@ def get_sdk_info():
 
 
 __all__ = ["connection", "disable_usage_logging", "get_sdk_info"]
-# running async code in jupyter throws "RuntimeError: This event loop is already running"
-# with tornado 6. This fixes the issue without downgrade to tornado==4.5.3
-nest_asyncio.apply()

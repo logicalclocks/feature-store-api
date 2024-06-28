@@ -1,0 +1,29 @@
+name: optional-dependency
+
+on: pull_request
+
+jobs:
+  unit_tests_no_great_expectations:
+    name: Unit Testing (No Great Expectations)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set Timezone
+        run: sudo timedatectl set-timezone UTC
+
+      - uses: actions/checkout@v4
+      - name: Copy README
+        run: cp README.md python/
+
+      - uses: actions/setup-python@v5
+        name: Setup Python
+        with:
+          python-version: "3.10"
+          cache: "pip"
+          cache-dependency-path: "python/setup.py"
+      - run: pip install -e python[python,dev-no-opt]
+
+      - name: Run Pytest suite
+        env:
+          ENABLE_HOPSWORKS_USAGE: "false"
+        run: pytest python/tests

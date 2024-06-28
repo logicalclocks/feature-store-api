@@ -17,12 +17,22 @@ from __future__ import annotations
 
 import datetime
 import json
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
+
+
+if TYPE_CHECKING:
+    import great_expectations
+
 
 import dateutil
-import great_expectations as ge
 import humps
 from hsfs import util
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+from hsfs.decorators import uses_great_expectations
+
+
+if HAS_GREAT_EXPECTATIONS:
+    import great_expectations
 
 
 class ValidationResult:
@@ -40,12 +50,9 @@ class ValidationResult:
         expectation_id: Optional[int] = None,
         validation_report_id: Optional[int] = None,
         validation_time: Optional[int] = None,
-        ingestion_result: Optional[str] = "UNKNOWN",
-        href=None,
-        expand=None,
-        items=None,
-        count=None,
-        type=None,
+        ingestion_result: Literal[
+            "unknown", "ingested", "rejected", "fg_data", "experiment"
+        ] = "UNKNOWN",
         **kwargs,
     ):
         self._id = id
@@ -101,8 +108,9 @@ class ValidationResult:
             "meta": self._meta,
         }
 
-    def to_ge_type(self) -> ge.core.ExpectationValidationResult:
-        return ge.core.ExpectationValidationResult(
+    @uses_great_expectations
+    def to_ge_type(self) -> great_expectations.core.ExpectationValidationResult:
+        return great_expectations.core.ExpectationValidationResult(
             success=self.success,
             exception_info=self.exception_info,
             expectation_config=self.expectation_config,
@@ -221,13 +229,20 @@ class ValidationResult:
             self._validation_time = None
 
     @property
-    def ingestion_result(self) -> str:
+    def ingestion_result(
+        self,
+    ) -> Literal["ingested", "rejected", "unknown", "experiment", "fg_data"]:
         return self._ingestion_result
 
     @ingestion_result.setter
-    def ingestion_result(self, ingestion_result: str = "UNKNOWN"):
-        allowed_values = ["INGESTED", "REJECTED", "UNKNOWN", "EXPERIMENT", "FG_DATA"]
-        if ingestion_result.upper() in allowed_values:
+    def ingestion_result(
+        self,
+        ingestion_result: Literal[
+            "ingested", "rejected", "unknown", "experiment", "fg_data"
+        ] = "unknown",
+    ):
+        allowed_values = ["ingested", "rejected", "unknown", "experiment", "fg_data"]
+        if ingestion_result.lower() in allowed_values:
             self._ingestion_result = ingestion_result
         else:
             raise ValueError(

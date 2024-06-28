@@ -230,7 +230,7 @@ class MonitoringWindowConfigEngine:
 
     def run_single_window_monitoring(
         self,
-        entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
+        entity: Union[feature_group.FeatureGroup, "feature_view.FeatureView"],
         monitoring_window_config: "mwc.MonitoringWindowConfig",
         feature_name: Optional[str] = None,
     ) -> List[FeatureDescriptiveStatistics]:
@@ -318,7 +318,7 @@ class MonitoringWindowConfigEngine:
 
     def fetch_entity_data_in_monitoring_window(
         self,
-        entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
+        entity: Union[feature_group.FeatureGroup, "feature_view.FeatureView"],
         start_time: Optional[int],
         end_time: Optional[int],
         row_percentage: float,
@@ -402,7 +402,7 @@ class MonitoringWindowConfigEngine:
 
     def fetch_feature_group_data(
         self,
-        entity: "feature_group.FeatureGroup",
+        entity: feature_group.FeatureGroup,
         feature_name: Optional[str] = None,
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,

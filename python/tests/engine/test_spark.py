@@ -32,6 +32,7 @@ from hsfs import (
 from hsfs.client import exceptions
 from hsfs.constructor import hudi_feature_group_alias, query
 from hsfs.core import training_dataset_engine
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.engine import spark
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from pyspark.sql import DataFrame
@@ -3392,6 +3393,10 @@ class TestSpark:
             == 1
         )
 
+    @pytest.mark.skipif(
+        HAS_GREAT_EXPECTATIONS is False,
+        reason="Great Expectations is not installed",
+    )
     def test_validate_with_great_expectations(self, mocker):
         # Arrange
         spark_engine = spark.Engine()

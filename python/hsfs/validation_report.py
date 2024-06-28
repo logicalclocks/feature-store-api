@@ -16,12 +16,21 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
-import great_expectations as ge
+
+if TYPE_CHECKING:
+    import great_expectations
+
 import humps
 from hsfs import util
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+from hsfs.decorators import uses_great_expectations
 from hsfs.ge_validation_result import ValidationResult
+
+
+if HAS_GREAT_EXPECTATIONS:
+    import great_expectations
 
 
 class ValidationReport:
@@ -32,9 +41,9 @@ class ValidationReport:
         success: bool,
         results: List[
             Union[
-                "ValidationResult",
+                ValidationResult,
                 Dict[str, Any],
-                ge.core.expectation_validation_result.ExpectationValidationResult,
+                great_expectations.core.expectation_validation_result.ExpectationValidationResult,
             ]
         ],
         meta: Optional[Union[Dict[str, Any], str]],
@@ -44,13 +53,10 @@ class ValidationReport:
         full_report_path: Optional[str] = None,
         featurestore_id: Optional[int] = None,
         featuregroup_id: Optional[int] = None,
-        href: Optional[str] = None,
-        expand: bool = None,
-        items: Optional[Dict[str, Any]] = None,
-        count: Optional[int] = None,
-        type: Optional[str] = None,
         validation_time: Optional[str] = None,
-        ingestion_result: str = "UNKNOWN",
+        ingestion_result: Literal[
+            "ingested", "rejected", "unknown", "experiment", "fg_data"
+        ] = "unknown",
         **kwargs,
     ) -> None:
         self._id = id
@@ -69,7 +75,7 @@ class ValidationReport:
     @classmethod
     def from_response_json(
         cls, json_dict: Dict[str, Any]
-    ) -> Union[List["ValidationReport"], "ValidationReport"]:
+    ) -> Union[List[ValidationReport], ValidationReport]:
         json_decamelized = humps.decamelize(json_dict)
         if (
             "count" in json_decamelized
@@ -94,7 +100,7 @@ class ValidationReport:
             "statistics": json.dumps(self._statistics),
             "results": self._results,
             "meta": json.dumps(self._meta),
-            "ingestionResult": self._ingestion_result,
+            "ingestionResult": self._ingestion_result.upper(),
         }
 
     def to_json_dict(self) -> Dict[str, Any]:
@@ -107,8 +113,9 @@ class ValidationReport:
             "meta": self._meta,
         }
 
-    def to_ge_type(self) -> ge.core.ExpectationSuiteValidationResult:
-        return ge.core.ExpectationSuiteValidationResult(
+    @uses_great_expectations
+    def to_ge_type(self) -> great_expectations.core.ExpectationSuiteValidationResult:
+        return great_expectations.core.ExpectationSuiteValidationResult(
             success=self.success,
             statistics=self.statistics,
             results=[result.to_ge_type() for result in self.results],
@@ -135,7 +142,7 @@ class ValidationReport:
         self._success = success
 
     @property
-    def results(self) -> List["ValidationResult"]:
+    def results(self) -> List[ValidationResult]:
         """List of expectation results obtained after validation."""
         return self._results
 
@@ -144,9 +151,9 @@ class ValidationReport:
         self,
         results: List[
             Union[
-                "ValidationResult",
+                ValidationResult,
                 Dict[str, Any],
-                ge.core.expectation_validation_result.ExpectationValidationResult,
+                great_expectations.core.expectation_validation_result.ExpectationValidationResult,
             ]
         ],
     ) -> None:
@@ -158,7 +165,7 @@ class ValidationReport:
             self._results = [ValidationResult(**result) for result in results]
         elif isinstance(
             results[0],
-            ge.core.expectation_validation_result.ExpectationValidationResult,
+            great_expectations.core.expectation_validation_result.ExpectationValidationResult,
         ):
             self._results = [
                 ValidationResult(**result.to_json_dict()) for result in results
@@ -224,11 +231,16 @@ class ValidationReport:
         return self._ingestion_result
 
     @ingestion_result.setter
-    def ingestion_result(self, ingestion_result: Optional[str]) -> None:
-        allowed_values = ["INGESTED", "REJECTED", "UNKNOWN", "EXPERIMENT", "FG_DATA"]
+    def ingestion_result(
+        self,
+        ingestion_result: Optional[
+            Literal["ingested", "rejected", "experiment", "unknown", "fg_data"]
+        ],
+    ) -> None:
         if ingestion_result is None:
             ingestion_result = "UNKNOWN"
-        if ingestion_result.upper() in allowed_values:
+        allowed_values = ["ingested", "rejected", "experiment", "unknown", "fg_data"]
+        if ingestion_result.lower() in allowed_values:
             self._ingestion_result = ingestion_result
         else:
             raise ValueError(

@@ -15,11 +15,18 @@
 #
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
 
-import great_expectations as ge
-from hsfs import engine, validation_report
+
+if TYPE_CHECKING:
+    import great_expectations
+    import pandas as pd
+
+
+from hsfs import engine, util, validation_report
 from hsfs import expectation_suite as es
+from hsfs import feature_group as fg_mod
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 
 
 class GreatExpectationEngine:
@@ -35,17 +42,19 @@ class GreatExpectationEngine:
 
     def validate(
         self,
-        feature_group,
-        dataframe,
+        feature_group: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
+        dataframe: pd.DataFrame,
         expectation_suite: Union[
-            ge.core.ExpectationSuite, es.ExpectationSuite, None
+            great_expectations.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
         save_report: bool = False,
-        validation_options: Dict[str, Any] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
         ge_type: bool = True,
-        ingestion_result: str = "UNKNOWN",
+        ingestion_result: Literal[
+            "unknown", "ingested", "rejected", "fg_data", "experiment"
+        ] = "unknown",
     ) -> Union[
-        ge.core.ExpectationSuiteValidationResult,
+        great_expectations.core.ExpectationSuiteValidationResult,
         validation_report.ValidationReport,
         None,
     ]:
@@ -59,6 +68,15 @@ class GreatExpectationEngine:
         if self.should_run_validation(
             expectation_suite=suite, validation_options=validation_options
         ):
+            if not HAS_GREAT_EXPECTATIONS:
+                raise ModuleNotFoundError(
+                    f"Feature Group {feature_group.name}, v{feature_group.version} is configured to run validation with Great Expectations, "
+                    "but Great Expectations is not installed. Please install it using `pip install great_expectations`.\n"
+                    "Alternatively you can disable Great Expectations validation by setting `run_validation=False`"
+                    "in the validation_options, or disable/delete the suite in the Feature Group Edit UI.\n"
+                    f"{util.get_feature_group_url(feature_group.feature_store_id, feature_group.id)}."
+                )
+
             report = engine.get_instance().validate_with_great_expectations(
                 dataframe=dataframe,
                 expectation_suite=suite.to_ge_type(),
@@ -89,11 +107,11 @@ class GreatExpectationEngine:
 
     def fetch_or_convert_expectation_suite(
         self,
-        feature_group,
+        feature_group: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
         expectation_suite: Union[
-            ge.core.ExpectationSuite, es.ExpectationSuite, None
+            great_expectations.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
-        validation_options: dict = None,
+        validation_options: Optional[Dict[str, Any]] = None,
     ) -> Optional[es.ExpectationSuite]:
         """Convert provided expectation suite or fetch the one attached to the Feature Group from backend."""
         if expectation_suite is not None:
@@ -104,7 +122,7 @@ class GreatExpectationEngine:
             "fetch_expectation_suite", True
         ):
             return feature_group.expectation_suite
-        return feature_group.get_expectation_suite(False)
+        return feature_group.get_expectation_suite(ge_type=False)
 
     def should_run_validation(
         self,
@@ -124,13 +142,16 @@ class GreatExpectationEngine:
     def save_or_convert_report(
         self,
         feature_group,
-        report: ge.core.ExpectationSuiteValidationResult,
+        report: great_expectations.core.ExpectationSuiteValidationResult,
         save_report: bool,
         ge_type: bool,
         validation_options: Dict[str, Any],
-        ingestion_result: str = "UNKNOWN",
+        ingestion_result: Literal[
+            "unknown", "ingested", "rejected", "fg_data", "experiment"
+        ] = "unknown",
     ) -> Union[
-        ge.core.ExpectationSuiteValidationResult, validation_report.ValidationReport
+        great_expectations.core.ExpectationSuiteValidationResult,
+        validation_report.ValidationReport,
     ]:
         save_report = validation_options.get("save_report", save_report)
         if save_report:
