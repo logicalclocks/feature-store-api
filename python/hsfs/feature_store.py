@@ -510,6 +510,9 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
+        transformation_functions: Optional[
+            List[Union[TransformationFunction, HopsworksUdf]]
+        ] = None,
     ) -> "feature_group.FeatureGroup":
         """Create a feature group metadata object.
 
@@ -592,6 +595,7 @@ class FeatureStore:
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
+            transformation_functions: A list of Hopsworks UDF's. Defaults to `None`, no transformations.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -616,6 +620,7 @@ class FeatureStore:
             parents=parents or [],
             topic_name=topic_name,
             notification_topic_name=notification_topic_name,
+            transformation_functions=transformation_functions,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -642,6 +647,9 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
+        transformation_functions: Optional[
+            List[Union[TransformationFunction, HopsworksUdf]]
+        ] = None,
     ) -> Union[
         "feature_group.FeatureGroup",
         "feature_group.ExternalFeatureGroup",
@@ -726,6 +734,7 @@ class FeatureStore:
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
+            transformation_functions: A list of Hopsworks UDF's. Defaults to `None`, no transformations.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -759,6 +768,7 @@ class FeatureStore:
                     parents=parents or [],
                     topic_name=topic_name,
                     notification_topic_name=notification_topic_name,
+                    transformation_functions=transformation_functions,
                 )
                 feature_group_object.feature_store = self
                 return feature_group_object

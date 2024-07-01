@@ -54,7 +54,7 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
 from hsfs.feature import Feature
-from hsfs.hopsworks_udf import HopsworksUdf
+from hsfs.hopsworks_udf import HopsworksUdf, UDFType
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -126,6 +126,7 @@ class FeatureView:
                     self.featurestore_id,
                     hopsworks_udf=transformation_function,
                     version=1,
+                    transformation_type=UDFType.MODEL_DEPENDENT,
                 )
                 if not isinstance(transformation_function, TransformationFunction)
                 else transformation_function
@@ -493,6 +494,7 @@ class FeatureView:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        request_parameters: Optional[Dict[str, Any]] = None,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -566,6 +568,7 @@ class FeatureView:
             force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
+            request_parameters: Request parameters required by on-demand transformation functions.
 
         # Returns
             `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
@@ -591,6 +594,7 @@ class FeatureView:
             vector_db_features=vector_db_features,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
+            request_parameters=request_parameters,
         )
 
     def get_feature_vectors(
@@ -602,6 +606,7 @@ class FeatureView:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        request_parameters: Optional[List[Dict[str, Any]]] = None,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -700,6 +705,7 @@ class FeatureView:
             vector_db_features=vector_db_features,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
+            request_parameters=request_parameters,
         )
 
     def get_inference_helper(
@@ -852,6 +858,10 @@ class FeatureView:
         If `filter` is specified, or if embedding feature is stored in default project index,
         the number of results returned may be less than k. Try using a large value of k and extract the top k
         items from the results if needed.
+
+        !!! warning "Duplicate column error in Polars"
+            If the feature view has duplicate column names, attempting to create a polars DataFrame
+            will raise an error. To avoid this, set `return_type` to `"list"` or `"pandas"`.
 
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
@@ -1024,7 +1034,7 @@ class FeatureView:
             start_time,
             end_time,
             self._batch_scoring_server.training_dataset_version,
-            self._batch_scoring_server._transformation_functions,
+            self._batch_scoring_server._model_dependent_transformation_functions,
             read_options,
             spine,
             primary_keys,
@@ -3442,7 +3452,12 @@ class FeatureView:
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
             transformation_functions=[
-                TransformationFunction.from_response_json(transformation_function)
+                TransformationFunction.from_response_json(
+                    {
+                        **transformation_function,
+                        "transformation_type": UDFType.MODEL_DEPENDENT,
+                    }
+                )
                 for transformation_function in transformation_functions
             ]
             if transformation_functions

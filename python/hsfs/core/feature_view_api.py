@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import List, Optional, Union
 
-from hsfs import client, feature_view, training_dataset, transformation_function
+from hsfs import client, feature_view, training_dataset
 from hsfs.client.exceptions import RestAPIError
 from hsfs.constructor import query, serving_prepared_statement
 from hsfs.core import explicit_provenance, job, training_dataset_job_conf
@@ -204,28 +204,6 @@ class FeatureViewApi:
         }
         return serving_prepared_statement.ServingPreparedStatement.from_response_json(
             self._client._send_request("GET", path, query_params, headers=headers)
-        )
-
-    def get_attached_transformation_fn(
-        self, name: str, version: int
-    ) -> List["transformation_function.TransformationFunction"]:
-        """
-        Get transformation functions attached to a feature view form the backend
-
-        # Arguments
-            name `str`: Name of feature view.
-            version `ìnt`: Version of feature view.
-
-        # Returns
-            `List[TransformationFunction]` : List of transformation functions attached to the feature view.
-
-        # Raises
-            `RestAPIError`: If the feature view cannot be found from the backend.
-            `ValueError`: If the feature group associated with the feature view cannot be found.
-        """
-        path = self._base_path + [name, self._VERSION, version, self._TRANSFORMATION]
-        return transformation_function.TransformationFunction.from_response_json(
-            self._client._send_request("GET", path)
         )
 
     def create_training_dataset(

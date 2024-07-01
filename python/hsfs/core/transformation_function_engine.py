@@ -147,21 +147,12 @@ class TransformationFunctionEngine:
         feature_view: feature_view.FeatureView,
         training_dataset_version: Optional[int] = None,
     ) -> List[transformation_function.TransformationFunction]:
-        # get attached transformation functions
-        transformation_functions = (
-            feature_view._feature_view_engine.get_attached_transformation_fn(
-                feature_view.name, feature_view.version
-            )
-        )
-
-        transformation_functions = (
-            [transformation_functions]
-            if not isinstance(transformation_functions, list)
-            else transformation_functions
-        )
-
+        # check if transformation functions require statistics
         is_stat_required = any(
-            [tf.hopsworks_udf.statistics_required for tf in transformation_functions]
+            [
+                tf.hopsworks_udf.statistics_required
+                for tf in feature_view.transformation_functions
+            ]
         )
         if not is_stat_required:
             td_tffn_stats = None
@@ -188,11 +179,11 @@ class TransformationFunctionEngine:
             )
 
         if is_stat_required:
-            for transformation_function in transformation_functions:
+            for transformation_function in feature_view.transformation_functions:
                 transformation_function.hopsworks_udf.transformation_statistics = (
                     td_tffn_stats.feature_descriptive_statistics
                 )
-        return feature_view._sort_transformation_functions(transformation_functions)
+        return feature_view.transformation_functions
 
     @staticmethod
     def compute_and_set_feature_statistics(

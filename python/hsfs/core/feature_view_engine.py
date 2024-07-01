@@ -25,7 +25,6 @@ from hsfs import (
     feature_group,
     feature_view,
     training_dataset_feature,
-    transformation_function,
     util,
 )
 from hsfs.client import exceptions
@@ -264,28 +263,6 @@ class FeatureViewEngine:
         if fs_query.pit_query is not None:
             return fs_query.pit_query
         return fs_query.query
-
-    def get_attached_transformation_fn(
-        self, name: str, version: int
-    ) -> List[transformation_function.TransformationFunction]:
-        """
-        Get transformation functions attached to a feature view form the backend
-
-        # Arguments
-            name `str`: Name of feature view.
-            version `ìnt`: Version of feature view.
-
-        # Returns
-            `List[TransformationFunction]` : List of transformation functions attached to the feature view.
-
-        # Raises
-            `RestAPIError`: If the feature view cannot be found from the backend.
-            `ValueError`: If the feature group associated with the feature view cannot be found.
-        """
-        transformation_functions = (
-            self._feature_view_api.get_attached_transformation_fn(name, version)
-        )
-        return transformation_functions
 
     def create_training_dataset(
         self,

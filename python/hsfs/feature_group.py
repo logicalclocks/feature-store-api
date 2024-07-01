@@ -73,8 +73,10 @@ from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.ge_validation_result import ValidationResult
+from hsfs.hopsworks_udf import HopsworksUdf, UDFType
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.transformation_function import TransformationFunction
 from hsfs.validation_report import ValidationReport
 
 
@@ -543,8 +545,13 @@ class FeatureGroupBase:
         """
         storage_connector_provenance = self.get_storage_connector_provenance()
 
-        if storage_connector_provenance.inaccessible or storage_connector_provenance.deleted:
-            _logger.info("The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`")
+        if (
+            storage_connector_provenance.inaccessible
+            or storage_connector_provenance.deleted
+        ):
+            _logger.info(
+                "The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`"
+            )
 
         if storage_connector_provenance.accessible:
             return storage_connector_provenance.accessible[0]
@@ -2022,6 +2029,9 @@ class FeatureGroup(FeatureGroupBase):
             Union[Dict[str, Any], "deltastreamer_jobconf.DeltaStreamerJobConf"]
         ] = None,
         deprecated: bool = False,
+        transformation_functions: Optional[
+            List[Union[TransformationFunction, HopsworksUdf]]
+        ] = None,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -2123,6 +2133,44 @@ class FeatureGroup(FeatureGroupBase):
         self._kafka_producer: Optional["confluent_kafka.Producer"] = None
         self._feature_writers: Optional[Dict[str, callable]] = None
         self._writer: Optional[callable] = None
+
+        # On-Demand Transformation Functions
+        self._transformation_functions: List[TransformationFunction] = (
+            [
+                TransformationFunction(
+                    featurestore_id,
+                    hopsworks_udf=transformation_function,
+                    version=1,
+                    transformation_type=UDFType.ON_DEMAND,
+                )
+                if not isinstance(transformation_function, TransformationFunction)
+                else transformation_function
+                for transformation_function in transformation_functions
+            ]
+            if transformation_functions
+            else []
+        )
+
+        if self._transformation_functions:
+            self._transformation_functions = (
+                FeatureGroup._sort_transformation_functions(
+                    self._transformation_functions
+                )
+            )
+
+    @staticmethod
+    def _sort_transformation_functions(
+        transformation_functions: List[TransformationFunction],
+    ) -> List[TransformationFunction]:
+        """
+        Function that sorts transformation functions in the order of the output column names.
+        The list of transformation functions are sorted based on the output columns names to maintain consistent ordering.
+        # Arguments
+            transformation_functions:  `List[TransformationFunction]`. List of transformation functions to be sorted
+        # Returns
+            `List[TransformationFunction]`: List of transformation functions to be sorted
+        """
+        return sorted(transformation_functions, key=lambda x: x.output_column_names[0])
 
     def read(
         self,
@@ -3204,6 +3252,17 @@ class FeatureGroup(FeatureGroupBase):
                 json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                     json_decamelized["embedding_index"]
                 )
+            if "transformation_functions" in json_decamelized:
+                transformation_functions = json_decamelized["transformation_functions"]
+                json_decamelized["transformation_functions"] = [
+                    TransformationFunction.from_response_json(
+                        {
+                            **transformation_function,
+                            "transformation_type": UDFType.ON_DEMAND,
+                        }
+                    )
+                    for transformation_function in transformation_functions
+                ]
             return cls(**json_decamelized)
         for fg in json_decamelized:
             if "type" in fg:
@@ -3214,6 +3273,17 @@ class FeatureGroup(FeatureGroupBase):
                 fg["embedding_index"] = EmbeddingIndex.from_response_json(
                     fg["embedding_index"]
                 )
+            if "transformation_functions" in fg:
+                transformation_functions = fg["transformation_functions"]
+                fg["transformation_functions"] = [
+                    TransformationFunction.from_response_json(
+                        {
+                            **transformation_function,
+                            "transformation_type": UDFType.ON_DEMAND,
+                        }
+                    )
+                    for transformation_function in transformation_functions
+                ]
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict: Dict[str, Any]) -> "FeatureGroup":
@@ -3224,6 +3294,17 @@ class FeatureGroup(FeatureGroupBase):
             json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                 json_decamelized["embedding_index"]
             )
+        if "transformation_functions" in json_decamelized:
+            transformation_functions = json_decamelized["transformation_functions"]
+            json_decamelized["transformation_functions"] = [
+                TransformationFunction.from_response_json(
+                    {
+                        **transformation_function,
+                        "transformation_type": UDFType.ON_DEMAND,
+                    }
+                )
+                for transformation_function in transformation_functions
+            ]
         self.__init__(**json_decamelized)
         return self
 
@@ -3270,6 +3351,7 @@ class FeatureGroup(FeatureGroupBase):
             "topicName": self.topic_name,
             "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
+            "transformationFunctions": self._transformation_functions,
         }
         if self.embedding_index:
             fg_meta_dict["embeddingIndex"] = self.embedding_index.to_dict()
@@ -3376,6 +3458,13 @@ class FeatureGroup(FeatureGroupBase):
             )
         return super().statistics
 
+    @property
+    def transformation_functions(
+        self,
+    ) -> List[TransformationFunction]:
+        """Get transformation functions."""
+        return self._transformation_functions
+
     @description.setter
     def description(self, new_description: Optional[str]) -> None:
         self._description = new_description
@@ -3401,6 +3490,13 @@ class FeatureGroup(FeatureGroupBase):
     @parents.setter
     def parents(self, new_parents: "explicit_provenance.Links") -> None:
         self._parents = new_parents
+
+    @transformation_functions.setter
+    def transformation_functions(
+        self,
+        transformation_functions: List[TransformationFunction],
+    ) -> None:
+        self._transformation_functions = transformation_functions
 
 
 @typechecked
