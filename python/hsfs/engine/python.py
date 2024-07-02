@@ -1636,13 +1636,6 @@ class Engine:
                     if (x is not None and x != "")
                     else None
                 )
-        # elif offline_type == "string":
-        #     if isinstance(feature_column, pl.Series):
-        #         return feature_column.map_elements(
-        #             lambda x: str(x) if x is not None else None
-        #         )
-        #     else:
-        #         return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif offline_type.startswith("decimal"):
             if isinstance(feature_column, pl.Series):
                 return feature_column.map_elements(

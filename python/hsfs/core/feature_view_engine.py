@@ -961,8 +961,6 @@ class FeatureViewEngine:
             training_dataset_version,
             hsml_model,
         )
-        # print(df.columns)
-        # print(df.info())
         return fg.insert(df, write_options=write_options)
 
     def read_log(self, fv,
@@ -978,8 +976,6 @@ class FeatureViewEngine:
         fg = self._get_logging_fg(fv, transformed)
         fv_feat_name_map = self._get_fv_feature_name_map(fv)
         query = fg.select_all()
-        # print(fg.id)
-        # print(query.read().head)
         if start_time:
             query = query.filter(fg.get_feature(FeatureViewEngine._LOG_TIME) >= start_time)
         if end_time:
