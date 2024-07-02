@@ -948,6 +948,10 @@ class FeatureViewEngine:
             return feature_logging.untransformed_features
 
     def log_features(self, fv, features, prediction=None, transformed=False, write_options=None, training_dataset_version=None, hsml_model=None):
+        default_write_options = {
+            "start_offline_materialization": False,
+        }
+        default_write_options.update(write_options)
         fg = self._get_logging_fg(fv, transformed)
         df = engine.get_instance().get_feature_logging_df(
             fg,
@@ -961,7 +965,7 @@ class FeatureViewEngine:
             training_dataset_version,
             hsml_model,
         )
-        return fg.insert(df, write_options=write_options)
+        return fg.insert(df, write_options=default_write_options)
 
     def read_log(self, fv,
                  start_time: Optional[
