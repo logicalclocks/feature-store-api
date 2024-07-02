@@ -3450,7 +3450,7 @@ class FeatureView:
             transformed_features: Optional[bool]=False,
             write_options: Optional[Dict[str, Any]] = None,
             training_dataset_version: Optional[int]=None,
-            hsml_model: Optional=None,
+            hsml_model=None,
             ):
         """Log features and optionally predictions for the current feature view.
 
@@ -3520,7 +3520,7 @@ class FeatureView:
                  filter: Optional[Union[Filter, Logic]] = None,
                  transformed: Optional[bool] = False,
                  training_dataset_version: Optional[int]=None,
-                 hsml_model: Optional=None,
+                 hsml_model=None,
                  ):
         """Read the log entries for the current feature view.
             Optionally, filter can be applied to start/end time, training dataset version, hsml model,
