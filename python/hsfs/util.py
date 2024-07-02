@@ -20,6 +20,7 @@ import itertools
 import json
 import logging
 import re
+import sys
 import threading
 import time
 from datetime import date, datetime, timezone
@@ -540,6 +541,13 @@ def build_serving_keys_from_prepared_statements(
                 )
             )
     return serving_keys
+
+
+def is_runtime_notebook():
+    if "ipykernel" in sys.modules:
+        return True
+    else:
+        return False
 
 
 class NpDatetimeEncoder(json.JSONEncoder):
