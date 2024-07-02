@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Optional, Union, Dict
+from typing import Dict, Optional, Union
 
 from hsfs import (
     client,
@@ -29,6 +29,7 @@ from hsfs import (
 )
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor.filter import Filter, Logic
 from hsfs.core import (
     arrow_flight_client,
     code_engine,
@@ -41,8 +42,7 @@ from hsfs.core import (
 )
 from hsfs.core.feature_logging import FeatureLogging
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.constructor.filter import Filter, Logic
-from hsfs.feature import Feature
+
 
 class FeatureViewEngine:
     ENTITY_TYPE = "featureview"
@@ -1021,7 +1021,7 @@ class FeatureViewEngine:
                 filter.value,
             )
         else:
-            raise "Accept only Filter or Logic"
+            raise FeatureStoreException("Accept only Filter or Logic")
 
     def _get_fv_feature_name_map(self, fv) -> Dict[str, str]:
         result_dict = {}
@@ -1056,7 +1056,7 @@ class FeatureViewEngine:
             for job in jobs:
                 try:
                     job._wait_for_job(wait)
-                except Exception as e:
+                except Exception:
                     pass
         return jobs
 
