@@ -85,7 +85,6 @@ from hsfs.core.constants import HAS_AIOMYSQL, HAS_GREAT_EXPECTATIONS, HAS_SQLALC
 from hsfs.core.feature_view_engine import FeatureViewEngine
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import uses_great_expectations
-from hsfs.feature import Feature
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
 from hsfs.training_dataset_feature import TrainingDatasetFeature
@@ -1758,7 +1757,7 @@ class Engine:
         if feature_log is None and cols:
             return pd.DataFrame(columns=cols)
         if not (isinstance(feature_log, (list, np.ndarray, pd.DataFrame, pl.DataFrame))):
-            assert False, f"type '{type(feature_log)}' not accepted"
+            raise ValueError(f"Type '{type(feature_log)}' not accepted")
         if isinstance(feature_log, list) or isinstance(feature_log, np.ndarray):
             if isinstance(feature_log[0], list) or isinstance(feature_log[0],
                                                            np.ndarray):

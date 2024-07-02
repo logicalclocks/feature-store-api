@@ -3381,7 +3381,7 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
-            enabled_logging=json_decamelized['enabled_logging'],
+            enabled_logging=json_decamelized.get('enabled_logging', False),
         )
         features = json_decamelized.get("features", [])
         if features:
