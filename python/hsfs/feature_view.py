@@ -3423,6 +3423,25 @@ class FeatureView:
         return self
 
     def enable_logging(self) -> None:
+        """Enable feature logging for the current feature view.
+
+        This method activates logging of features.
+
+        # Example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # enable logging
+            feature_view.enable_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to enable feature logging.
+        """
         return self._feature_view_engine.enable_feature_logging(self)
 
     def log(self,
@@ -3430,9 +3449,32 @@ class FeatureView:
             prediction: Union[pd.Dataframe, list[list], np.ndarray]=None,
             transformed_features: Optional[bool]=False,
             write_options: Optional[Dict[str, Any]] = None,
-            training_dataset_version=None,
-            hsml_model=None,
+            training_dataset_version: Optional[int]=None,
+            hsml_model: Optional=None,
             ):
+        """Log features and optionally predictions for the current feature view.
+
+        Note: If features is a `pd.Dataframe`, prediction can be provided as columns in the dataframe.
+
+        # Arguments
+            features: The features to be logged. Can be a pandas DataFrame, a list of lists, or a numpy ndarray.
+            prediction: The predictions to be logged. Can be a pandas DataFrame, a list of lists, or a numpy ndarray. Defaults to None.
+            transformed_features: Whether the features are transformed. Defaults to False.
+            write_options: Options for writing the log. Defaults to None.
+            training_dataset_version: Version of the training dataset. Defaults to None.
+            hsml_model: hsml.model.Model` HSML model associated with the log. Defaults to None.
+
+        # Example
+            ```python
+            # log features
+            feature_view.log(features)
+            # log features and predictions
+            feature_view.log(features, prediction)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to log features.
+        """
         if not self.enabled_logging:
             self.enable_logging()
         return self._feature_view_engine.log_features(
@@ -3450,6 +3492,22 @@ class FeatureView:
                          limit: Optional[int] = None,
                          transformed: Optional[bool] = False,
                          ):
+        """Retrieve the log timeline for the current feature view.
+
+        # Arguments
+            wallclock_time: Specific time to get the log timeline for. Can be a string, integer, datetime, or date. Defaults to None.
+            limit: Maximum number of entries to retrieve. Defaults to None.
+            transformed: Whether to include transformed logs. Defaults to False.
+
+        # Example
+            ```python
+            # get log timeline
+            log_timeline = feature_view.get_log_timeline(limit=10)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the log timeline.
+        """
         return self._feature_view_engine.get_log_timeline(
             self, wallclock_time, limit, transformed
         )
@@ -3461,23 +3519,102 @@ class FeatureView:
                      Union[str, int, datetime, datetime.date]] = None,
                  filter: Optional[Union[Filter, Logic]] = None,
                  transformed: Optional[bool] = False,
-                 training_dataset_version=None,
-                 hsml_model=None,
+                 training_dataset_version: Optional[int]=None,
+                 hsml_model: Optional=None,
                  ):
+        """Read the log entries for the current feature view.
+            Optionally, filter can be applied to start/end time, training dataset version, hsml model,
+            and custom fitler.
+
+        # Arguments
+            start_time: Start time for the log entries. Can be a string, integer, datetime, or date. Defaults to None.
+            end_time: End time for the log entries. Can be a string, integer, datetime, or date. Defaults to None.
+            filter: Filter to apply on the log entries. Can be a Filter or Logic object. Defaults to None.
+            transformed: Whether to include transformed logs. Defaults to False.
+            training_dataset_version: Version of the training dataset. Defaults to None.
+            hsml_model: HSML model associated with the log. Defaults to None.
+
+        # Example
+            ```python
+            # read all log entries
+            log_entries = feature_view.read_log()
+            # read log entries within time ranges
+            log_entries = feature_view.read_log(start_time="2022-01-01", end_time="2022-01-31")
+            # read log entries of a specific training dataset version
+            log_entries = feature_view.read_log(training_dataset_version=1)
+            # read log entries of a specific hsml model
+            log_entries = feature_view.read_log(hsml_model=Model(1, "dummy", version=1))
+            # read log entries by applying filter on features of feature group `fg` in the feature view
+            log_entries = feature_view.read_log(filter=fg.feature1 > 10)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to read the log entries.
+        """
         return self._feature_view_engine.read_log(
             self, start_time, end_time, filter, transformed, training_dataset_version, hsml_model
         )
 
     def pause_logging(self):
+        """Pause scheduled materialization job for the current feature view.
+
+        # Example
+            ```python
+            # pause logging
+            feature_view.pause_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to pause feature logging.
+        """
         self._feature_view_engine.pause_logging(self)
 
     def resume_logging(self):
+        """Resume scheduled materialization job for the current feature view.
+
+        # Example
+            ```python
+            # resume logging
+            feature_view.resume_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to pause feature logging.
+        """
         self._feature_view_engine.resume_logging(self)
 
-    def materialize_log(self, wait=False):
+    def materialize_log(self, wait: Optional[bool]=False):
+        """Materialize the log for the current feature view.
+
+        # Arguments
+            wait: Whether to wait for the materialization to complete. Defaults to False.
+
+        # Example
+            ```python
+            # materialize log
+            materialization_result = feature_view.materialize_log(wait=True)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to materialize the log.
+        """
         return self._feature_view_engine.materialize_log(self, wait)
 
-    def delete_log(self, transformed=None):
+    def delete_log(self, transformed: Optional[bool]=None):
+        """Delete the log for the current feature view.
+
+         # Arguments
+             transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
+
+         # Example
+             ```python
+             # delete log
+             feature_view.delete_log()
+             ```
+
+         # Raises
+             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
+         """
         return self._feature_view_engine.delete_log(self, transformed)
 
     @staticmethod
