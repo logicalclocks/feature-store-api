@@ -18,7 +18,7 @@ from __future__ import annotations
 import datetime
 import os
 
-from hsfs import hsfs_code
+from hsfs import code
 from hsfs.core import code_api
 
 
@@ -43,7 +43,7 @@ class CodeEngine:
         job_name = os.environ.get(CodeEngine.JOB_ENV)
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
-        code_entity = code.Code(
+        code_entity = hsfs_code.Code(
             commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
             application_id=web_proxy[7:] if web_proxy else None,
         )
