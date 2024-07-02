@@ -43,7 +43,7 @@ class CodeEngine:
         job_name = os.environ.get(CodeEngine.JOB_ENV)
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
-        code_entity = hsfs_code.Code(
+        code_entity = code.Code(
             commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
             application_id=web_proxy[7:] if web_proxy else None,
         )
