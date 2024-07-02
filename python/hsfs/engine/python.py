@@ -1635,6 +1635,13 @@ class Engine:
                     if (x is not None and x != "")
                     else None
                 )
+        elif offline_type == "string":
+            if isinstance(feature_column, pl.Series):
+                return feature_column.map_elements(
+                    lambda x: str(x) if x is not None else None
+                )
+            else:
+                return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif offline_type.startswith("decimal"):
             if isinstance(feature_column, pl.Series):
                 return feature_column.map_elements(
@@ -1653,7 +1660,6 @@ class Engine:
                     "tinyint": pl.Int8,
                     "float": pl.Float32,
                     "double": pl.Float64,
-                    "string": pl.Utf8,
                 }
             else:
                 offline_dtype_mapping = {
@@ -1663,7 +1669,6 @@ class Engine:
                     "tinyint": pd.Int8Dtype(),
                     "float": np.dtype("float32"),
                     "double": np.dtype("float64"),
-                    "string": pd.StringDtype(),
                 }
             if offline_type in offline_dtype_mapping:
                 if isinstance(feature_column, pl.Series):
@@ -1794,9 +1799,8 @@ class Engine:
         features[td_col_name] = Engine._cast_column_to_offline_type(
             pd.Series([training_dataset_version for _ in range(len(features))]), fg.get_feature(td_col_name).type
         )
-        features[model_col_name] = Engine._cast_column_to_offline_type(
-            pd.Series([FeatureViewEngine.get_hsml_model_value(hsml_model) if hsml_model else None for _ in range(len(features))]), fg.get_feature(model_col_name).type
-        )
+        # _cast_column_to_offline_type cannot cast string type
+        features[model_col_name] = pd.Series([FeatureViewEngine.get_hsml_model_value(hsml_model) if hsml_model else None for _ in range(len(features))], dtype=pd.StringDtype())
         now = datetime.now()
         features[time_col_name] = Engine._cast_column_to_offline_type(
             pd.Series([now for _ in range(len(features))]), fg.get_feature(time_col_name).type
