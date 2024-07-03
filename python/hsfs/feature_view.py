@@ -917,7 +917,7 @@ class FeatureView:
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options: Optional[Dict[str, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         inference_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
@@ -998,7 +998,7 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
-            primary_keys,
+            primary_key,
             event_time,
             inference_helper_columns,
             dataframe_type,
@@ -1191,7 +1191,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
     ) -> Tuple[int, "job.Job"]:
@@ -1357,7 +1357,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not. Training helper columns are a
@@ -1392,7 +1392,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1423,7 +1423,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
     ) -> Tuple[int, "job.Job"]:
@@ -1635,7 +1635,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -1679,7 +1679,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1712,7 +1712,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
     ) -> Tuple[int, "job.Job"]:
@@ -1910,7 +1910,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -1962,7 +1962,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -2060,7 +2060,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
@@ -2154,7 +2154,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2189,7 +2189,7 @@ class FeatureView:
             read_options,
             training_dataset_obj=td,
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2215,7 +2215,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
@@ -2321,7 +2321,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2365,7 +2365,7 @@ class FeatureView:
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2407,7 +2407,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
@@ -2528,7 +2528,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2585,7 +2585,7 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2624,7 +2624,7 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[str, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
@@ -2666,7 +2666,7 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2685,7 +2685,7 @@ class FeatureView:
             self,
             read_options,
             training_dataset_version=training_dataset_version,
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2698,7 +2698,7 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
@@ -2737,7 +2737,7 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2758,7 +2758,7 @@ class FeatureView:
             read_options,
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2771,7 +2771,7 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[str, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: str = "default",
@@ -2812,7 +2812,7 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2837,7 +2837,7 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
-            primary_keys=primary_keys,
+            primary_keys=primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
