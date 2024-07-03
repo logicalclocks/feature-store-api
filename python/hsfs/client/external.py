@@ -111,7 +111,7 @@ class Client(base.Client):
             # are needed when the application starts (before user code is run)
             # So in this case, we can't materialize the certificates on the fly.
             _logger.debug("Running in Spark environment, initializing Spark session")
-            _spark_session = SparkSession.builder.enableHiveSupport.getOrCreate()
+            _spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
 
             self._validate_spark_configuration(_spark_session)
             with open(
