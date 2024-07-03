@@ -921,6 +921,7 @@ class FeatureView:
         event_time: bool = False,
         inference_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> TrainingDatasetDataFrameTypes:
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -998,7 +999,7 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
-            primary_key,
+            kwargs.get("primary_keys", False) or primary_key,
             event_time,
             inference_helper_columns,
             dataframe_type,
@@ -1194,6 +1195,7 @@ class FeatureView:
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
+        **kwargs,
     ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
@@ -1392,7 +1394,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1426,6 +1428,7 @@ class FeatureView:
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
+        **kwargs,
     ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
@@ -1679,7 +1682,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1715,6 +1718,7 @@ class FeatureView:
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
+        **kwargs,
     ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
@@ -1962,7 +1966,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -2064,6 +2068,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         Optional[TrainingDatasetDataFrameTypes],  # optional label DataFrame
@@ -2189,7 +2194,7 @@ class FeatureView:
             read_options,
             training_dataset_obj=td,
             spine=spine,
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2219,6 +2224,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2365,7 +2371,7 @@ class FeatureView:
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
             spine=spine,
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2411,6 +2417,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2585,7 +2592,7 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
             spine=spine,
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2628,6 +2635,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         Optional[TrainingDatasetDataFrameTypes],
@@ -2685,7 +2693,7 @@ class FeatureView:
             self,
             read_options,
             training_dataset_version=training_dataset_version,
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2702,6 +2710,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2758,7 +2767,7 @@ class FeatureView:
             read_options,
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2775,6 +2784,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: str = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2837,7 +2847,7 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
-            primary_keys=primary_key,
+            primary_keys=kwargs.get("primary_keys", False) or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
