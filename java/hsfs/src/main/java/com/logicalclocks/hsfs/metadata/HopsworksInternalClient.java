@@ -46,6 +46,7 @@ import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -62,9 +63,12 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
   private static final String DOMAIN_CA_TRUSTSTORE = "hopsworks.domain.truststore";
   private static final String TOKEN_PATH = "token.jwt";
 
-  private static final String MATERIAL_PASSWD = "material_passwd";
-  private static final String T_CERTIFICATE = "t_certificate";
-  private static final String K_CERTIFICATE = "k_certificate";
+  private static final String MATERIAL_PASSWD = (Paths.get(System.getenv("MATERIAL_DIRECTORY"),
+        "material_passwd")).toString();
+  private static final String T_CERTIFICATE = (Paths.get(System.getenv("MATERIAL_DIRECTORY"),
+        "t_certificate")).toString();
+  private static final String K_CERTIFICATE = (Paths.get(System.getenv("MATERIAL_DIRECTORY"),
+        "k_certificate")).toString();
 
   private PoolingHttpClientConnectionManager connectionPool = null;
 
@@ -109,6 +113,9 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
     Properties systemProperties = System.getProperties();
 
     Path trustStorePath = Paths.get(systemProperties.getProperty(DOMAIN_CA_TRUSTSTORE));
+    if (trustStorePath == null || !Files.exists(trustStorePath)) {
+      trustStorePath = Paths.get(T_CERTIFICATE);
+    }
     LOGGER.info("Trust store path: " + trustStorePath);
     SSLContext sslCtx = SSLContexts.custom()
         .loadTrustMaterial(trustStorePath.toFile(), null, new TrustSelfSignedStrategy())
