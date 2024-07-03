@@ -34,7 +34,7 @@ from hsfs.client import exceptions
 from hsfs.constructor import hudi_feature_group_alias, query
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
-from hsfs.hopsworks_udf import udf
+from hsfs.hopsworks_udf import UDFType, udf
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from pyspark.sql import DataFrame
 from pyspark.sql.types import (
@@ -2675,6 +2675,7 @@ class TestSpark:
         tf = transformation_function.TransformationFunction(
             featurestore_id=99,
             hopsworks_udf=plus_one,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         f = training_dataset_feature.TrainingDatasetFeature(
@@ -2724,6 +2725,7 @@ class TestSpark:
         tf = transformation_function.TransformationFunction(
             featurestore_id=99,
             hopsworks_udf=plus_one,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         transformation_fn_dict = dict()
@@ -4328,13 +4330,12 @@ class TestSpark:
         engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        @udf(int)
+        @udf(int, drop=["col1"])
         def plus_one(col1):
             return col1 + 1
 
         tf = transformation_function.TransformationFunction(
-            99,
-            hopsworks_udf=plus_one,
+            99, hopsworks_udf=plus_one, transformation_type=UDFType.MODEL_DEPENDENT
         )
 
         f = feature.Feature(name="col_0", type=IntegerType(), index=0)
@@ -4388,13 +4389,12 @@ class TestSpark:
         engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        @udf([int, int])
+        @udf([int, int], drop=["col1"])
         def plus_two(col1):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col1 + 2})
 
         tf = transformation_function.TransformationFunction(
-            99,
-            hopsworks_udf=plus_two,
+            99, hopsworks_udf=plus_two, transformation_type=UDFType.MODEL_DEPENDENT
         )
 
         f = feature.Feature(name="col_0", type=IntegerType(), index=0)
@@ -4449,13 +4449,12 @@ class TestSpark:
         engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        @udf([int, int])
+        @udf([int, int], drop=["col1", "col2"])
         def test(col1, col2):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
 
         tf = transformation_function.TransformationFunction(
-            99,
-            hopsworks_udf=test,
+            99, hopsworks_udf=test, transformation_type=UDFType.MODEL_DEPENDENT
         )
 
         f = feature.Feature(name="col_0", type=IntegerType(), index=0)

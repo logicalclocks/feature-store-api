@@ -428,7 +428,7 @@ class HopsworksUdf:
         """
         if self._udf_type == UDFType.MODEL_DEPENDENT:
             _BASE_COLUMN_NAME = (
-                f'{self.function_name}_{"-".join(self.transformation_features)}_'
+                f'{self.function_name}_{"_".join(self.transformation_features)}_'
             )
             if len(self.return_types) > 1:
                 return [
@@ -655,10 +655,14 @@ def renaming_wrapper(*args):
         transformation_features = [
             feature.strip() for feature in json_decamelized["transformation_features"]
         ]
-        dropped_features = [
-            dropped_feature.strip()
-            for dropped_feature in json_decamelized["dropped_features"]
-        ]
+        dropped_features = (
+            [
+                dropped_feature.strip()
+                for dropped_feature in json_decamelized["dropped_features"]
+            ]
+            if "dropped_features" in json_decamelized
+            else None
+        )
         statistics_features = (
             [
                 feature.strip()
@@ -670,6 +674,16 @@ def renaming_wrapper(*args):
 
         # Reconstructing statistics arguments.
         arg_list, _, _, _ = HopsworksUdf._parse_function_signature(function_source_code)
+
+        transformation_features = (
+            arg_list if not transformation_features else transformation_features
+        )
+
+        if dropped_features:
+            dropped_features = [
+                transformation_features[arg_list.index(dropped_feature)]
+                for dropped_feature in dropped_features
+            ]
 
         if statistics_features:
             transformation_features = [

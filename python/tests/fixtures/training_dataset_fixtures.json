@@ -122,21 +122,12 @@
               "items": [
                 {
                   "featurestore_id": 11,
-                  "transformation_fn": "test_transformation_fn",
                   "version": 1,
                   "name": "test_name",
-                  "source_code_content": "test_source_code_content",
-                  "builtin_source_code": "test_builtin_source_code",
-                  "output_type": "test_output_type",
-                  "id": 43,
-                  "type": "transformationFunctionTDO",
-                  "items": [],
-                  "count": 0,
                   "href": "test_href"
                 }
               ]
-            },
-            "transformation_function": "test_transformation_function"
+            }
           }
         ],
         "statistics_config": {
@@ -153,7 +144,6 @@
         "from_query": "test_from_query",
         "querydto": "test_querydto",
         "label": "test_label",
-        "transformation_functions": "test_transformation_functions",
         "train_split": "test_train_split",
         "time_split_size": "test_time_split_size",
         "type": "trainingDatasetDTO"

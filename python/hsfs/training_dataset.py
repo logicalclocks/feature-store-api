@@ -29,7 +29,6 @@ from hsfs.core import (
     statistics_engine,
     training_dataset_api,
     training_dataset_engine,
-    transformation_function_engine,
     vector_server,
 )
 from hsfs.statistics_config import StatisticsConfig
@@ -538,7 +537,6 @@ class TrainingDataset(TrainingDatasetBase):
         from_query=None,
         querydto=None,
         label=None,
-        transformation_functions=None,
         train_split=None,
         time_split_size=None,
         extra_filter=None,
@@ -580,7 +578,6 @@ class TrainingDataset(TrainingDatasetBase):
         self._querydto = querydto
         self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
-        self._transformation_functions = transformation_functions
 
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             featurestore_id
@@ -592,9 +589,6 @@ class TrainingDataset(TrainingDatasetBase):
             featurestore_id, self.ENTITY_TYPE
         )
         self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
-        )
         self._vector_server = vector_server.VectorServer(
             featurestore_id, features=self._features
         )
@@ -1083,19 +1077,6 @@ class TrainingDataset(TrainingDatasetBase):
     def feature_store_name(self) -> str:
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
-
-    @property
-    def transformation_functions(self):
-        """Set transformation functions."""
-        if self._id is not None and self._transformation_functions is None:
-            self._transformation_functions = (
-                self._transformation_function_engine.get_td_transformation_fn(self)
-            )
-        return self._transformation_functions
-
-    @transformation_functions.setter
-    def transformation_functions(self, transformation_functions):
-        self._transformation_functions = transformation_functions
 
     @property
     def serving_keys(self) -> Set[str]:

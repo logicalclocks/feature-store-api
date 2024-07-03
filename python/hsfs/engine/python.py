@@ -966,7 +966,7 @@ class Engine:
             #        training_dataset_obj, feature_view_obj, training_dataset_version
             #    )
             return self._apply_transformation_function(
-                training_dataset_obj.transformation_functions, df
+                feature_view_obj.transformation_functions, df
             )
 
     def split_labels(

@@ -2214,6 +2214,7 @@ class TestPython:
         mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
+        mock_feature_view = mocker.patch("hsfs.feature_view.FeatureView")
 
         python_engine = python.Engine()
 
@@ -2230,7 +2231,7 @@ class TestPython:
         # Act
         python_engine.get_training_data(
             training_dataset_obj=td,
-            feature_view_obj=None,
+            feature_view_obj=mock_feature_view,
             query_obj=mocker.Mock(),
             read_options=None,
             dataframe_type="default",
@@ -2964,6 +2965,7 @@ class TestPython:
 
     def test_write_training_dataset_query_td(self, mocker, backend_fixtures):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_job = mocker.patch("hsfs.core.job.Job")
@@ -3008,6 +3010,7 @@ class TestPython:
 
     def test_write_training_dataset_query_fv(self, mocker, backend_fixtures):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_job = mocker.patch("hsfs.core.job.Job")
@@ -3280,7 +3283,7 @@ class TestPython:
         engine._engine_type = "python"
         python_engine = python.Engine()
 
-        @udf([int, int])
+        @udf([int, int], drop=["col1"])
         def plus_two(col1):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col1 + 2})
 
@@ -3324,7 +3327,7 @@ class TestPython:
         engine._engine_type = "python"
         python_engine = python.Engine()
 
-        @udf([int, int])
+        @udf([int, int], drop=["col1", "col2"])
         def plus_two(col1, col2):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
 
@@ -3354,6 +3357,7 @@ class TestPython:
         )
 
         # Assert
+        print(result.columns)
         assert all(result.columns == ["plus_two_col1_col2_0", "plus_two_col1_col2_1"])
         assert len(result) == 2
         assert result["plus_two_col1_col2_0"][0] == 2
