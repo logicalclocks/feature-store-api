@@ -1773,7 +1773,7 @@ class Engine:
 
             return pd.DataFrame(feature_log, columns=cols)
         else:
-            return feature_log
+            return feature_log.copy(deep=False)
 
     @staticmethod
     def get_feature_logging_df(fg,
@@ -1806,4 +1806,4 @@ class Engine:
             pd.Series([now for _ in range(len(features))]), fg.get_feature(time_col_name).type
         )
         features["log_id"] = [str(uuid.uuid4()) for _ in range(len(features))]
-        return features
+        return features[[feat.name for feat in fg.features]]

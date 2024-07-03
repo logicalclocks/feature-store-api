@@ -3446,7 +3446,7 @@ class FeatureView:
 
     def log(self,
             features: Union[pd.DataFrame, list[list], np.ndarray],
-            prediction: Union[pd.DataFrame, list[list], np.ndarray]=None,
+            prediction: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
             transformed_features: Optional[bool]=False,
             write_options: Optional[Dict[str, Any]] = None,
             training_dataset_version: Optional[int]=None,
