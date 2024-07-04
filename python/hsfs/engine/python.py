@@ -177,7 +177,6 @@ class Engine:
         if not online_conn:
             return self._sql_offline(
                 sql_query,
-                feature_store,
                 dataframe_type,
                 schema,
                 arrow_flight_config=read_options.get("arrow_flight_config", {})
@@ -236,7 +235,7 @@ class Engine:
         connector: sc.JdbcConnector,
         dataframe_type: str,
         read_options: Optional[Dict[str, Any]],
-        schema: Optional[List["feature.Feature"]] = None,
+        schema: Optional[List[feature.Feature]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         self._validate_dataframe_type(dataframe_type)
         if self._mysql_online_fs_engine is None:
@@ -535,7 +534,7 @@ class Engine:
             or hudi_fg_alias.left_feature_group_start_timestamp is not None
         ):
             raise FeatureStoreException(
-                +"Incremental queries not supported in the python client."
+                "Incremental queries not supported in the python client."
                 + " Read feature group without timestamp to retrieve latest snapshot or switch to "
                 + "environment with Spark Engine."
             )
