@@ -83,7 +83,7 @@ from hsfs.core import (
     transformation_function_engine,
     variable_api,
 )
-from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+from hsfs.core.constants import HAS_AIOMYSQL, HAS_GREAT_EXPECTATIONS, HAS_SQLALCHEMY
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import uses_great_expectations
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
@@ -110,6 +110,9 @@ except ImportError:
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations
+
+if HAS_AIOMYSQL and HAS_SQLALCHEMY:
+    import util_sql
 
 # Decimal types are currently not supported
 _INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
@@ -269,7 +272,7 @@ class Engine:
         self._validate_dataframe_type(dataframe_type)
 
         if self._mysql_online_fs_engine is None:
-            self._mysql_online_fs_engine = util.create_mysql_engine(
+            self._mysql_online_fs_engine = util_sql.create_mysql_engine(
                 connector,
                 (
                     isinstance(client.get_instance(), client.external.Client)

@@ -25,7 +25,12 @@ import aiomysql
 import aiomysql.utils
 from hsfs import feature_view, storage_connector, training_dataset, util
 from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
-from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
+from hsfs.core import (
+    feature_view_api,
+    storage_connector_api,
+    training_dataset_api,
+    util_sql,
+)
 from hsfs.serving_key import ServingKey
 from sqlalchemy import bindparam, exc, sql, text
 
@@ -457,7 +462,7 @@ class OnlineStoreSqlClient:
         _logger.debug(
             f"Creating MySQL {'external' if self.external is True else ''}engine with options: {options}."
         )
-        self._prepared_statement_engine = util.create_mysql_engine(
+        self._prepared_statement_engine = util_sql.create_mysql_engine(
             online_conn, self._external, options=options
         )
 
