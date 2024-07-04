@@ -24,7 +24,17 @@ import sys
 import threading
 import time
 from datetime import date, datetime, timezone
-from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 from urllib.parse import urljoin, urlparse
 
 import numpy as np

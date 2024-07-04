@@ -92,9 +92,7 @@ def _should_retry_healthcheck_or_certificate_registration(exception):
 def is_data_format_supported(data_format: str, read_options: Optional[Dict[str, Any]]):
     if data_format not in ArrowFlightClient.SUPPORTED_FORMATS:
         return False
-    elif read_options and (
-        read_options.get("use_hive", False) or read_options.get("use_spark", False)
-    ):
+    elif read_options and read_options.get("use_spark", False):
         return False
     else:
         return get_instance()._should_be_used()
