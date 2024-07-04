@@ -1,6 +1,10 @@
 import importlib.util
 
 
+# Avro
+HAS_FAST_AVRO: bool = importlib.util.find_spec("fastavro") is not None
+HAS_AVRO: bool = importlib.util.find_spec("avro") is not None
+
 # Confluent Kafka
 HAS_CONFLUENT_KAFKA: bool = importlib.util.find_spec("confluent_kafka") is not None
 confluent_kafka_not_installed_message = (
