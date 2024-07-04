@@ -53,7 +53,6 @@ import polars as pl
 import pyarrow as pa
 import pytz
 from botocore.response import StreamingBody
-from confluent_kafka import KafkaError
 from hsfs import (
     client,
     feature,
@@ -73,6 +72,7 @@ from hsfs.core import (
     ingestion_job_conf,
     job,
     job_api,
+    kafka_engine,
     statistics_api,
     storage_connector_api,
     training_dataset_api,
@@ -90,7 +90,6 @@ from pyhive import hive
 from pyhive.exc import OperationalError
 from sqlalchemy import sql
 from thrift.transport.TTransport import TTransportException
-from tqdm.auto import tqdm
 
 
 # Disable pyhive INFO logging
@@ -1289,7 +1288,7 @@ class Engine:
         initial_check_point = ""
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
-                producer, feature_writers, writer = self._init_kafka_resources(
+                producer, feature_writers, writer = kafka_engine.init_kafka_resources(
                     feature_group, offline_write_options
                 )
                 feature_group._kafka_producer = producer
@@ -1300,37 +1299,20 @@ class Engine:
                 feature_writers = feature_group._feature_writers
                 writer = feature_group._writer
         else:
-            producer, feature_writers, writer = self._init_kafka_resources(
+            producer, feature_writers, writer = kafka_engine.init_kafka_resources(
                 feature_group, offline_write_options
             )
 
-            # initialize progress bar
-            progress_bar = tqdm(
-                total=dataframe.shape[0],
-                bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
-                "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
-                desc="Uploading Dataframe",
-                mininterval=1,
-            )
-
             # set initial_check_point to the current offset
-            initial_check_point = self._kafka_get_offsets(
+            initial_check_point = kafka_engine.kafka_get_offsets(
                 feature_group, offline_write_options, True
             )
 
-        def acked(err: Exception, msg: Any) -> None:
-            if err is not None:
-                if offline_write_options.get("debug_kafka", False):
-                    print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
-                if err.code() in [
-                    KafkaError.TOPIC_AUTHORIZATION_FAILED,
-                    KafkaError._MSG_TIMED_OUT,
-                ]:
-                    progress_bar.colour = "RED"
-                    raise err  # Stop producing and show error
-            # update progress bar for each msg
-            if not feature_group._multi_part_insert:
-                progress_bar.update()
+        acked, progress_bar = kafka_engine.build_ack_callback_and_progress_bar(
+            n_rows=dataframe.shape[0],
+            is_multi_part_insert=feature_group._multi_part_insert,
+            offline_write_options=offline_write_options,
+        )
 
         if isinstance(dataframe, pd.DataFrame):
             row_iterator = dataframe.itertuples(index=False)
@@ -1360,7 +1342,7 @@ class Engine:
                         row[k] = None
 
             # encode complex features
-            row = self._encode_complex_features(feature_writers, row)
+            row = kafka_engine.encode_complex_features(feature_writers, row)
 
             # encode feature row
             with BytesIO() as outf:
@@ -1370,8 +1352,8 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            self._kafka_produce(
-                producer, feature_group, key, encoded_row, acked, offline_write_options
+            kafka_engine.kafka_produce(
+                key, encoded_row, producer, feature_group, acked, offline_write_options
             )
 
         # make sure producer blocks and everything is delivered

@@ -23,10 +23,11 @@ from hsfs import client
 from hsfs.client import hopsworks
 from hsfs.core import storage_connector_api
 from hsfs.core.constants import HAS_AVRO, HAS_CONFLUENT_KAFKA, HAS_FAST_AVRO
+from tqdm import tqdm
 
 
 if HAS_CONFLUENT_KAFKA:
-    from confluent_kafka import Consumer, Producer, TopicPartition
+    from confluent_kafka import Consumer, KafkaError, Producer, TopicPartition
 
 if HAS_FAST_AVRO:
     from fastavro import schemaless_writer
@@ -182,3 +183,34 @@ def get_kafka_config(
     config = storage_connector.confluent_options()
     config.update(write_options.get("kafka_producer_config", {}))
     return config
+
+
+def build_ack_callback_and_optional_progress_bar(
+    n_rows: int, is_multi_part_insert: bool, offline_write_options: Dict[str, Any]
+) -> Tuple[Callable, Optional[tqdm]]:
+    if not is_multi_part_insert:
+        progress_bar = tqdm(
+            total=n_rows,
+            bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
+            "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
+            desc="Uploading Dataframe",
+            mininterval=1,
+        )
+    else:
+        progress_bar = None
+
+    def acked(err: Exception, msg: Any) -> None:
+        if err is not None:
+            if offline_write_options.get("debug_kafka", False):
+                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+            if err.code() in [
+                KafkaError.TOPIC_AUTHORIZATION_FAILED,
+                KafkaError._MSG_TIMED_OUT,
+            ]:
+                progress_bar.colour = "RED"
+                raise err  # Stop producing and show error
+        # update progress bar for each msg
+        if not is_multi_part_insert:
+            progress_bar.update()
+
+    return acked, progress_bar
