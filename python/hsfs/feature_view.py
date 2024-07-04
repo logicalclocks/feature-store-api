@@ -3453,7 +3453,7 @@ class FeatureView:
     def log(self,
             features: Union[pd.DataFrame, list[list], np.ndarray],
             prediction: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
-            transformed_features: Optional[bool]=False,
+            transformed: Optional[bool]=False,
             write_options: Optional[Dict[str, Any]] = None,
             training_dataset_version: Optional[int]=None,
             hsml_model=None,
@@ -3465,7 +3465,7 @@ class FeatureView:
         # Arguments
             features: The features to be logged. Can be a pandas DataFrame, a list of lists, or a numpy ndarray.
             prediction: The predictions to be logged. Can be a pandas DataFrame, a list of lists, or a numpy ndarray. Defaults to None.
-            transformed_features: Whether the features are transformed. Defaults to False.
+            transformed: Whether the features are transformed. Defaults to False.
             write_options: Options for writing the log. Defaults to None.
             training_dataset_version: Version of the training dataset. Defaults to None.
             hsml_model: hsml.model.Model` HSML model associated with the log. Defaults to None.
@@ -3484,7 +3484,7 @@ class FeatureView:
         if not self.enabled_logging:
             self.enable_logging()
         return self._feature_view_engine.log_features(
-            self, features, prediction, transformed_features,
+            self, features, prediction, transformed,
             write_options,
             training_dataset_version=(
                 training_dataset_version or self.get_last_accessed_training_dataset()
