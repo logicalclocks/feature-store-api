@@ -15,8 +15,6 @@
 #
 from __future__ import annotations
 
-import ast
-import decimal
 import json
 import logging
 import math
@@ -42,6 +40,11 @@ from typing import (
     Union,
 )
 
+from hsfs.core.type_systems import (
+    cast_column_to_offline_type,
+    convert_spark_type_to_offline_type,
+)
+
 
 if TYPE_CHECKING:
     import great_expectations
@@ -53,7 +56,6 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pyarrow as pa
-import pytz
 from botocore.response import StreamingBody
 from confluent_kafka import Consumer, KafkaError, Producer, TopicPartition
 from hsfs import (
@@ -83,7 +85,7 @@ from hsfs.core import (
     transformation_function_engine,
     variable_api,
 )
-from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+from hsfs.core.constants import HAS_ARROW, HAS_GREAT_EXPECTATIONS, HAS_PANDAS
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import uses_great_expectations
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
@@ -111,52 +113,11 @@ except ImportError:
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
-# Decimal types are currently not supported
-_INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
-_BIG_INT_TYPES = [pa.uint32(), pa.int64()]
-_FLOAT_TYPES = [pa.float16(), pa.float32()]
-_DOUBLE_TYPES = [pa.float64()]
-_TIMESTAMP_UNIT = ["ns", "us", "ms", "s"]
-_BOOLEAN_TYPES = [pa.bool_()]
-_STRING_TYPES = [pa.string(), pa.large_string()]
-_DATE_TYPES = [pa.date32(), pa.date64()]
-_BINARY_TYPES = [pa.binary(), pa.large_binary()]
+if HAS_ARROW:
+    from hsfs.core.type_systems import PYARROW_HOPSWORKS_DTYPE_MAPPING
 
-PYARROW_HOPSWORKS_DTYPE_MAPPING = {
-    **dict.fromkeys(_INT_TYPES, "int"),
-    **dict.fromkeys(_BIG_INT_TYPES, "bigint"),
-    **dict.fromkeys(_FLOAT_TYPES, "float"),
-    **dict.fromkeys(_DOUBLE_TYPES, "double"),
-    **dict.fromkeys(
-        [
-            *[pa.timestamp(unit) for unit in _TIMESTAMP_UNIT],
-            *[
-                pa.timestamp(unit, tz=tz)
-                for unit in _TIMESTAMP_UNIT
-                for tz in pytz.all_timezones
-            ],
-        ],
-        "timestamp",
-    ),
-    **dict.fromkeys(_BOOLEAN_TYPES, "boolean"),
-    **dict.fromkeys(
-        [
-            *_STRING_TYPES,
-            # Category type in pandas stored as dictinoary in pyarrow
-            *[
-                pa.dictionary(
-                    value_type=value_type, index_type=index_type, ordered=ordered
-                )
-                for value_type in _STRING_TYPES
-                for index_type in _INT_TYPES + _BIG_INT_TYPES
-                for ordered in [True, False]
-            ],
-        ],
-        "string",
-    ),
-    **dict.fromkeys(_DATE_TYPES, "date"),
-    **dict.fromkeys(_BINARY_TYPES, "binary"),
-}
+if HAS_PANDAS:
+    from hsfs.core.type_systems import convert_pandas_dtype_to_offline_type
 
 
 class Engine:
@@ -813,7 +774,7 @@ class Engine:
         for feat_name in arrow_schema.names:
             name = util.autofix_feature_name(feat_name)
             try:
-                converted_type = self._convert_pandas_dtype_to_offline_type(
+                converted_type = convert_pandas_dtype_to_offline_type(
                     arrow_schema.field(feat_name).type
                 )
             except ValueError as e:
@@ -1277,10 +1238,10 @@ class Engine:
                 isinstance(dataset, pl.DataFrame)
                 or isinstance(dataset, pl.dataframe.frame.DataFrame)
             ):
-                offline_type = Engine.convert_spark_type_to_offline_type(
+                offline_type = convert_spark_type_to_offline_type(
                     transformation_fn.output_type
                 )
-                dataset[feature_name] = Engine._cast_column_to_offline_type(
+                dataset[feature_name] = cast_column_to_offline_type(
                     dataset[feature_name], offline_type
                 )
 
@@ -1578,219 +1539,6 @@ class Engine:
         config = storage_connector.confluent_options()
         config.update(write_options.get("kafka_producer_config", {}))
         return config
-
-    @staticmethod
-    def _convert_pandas_dtype_to_offline_type(arrow_type: str) -> str:
-        # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
-        # using pyarrow types obatined from pandas dataframe to convert pandas typed fields,
-        # A recurisive function  "_convert_pandas_object_type_to_offline_type" is used to convert complex types like lists and structures
-        # "_convert_simple_pandas_dtype_to_offline_type" is used to convert simple types
-        # In the backend, the types specified here will also be used for mapping to Avro types.
-
-        if (
-            pa.types.is_list(arrow_type)
-            or pa.types.is_large_list(arrow_type)
-            or pa.types.is_struct(arrow_type)
-        ):
-            return Engine._convert_pandas_object_type_to_offline_type(arrow_type)
-
-        return Engine._convert_simple_pandas_dtype_to_offline_type(arrow_type)
-
-    @staticmethod
-    def convert_spark_type_to_offline_type(spark_type_string: str) -> str:
-        if spark_type_string.endswith("Type()"):
-            spark_type_string = util.translate_legacy_spark_type(spark_type_string)
-        if spark_type_string == "STRING":
-            return "STRING"
-        elif spark_type_string == "BINARY":
-            return "BINARY"
-        elif spark_type_string == "BYTE":
-            return "INT"
-        elif spark_type_string == "SHORT":
-            return "INT"
-        elif spark_type_string == "INT":
-            return "INT"
-        elif spark_type_string == "LONG":
-            return "BIGINT"
-        elif spark_type_string == "FLOAT":
-            return "FLOAT"
-        elif spark_type_string == "DOUBLE":
-            return "DOUBLE"
-        elif spark_type_string == "TIMESTAMP":
-            return "TIMESTAMP"
-        elif spark_type_string == "DATE":
-            return "DATE"
-        elif spark_type_string == "BOOLEAN":
-            return "BOOLEAN"
-        else:
-            raise ValueError(
-                f"Return type {spark_type_string} not supported for transformation functions."
-            )
-
-    @staticmethod
-    def _convert_simple_pandas_dtype_to_offline_type(arrow_type: str) -> str:
-        try:
-            return PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
-        except KeyError as err:
-            raise ValueError(f"dtype '{arrow_type}' not supported") from err
-
-    @staticmethod
-    def _convert_pandas_object_type_to_offline_type(arrow_type: str) -> str:
-        if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type):
-            # figure out sub type
-            sub_arrow_type = arrow_type.value_type
-            subtype = Engine._convert_pandas_dtype_to_offline_type(sub_arrow_type)
-            return "array<{}>".format(subtype)
-        if pa.types.is_struct(arrow_type):
-            struct_schema = {}
-            for index in range(arrow_type.num_fields):
-                struct_schema[arrow_type.field(index).name] = (
-                    Engine._convert_pandas_dtype_to_offline_type(
-                        arrow_type.field(index).type
-                    )
-                )
-            return (
-                "struct<"
-                + ",".join([f"{key}:{value}" for key, value in struct_schema.items()])
-                + ">"
-            )
-
-        raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
-
-    @staticmethod
-    def _cast_column_to_offline_type(
-        feature_column: pd.Series, offline_type: str
-    ) -> pd.Series:
-        offline_type = offline_type.lower()
-        if offline_type == "timestamp":
-            # convert (if tz!=UTC) to utc, then make timezone unaware
-            if isinstance(feature_column, pl.Series):
-                return feature_column.cast(pl.Datetime(time_zone=None))
-            else:
-                return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
-        elif offline_type == "date":
-            if isinstance(feature_column, pl.Series):
-                return feature_column.cast(pl.Date)
-            else:
-                return pd.to_datetime(feature_column, utc=True).dt.date
-        elif (
-            offline_type.startswith("array<")
-            or offline_type.startswith("struct<")
-            or offline_type == "boolean"
-        ):
-            if isinstance(feature_column, pl.Series):
-                return feature_column.map_elements(
-                    lambda x: (ast.literal_eval(x) if isinstance(x, str) else x)
-                    if (x is not None and x != "")
-                    else None
-                )
-            else:
-                return feature_column.apply(
-                    lambda x: (ast.literal_eval(x) if isinstance(x, str) else x)
-                    if (x is not None and x != "")
-                    else None
-                )
-        elif offline_type == "string":
-            if isinstance(feature_column, pl.Series):
-                return feature_column.map_elements(
-                    lambda x: str(x) if x is not None else None
-                )
-            else:
-                return feature_column.apply(lambda x: str(x) if x is not None else None)
-        elif offline_type.startswith("decimal"):
-            if isinstance(feature_column, pl.Series):
-                return feature_column.map_elements(
-                    lambda x: decimal.Decimal(x) if (x is not None) else None
-                )
-            else:
-                return feature_column.apply(
-                    lambda x: decimal.Decimal(x) if (x is not None) else None
-                )
-        else:
-            if isinstance(feature_column, pl.Series):
-                offline_dtype_mapping = {
-                    "bigint": pl.Int64,
-                    "int": pl.Int32,
-                    "smallint": pl.Int16,
-                    "tinyint": pl.Int8,
-                    "float": pl.Float32,
-                    "double": pl.Float64,
-                }
-            else:
-                offline_dtype_mapping = {
-                    "bigint": pd.Int64Dtype(),
-                    "int": pd.Int32Dtype(),
-                    "smallint": pd.Int16Dtype(),
-                    "tinyint": pd.Int8Dtype(),
-                    "float": np.dtype("float32"),
-                    "double": np.dtype("float64"),
-                }
-            if offline_type in offline_dtype_mapping:
-                if isinstance(feature_column, pl.Series):
-                    casted_feature = feature_column.cast(
-                        offline_dtype_mapping[offline_type]
-                    )
-                else:
-                    casted_feature = feature_column.astype(
-                        offline_dtype_mapping[offline_type]
-                    )
-                return casted_feature
-            else:
-                return feature_column  # handle gracefully, just return the column as-is
-
-    @staticmethod
-    def _cast_column_to_online_type(
-        feature_column: pd.Series, online_type: str
-    ) -> pd.Series:
-        online_type = online_type.lower()
-        if online_type == "timestamp":
-            # convert (if tz!=UTC) to utc, then make timezone unaware
-            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
-        elif online_type == "date":
-            return pd.to_datetime(feature_column, utc=True).dt.date
-        elif online_type.startswith("varchar") or online_type == "text":
-            return feature_column.apply(lambda x: str(x) if x is not None else None)
-        elif online_type == "boolean":
-            return feature_column.apply(
-                lambda x: (ast.literal_eval(x) if isinstance(x, str) else x)
-                if (x is not None and x != "")
-                else None
-            )
-        elif online_type.startswith("decimal"):
-            return feature_column.apply(
-                lambda x: decimal.Decimal(x) if (x is not None) else None
-            )
-        else:
-            online_dtype_mapping = {
-                "bigint": pd.Int64Dtype(),
-                "int": pd.Int32Dtype(),
-                "smallint": pd.Int16Dtype(),
-                "tinyint": pd.Int8Dtype(),
-                "float": np.dtype("float32"),
-                "double": np.dtype("float64"),
-            }
-            if online_type in online_dtype_mapping:
-                casted_feature = feature_column.astype(
-                    online_dtype_mapping[online_type]
-                )
-                return casted_feature
-            else:
-                return feature_column  # handle gracefully, just return the column as-is
-
-    @staticmethod
-    def cast_columns(
-        df: pd.DataFrame, schema: List["feature.Feature"], online: bool = False
-    ) -> pd.DataFrame:
-        for _feat in schema:
-            if not online:
-                df[_feat.name] = Engine._cast_column_to_offline_type(
-                    df[_feat.name], _feat.type
-                )
-            else:
-                df[_feat.name] = Engine._cast_column_to_online_type(
-                    df[_feat.name], _feat.online_type
-                )
-        return df
 
     @staticmethod
     def is_connector_type_supported(connector_type: str) -> bool:
