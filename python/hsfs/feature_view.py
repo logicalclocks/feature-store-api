@@ -568,7 +568,7 @@ class FeatureView:
             force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
-            request_parameters: Request parameters required by on-demand transformation functions.
+            request_parameters: Request parameters required by on-demand transformation functions to compute on-demand features present in the feature view.
 
         # Returns
             `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
@@ -678,6 +678,7 @@ class FeatureView:
             force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
+            request_parameters: Request parameters required by on-demand transformation functions to compute on-demand features present in the feature view.
 
         # Returns
             `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
@@ -859,9 +860,6 @@ class FeatureView:
         the number of results returned may be less than k. Try using a large value of k and extract the top k
         items from the results if needed.
 
-        !!! warning "Duplicate column error in Polars"
-            If the feature view has duplicate column names, attempting to create a polars DataFrame
-            will raise an error. To avoid this, set `return_type` to `"list"` or `"pandas"`.
 
         # Arguments
             embedding: The target embedding for which neighbors are to be found.

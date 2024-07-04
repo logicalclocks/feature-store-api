@@ -33,6 +33,10 @@ from hsfs.transformation_statistics import TransformationStatistics
 
 
 class UDFType(Enum):
+    """
+    Class that store the possible types of transformation functions.
+    """
+
     MODEL_DEPENDENT = "model_dependent"
     ON_DEMAND = "on_demand"
 
@@ -111,11 +115,14 @@ class HopsworksUdf:
 
     Attributes
     ----------
-        output_type (List[str]) : Output types of the columns returned from the UDF.
         function_name (str) : Name of the UDF
-        statistics_required (bool) : True if statistics is required for any of the parameters of the UDF.
-        transformation_statistics (Dict[str, FeatureDescriptiveStatistics]): Dictionary that maps the statistics_argument name in the function to the actual statistics variable.
+        udf_type (UDFType): Type of the UDF can be either \"model dependent\" or \"on-demand\".
+        return_types (List[str]): The data types of the columns returned from the UDF.
         transformation_features (List[str]) : List of feature names to which the transformation function would be applied.
+        output_column_names (List[str]): Column names of the DataFrame returned after application of the transformation function.
+        dropped_features (List[str]): List of features that will be dropped after the UDF is applied.
+        transformation_statistics (Dict[str, FeatureDescriptiveStatistics]): Dictionary that maps the statistics_argument name in the function to the actual statistics variable.
+        statistics_required (bool) : True if statistics is required for any of the parameters of the UDF.
         statistics_features (List[str]) : List of feature names that requires statistics.
     """
 
@@ -715,6 +722,12 @@ def renaming_wrapper(*args):
         return hopsworks_udf
 
     def _validate_udf_type(self):
+        """
+        Function that returns validates if the defined transformation function can be used for the specified UDF type.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException` : If the UDF Type is None or if statistics or multiple columns has been output by a on-demand transformation function
+        """
         if self.udf_type is None:
             raise FeatureStoreException("UDF Type cannot be None")
 
@@ -785,7 +798,7 @@ def renaming_wrapper(*args):
     @property
     def statistics_features(self) -> List[str]:
         """
-        list of feature names that require statistics
+        List of feature names that require statistics
         """
         return [
             transformation_feature.feature_name
@@ -806,7 +819,7 @@ def renaming_wrapper(*args):
     @property
     def _statistics_argument_names(self) -> List[str]:
         """
-        list of argument names required for statistics
+        List of argument names required for statistics
         """
         return [
             transformation_feature.statistic_argument_name
@@ -827,6 +840,9 @@ def renaming_wrapper(*args):
 
     @property
     def dropped_features(self) -> List[str]:
+        """
+        List of features that will be dropped after the UDF is applied.
+        """
         if self._feature_name_prefix:
             return [
                 self._feature_name_prefix + dropped_feature

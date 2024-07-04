@@ -147,6 +147,15 @@ class TransformationFunctionEngine:
         feature_view: feature_view.FeatureView,
         training_dataset_version: Optional[int] = None,
     ) -> List[transformation_function.TransformationFunction]:
+        """
+        Function that updates statistics required for all transformation functions in the feature view based on training dataset version.
+
+        # Arguments
+            feature_view `FeatureView`: The feature view in which the training data is being created.
+            training_dataset_version `TrainingDataset`: The training version used to update the statistics used in the transformation functions.
+        # Returns
+            `List[transformation_function.TransformationFunction]` : List of transformation functions.
+        """
         # check if transformation functions require statistics
         is_stat_required = any(
             [

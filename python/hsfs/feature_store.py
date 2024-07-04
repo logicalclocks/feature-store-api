@@ -521,13 +521,26 @@ class FeatureStore:
             # connect to the Feature Store
             fs = ...
 
+            # define the on-demand transformation functions
+            @udf(int)
+            def plus_one(value):
+                return value + 1
+
+            @udf(int)
+            def plus_two(value):
+                return value + 2
+
+            # construct list of "transformation functions" on features
+            transformation_functions = [plus_one("feature1"), plus_two("feature2"))]
+
             fg = fs.create_feature_group(
                     name='air_quality',
                     description='Air Quality characteristics of each day',
                     version=1,
                     primary_key=['city','date'],
                     online_enabled=True,
-                    event_time='date'
+                    event_time='date',
+                    transformation_functions=transformation_functions
                 )
             ```
 
@@ -595,7 +608,9 @@ class FeatureStore:
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
-            transformation_functions: A list of Hopsworks UDF's. Defaults to `None`, no transformations.
+            transformation_functions: On-Demand Transformation functions attached to the feature group.
+                It can be a list of list of user defined functions defined using the hopsworks `@udf` decorator.
+                Defaults to `None`, no transformations.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -669,6 +684,7 @@ class FeatureStore:
                     primary_key=["day", "area"],
                     online_enabled=True,
                     event_time="timestamp",
+                    transformation_functions=transformation_functions,
                     )
             ```
 
@@ -734,7 +750,9 @@ class FeatureStore:
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
-            transformation_functions: A list of Hopsworks UDF's. Defaults to `None`, no transformations.
+            transformation_functions: On-Demand Transformation functions attached to the feature group.
+                It can be a list of list of user defined functions defined using the hopsworks `@udf` decorator.
+                Defaults to `None`, no transformations.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -1543,7 +1561,9 @@ class FeatureStore:
                 Training helper columns can be optionally fetched with training data. For more details see
                 documentation for feature view's get training data methods.  Defaults to `[], no training helper
                 columns.
-            transformation_functions: A list of Hopsworks UDF's. Defaults to `None`, no transformations.
+            transformation_functions: Model Dependent Transformation functions attached to the feature view.
+                It can be a list of list of user defined functions defined using the hopsworks `@udf` decorator.
+                Defaults to `None`, no transformations.
 
         # Returns:
             `FeatureView`: The feature view metadata object.
@@ -1618,7 +1638,9 @@ class FeatureStore:
                 Training helper columns can be optionally fetched with training data. For more details see
                 documentation for feature view's get training data methods.  Defaults to `[], no training helper
                 columns.
-            transformation_functions: A list of Hopsworks UDF's. Defaults to `None`, no transformations.
+            transformation_functions: Model Dependent Transformation functions attached to the feature view.
+                It can be a list of list of user defined functions defined using the hopsworks `@udf` decorator.
+                Defaults to `None`, no transformations.
 
         # Returns:
             `FeatureView`: The feature view metadata object.
