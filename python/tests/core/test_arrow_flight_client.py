@@ -184,27 +184,6 @@ class TestArrowFlightClient:
         # Assert
         assert mock_read_path.call_count == 1
 
-    def test_get_training_data_featureview_spark(self, mocker, backend_fixtures):
-        # Arrange
-        self._arrange_engine_mocks(mocker, backend_fixtures)
-        fv = self._arrange_featureview_mocks(mocker, backend_fixtures)
-        self._arrange_dataset_reads(mocker, backend_fixtures, "parquet")
-        stream = mocker.MagicMock()
-        stream.content = b""
-        mock_read_file = mocker.patch(
-            "hsfs.core.dataset_api.DatasetApi.read_content", return_value=stream
-        )
-        mock_read_pandas = mocker.patch(
-            "hsfs.engine.python.Engine._read_pandas", return_value=pd.DataFrame()
-        )
-
-        # Act
-        fv.get_training_data(1, read_options={"use_hive": True})
-
-        # Assert
-        assert mock_read_file.call_count == 1
-        assert mock_read_pandas.call_count == 1
-
     def test_construct_query_object(self, mocker, backend_fixtures):
         # Arrange
         self._arrange_engine_mocks(mocker, backend_fixtures)

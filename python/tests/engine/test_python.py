@@ -859,8 +859,8 @@ class TestPython:
 
         # Assert
         assert str(e_info.value) == (
-            "Hive engine on Python environments does not support incremental queries. "
-            + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+            "Incremental queries not supported in the python client."
+            + " Read feature group without timestamp to retrieve latest snapshot or switch to "
             + "environment with Spark Engine."
         )
 
@@ -893,8 +893,8 @@ class TestPython:
 
         # Assert
         assert str(e_info.value) == (
-            "Hive engine on Python environments does not support incremental queries. "
-            + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+            "Incremental queries not supported in the python client."
+            + " Read feature group without timestamp to retrieve latest snapshot or switch to "
             + "environment with Spark Engine."
         )
 
