@@ -3428,6 +3428,17 @@ class FeatureView:
         self._init_feature_monitoring_engine()
         return self
 
+    def transform_batch_data(self, features):
+        self._feature_view_engine.transform_batch_data(
+            features, self.transformation_functions
+        )
+
+    def transform_feature_vector(self, features):
+        return self.transform_feature_vectors([features])
+
+    def transform_feature_vectors(self, features):
+        return self._batch_scoring_server.transform_feature_vectors(features)
+
     def enable_logging(self) -> None:
         """Enable feature logging for the current feature view.
 

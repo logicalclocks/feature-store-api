@@ -765,7 +765,7 @@ class FeatureViewEngine:
             with_label=False,
             primary_keys=primary_keys,
             event_time=event_time,
-            inference_helper_columns=inference_helper_columns,
+            inference_helper_columns=inference_helper_columns or transformed,
             training_helper_columns=False,
             training_dataset_version=training_dataset_version,
             spine=spine,
@@ -776,6 +776,11 @@ class FeatureViewEngine:
             )
         else:
             return feature_dataframe
+
+    def transform_batch_data(self, features, transformation_functions):
+        return engine.get_instance()._apply_transformation_function(
+                transformation_functions, dataset=features
+            )
 
     def add_tag(
         self, feature_view_obj, name: str, value, training_dataset_version=None
