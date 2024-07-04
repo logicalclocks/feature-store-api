@@ -105,11 +105,14 @@ def kafka_get_offsets(
     return ""
 
 
-def _kafka_produce(
-    producer: Producer,
-    feature_group: Union[FeatureGroup, ExternalFeatureGroup],
+def kafka_produce(
     key: str,
     encoded_row: bytes,
+    producer: Producer,
+    topic_name: str,
+    feature_group_id: int,
+    subject_id: int,
+    project_id: int,
     acked: callable,
     offline_write_options: Dict[str, Any],
 ) -> None:
@@ -118,13 +121,13 @@ def _kafka_produce(
         try:
             # produce
             header = {
-                "projectId": str(feature_group.feature_store.project_id).encode("utf8"),
-                "featureGroupId": str(feature_group._id).encode("utf8"),
-                "subjectId": str(feature_group.subject["id"]).encode("utf8"),
+                "projectId": str(project_id).encode("utf8"),
+                "featureGroupId": str(feature_group_id).encode("utf8"),
+                "subjectId": str(subject_id).encode("utf8"),
             }
 
             producer.produce(
-                topic=feature_group._online_topic_name,
+                topic=topic_name,
                 key=key,
                 value=encoded_row,
                 callback=acked,
