@@ -250,6 +250,7 @@ class VectorServer:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed=True,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         online_client_choice = self.which_client_and_ensure_initialised(
@@ -281,6 +282,7 @@ class VectorServer:
             vector_db_result=vector_db_features or {},
             allow_missing=allow_missing,
             client=online_client_choice,
+            transformed=transformed,
         )
 
         return self.handle_feature_vector_return_type(
@@ -298,6 +300,7 @@ class VectorServer:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed=True,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
@@ -383,6 +386,7 @@ class VectorServer:
                 vector_db_result=vector_db_result,
                 allow_missing=allow_missing,
                 client=online_client_choice,
+                transformed=transformed,
             )
 
             if vector is not None:
@@ -399,6 +403,7 @@ class VectorServer:
         vector_db_result: Optional[Dict[str, Any]],
         allow_missing: bool,
         client: Literal["rest", "sql"],
+        transformed,
     ) -> Optional[List[Any]]:
         """Assembles serving vector from online feature store."""
         # Errors in batch requests are returned as None values
@@ -435,7 +440,7 @@ class VectorServer:
 
         if len(self.return_feature_value_handlers) > 0:
             self.apply_return_value_handlers(result_dict, client=client)
-        if len(self.transformation_functions) > 0:
+        if len(self.transformation_functions) > 0 and transformed:
             self.apply_transformation(result_dict)
 
         _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)

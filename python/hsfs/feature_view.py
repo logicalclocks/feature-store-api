@@ -465,6 +465,7 @@ class FeatureView:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed: Optional[bool] = True,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -563,6 +564,7 @@ class FeatureView:
             vector_db_features=vector_db_features,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
+            transformed=transformed,
         )
 
     def get_feature_vectors(
@@ -574,6 +576,7 @@ class FeatureView:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed: Optional[bool] = True,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -672,6 +675,7 @@ class FeatureView:
             vector_db_features=vector_db_features,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
+            transformed=transformed,
         )
 
     def get_inference_helper(
@@ -923,6 +927,7 @@ class FeatureView:
         event_time: bool = False,
         inference_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        transformed: Optional[bool] = True,
         **kwargs,
     ) -> TrainingDatasetDataFrameTypes:
         """Get a batch of data from an event time interval from the offline feature store.
@@ -1001,6 +1006,7 @@ class FeatureView:
             event_time,
             inference_helper_columns,
             dataframe_type,
+            transformed=transformed,
         )
 
     def add_tag(self, name: str, value: Any) -> None:

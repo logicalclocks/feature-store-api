@@ -748,6 +748,7 @@ class FeatureViewEngine:
         event_time=False,
         inference_helper_columns=False,
         dataframe_type="default",
+        transformed=True,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
@@ -769,7 +770,7 @@ class FeatureViewEngine:
             training_dataset_version=training_dataset_version,
             spine=spine,
         ).read(read_options=read_options, dataframe_type=dataframe_type)
-        if transformation_functions:
+        if transformation_functions and transformed:
             return engine.get_instance()._apply_transformation_function(
                 transformation_functions, dataset=feature_dataframe
             )
