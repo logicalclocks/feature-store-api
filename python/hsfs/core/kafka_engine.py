@@ -56,21 +56,42 @@ def init_kafka_consumer(
 def init_kafka_resources(
     feature_group: Union[FeatureGroup, ExternalFeatureGroup],
     offline_write_options: Dict[str, Any],
-) -> Tuple[Producer, Dict[str, Callable], Callable]:
-    # setup kafka producer
-    producer = init_kafka_producer(
-        feature_group.feature_store_id, offline_write_options
-    )
+) -> Tuple[
+    Producer, Dict[str, bytes], Dict[str, Callable[..., bytes]], Callable[..., bytes] :
+]:
+    if feature_group._multi_part_insert and feature_group._kafka_producer:
+        return (
+            feature_group._kafka_producer,
+            feature_group._kafka_headers,
+            feature_group._feature_writers,
+            feature_group._writer,
+        )
+    else:
+        # setup kafka producer
+        producer = init_kafka_producer(
+            feature_group.feature_store_id, offline_write_options
+        )
+        # setup complex feature writers
+        feature_writers = {
+            feature: get_encoder_func(feature_group._get_feature_avro_schema(feature))
+            for feature in feature_group.get_complex_features()
+        }
+        # setup row writer function
+        writer = get_encoder_func(feature_group._get_encoded_avro_schema())
 
-    # setup complex feature writers
-    feature_writers = {
-        feature: get_encoder_func(feature_group._get_feature_avro_schema(feature))
-        for feature in feature_group.get_complex_features()
-    }
+        # custom headers for hopsworks onlineFS
+        headers = {
+            "projectId": str(feature_group.feature_store.project_id).encode("utf8"),
+            "featureGroupId": str(feature_group._id).encode("utf8"),
+            "subjectId": str(feature_group.subject["id"]).encode("utf8"),
+        }
+        if feature_group._multi_part_insert:
+            feature_group._kafka_producer = producer
+            feature_group._kafka_headers = headers
+            feature_group._feature_writers = feature_writers
+            feature_group._writer = writer
 
-    # setup row writer function
-    writer = get_encoder_func(feature_group._get_encoded_avro_schema())
-    return producer, feature_writers, writer
+    return producer, headers, feature_writers, writer
 
 
 def init_kafka_producer(
@@ -111,35 +132,27 @@ def kafka_produce(
     encoded_row: bytes,
     producer: Producer,
     topic_name: str,
-    feature_group_id: int,
-    subject_id: int,
-    project_id: int,
+    headers: Dict[str, bytes],
     acked: callable,
-    offline_write_options: Dict[str, Any],
+    debug_kafka: bool = False,
 ) -> None:
     while True:
         # if BufferError is thrown, we can be sure, message hasn't been send so we retry
         try:
             # produce
-            header = {
-                "projectId": str(project_id).encode("utf8"),
-                "featureGroupId": str(feature_group_id).encode("utf8"),
-                "subjectId": str(subject_id).encode("utf8"),
-            }
-
             producer.produce(
                 topic=topic_name,
                 key=key,
                 value=encoded_row,
                 callback=acked,
-                headers=header,
+                headers=headers,
             )
 
             # Trigger internal callbacks to empty op queue
             producer.poll(0)
             break
         except BufferError as e:
-            if offline_write_options.get("debug_kafka", False):
+            if debug_kafka:
                 print("Caught: {}".format(e))
             # backoff for 1 second
             producer.poll(1)

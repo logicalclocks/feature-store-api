@@ -1286,29 +1286,16 @@ class Engine:
         offline_write_options: Dict[str, Any],
     ) -> Optional[job.Job]:
         initial_check_point = ""
-        if feature_group._multi_part_insert:
-            if feature_group._kafka_producer is None:
-                producer, feature_writers, writer = kafka_engine.init_kafka_resources(
-                    feature_group, offline_write_options
-                )
-                feature_group._kafka_producer = producer
-                feature_group._feature_writers = feature_writers
-                feature_group._writer = writer
-            else:
-                producer = feature_group._kafka_producer
-                feature_writers = feature_group._feature_writers
-                writer = feature_group._writer
-        else:
-            producer, feature_writers, writer = kafka_engine.init_kafka_resources(
-                feature_group, offline_write_options
-            )
-
+        producer, headers, feature_writers, writer = kafka_engine.init_kafka_resources(
+            feature_group, offline_write_options
+        )
+        if not feature_group._multi_part_insert:
             # set initial_check_point to the current offset
             initial_check_point = kafka_engine.kafka_get_offsets(
                 feature_group, offline_write_options, True
             )
 
-        acked, progress_bar = kafka_engine.build_ack_callback_and_progress_bar(
+        acked, progress_bar = kafka_engine.build_ack_callback_and_optional_progress_bar(
             n_rows=dataframe.shape[0],
             is_multi_part_insert=feature_group._multi_part_insert,
             offline_write_options=offline_write_options,
@@ -1353,7 +1340,12 @@ class Engine:
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
             kafka_engine.kafka_produce(
-                key, encoded_row, producer, feature_group, acked, offline_write_options
+                key=key,
+                encoded_row=encoded_row,
+                producer=producer,
+                headers=headers,
+                acked=acked,
+                debug_kafka=offline_write_options.get("debug_kafka", False),
             )
 
         # make sure producer blocks and everything is delivered
@@ -1361,13 +1353,11 @@ class Engine:
             producer.flush()
             progress_bar.close()
 
-        # start materialization job
+        # start materialization job if not an external feature group, otherwise return None
+        if isinstance(feature_group, ExternalFeatureGroup):
+            return None
         # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
-        if (
-            not isinstance(feature_group, ExternalFeatureGroup)
-            and not initial_check_point
-            and not feature_group._multi_part_insert
-        ):
+        if not initial_check_point and not feature_group._multi_part_insert:
             if self._start_offline_materialization(offline_write_options):
                 warnings.warn(
                     "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
@@ -1375,7 +1365,7 @@ class Engine:
                     stacklevel=1,
                 )
             # set the initial_check_point to the lowest offset (it was not set previously due to topic not existing)
-            initial_check_point = self._kafka_get_offsets(
+            initial_check_point = kafka_engine.kafka_get_offsets(
                 feature_group, offline_write_options, False
             )
             feature_group.materialization_job.run(
@@ -1383,9 +1373,7 @@ class Engine:
                 + initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
-        elif not isinstance(
-            feature_group, ExternalFeatureGroup
-        ) and self._start_offline_materialization(offline_write_options):
+        elif self._start_offline_materialization(offline_write_options):
             if not offline_write_options.get(
                 "skip_offsets", False
             ) and self._job_api.last_execution(
@@ -1399,8 +1387,6 @@ class Engine:
                 + initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
-        if isinstance(feature_group, ExternalFeatureGroup):
-            return None
         return feature_group.materialization_job
 
     @staticmethod
