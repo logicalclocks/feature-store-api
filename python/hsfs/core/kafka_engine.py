@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 from io import BytesIO
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Literal, Optional, Tuple, Union
 
 from hsfs import client
 from hsfs.client import hopsworks
@@ -180,7 +180,9 @@ def get_encoder_func(writer_schema: str) -> callable:
 
 
 def get_kafka_config(
-    feature_store_id: int, write_options: Optional[Dict[str, Any]] = None
+    feature_store_id: int,
+    write_options: Optional[Dict[str, Any]] = None,
+    engine: Literal["spark", "confluent"] = "confluent",
 ) -> Dict[str, Any]:
     if write_options is None:
         write_options = {}
@@ -193,7 +195,10 @@ def get_kafka_config(
         feature_store_id, external
     )
 
-    config = storage_connector.confluent_options()
+    if engine == "spark":
+        config = storage_connector.spark_options()
+    elif engine == "confluent":
+        config = storage_connector.confluent_options()
     config.update(write_options.get("kafka_producer_config", {}))
     return config
 
