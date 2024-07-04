@@ -112,7 +112,10 @@ if HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
 if HAS_AIOMYSQL and HAS_SQLALCHEMY:
-    import util_sql
+    from hsfs.core import util_sql
+
+if HAS_SQLALCHEMY:
+    from sqlalchemy import sql
 
 # Decimal types are currently not supported
 _INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]

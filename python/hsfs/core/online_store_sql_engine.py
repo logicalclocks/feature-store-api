@@ -21,18 +21,26 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-import aiomysql
-import aiomysql.utils
 from hsfs import feature_view, storage_connector, training_dataset, util
 from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
 from hsfs.core import (
     feature_view_api,
     storage_connector_api,
     training_dataset_api,
-    util_sql,
 )
+from hsfs.core.constants import HAS_AIOMYSQL, HAS_SQLALCHEMY
 from hsfs.serving_key import ServingKey
-from sqlalchemy import bindparam, exc, sql, text
+
+
+if HAS_AIOMYSQL:
+    import aiomysql
+    import aiomysql.utils
+
+if HAS_SQLALCHEMY:
+    from sqlalchemy import bindparam, exc, sql, text
+
+if HAS_AIOMYSQL and HAS_SQLALCHEMY:
+    from hsfs.core import util_sql
 
 
 _logger = logging.getLogger(__name__)
@@ -530,7 +538,7 @@ class OnlineStoreSqlClient:
         ]
 
     async def _get_connection_pool(self, default_min_size: int) -> None:
-        self._connection_pool = await util.create_async_engine(
+        self._connection_pool = await util_sql.create_async_engine(
             self._online_connector,
             self._external,
             default_min_size,
