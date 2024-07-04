@@ -955,11 +955,7 @@ class FeatureView:
             end_time: End event time for the batch query, exclusive. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            read_options: User provided read options.
-                Dictionary of read options for python engine:
-                * key `"use_hive"` and value `True` to read batch data with Hive instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
-                Defaults to `{}`.
+            read_options: User provided read options for python engine, defaults to `{}`:
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
             spine: Spine dataframe with primary key, event time and
@@ -2137,13 +2133,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, read_options can contain the
                 following entries:
-                * key `"use_hive"` and value `True` to create in-memory training dataset
-                  with Hive instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
-                  For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`.
                 * key `spark` and value an object of type
                   [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -2304,13 +2295,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, read_options can contain the
                 following entries:
-                * key `"use_hive"` and value `True` to create in-memory training dataset
-                  with Hive instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                   [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -2511,13 +2497,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, read_options can contain the
                 following entries:
-                * key `"use_hive"` and value `True` to create in-memory training dataset
-                  with Hive instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                   [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -2658,13 +2639,8 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
-                * key `"use_hive"` and value `True` to read training dataset
-                  with the Hopsworks API instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
@@ -2729,13 +2705,8 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
-                * key `"use_hive"` and value `True` to read training dataset
-                  with the Hopsworks API instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
@@ -2804,13 +2775,8 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
-                * key `"use_hive"` and value `True` to read training dataset
-                  with the Hopsworks API instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.

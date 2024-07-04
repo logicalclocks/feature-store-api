@@ -18,7 +18,6 @@ from __future__ import annotations
 import ast
 import decimal
 import json
-import logging
 import math
 import numbers
 import os
@@ -81,7 +80,6 @@ from hsfs.core import (
     training_dataset_api,
     training_dataset_job_conf,
     transformation_function_engine,
-    variable_api,
 )
 from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.core.vector_db_client import VectorDbClient
@@ -89,15 +87,9 @@ from hsfs.decorators import uses_great_expectations
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from pyhive import hive
-from pyhive.exc import OperationalError
 from sqlalchemy import sql
-from thrift.transport.TTransport import TTransportException
 from tqdm.auto import tqdm
 
-
-# Disable pyhive INFO logging
-logging.getLogger("pyhive").setLevel(logging.WARNING)
 
 HAS_FAST = False
 try:
@@ -177,7 +169,7 @@ class Engine:
         self,
         sql_query: str,
         feature_store: feature_store.FeatureStore,
-        online_conn: Optional["sc.OnlineStorageConnector"],
+        online_conn: Optional["sc.JdbcConnector"],
         dataframe_type: str,
         read_options: Optional[Dict[str, Any]],
         schema: Optional[List["feature.Feature"]] = None,
@@ -188,7 +180,6 @@ class Engine:
                 feature_store,
                 dataframe_type,
                 schema,
-                hive_config=read_options.get("hive_config") if read_options else None,
                 arrow_flight_config=read_options.get("arrow_flight_config", {})
                 if read_options
                 else {},
@@ -218,10 +209,8 @@ class Engine:
     def _sql_offline(
         self,
         sql_query: str,
-        feature_store: feature_store.FeatureStore,
         dataframe_type: str,
         schema: Optional[List["feature.Feature"]] = None,
-        hive_config: Optional[Dict[str, Any]] = None,
         arrow_flight_config: Optional[Dict[str, Any]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         self._validate_dataframe_type(dataframe_type)
@@ -234,26 +223,9 @@ class Engine:
                 dataframe_type,
             )
         else:
-            with self._create_hive_connection(
-                feature_store, hive_config=hive_config
-            ) as hive_conn:
-                # Suppress SQLAlchemy pandas warning
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", UserWarning)
-                    if dataframe_type.lower() == "polars":
-                        result_df = util.run_with_loading_animation(
-                            "Reading data from Hopsworks, using Hive",
-                            pl.read_database,
-                            sql_query,
-                            hive_conn,
-                        )
-                    else:
-                        result_df = util.run_with_loading_animation(
-                            "Reading data from Hopsworks, using Hive",
-                            pd.read_sql,
-                            sql_query,
-                            hive_conn,
-                        )
+            raise ValueError(
+                "Reading data with Hive is not supported when using hopsworks client version >= 4.0"
+            )
         if schema:
             result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -261,13 +233,12 @@ class Engine:
     def _jdbc(
         self,
         sql_query: str,
-        connector: "sc.OnlineStorageConnector",
+        connector: sc.JdbcConnector,
         dataframe_type: str,
         read_options: Optional[Dict[str, Any]],
         schema: Optional[List["feature.Feature"]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         self._validate_dataframe_type(dataframe_type)
-
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
                 connector,
@@ -290,11 +261,11 @@ class Engine:
 
     def read(
         self,
-        storage_connector: "sc.StorageConnector",
+        storage_connector: sc.StorageConnector,
         data_format: str,
         read_options: Optional[Dict[str, Any]],
         location: Optional[str],
-        dataframe_type: str,
+        dataframe_type: Literal["polars", "pandas", "default"],
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
@@ -345,7 +316,9 @@ class Engine:
                 )
             )
 
-    def _read_polars(self, data_format: str, obj: Any) -> pl.DataFrame:
+    def _read_polars(
+        self, data_format: Literal["csv", "tsv", "parquet"], obj: Any
+    ) -> pl.DataFrame:
         if data_format.lower() == "csv":
             return pl.read_csv(obj)
         elif data_format.lower() == "tsv":
@@ -520,7 +493,7 @@ class Engine:
         sql_query: str,
         feature_store: feature_store.FeatureStore,
         n: int,
-        online_conn: "sc.OnlineStorageConnector",
+        online_conn: "sc.JdbcConnector",
         read_options: Optional[Dict[str, Any]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         return self.sql(
@@ -562,8 +535,8 @@ class Engine:
             or hudi_fg_alias.left_feature_group_start_timestamp is not None
         ):
             raise FeatureStoreException(
-                "Hive engine on Python environments does not support incremental queries. "
-                + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+                +"Incremental queries not supported in the python client."
+                + " Read feature group without timestamp to retrieve latest snapshot or switch to "
                 + "environment with Spark Engine."
             )
 
@@ -1133,41 +1106,6 @@ class Engine:
             await_termination=user_write_options.get("wait_for_job", True)
         )
         return td_job
-
-    def _create_hive_connection(
-        self,
-        feature_store: feature_store.FeatureStore,
-        hive_config: Optional[Dict[str, Any]] = None,
-    ) -> hive.Connection:
-        host = variable_api.VariableApi().get_loadbalancer_external_domain()
-        if host == "":
-            # If the load balancer is not configured, then fall back to use
-            # the hive server on the head node
-            host = client.get_instance().host
-
-        try:
-            return hive.Connection(
-                host=host,
-                port=9085,
-                # database needs to be set every time, 'default' doesn't work in pyhive
-                database=feature_store,
-                configuration=hive_config,
-                auth="CERTIFICATES",
-                truststore=client.get_instance()._get_jks_trust_store_path(),
-                keystore=client.get_instance()._get_jks_key_store_path(),
-                keystore_password=client.get_instance()._cert_key,
-            )
-        except (TTransportException, AttributeError) as err:
-            raise ValueError(
-                f"Cannot connect to hive server. Please check the host name '{client.get_instance()._host}' "
-                "is correct and make sure port '9085' is open on host server."
-            ) from err
-        except OperationalError as err:
-            if err.args[0].status.statusCode == 3:
-                raise RuntimeError(
-                    f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
-                    f" It is possible to request access from data owners of '{feature_store}'."
-                ) from err
 
     def _return_dataframe_type(
         self, dataframe: Union[pd.DataFrame, pl.DataFrame], dataframe_type: str

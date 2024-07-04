@@ -33,10 +33,14 @@ def init(engine_type: str) -> None:
         if engine_type == "spark":
             _engine_type = "spark"
             _engine = spark.Engine()
+        elif engine_type == "hive":
+            raise ValueError(
+                "Hive engine is not supported in hopsworks client version >= 4.0."
+            )
         elif engine_type == "spark-no-metastore":
             _engine_type = "spark-no-metastore"
             _engine = spark_no_metastore.Engine()
-        elif engine_type in ["hive", "python", "training"]:
+        elif engine_type in ["python", "training"]:
             try:
                 from hsfs.engine import python
             except ImportError as err:
