@@ -938,7 +938,9 @@ class FeatureViewEngine:
 
     def enable_feature_logging(self, fv):
         self._feature_view_api.enable_feature_logging(fv.name, fv.version)
-        fv.enabled_logging = self.get(fv.name, fv.version).enabled_logging
+        fv.logging_enabled = self.get(fv.name, fv.version).logging_enabled
+        if not fv.logging_enabled:
+            warnings.warn("Feature logging does not enable successfully.")
         return fv
 
     def get_feature_logging(self, fv):

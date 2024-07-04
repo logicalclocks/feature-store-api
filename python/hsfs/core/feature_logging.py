@@ -1,14 +1,14 @@
 import json
-from typing import Any, Dict
-
-import hsfs.feature_group as feature_group
 import humps
-from hsfs import util
+from typing import Any, Dict
+from hsfs import util, feature_group
 
 
 class FeatureLogging:
 
-    def __init__(self, id, transformed_features, untransformed_features):
+    def __init__(self, id: int,
+                 transformed_features: feature_group.FeatureGroup,
+                 untransformed_features: feature_group.FeatureGroup):
         self._id = id
         self._transformed_features = transformed_features
         self._untransformed_features = untransformed_features

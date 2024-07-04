@@ -102,7 +102,7 @@ class FeatureView:
         ] = None,
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[skm.ServingKey]] = None,
-        enabled_logging: bool = False,
+        logging_enabled: Optional[bool] = False,
         **kwargs,
     ) -> None:
         self._name = name
@@ -145,7 +145,7 @@ class FeatureView:
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
-        self._enabled_logging = enabled_logging
+        self._logging_enabled = logging_enabled
 
         if self._id:
             self._init_feature_monitoring_engine()
@@ -539,6 +539,7 @@ class FeatureView:
             force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
+            transformed: Setting to `False` returns the untransformed feature vectors.
 
         # Returns
             `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
@@ -648,6 +649,7 @@ class FeatureView:
             force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
+            transformed: Setting to `False` returns the untransformed feature vectors.
 
         # Returns
             `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
@@ -983,6 +985,8 @@ class FeatureView:
             dataframe_type: str, optional. The type of the returned dataframe.
                 Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
                 Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
+            transformed: Setting to `False` returns the untransformed feature vectors.
+
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
@@ -3387,7 +3391,7 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
-            enabled_logging=json_decamelized.get('enabled_logging', False),
+            logging_enabled=json_decamelized.get('enabled_logging', False),
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3463,7 +3467,7 @@ class FeatureView:
 
     def log(self,
             features: Union[pd.DataFrame, list[list], np.ndarray],
-            prediction: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
+            predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
             transformed: Optional[bool]=False,
             write_options: Optional[Dict[str, Any]] = None,
             training_dataset_version: Optional[int]=None,
@@ -3479,7 +3483,7 @@ class FeatureView:
             transformed: Whether the features are transformed. Defaults to False.
             write_options: Options for writing the log. Defaults to None.
             training_dataset_version: Version of the training dataset. Defaults to None.
-            hsml_model: hsml.model.Model` HSML model associated with the log. Defaults to None.
+            hsml_model: `hsml.model.Model` HSML model associated with the log. Defaults to None.
 
         # Example
             ```python
@@ -3492,7 +3496,7 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to log features.
         """
-        if not self.enabled_logging:
+        if not self.logging_enabled:
             self.enable_logging()
         return self._feature_view_engine.log_features(
             self, features, prediction, transformed,
@@ -3618,7 +3622,7 @@ class FeatureView:
         return self._feature_view_engine.materialize_log(self, wait)
 
     def delete_log(self, transformed: Optional[bool]=None):
-        """Delete the log for the current feature view.
+        """Delete the logged feature data for the current feature view.
 
          # Arguments
              transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
@@ -3666,7 +3670,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
-            "enabledLogging": self._enabled_logging,
+            "enabledLogging": self._logging_enabled,
             "type": "featureViewDTO",
         }
 
@@ -3838,9 +3842,9 @@ class FeatureView:
         self._serving_keys = serving_keys
 
     @property
-    def enabled_logging(self) -> bool:
-        return self._enabled_logging
+    def logging_enabled(self) -> bool:
+        return self._logging_enabled
 
-    @enabled_logging.setter
-    def enabled_logging(self, enable_logging) -> None:
-        self._enabled_logging = enable_logging
+    @logging_enabled.setter
+    def logging_enabled(self, logging_enabled) -> None:
+        self._logging_enabled = logging_enabled

@@ -47,9 +47,9 @@ class FeatureViewApi:
     _LOGGING = "log"
     _PAUSE_LOGGING = "pause"
     _RESUME_LOGGING = "resume"
-    _MATERIALIZE_LOGGING = "execute"
-    _TRANSFORMED = "transformed"
-    _UNTRANSFORMED = "untransformed"
+    _MATERIALIZE_LOGGING = "materialize"
+    _TRANSFORMED_lOG = "transformed"
+    _UNTRANSFORMED_LOG = "untransformed"
 
 
     def __init__(self, feature_store_id: int) -> None:
@@ -457,7 +457,7 @@ class FeatureViewApi:
         ]
         if transformed is not None:
             if transformed:
-                path_params += [self._TRANSFORMED]
+                path_params += [self._TRANSFORMED_lOG]
             else:
-                path_params += [self._UNTRANSFORMED]
+                path_params += [self._UNTRANSFORMED_LOG]
         _client._send_request("DELETE", path_params, {})
