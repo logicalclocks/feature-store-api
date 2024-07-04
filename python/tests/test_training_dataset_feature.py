@@ -16,6 +16,7 @@
 
 
 from hsfs import feature_group, training_dataset_feature
+from hsfs.hopsworks_udf import UDFType
 
 
 class TestTrainingDatasetFeature:
@@ -32,6 +33,40 @@ class TestTrainingDatasetFeature:
         assert td_feature.name == "test_name"
         assert td_feature.type == "test_type"
         assert td_feature.index == "test_index"
+        assert isinstance(td_feature._feature_group, feature_group.FeatureGroup)
+        assert (
+            td_feature._feature_group_feature_name == "test_feature_group_feature_name"
+        )
+        assert td_feature.label == "test_label"
+
+    def test_from_response_json_on_demand_transformation(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["training_dataset_feature"]["get_transformations"][
+            "response"
+        ]
+
+        # Act
+        td_feature = training_dataset_feature.TrainingDatasetFeature.from_response_json(
+            json
+        )
+
+        # Assert
+        assert td_feature.name == "test_name"
+        assert td_feature.type == "test_type"
+        assert td_feature.index == "test_index"
+        assert (
+            td_feature.on_demand_transformation_function.hopsworks_udf.function_name
+            == "add_one_fs"
+        )
+
+        assert (
+            td_feature.on_demand_transformation_function.hopsworks_udf._function_source
+            == "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
+        )
+        assert (
+            td_feature.on_demand_transformation_function.hopsworks_udf.udf_type
+            == UDFType.ON_DEMAND
+        )
         assert isinstance(td_feature._feature_group, feature_group.FeatureGroup)
         assert (
             td_feature._feature_group_feature_name == "test_feature_group_feature_name"

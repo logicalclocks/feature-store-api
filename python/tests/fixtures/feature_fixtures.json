@@ -9,6 +9,22 @@
       "partition": false,
       "primary": true,
       "type": "int",
+      "on_demand": false,
+      "description": "test_description",
+      "feature_group": null
+    }
+  },
+  "get_on_demand": {
+    "response": {
+      "defaultValue": "1",
+      "featureGroupId": 15,
+      "hudiPrecombineKey": true,
+      "name": "intt",
+      "onlineType": "int",
+      "partition": false,
+      "primary": true,
+      "type": "int",
+      "on_demand": true,
       "description": "test_description",
       "feature_group": null
     }

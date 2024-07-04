@@ -36,6 +36,26 @@ class TestFeature:
         assert f.online_type == "int"
         assert f.default_value == "1"  # default value should be specified as string
         assert f._feature_group_id == 15
+        assert not f.on_demand
+
+    def test_from_response_json_on_demand(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["feature"]["get_on_demand"]["response"]
+
+        # Act
+        f = feature.Feature.from_response_json(json)
+
+        # Assert
+        assert f.name == "intt"
+        assert f.type == "int"
+        assert f.description == "test_description"
+        assert f.primary is True
+        assert f.partition is False
+        assert f.hudi_precombine_key is True
+        assert f.online_type == "int"
+        assert f.default_value == "1"  # default value should be specified as string
+        assert f._feature_group_id == 15
+        assert f.on_demand
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange

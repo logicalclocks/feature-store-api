@@ -206,7 +206,8 @@ class HopsworksUdf:
 
         missing_drop_features = []
         for dropped_feature in dropped_features:
-            if feature_name_prefix + dropped_feature not in transformation_feature:
+            dropped_feature = feature_name_prefix + dropped_feature
+            if dropped_feature not in transformation_feature:
                 missing_drop_features.append(dropped_feature)
 
         if missing_drop_features:
