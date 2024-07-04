@@ -13,3 +13,8 @@ great_expectations_not_installed_message = (
     "You will need to restart your kernel if applicable."
 )
 initialise_expectation_suite_for_single_expectation_api_message = "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+
+HAS_ARROW: bool = importlib.util.find_spec("pyarrow") is not None
+HAS_PANDAS: bool = importlib.util.find_spec("pandas") is not None
+HAS_NUMPY: bool = importlib.util.find_spec("numpy") is not None
+HAS_POLARS: bool = importlib.util.find_spec("polars") is not None
