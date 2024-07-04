@@ -3429,8 +3429,8 @@ class FeatureView:
         return self
 
     def transform_batch_data(self, features):
-        self._feature_view_engine.transform_batch_data(
-            features, self.transformation_functions
+        return self._feature_view_engine.transform_batch_data(
+            features, self._batch_scoring_server._transformation_functions
         )
 
     def transform_feature_vector(self, features):

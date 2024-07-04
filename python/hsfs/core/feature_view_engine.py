@@ -779,7 +779,7 @@ class FeatureViewEngine:
 
     def transform_batch_data(self, features, transformation_functions):
         return engine.get_instance()._apply_transformation_function(
-                transformation_functions, dataset=features
+                transformation_functions, dataset=features, inplace=False
             )
 
     def add_tag(
@@ -957,7 +957,8 @@ class FeatureViewEngine:
         default_write_options = {
             "start_offline_materialization": False,
         }
-        default_write_options.update(write_options)
+        if write_options:
+            default_write_options.update(write_options)
         fg = self._get_logging_fg(fv, transformed)
         df = engine.get_instance().get_feature_logging_df(
             fg,
