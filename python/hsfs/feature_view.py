@@ -3497,6 +3497,10 @@ class FeatureView:
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to log features.
         """
         if not self.logging_enabled:
+            warnings.warn(
+                "Feature logging is not enabled. It may take longer to enable logging before logging the features. You can call `feature_view.enable_logging()` to enable logging beforehand.",
+                stacklevel=1,
+            )
             self.enable_logging()
         return self._feature_view_engine.log_features(
             self, features, predictions, transformed,
