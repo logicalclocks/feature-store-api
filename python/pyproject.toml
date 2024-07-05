@@ -50,14 +50,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-hive = [
-    "pyhopshive[thrift]",
-    "pyarrow>=10.0",
-    "confluent-kafka<=2.3.0",
-    "fastavro>=1.4.11,<=1.8.4",
-]
 python = [
-    "pyhopshive[thrift]",
     "pyarrow>=10.0",
     "confluent-kafka<=2.3.0",
     "fastavro>=1.4.11,<=1.8.4",

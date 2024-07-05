@@ -215,9 +215,9 @@ class Connection:
                 self._engine is None and importlib.util.find_spec("pyspark")
             ):
                 self._engine = "spark"
-            elif (
-                self._engine is not None and self._engine.lower() in ["hive", "python"]
-            ) or (self._engine is None and not importlib.util.find_spec("pyspark")):
+            elif (self._engine is not None and self._engine.lower() == "python") or (
+                self._engine is None and not importlib.util.find_spec("pyspark")
+            ):
                 self._engine = "python"
             elif self._engine is not None and self._engine.lower() == "training":
                 self._engine = "training"
