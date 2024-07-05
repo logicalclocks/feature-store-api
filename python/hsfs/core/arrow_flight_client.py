@@ -92,9 +92,7 @@ def _should_retry_healthcheck_or_certificate_registration(exception):
 def is_data_format_supported(data_format: str, read_options: Optional[Dict[str, Any]]):
     if data_format not in ArrowFlightClient.SUPPORTED_FORMATS:
         return False
-    elif read_options and (
-        read_options.get("use_hive", False) or read_options.get("use_spark", False)
-    ):
+    elif read_options and read_options.get("use_spark", False):
         return False
     else:
         return get_instance()._should_be_used()
@@ -122,9 +120,7 @@ def _is_query_supported_rec(query: query.Query):
 
 
 def is_query_supported(query: query.Query, read_options: Optional[Dict[str, Any]]):
-    if read_options and (
-        read_options.get("use_hive", False) or read_options.get("use_spark", False)
-    ):
+    if read_options and read_options.get("use_spark", False):
         return False
     elif not _is_query_supported_rec(query):
         return False
@@ -138,12 +134,12 @@ class ArrowFlightClient:
         StorageConnector.SNOWFLAKE,
         StorageConnector.BIGQUERY,
     ]
-    READ_ERROR = 'Could not read data using Hopsworks Feature Query Service. If the issue persists, use read_options={"use_hive": True} instead.'
+    READ_ERROR = "Could not read data using Hopsworks Feature Query Service."
     WRITE_ERROR = 'Could not write data using Hopsworks Feature Query Service. If the issue persists, use write_options={"use_spark": True} instead.'
     DEFAULTING_TO_DIFFERENT_SERVICE_WARNING = (
-        "Defaulting to Hive/Spark execution for this call."
+        "Defaulting to Spark execution for this call."
     )
-    CLIENT_WILL_STAY_ACTIVE_WARNING = 'The client will remain active for future calls. If the issue persists, use read_options={"use_hive": True} or write_options={"use_spark": True}.'
+    CLIENT_WILL_STAY_ACTIVE_WARNING = 'The client will remain active for future calls. If the issue persists write_options={"use_spark": True}.'
     DEFAULT_TIMEOUT_SECONDS = 900
     DEFAULT_HEALTHCHECK_TIMEOUT_SECONDS = 5
     DEFAULT_GRPC_MIN_RECONNECT_BACKOFF_MS = 2000
@@ -192,7 +188,7 @@ class ArrowFlightClient:
             self._health_check()
             self._register_certificates()
         except Exception as e:
-            _logger.debug("Failed to connect to Hopsworks Feature Query Service")
+            _logger.debug("Failed to connect to Hopsworks Feature Query Service.")
             _logger.exception(e)
             warnings.warn(
                 f"Failed to connect to Hopsworks Feature Query Service, got {str(e)}."

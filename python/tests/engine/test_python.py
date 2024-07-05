@@ -87,45 +87,11 @@ class TestPython:
         assert mock_python_engine_sql_offline.call_count == 0
         assert mock_python_engine_jdbc.call_count == 1
 
-    def test_sql_offline(self, mocker):
-        # Arrange
-        mock_python_engine_create_hive_connection = mocker.patch(
-            "hsfs.engine.python.Engine._create_hive_connection"
-        )
-        mock_python_engine_return_dataframe_type = mocker.patch(
-            "hsfs.engine.python.Engine._return_dataframe_type"
-        )
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine._sql_offline(
-            sql_query="", feature_store=None, dataframe_type="default"
-        )
-
-        # Assert
-        assert mock_python_engine_create_hive_connection.call_count == 1
-        assert mock_python_engine_return_dataframe_type.call_count == 1
-
-    def test_sql_offline_dataframe_type_none(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.engine.python.Engine._create_hive_connection")
-
-        python_engine = python.Engine()
-
-        with pytest.raises(exceptions.FeatureStoreException) as fstore_except:
-            # Act
-            python_engine._sql_offline(
-                sql_query="", feature_store=None, dataframe_type=None
-            )
-        assert (
-            str(fstore_except.value)
-            == 'dataframe_type : None not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
-        )
-
     def test_jdbc(self, mocker):
         # Arrange
-        mock_util_create_mysql_engine = mocker.patch("hsfs.util.create_mysql_engine")
+        mock_util_create_mysql_engine = mocker.patch(
+            "hsfs.core.util_sql.create_mysql_engine"
+        )
         mocker.patch("hsfs.client.get_instance")
         mock_python_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.python.Engine._return_dataframe_type"
@@ -145,7 +111,7 @@ class TestPython:
 
     def test_jdbc_dataframe_type_none(self, mocker):
         # Arrange
-        mocker.patch("hsfs.util.create_mysql_engine")
+        mocker.patch("hsfs.core.util_sql.create_mysql_engine")
         mocker.patch("hsfs.client.get_instance")
         query = "SELECT * FROM TABLE"
 
@@ -165,7 +131,9 @@ class TestPython:
 
     def test_jdbc_read_options(self, mocker):
         # Arrange
-        mock_util_create_mysql_engine = mocker.patch("hsfs.util.create_mysql_engine")
+        mock_util_create_mysql_engine = mocker.patch(
+            "hsfs.core.util_sql.create_mysql_engine"
+        )
         mocker.patch("hsfs.client.get_instance")
         mock_python_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.python.Engine._return_dataframe_type"
@@ -895,8 +863,8 @@ class TestPython:
 
         # Assert
         assert str(e_info.value) == (
-            "Hive engine on Python environments does not support incremental queries. "
-            + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+            "Incremental queries are not supported in the python client."
+            + " Read feature group without timestamp to retrieve latest snapshot or switch to "
             + "environment with Spark Engine."
         )
 
@@ -929,8 +897,8 @@ class TestPython:
 
         # Assert
         assert str(e_info.value) == (
-            "Hive engine on Python environments does not support incremental queries. "
-            + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+            "Incremental queries are not supported in the python client."
+            + " Read feature group without timestamp to retrieve latest snapshot or switch to "
             + "environment with Spark Engine."
         )
 
@@ -3070,19 +3038,6 @@ class TestPython:
         assert mock_fv_api.return_value.compute_training_dataset.call_count == 1
         assert mock_td_api.return_value.compute.call_count == 0
         assert mock_job._wait_for_job.call_count == 1
-
-    def test_create_hive_connection(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.client.get_instance")
-        mock_pyhive_conn = mocker.patch("pyhive.hive.Connection")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine._create_hive_connection(feature_store=None)
-
-        # Assert
-        assert mock_pyhive_conn.call_count == 1
 
     def test_return_dataframe_type_default(self):
         # Arrange

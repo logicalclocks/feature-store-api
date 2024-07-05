@@ -32,6 +32,6 @@ class Engine(spark.Engine):
 
         super().__init__()
 
-    def _sql_offline(self, sql_query, feature_store):
+    def _sql_offline(self, sql_query):
         # Spark no metastore does not require the
         return self._spark_session.sql(sql_query)

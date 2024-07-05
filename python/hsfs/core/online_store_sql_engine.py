@@ -19,15 +19,32 @@ import asyncio
 import json
 import logging
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
-import aiomysql
-import aiomysql.utils
-from hsfs import feature_view, storage_connector, training_dataset, util
-from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
-from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
-from hsfs.serving_key import ServingKey
-from sqlalchemy import bindparam, exc, sql, text
+from hsfs import util
+from hsfs.core import (
+    feature_view_api,
+    storage_connector_api,
+    training_dataset_api,
+)
+from hsfs.core.constants import HAS_AIOMYSQL, HAS_SQLALCHEMY
+
+
+if TYPE_CHECKING:
+    from hsfs import feature_view, storage_connector, training_dataset
+    from hsfs.constructor.serving_prepared_statement import ServingPreparedStatement
+    from hsfs.serving_key import ServingKey
+
+
+if HAS_AIOMYSQL:
+    import aiomysql
+    import aiomysql.utils
+
+if HAS_SQLALCHEMY:
+    from sqlalchemy import bindparam, exc, sql, text
+
+if HAS_AIOMYSQL and HAS_SQLALCHEMY:
+    from hsfs.core import util_sql
 
 
 _logger = logging.getLogger(__name__)
@@ -76,7 +93,7 @@ class OnlineStoreSqlClient:
         entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
         inference_helper_columns: bool,
     ) -> None:
-        if isinstance(entity, feature_view.FeatureView):
+        if hasattr(entity, "_feature_view_engine"):
             _logger.debug(
                 f"Initialising prepared statements for feature view {entity.name} version {entity.version}."
             )
@@ -91,7 +108,7 @@ class OnlineStoreSqlClient:
                     )
                 )
                 _logger.debug(f"{self.prepared_statements[key]}")
-        elif isinstance(entity, training_dataset.TrainingDataset):
+        elif hasattr(entity, "_training_dataset_type"):
             _logger.debug(
                 f"Initialising prepared statements for training dataset {entity.name} version {entity.version}."
             )
@@ -457,7 +474,7 @@ class OnlineStoreSqlClient:
         _logger.debug(
             f"Creating MySQL {'external' if self.external is True else ''}engine with options: {options}."
         )
-        self._prepared_statement_engine = util.create_mysql_engine(
+        self._prepared_statement_engine = util_sql.create_mysql_engine(
             online_conn, self._external, options=options
         )
 
@@ -491,7 +508,7 @@ class OnlineStoreSqlClient:
 
     @staticmethod
     def _get_result_key_serving_key(
-        serving_keys: List["ServingKey"], result_dict: Dict[str, Dict[str, Any]]
+        serving_keys: List[ServingKey], result_dict: Dict[str, Dict[str, Any]]
     ) -> Tuple[str]:
         _logger.debug(
             f"Get result key serving key {serving_keys} from result dict {result_dict}"
@@ -525,7 +542,7 @@ class OnlineStoreSqlClient:
         ]
 
     async def _get_connection_pool(self, default_min_size: int) -> None:
-        self._connection_pool = await util.create_async_engine(
+        self._connection_pool = await util_sql.create_async_engine(
             self._online_connector,
             self._external,
             default_min_size,

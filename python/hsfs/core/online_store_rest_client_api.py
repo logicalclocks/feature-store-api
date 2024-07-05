@@ -15,14 +15,40 @@
 #
 import json
 import logging
+from datetime import date, datetime
 from typing import Any, Dict
 
 from hsfs import util
 from hsfs.client import exceptions, online_store_rest_client
+from hsfs.core.constants import HAS_NUMPY
 from requests import Response
 
 
+if HAS_NUMPY:
+    import numpy as np
+
 _logger = logging.getLogger(__name__)
+
+if HAS_NUMPY:
+
+    class NpDatetimeEncoder(json.JSONEncoder):
+        def default(self, obj):
+            dtypes = (np.datetime64, np.complexfloating)
+            if isinstance(obj, (datetime, date)):
+                return util.dateconvert_event_time_to_timestamp(obj)
+            elif isinstance(obj, dtypes):
+                return str(obj)
+            elif isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                if any([np.issubdtype(obj.dtype, i) for i in dtypes]):
+                    return obj.astype(str).tolist()
+                return obj.tolist()
+            return super(NpDatetimeEncoder, self).default(obj)
+else:
+    NpDatetimeEncoder = json.JSONEncoder
 
 
 class OnlineStoreRestClientApi:
