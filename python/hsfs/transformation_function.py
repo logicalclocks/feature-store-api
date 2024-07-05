@@ -20,7 +20,7 @@ import json
 
 import humps
 from hsfs import util
-from hsfs.core import transformation_function_engine
+from hsfs.core import transformation_function_engine, type_systems
 
 
 class TransformationFunction:
@@ -58,14 +58,10 @@ class TransformationFunction:
             # type -> user init coming from user
             self._transformer_code = None
             self._extract_source_code()
-            self._output_type = self._transformation_function_engine.infer_spark_type(
-                output_type
-            )
+            self._output_type = type_systems.infer_spark_type(output_type)
         elif builtin_source_code is not None:
             # user triggered to register built-in transformation function
-            self._output_type = self._transformation_function_engine.infer_spark_type(
-                output_type
-            )
+            self._output_type = type_systems.infer_spark_type(output_type)
             self._source_code_content = json.dumps(
                 {
                     "module_imports": "",
@@ -75,9 +71,7 @@ class TransformationFunction:
         else:
             # load backend response
             # load original source code
-            self._output_type = self._transformation_function_engine.infer_spark_type(
-                output_type
-            )
+            self._output_type = type_systems.infer_spark_type(output_type)
             self._load_source_code(self._source_code_content)
 
         self._feature_group_feature_name = None

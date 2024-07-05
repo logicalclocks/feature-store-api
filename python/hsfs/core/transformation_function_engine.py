@@ -15,19 +15,16 @@
 #
 from __future__ import annotations
 
-import datetime
 from functools import partial
 from typing import Dict, Optional, Union
 
 import hsfs
-import numpy
 from hsfs import (
     feature_view,
     statistics,
     training_dataset,
     training_dataset_feature,
     transformation_function_attached,
-    util,
 )
 from hsfs.core import (
     feature_view_api,
@@ -204,46 +201,6 @@ class TransformationFunctionEngine:
                 )
                 attached_transformation_fns[ft_name] = transformation_fn
         return attached_transformation_fns
-
-    @staticmethod
-    def infer_spark_type(output_type):
-        if not output_type:
-            return "STRING"  # STRING is default type for spark udfs
-
-        if isinstance(output_type, str):
-            if output_type.endswith("Type()"):
-                return util.translate_legacy_spark_type(output_type)
-            output_type = output_type.lower()
-
-        if output_type in (str, "str", "string"):
-            return "STRING"
-        elif output_type in (bytes, "binary"):
-            return "BINARY"
-        elif output_type in (numpy.int8, "int8", "byte", "tinyint"):
-            return "BYTE"
-        elif output_type in (numpy.int16, "int16", "short", "smallint"):
-            return "SHORT"
-        elif output_type in (int, "int", "integer", numpy.int32):
-            return "INT"
-        elif output_type in (numpy.int64, "int64", "long", "bigint"):
-            return "LONG"
-        elif output_type in (float, "float"):
-            return "FLOAT"
-        elif output_type in (numpy.float64, "float64", "double"):
-            return "DOUBLE"
-        elif output_type in (
-            datetime.datetime,
-            numpy.datetime64,
-            "datetime",
-            "timestamp",
-        ):
-            return "TIMESTAMP"
-        elif output_type in (datetime.date, "date"):
-            return "DATE"
-        elif output_type in (bool, "boolean", "bool"):
-            return "BOOLEAN"
-        else:
-            raise TypeError("Not supported type %s." % output_type)
 
     @staticmethod
     def compute_transformation_fn_statistics(

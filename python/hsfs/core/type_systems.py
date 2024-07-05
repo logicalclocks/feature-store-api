@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import ast
+import datetime
 import decimal
 from typing import TYPE_CHECKING, List, Literal, Union
 
@@ -356,3 +357,43 @@ def convert_spark_type_to_offline_type(spark_type_string: str) -> str:
         raise ValueError(
             f"Return type {spark_type_string} not supported for transformation functions."
         )
+
+
+def infer_spark_type(output_type):
+    if not output_type:
+        return "STRING"  # STRING is default type for spark udfs
+
+    if isinstance(output_type, str):
+        if output_type.endswith("Type()"):
+            return translate_legacy_spark_type(output_type)
+        output_type = output_type.lower()
+
+    if output_type in (str, "str", "string"):
+        return "STRING"
+    elif output_type in (bytes, "binary"):
+        return "BINARY"
+    elif output_type in (np.int8, "int8", "byte", "tinyint"):
+        return "BYTE"
+    elif output_type in (np.int16, "int16", "short", "smallint"):
+        return "SHORT"
+    elif output_type in (int, "int", "integer", np.int32):
+        return "INT"
+    elif output_type in (np.int64, "int64", "long", "bigint"):
+        return "LONG"
+    elif output_type in (float, "float"):
+        return "FLOAT"
+    elif output_type in (np.float64, "float64", "double"):
+        return "DOUBLE"
+    elif output_type in (
+        datetime.datetime,
+        np.datetime64,
+        "datetime",
+        "timestamp",
+    ):
+        return "TIMESTAMP"
+    elif output_type in (datetime.date, "date"):
+        return "DATE"
+    elif output_type in (bool, "boolean", "bool"):
+        return "BOOLEAN"
+    else:
+        raise TypeError("Not supported type %s." % output_type)
