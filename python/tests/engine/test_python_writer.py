@@ -27,6 +27,7 @@ from hsfs.engine import python
 class TestPythonWriter:
     def test_write_dataframe_kafka(self, mocker, dataframe_fixture_times):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.core.kafka_engine.get_kafka_config", return_value={})
         avro_schema_mock = mocker.patch(
             "hsfs.feature_group.FeatureGroup._get_encoded_avro_schema"
@@ -55,6 +56,7 @@ class TestPythonWriter:
         topic_mock.topics = {topic_name: topic_metadata}
         consumer = mocker.MagicMock()
         consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
+        mocker.patch("hsfs.core.kafka_engine.Consumer", return_value=consumer)
         python_engine = python.Engine()
 
         fg = feature_group.FeatureGroup(
@@ -78,7 +80,8 @@ class TestPythonWriter:
         )
 
         # Assert
-        encoded_row = mock_python_engine_kafka_produce.call_args[0][3]
+        print(mock_python_engine_kafka_produce.call_args)
+        encoded_row = mock_python_engine_kafka_produce.call_args[1]["encoded_row"]
         print("Value" + str(encoded_row))
         parsed_schema = fastavro.parse_schema(json.loads(avro_schema))
         with BytesIO() as outf:

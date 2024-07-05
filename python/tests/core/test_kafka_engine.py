@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import importlib
+
 from hsfs import storage_connector
 from hsfs.core import constants, kafka_engine
 
@@ -84,7 +86,9 @@ class TestKafkaEngine:
         # Arrange
         mock_json_loads = mocker.patch("json.loads")
         mock_avro_schema_parse = mocker.patch("avro.schema.parse")
+        constants.HAS_AVRO = True
         constants.HAS_FAST_AVRO = False
+        importlib.reload(kafka_engine)
 
         # Act
         result = kafka_engine.get_encoder_func(
@@ -115,7 +119,9 @@ class TestKafkaEngine:
                 ],
             },
         )
+        constants.HAS_AVRO = False
         constants.HAS_FAST_AVRO = True
+        importlib.reload(kafka_engine)
 
         # Act
         result = kafka_engine.get_encoder_func(
@@ -142,7 +148,7 @@ class TestKafkaEngine:
         sc = storage_connector.StorageConnector.from_response_json(json)
         mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
 
-        mocker.patch("hsfs.engine.python.isinstance", return_value=True)
+        mocker.patch("hsfs.core.kafka_engine.isinstance", return_value=True)
 
         mock_client = mocker.patch("hsfs.client.get_instance")
         mock_client.return_value._write_pem.return_value = (
@@ -410,6 +416,8 @@ class TestKafkaEngine:
         json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
         sc = storage_connector.StorageConnector.from_response_json(json)
         mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
+
+        mocker.patch("hsfs.core.kafka_engine.isinstance", return_value=True)
 
         # Act
         results = kafka_engine.get_kafka_config(

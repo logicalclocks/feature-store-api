@@ -129,9 +129,9 @@ def kafka_get_offsets(
 
 
 def kafka_produce(
+    producer: Producer,
     key: str,
     encoded_row: bytes,
-    producer: Producer,
     topic_name: str,
     headers: Dict[str, bytes],
     acked: callable,
