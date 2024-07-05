@@ -85,6 +85,7 @@ from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
+
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations
 
@@ -1233,7 +1234,10 @@ class Engine:
         if not feature_group._multi_part_insert:
             # set initial_check_point to the current offset
             initial_check_point = kafka_engine.kafka_get_offsets(
-                feature_group, offline_write_options, True
+                topic_name=feature_group._online_topic_name,
+                feature_store_id=feature_group.feature_store_id,
+                offline_write_options=offline_write_options,
+                high=True,
             )
 
         acked, progress_bar = kafka_engine.build_ack_callback_and_optional_progress_bar(
@@ -1307,7 +1311,10 @@ class Engine:
                 )
             # set the initial_check_point to the lowest offset (it was not set previously due to topic not existing)
             initial_check_point = kafka_engine.kafka_get_offsets(
-                feature_group, offline_write_options, False
+                topic_name=feature_group._online_topic_name,
+                feature_store_id=feature_group.feature_store_id,
+                offline_write_options=offline_write_options,
+                high=True,
             )
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")

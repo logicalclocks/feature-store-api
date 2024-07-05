@@ -1,5 +1,5 @@
 #
-#   Copyright 2021 Logical Clocks AB
+#   Copyright 2024 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -103,12 +103,12 @@ def init_kafka_producer(
 
 
 def kafka_get_offsets(
-    feature_group: Union[FeatureGroup, ExternalFeatureGroup],
+    topic_name: str,
+    feature_store_id: int,
     offline_write_options: Dict[str, Any],
     high: bool,
 ) -> str:
-    topic_name = feature_group._online_topic_name
-    consumer = init_kafka_consumer(feature_group, offline_write_options)
+    consumer = init_kafka_consumer(feature_store_id, offline_write_options)
     topics = consumer.list_topics(
         timeout=offline_write_options.get("kafka_timeout", 6)
     ).topics
