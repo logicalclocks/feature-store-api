@@ -1410,6 +1410,12 @@ class Engine:
     def is_connector_type_supported(type):
         return True
 
+    @staticmethod
+    def get_feature_logging_df(features, prediction=None):
+        # do not take prediction separately because spark ml framework usually return feature together with the prediction
+        # and it is costly to join them back
+        return features
+
 
 class SchemaError(Exception):
     """Thrown when schemas don't match"""

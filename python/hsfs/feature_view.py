@@ -102,6 +102,7 @@ class FeatureView:
         ] = None,
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[skm.ServingKey]] = None,
+        logging_enabled: Optional[bool] = False,
         **kwargs,
     ) -> None:
         self._name = name
@@ -144,6 +145,7 @@ class FeatureView:
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
+        self._logging_enabled = logging_enabled
 
         if self._id:
             self._init_feature_monitoring_engine()
@@ -463,6 +465,7 @@ class FeatureView:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed: Optional[bool] = True,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -536,6 +539,7 @@ class FeatureView:
             force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
+            transformed: Setting to `False` returns the untransformed feature vectors.
 
         # Returns
             `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
@@ -561,6 +565,7 @@ class FeatureView:
             vector_db_features=vector_db_features,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
+            transformed=transformed,
         )
 
     def get_feature_vectors(
@@ -572,6 +577,7 @@ class FeatureView:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed: Optional[bool] = True,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -643,6 +649,7 @@ class FeatureView:
             force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
+            transformed: Setting to `False` returns the untransformed feature vectors.
 
         # Returns
             `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
@@ -670,6 +677,7 @@ class FeatureView:
             vector_db_features=vector_db_features,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
+            transformed=transformed,
         )
 
     def get_inference_helper(
@@ -921,6 +929,7 @@ class FeatureView:
         event_time: bool = False,
         inference_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        transformed: Optional[bool] = True,
         **kwargs,
     ) -> TrainingDatasetDataFrameTypes:
         """Get a batch of data from an event time interval from the offline feature store.
@@ -976,6 +985,8 @@ class FeatureView:
             dataframe_type: str, optional. The type of the returned dataframe.
                 Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
                 Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
+            transformed: Setting to `False` returns the untransformed feature vectors.
+
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
@@ -999,6 +1010,7 @@ class FeatureView:
             event_time,
             inference_helper_columns,
             dataframe_type,
+            transformed=transformed,
         )
 
     def add_tag(self, name: str, value: Any) -> None:
@@ -3379,6 +3391,7 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
+            logging_enabled=json_decamelized.get('enabled_logging', False),
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3413,10 +3426,221 @@ class FeatureView:
             "training_helper_columns",
             "schema",
             "serving_keys",
+            "enabled_logging",
         ]:
             self._update_attribute_if_present(self, other, key)
         self._init_feature_monitoring_engine()
         return self
+
+    def transform_batch_data(self, features):
+        return self._feature_view_engine.transform_batch_data(
+            features, self._batch_scoring_server._transformation_functions
+        )
+
+    def transform_feature_vector(self, features):
+        return self.transform_feature_vectors([features])
+
+    def transform_feature_vectors(self, features):
+        return self._batch_scoring_server.transform_feature_vectors(features)
+
+    def enable_logging(self) -> None:
+        """Enable feature logging for the current feature view.
+
+        This method activates logging of features.
+
+        # Example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # enable logging
+            feature_view.enable_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to enable feature logging.
+        """
+        return self._feature_view_engine.enable_feature_logging(self)
+
+    def log(self,
+            features: Union[pd.DataFrame, list[list], np.ndarray],
+            predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
+            transformed: Optional[bool]=False,
+            write_options: Optional[Dict[str, Any]] = None,
+            training_dataset_version: Optional[int]=None,
+            hsml_model=None,
+            ):
+        """Log features and optionally predictions for the current feature view.
+
+        Note: If features is a `pd.Dataframe`, prediction can be provided as columns in the dataframe.
+
+        # Arguments
+            features: The features to be logged. Can be a pandas DataFrame, a list of lists, or a numpy ndarray.
+            prediction: The predictions to be logged. Can be a pandas DataFrame, a list of lists, or a numpy ndarray. Defaults to None.
+            transformed: Whether the features are transformed. Defaults to False.
+            write_options: Options for writing the log. Defaults to None.
+            training_dataset_version: Version of the training dataset. Defaults to None.
+            hsml_model: `hsml.model.Model` HSML model associated with the log. Defaults to None.
+
+        # Example
+            ```python
+            # log features
+            feature_view.log(features)
+            # log features and predictions
+            feature_view.log(features, prediction)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to log features.
+        """
+        if not self.logging_enabled:
+            warnings.warn(
+                "Feature logging is not enabled. It may take longer to enable logging before logging the features. You can call `feature_view.enable_logging()` to enable logging beforehand.",
+                stacklevel=1,
+            )
+            self.enable_logging()
+        return self._feature_view_engine.log_features(
+            self, features, predictions, transformed,
+            write_options,
+            training_dataset_version=(
+                training_dataset_version or self.get_last_accessed_training_dataset()
+            ),
+            hsml_model=hsml_model
+        )
+
+    def get_log_timeline(self,
+                         wallclock_time: Optional[
+                             Union[str, int, datetime, datetime.date]] = None,
+                         limit: Optional[int] = None,
+                         transformed: Optional[bool] = False,
+                         ):
+        """Retrieve the log timeline for the current feature view.
+
+        # Arguments
+            wallclock_time: Specific time to get the log timeline for. Can be a string, integer, datetime, or date. Defaults to None.
+            limit: Maximum number of entries to retrieve. Defaults to None.
+            transformed: Whether to include transformed logs. Defaults to False.
+
+        # Example
+            ```python
+            # get log timeline
+            log_timeline = feature_view.get_log_timeline(limit=10)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the log timeline.
+        """
+        return self._feature_view_engine.get_log_timeline(
+            self, wallclock_time, limit, transformed
+        )
+
+    def read_log(self,
+                 start_time: Optional[
+                     Union[str, int, datetime, datetime.date]] = None,
+                 end_time: Optional[
+                     Union[str, int, datetime, datetime.date]] = None,
+                 filter: Optional[Union[Filter, Logic]] = None,
+                 transformed: Optional[bool] = False,
+                 training_dataset_version: Optional[int]=None,
+                 hsml_model=None,
+                 ):
+        """Read the log entries for the current feature view.
+            Optionally, filter can be applied to start/end time, training dataset version, hsml model,
+            and custom fitler.
+
+        # Arguments
+            start_time: Start time for the log entries. Can be a string, integer, datetime, or date. Defaults to None.
+            end_time: End time for the log entries. Can be a string, integer, datetime, or date. Defaults to None.
+            filter: Filter to apply on the log entries. Can be a Filter or Logic object. Defaults to None.
+            transformed: Whether to include transformed logs. Defaults to False.
+            training_dataset_version: Version of the training dataset. Defaults to None.
+            hsml_model: HSML model associated with the log. Defaults to None.
+
+        # Example
+            ```python
+            # read all log entries
+            log_entries = feature_view.read_log()
+            # read log entries within time ranges
+            log_entries = feature_view.read_log(start_time="2022-01-01", end_time="2022-01-31")
+            # read log entries of a specific training dataset version
+            log_entries = feature_view.read_log(training_dataset_version=1)
+            # read log entries of a specific hsml model
+            log_entries = feature_view.read_log(hsml_model=Model(1, "dummy", version=1))
+            # read log entries by applying filter on features of feature group `fg` in the feature view
+            log_entries = feature_view.read_log(filter=fg.feature1 > 10)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to read the log entries.
+        """
+        return self._feature_view_engine.read_feature_logs(
+            self, start_time, end_time, filter, transformed, training_dataset_version, hsml_model
+        )
+
+    def pause_logging(self):
+        """Pause scheduled materialization job for the current feature view.
+
+        # Example
+            ```python
+            # pause logging
+            feature_view.pause_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to pause feature logging.
+        """
+        self._feature_view_engine.pause_logging(self)
+
+    def resume_logging(self):
+        """Resume scheduled materialization job for the current feature view.
+
+        # Example
+            ```python
+            # resume logging
+            feature_view.resume_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to pause feature logging.
+        """
+        self._feature_view_engine.resume_logging(self)
+
+    def materialize_log(self, wait: Optional[bool]=False):
+        """Materialize the log for the current feature view.
+
+        # Arguments
+            wait: Whether to wait for the materialization to complete. Defaults to False.
+
+        # Example
+            ```python
+            # materialize log
+            materialization_result = feature_view.materialize_log(wait=True)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to materialize the log.
+        """
+        return self._feature_view_engine.materialize_feature_logs(self, wait)
+
+    def delete_log(self, transformed: Optional[bool]=None):
+        """Delete the logged feature data for the current feature view.
+
+         # Arguments
+             transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
+
+         # Example
+             ```python
+             # delete log
+             feature_view.delete_log()
+             ```
+
+         # Raises
+             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
+         """
+        return self._feature_view_engine.delete_feature_logs(self, transformed)
 
     @staticmethod
     def _update_attribute_if_present(this: "FeatureView", new: Any, key: str) -> None:
@@ -3450,6 +3674,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
+            "enabledLogging": self._logging_enabled,
             "type": "featureViewDTO",
         }
 
@@ -3619,3 +3844,11 @@ class FeatureView:
     @serving_keys.setter
     def serving_keys(self, serving_keys: List[skm.ServingKey]) -> None:
         self._serving_keys = serving_keys
+
+    @property
+    def logging_enabled(self) -> bool:
+        return self._logging_enabled
+
+    @logging_enabled.setter
+    def logging_enabled(self, logging_enabled) -> None:
+        self._logging_enabled = logging_enabled
