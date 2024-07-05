@@ -976,16 +976,16 @@ class FeatureViewEngine:
         )
         return fg.insert(df, write_options=default_write_options)
 
-    def read_log(self, fv,
-                 start_time: Optional[
+    def read_feature_logs(self, fv,
+                          start_time: Optional[
                      Union[str, int, datetime, datetime.date]] = None,
-                 end_time: Optional[
+                          end_time: Optional[
                      Union[str, int, datetime, datetime.date]] = None,
-                 filter: Optional[Union[Filter, Logic]]=None,
-                 transformed: Optional[bool]=False,
-                 training_dataset_version=None,
-                 hsml_model=None,
-                 ):
+                          filter: Optional[Union[Filter, Logic]]=None,
+                          transformed: Optional[bool]=False,
+                          training_dataset_version=None,
+                          hsml_model=None,
+                          ):
         fg = self._get_logging_fg(fv, transformed)
         fv_feat_name_map = self._get_fv_feature_name_map(fv)
         query = fg.select_all()
@@ -1057,7 +1057,7 @@ class FeatureViewEngine:
             fv.name, fv.version
         )
 
-    def materialize_log(self, fv, wait):
+    def materialize_feature_logs(self, fv, wait):
         jobs = self._feature_view_api.materialize_feature_logging(
             fv.name, fv.version
         )
@@ -1069,7 +1069,7 @@ class FeatureViewEngine:
                     pass
         return jobs
 
-    def delete_log(self, fv, transformed):
-        self._feature_view_api.delete_feature_log(
+    def delete_feature_logs(self, fv, transformed):
+        self._feature_view_api.delete_feature_logs(
             fv.name, fv.version, transformed
         )

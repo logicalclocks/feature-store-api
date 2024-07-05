@@ -3572,7 +3572,7 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to read the log entries.
         """
-        return self._feature_view_engine.read_log(
+        return self._feature_view_engine.read_feature_logs(
             self, start_time, end_time, filter, transformed, training_dataset_version, hsml_model
         )
 
@@ -3619,7 +3619,7 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to materialize the log.
         """
-        return self._feature_view_engine.materialize_log(self, wait)
+        return self._feature_view_engine.materialize_feature_logs(self, wait)
 
     def delete_log(self, transformed: Optional[bool]=None):
         """Delete the logged feature data for the current feature view.
@@ -3636,7 +3636,7 @@ class FeatureView:
          # Raises
              `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
          """
-        return self._feature_view_engine.delete_log(self, transformed)
+        return self._feature_view_engine.delete_feature_logs(self, transformed)
 
     @staticmethod
     def _update_attribute_if_present(this: "FeatureView", new: Any, key: str) -> None:

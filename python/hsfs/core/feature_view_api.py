@@ -442,7 +442,7 @@ class FeatureViewApi:
         ]
         return _client._send_request("GET", path_params, {})
 
-    def delete_feature_log(
+    def delete_feature_logs(
         self,
         feature_view_name: str,
         feature_view_version: int,
