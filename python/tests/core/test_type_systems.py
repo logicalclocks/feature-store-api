@@ -13,9 +13,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import datetime
+
 import pytest
 from hsfs.core import type_systems
-from hsfs.core.constants import HAS_ARROW, HAS_PANDAS, HAS_POLARS
+from hsfs.core.constants import HAS_ARROW, HAS_PANDAS
 
 
 if HAS_ARROW:
@@ -26,9 +28,6 @@ if HAS_PANDAS:
     import pandas as pd
 
     rng_engine = np.random.default_rng(42)
-
-if HAS_POLARS:
-    pass
 
 
 class TestTypeSystems:
@@ -524,3 +523,227 @@ class TestTypeSystems:
 
         # Assert
         assert str(e_info.value) == "dtype 'other' not supported"
+
+    def test_infer_spark_type_string_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(str)
+
+        # Assert
+        assert result == "STRING"
+
+    def test_infer_spark_type_string_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type("str")
+
+        # Assert
+        assert result == "STRING"
+
+    def test_infer_spark_type_string_type_3(self):
+        # Act
+        result = type_systems.infer_spark_type("string")
+
+        # Assert
+        assert result == "STRING"
+
+    def test_infer_spark_type_byte_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(bytes)
+        result1 = type_systems.infer_spark_type("BinaryType()")
+
+        # Assert
+        assert result == "BINARY"
+        assert result1 == "BINARY"
+
+    def test_infer_spark_type_int8_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(np.int8)
+
+        # Assert
+        assert result == "BYTE"
+
+    def test_infer_spark_type_int8_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type("int8")
+
+        # Assert
+        assert result == "BYTE"
+
+    def test_infer_spark_type_int8_type_3(self):
+        # Act
+        result = type_systems.infer_spark_type("byte")
+        result1 = type_systems.infer_spark_type("ByteType()")
+
+        # Assert
+        assert result == "BYTE"
+        assert result1 == "BYTE"
+
+    def test_infer_spark_type_int16_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(np.int16)
+
+        # Assert
+        assert result == "SHORT"
+
+    def test_infer_spark_type_int16_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type("int16")
+
+        # Assert
+        assert result == "SHORT"
+
+    def test_infer_spark_type_int16_type_3(self):
+        # Act
+        result = type_systems.infer_spark_type("short")
+        result1 = type_systems.infer_spark_type("ShortType()")
+
+        # Assert
+        assert result == "SHORT"
+        assert result1 == "SHORT"
+
+    def test_infer_spark_type_int_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(int)
+
+        # Assert
+        assert result == "INT"
+
+    def test_infer_spark_type_int_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type("int")
+
+        # Assert
+        assert result == "INT"
+
+    def test_infer_spark_type_int_type_3(self):
+        # Act
+        result = type_systems.infer_spark_type(np.int32)
+        result1 = type_systems.infer_spark_type("IntegerType()")
+
+        # Assert
+        assert result == "INT"
+        assert result1 == "INT"
+
+    def test_infer_spark_type_int64_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(np.int64)
+
+        # Assert
+        assert result == "LONG"
+
+    def test_infer_spark_type_int64_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type("int64")
+
+        # Assert
+        assert result == "LONG"
+
+    def test_infer_spark_type_int64_type_3(self):
+        # Act
+        result = type_systems.infer_spark_type("long")
+
+        # Assert
+        assert result == "LONG"
+
+    def test_infer_spark_type_int64_type_4(self):
+        # Act
+        result = type_systems.infer_spark_type("bigint")
+        result1 = type_systems.infer_spark_type("LongType()")
+
+        # Assert
+        assert result == "LONG"
+        assert result1 == "LONG"
+
+    def test_infer_spark_type_float_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(float)
+
+        # Assert
+        assert result == "FLOAT"
+
+    def test_infer_spark_type_float_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type("float")
+        result1 = type_systems.infer_spark_type("FloatType()")
+
+        # Assert
+        assert result == "FLOAT"
+        assert result1 == "FLOAT"
+
+    def test_infer_spark_type_double_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(np.float64)
+
+        # Assert
+        assert result == "DOUBLE"
+
+    def test_infer_spark_type_double_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type("float64")
+
+        # Assert
+        assert result == "DOUBLE"
+
+    def test_infer_spark_type_double_type_3(self):
+        # Act
+        result = type_systems.infer_spark_type("double")
+        result1 = type_systems.infer_spark_type("DoubleType()")
+
+        # Assert
+        assert result == "DOUBLE"
+        assert result1 == "DOUBLE"
+
+    def test_infer_spark_type_timestamp_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(datetime.datetime)
+
+        # Assert
+        assert result == "TIMESTAMP"
+
+    def test_infer_spark_type_timestamp_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type(np.datetime64)
+        result1 = type_systems.infer_spark_type("TimestampType()")
+
+        # Assert
+        assert result == "TIMESTAMP"
+        assert result1 == "TIMESTAMP"
+
+    def test_infer_spark_type_date_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(datetime.date)
+        result1 = type_systems.infer_spark_type("DateType()")
+
+        # Assert
+        assert result == "DATE"
+        assert result1 == "DATE"
+
+    def test_infer_spark_type_bool_type_1(self):
+        # Act
+        result = type_systems.infer_spark_type(bool)
+
+        # Assert
+        assert result == "BOOLEAN"
+
+    def test_infer_spark_type_bool_type_2(self):
+        # Act
+        result = type_systems.infer_spark_type("boolean")
+
+        # Assert
+        assert result == "BOOLEAN"
+
+    def test_infer_spark_type_bool_type_3(self):
+        # Act
+        result = type_systems.infer_spark_type("bool")
+        result1 = type_systems.infer_spark_type("BooleanType()")
+
+        # Assert
+        assert result == "BOOLEAN"
+        assert result1 == "BOOLEAN"
+
+    def test_infer_spark_type_wrong_type(self):
+        # Act
+        with pytest.raises(TypeError) as e_info:
+            type_systems.infer_spark_type("wrong")
+
+        # Assert
+        assert str(e_info.value) == "Not supported type wrong."
