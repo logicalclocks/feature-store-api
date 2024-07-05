@@ -20,9 +20,11 @@ import pytest
 import requests
 from hsfs.client.base import Client
 from hsfs.client.exceptions import RestAPIError
+from tests.util import changes_environ
 
 
 class TestBaseClient:
+    @changes_environ
     def test_valid_token_no_retires(self, mocker):
         # Arrange
         os.environ[Client.REST_ENDPOINT] = "True"
@@ -48,6 +50,7 @@ class TestBaseClient:
         # Assert
         assert spy_retry_token_expired.call_count == 0
 
+    @changes_environ
     def test_invalid_token_retires(self, mocker):
         # Arrange
         os.environ[Client.REST_ENDPOINT] = "True"
@@ -77,6 +80,7 @@ class TestBaseClient:
         # Assert
         assert spy_retry_token_expired.call_count == 10
 
+    @changes_environ
     def test_invalid_token_retires_backoff_break(self, mocker):
         # Arrange
         os.environ[Client.REST_ENDPOINT] = "True"
