@@ -768,7 +768,12 @@ class Engine:
         self,
         dataframe: Union[pd.DataFrame, pl.DataFrame],
         time_travel_format: Optional[str] = None,
+        features: Optional[List[feature.Feature]] = None,
     ) -> List[feature.Feature]:
+        feature_type_map = {}
+        if features:
+            for _feature in features:
+                feature_type_map[_feature.name] = _feature.type
         if isinstance(dataframe, pd.DataFrame):
             arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
         elif isinstance(dataframe, pl.DataFrame) or isinstance(
@@ -776,12 +781,17 @@ class Engine:
         ):
             arrow_schema = dataframe.to_arrow().schema
         features = []
-        for feat_name in arrow_schema.names:
+        for i in range(len(arrow_schema.names)):
+            feat_name = arrow_schema.names[i]
             name = util.autofix_feature_name(feat_name)
             try:
-                converted_type = self._convert_pandas_dtype_to_offline_type(
-                    arrow_schema.field(feat_name).type
-                )
+                pd_type = arrow_schema.field(feat_name).type
+                if pd_type == "null" and feature_type_map.get(name):
+                    converted_type = feature_type_map.get(name)
+                else:
+                    converted_type = self._convert_pandas_dtype_to_offline_type(
+                        pd_type
+                    )
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}") from e
             features.append(feature.Feature(name, converted_type))
@@ -1186,7 +1196,7 @@ class Engine:
             str, transformation_function_attached.TransformationFunctionAttached
         ],
         dataset: Union[pd.DataFrame, pl.DataFrame],
-        inplace=True,
+        inplace=False,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         for (
             feature_name,
@@ -1195,13 +1205,16 @@ class Engine:
             if isinstance(dataset, pl.DataFrame) or isinstance(
                 dataset, pl.dataframe.frame.DataFrame
             ):
+                if inplace:
+                    dataset = dataset.clone()
                 dataset = dataset.with_columns(
                     pl.col(feature_name).map_elements(
                         transformation_fn.transformation_fn
                     )
                 )
             else:
-                dataset = pd.DataFrame.copy(dataset)
+                if inplace:
+                    dataset = pd.DataFrame.copy(dataset)
                 dataset[feature_name] = dataset[feature_name].map(
                     transformation_fn.transformation_fn
                 )
@@ -1615,15 +1628,10 @@ class Engine:
                 prediction[f.name] = Engine._cast_column_to_offline_type(prediction[f.name], f.type)
             if not set(prediction.columns).intersection(set(features.columns)):
                 features = pd.concat([features, prediction], axis=1)
-        # need to case the column type as if it is None, type cannot be inferred.
-        features[td_col_name] = Engine._cast_column_to_offline_type(
-            pd.Series([training_dataset_version for _ in range(len(features))]), fg.get_feature(td_col_name).type
-        )
+        features[td_col_name] = pd.Series([training_dataset_version for _ in range(len(features))])
         # _cast_column_to_offline_type cannot cast string type
         features[model_col_name] = pd.Series([FeatureViewEngine.get_hsml_model_value(hsml_model) if hsml_model else None for _ in range(len(features))], dtype=pd.StringDtype())
         now = datetime.now()
-        features[time_col_name] = Engine._cast_column_to_offline_type(
-            pd.Series([now for _ in range(len(features))]), fg.get_feature(time_col_name).type
-        )
+        features[time_col_name] = pd.Series([now for _ in range(len(features))])
         features["log_id"] = [str(uuid.uuid4()) for _ in range(len(features))]
         return features[[feat.name for feat in fg.features]]
