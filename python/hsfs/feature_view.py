@@ -917,10 +917,11 @@ class FeatureView:
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options: Optional[Dict[str, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         inference_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> TrainingDatasetDataFrameTypes:
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -964,7 +965,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             inference_helper_columns: whether to include inference helper columns or not.
@@ -994,7 +995,7 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
-            primary_keys,
+            kwargs.get("primary_keys") or primary_key,
             event_time,
             inference_helper_columns,
             dataframe_type,
@@ -1187,10 +1188,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
-    ) -> Tuple[int, "job.Job"]:
+        **kwargs,
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
 
@@ -1353,7 +1355,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not. Training helper columns are a
@@ -1388,7 +1390,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1419,10 +1421,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
-    ) -> Tuple[int, "job.Job"]:
+        **kwargs,
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
         The training data can be retrieved by calling `feature_view.get_train_test_split`.
@@ -1631,7 +1634,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -1675,7 +1678,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1708,10 +1711,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
-    ) -> Tuple[int, "job.Job"]:
+        **kwargs,
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
         The training data can be retrieved by calling `feature_view.get_train_validation_test_split`.
@@ -1906,7 +1910,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -1958,7 +1962,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1978,7 +1982,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-    ) -> "job.Job":
+    ) -> job.Job:
         """
         Recreate a training dataset.
 
@@ -2056,10 +2060,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         Optional[TrainingDatasetDataFrameTypes],  # optional label DataFrame
@@ -2145,7 +2150,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2180,7 +2185,7 @@ class FeatureView:
             read_options,
             training_dataset_obj=td,
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2206,10 +2211,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2307,7 +2313,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2351,7 +2357,7 @@ class FeatureView:
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2393,10 +2399,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2509,7 +2516,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2566,7 +2573,7 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2605,10 +2612,11 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[str, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         Optional[TrainingDatasetDataFrameTypes],
@@ -2642,7 +2650,7 @@ class FeatureView:
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2661,7 +2669,7 @@ class FeatureView:
             self,
             read_options,
             training_dataset_version=training_dataset_version,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2674,10 +2682,11 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2708,7 +2717,7 @@ class FeatureView:
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2729,7 +2738,7 @@ class FeatureView:
             read_options,
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2742,10 +2751,11 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[str, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: str = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2778,7 +2788,7 @@ class FeatureView:
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2803,7 +2813,7 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
