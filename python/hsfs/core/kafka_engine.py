@@ -56,6 +56,7 @@ def init_kafka_consumer(
 def init_kafka_resources(
     feature_group: Union[FeatureGroup, ExternalFeatureGroup],
     offline_write_options: Dict[str, Any],
+    project_id: int,
 ) -> Tuple[
     Producer, Dict[str, bytes], Dict[str, Callable[..., bytes]], Callable[..., bytes] :
 ]:
@@ -81,7 +82,7 @@ def init_kafka_resources(
 
         # custom headers for hopsworks onlineFS
         headers = {
-            "projectId": str(feature_group.feature_store.project_id).encode("utf8"),
+            "projectId": str(project_id).encode("utf8"),
             "featureGroupId": str(feature_group._id).encode("utf8"),
             "subjectId": str(feature_group.subject["id"]).encode("utf8"),
         }

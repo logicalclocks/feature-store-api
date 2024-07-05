@@ -1229,7 +1229,9 @@ class Engine:
     ) -> Optional[job.Job]:
         initial_check_point = ""
         producer, headers, feature_writers, writer = kafka_engine.init_kafka_resources(
-            feature_group, offline_write_options
+            feature_group,
+            offline_write_options,
+            project_id=feature_group.feature_store.project_id,
         )
         if not feature_group._multi_part_insert:
             # set initial_check_point to the current offset
@@ -1285,9 +1287,10 @@ class Engine:
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
             kafka_engine.kafka_produce(
+                producer=producer,
                 key=key,
                 encoded_row=encoded_row,
-                producer=producer,
+                topic_name=feature_group._online_topic_name,
                 headers=headers,
                 acked=acked,
                 debug_kafka=offline_write_options.get("debug_kafka", False),

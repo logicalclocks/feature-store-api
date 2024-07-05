@@ -3305,16 +3305,16 @@ class TestPython:
 
     def test_materialization_kafka(self, mocker):
         # Arrange
-        mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
+        mocker.patch("hsfs.core.kafka_engine.get_kafka_config", return_value={})
         mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
-        mocker.patch("hsfs.engine.python.Engine._get_encoder_func")
-        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
+        mocker.patch("hsfs.core.kafka_engine.get_encoder_func")
+        mocker.patch("hsfs.core.kafka_engine.encode_complex_features")
         mock_python_engine_kafka_produce = mocker.patch(
-            "hsfs.engine.python.Engine._kafka_produce"
+            "hsfs.core.kafka_engine.kafka_produce"
         )
         mocker.patch("hsfs.util.get_job_url")
         mocker.patch(
-            "hsfs.engine.python.Engine._kafka_get_offsets",
+            "hsfs.core.kafka_engine.kafka_get_offsets",
             return_value=" tests_offsets",
         )
         mocker.patch(
@@ -3360,16 +3360,16 @@ class TestPython:
 
     def test_materialization_kafka_first_job_execution(self, mocker):
         # Arrange
-        mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
+        mocker.patch("hsfs.core.kafka_engine.get_kafka_config", return_value={})
         mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
-        mocker.patch("hsfs.engine.python.Engine._get_encoder_func")
-        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
+        mocker.patch("hsfs.core.kafka_engine.get_encoder_func")
+        mocker.patch("hsfs.core.kafka_engine.encode_complex_features")
         mock_python_engine_kafka_produce = mocker.patch(
-            "hsfs.engine.python.Engine._kafka_produce"
+            "hsfs.core.kafka_engine.kafka_produce"
         )
         mocker.patch("hsfs.util.get_job_url")
         mocker.patch(
-            "hsfs.engine.python.Engine._kafka_get_offsets",
+            "hsfs.core.kafka_engine.kafka_get_offsets",
             return_value=" tests_offsets",
         )
         mocker.patch(
@@ -3415,16 +3415,16 @@ class TestPython:
 
     def test_materialization_kafka_skip_offsets(self, mocker):
         # Arrange
-        mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
+        mocker.patch("hsfs.core.kafka_engine.get_kafka_config", return_value={})
         mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
-        mocker.patch("hsfs.engine.python.Engine._get_encoder_func")
-        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
+        mocker.patch("hsfs.core.kafka_engine.get_encoder_func")
+        mocker.patch("hsfs.core.kafka_engine.encode_complex_features")
         mock_python_engine_kafka_produce = mocker.patch(
-            "hsfs.engine.python.Engine._kafka_produce"
+            "hsfs.core.kafka_engine.kafka_produce"
         )
         mocker.patch("hsfs.util.get_job_url")
         mocker.patch(
-            "hsfs.engine.python.Engine._kafka_get_offsets",
+            "hsfs.core.kafka_engine.kafka_get_offsets",
             return_value=" tests_offsets",
         )
 
@@ -3469,16 +3469,16 @@ class TestPython:
 
     def test_materialization_kafka_topic_doesnt_exist(self, mocker):
         # Arrange
-        mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
+        mocker.patch("hsfs.core.kafka_engine.get_kafka_config", return_value={})
         mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
-        mocker.patch("hsfs.engine.python.Engine._get_encoder_func")
-        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
+        mocker.patch("hsfs.core.kafka_engine.get_encoder_func")
+        mocker.patch("hsfs.core.kafka_engine.encode_complex_features")
         mock_python_engine_kafka_produce = mocker.patch(
-            "hsfs.engine.python.Engine._kafka_produce"
+            "hsfs.core.kafka_engine.kafka_produce"
         )
         mocker.patch("hsfs.util.get_job_url")
         mocker.patch(
-            "hsfs.engine.python.Engine._kafka_get_offsets",
+            "hsfs.core.kafka_engine.kafka_get_offsets",
             side_effect=["", " tests_offsets"],
         )
 

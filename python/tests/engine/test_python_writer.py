@@ -27,7 +27,7 @@ from hsfs.engine import python
 class TestPythonWriter:
     def test_write_dataframe_kafka(self, mocker, dataframe_fixture_times):
         # Arrange
-        mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
+        mocker.patch("hsfs.core.kafka_engine.get_kafka_config", return_value={})
         avro_schema_mock = mocker.patch(
             "hsfs.feature_group.FeatureGroup._get_encoded_avro_schema"
         )
@@ -45,7 +45,7 @@ class TestPythonWriter:
         )
         avro_schema_mock.side_effect = [avro_schema]
         mock_python_engine_kafka_produce = mocker.patch(
-            "hsfs.engine.python.Engine._kafka_produce"
+            "hsfs.core.kafka_engine.kafka_produce"
         )
         mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
         mocker.patch("hsfs.util.get_job_url")
