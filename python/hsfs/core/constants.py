@@ -13,3 +13,10 @@ great_expectations_not_installed_message = (
     "You will need to restart your kernel if applicable."
 )
 initialise_expectation_suite_for_single_expectation_api_message = "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+
+# Numpy
+HAS_NUMPY: bool = importlib.util.find_spec("numpy") is not None
+
+# SQL packages
+HAS_SQLALCHEMY: bool = importlib.util.find_spec("sqlalchemy") is not None
+HAS_AIOMYSQL: bool = importlib.util.find_spec("aiomysql") is not None
