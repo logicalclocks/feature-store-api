@@ -25,6 +25,8 @@ if HAS_PANDAS:
     import numpy as np
     import pandas as pd
 
+    rng_engine = np.random.default_rng(42)
+
 if HAS_POLARS:
     pass
 
@@ -34,8 +36,6 @@ class TestTypeSystems:
         not HAS_ARROW or not HAS_PANDAS, reason="Arrow or Pandas are not installed"
     )
     def test_infer_type_pyarrow_list(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_pandas_object_type_to_offline_type(
             arrow_type=pa.list_(pa.int8())
@@ -45,8 +45,6 @@ class TestTypeSystems:
         assert result == "array<int>"
 
     def test_infer_type_pyarrow_large_list(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_pandas_object_type_to_offline_type(
             arrow_type=pa.large_list(pa.int8())
@@ -56,8 +54,6 @@ class TestTypeSystems:
         assert result == "array<int>"
 
     def test_infer_type_pyarrow_struct(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_pandas_object_type_to_offline_type(
             arrow_type=pa.struct([pa.field("f1", pa.int32())])
@@ -67,8 +63,6 @@ class TestTypeSystems:
         assert result == "struct<f1:int>"
 
     def test_infer_type_pyarrow_date32(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.date32()
@@ -78,8 +72,6 @@ class TestTypeSystems:
         assert result == "date"
 
     def test_infer_type_pyarrow_date64(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.date64()
@@ -89,8 +81,6 @@ class TestTypeSystems:
         assert result == "date"
 
     def test_infer_type_pyarrow_binary(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.binary()
@@ -100,8 +90,6 @@ class TestTypeSystems:
         assert result == "binary"
 
     def test_infer_type_pyarrow_large_binary(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.large_binary()
@@ -111,8 +99,6 @@ class TestTypeSystems:
         assert result == "binary"
 
     def test_infer_type_pyarrow_string(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.string()
@@ -122,8 +108,6 @@ class TestTypeSystems:
         assert result == "string"
 
     def test_infer_type_pyarrow_large_string(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.large_string()
@@ -133,8 +117,6 @@ class TestTypeSystems:
         assert result == "string"
 
     def test_infer_type_pyarrow_utf8(self):
-        # Arrange
-
         # Act
         result = type_systems.convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.utf8()
@@ -144,8 +126,6 @@ class TestTypeSystems:
         assert result == "string"
 
     def test_infer_type_pyarrow_other(self):
-        # Arrange
-
         # Act
         with pytest.raises(ValueError) as e_info:
             type_systems.convert_simple_pandas_dtype_to_offline_type(
@@ -191,7 +171,7 @@ class TestTypeSystems:
 
     def test_infer_type_pyarrow_struct_with_list_fields(self):
         # Arrange
-        mapping = {"user0": list(np.random.normal(size=5)), "user1": ["test", "test"]}
+        mapping = {"user0": list(rng_engine.normal(size=5)), "user1": ["test", "test"]}
         pdf = pd.DataFrame(
             data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
@@ -246,7 +226,7 @@ class TestTypeSystems:
     def test_infer_type_pyarrow_struct_with_struct_fields_with_list_values(self):
         # Arrange
         mapping = {
-            f"user{i}": {"value": list(np.random.normal(size=5))} for i in range(2)
+            f"user{i}": {"value": list(rng_engine.normal(size=5))} for i in range(2)
         }
         pdf = pd.DataFrame(
             data=zip(list(range(1, 2)), [mapping] * 2),
@@ -287,7 +267,7 @@ class TestTypeSystems:
 
     def test_infer_type_pyarrow_list_of_struct_fields(self):
         # Arrange
-        mapping = [{"value": np.random.normal(size=5)}]
+        mapping = [{"value": rng_engine.normal(size=5)}]
         pdf = pd.DataFrame(
             data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
@@ -304,7 +284,7 @@ class TestTypeSystems:
 
     def test_infer_type_pyarrow_struct_with_list_of_struct_fields(self):
         # Arrange
-        mapping = {f"user{i}": [{"value": np.random.normal(size=5)}] for i in range(2)}
+        mapping = {f"user{i}": [{"value": rng_engine.normal(size=5)}] for i in range(2)}
         pdf = pd.DataFrame(
             data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
@@ -321,3 +301,226 @@ class TestTypeSystems:
             arrow_type
             == "struct<user0:array<struct<value:array<double>>>,user1:array<struct<value:array<double>>>>"
         )
+
+    def test_convert_simple_pandas_type_uint8(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.uint8()
+        )
+
+        # Assert
+        assert result == "int"
+
+    def test_convert_simple_pandas_type_uint16(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.uint16()
+        )
+
+        # Assert
+        assert result == "int"
+
+    def test_convert_simple_pandas_type_int8(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.int8()
+        )
+
+        # Assert
+        assert result == "int"
+
+    def test_convert_simple_pandas_type_int16(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.int16()
+        )
+
+        # Assert
+        assert result == "int"
+
+    def test_convert_simple_pandas_type_int32(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.int32()
+        )
+
+        # Assert
+        assert result == "int"
+
+    def test_convert_simple_pandas_type_uint32(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.uint32()
+        )
+
+        # Assert
+        assert result == "bigint"
+
+    def test_convert_simple_pandas_type_int64(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.int64()
+        )
+
+        # Assert
+        assert result == "bigint"
+
+    def test_convert_simple_pandas_type_float16(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.float16()
+        )
+
+        # Assert
+        assert result == "float"
+
+    def test_convert_simple_pandas_type_float32(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.float32()
+        )
+
+        # Assert
+        assert result == "float"
+
+    def test_convert_simple_pandas_type_float64(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.float64()
+        )
+
+        # Assert
+        assert result == "double"
+
+    def test_convert_simple_pandas_type_datetime64ns(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ns")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64nstz(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ns", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64us(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="us")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64ustz(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="us", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64ms(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ms")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64mstz(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ms", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64s(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="s")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64stz(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="s", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_bool(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.bool_()
+        )
+
+        # Assert
+        assert result == "boolean"
+
+    def test_convert_simple_pandas_type_category_unordered(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.string(), index_type=pa.int8(), ordered=False
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_convert_simple_pandas_type_large_string_category_unordered(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.large_string(), index_type=pa.int64(), ordered=False
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_convert_simple_pandas_type_large_string_category_ordered(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.large_string(), index_type=pa.int64(), ordered=True
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_convert_simple_pandas_type_category_ordered(self):
+        # Act
+        result = type_systems.convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.string(), index_type=pa.int8(), ordered=True
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_convert_simple_pandas_type_other(self):
+        # Act
+        with pytest.raises(ValueError) as e_info:
+            type_systems.convert_simple_pandas_dtype_to_offline_type(arrow_type="other")
+
+        # Assert
+        assert str(e_info.value) == "dtype 'other' not supported"
