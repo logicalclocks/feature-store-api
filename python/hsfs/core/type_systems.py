@@ -20,11 +20,8 @@ import decimal
 from typing import TYPE_CHECKING, List, Literal, Union
 
 import pytz
-from hsfs.core.constants import HAS_ARROW
+from hsfs.core.constants import HAS_ARROW, HAS_PANDAS, HAS_POLARS
 
-
-if HAS_ARROW:
-    import pyarrow as pa
 
 if TYPE_CHECKING:
     import numpy as np
@@ -32,52 +29,101 @@ if TYPE_CHECKING:
     import polars as pl
     from hsfs import feature
 
-# Decimal types are currently not supported
-_INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
-_BIG_INT_TYPES = [pa.uint32(), pa.int64()]
-_FLOAT_TYPES = [pa.float16(), pa.float32()]
-_DOUBLE_TYPES = [pa.float64()]
-_TIMESTAMP_UNIT = ["ns", "us", "ms", "s"]
-_BOOLEAN_TYPES = [pa.bool_()]
-_STRING_TYPES = [pa.string(), pa.large_string()]
-_DATE_TYPES = [pa.date32(), pa.date64()]
-_BINARY_TYPES = [pa.binary(), pa.large_binary()]
+if HAS_ARROW:
+    import pyarrow as pa
 
-PYARROW_HOPSWORKS_DTYPE_MAPPING = {
-    **dict.fromkeys(_INT_TYPES, "int"),
-    **dict.fromkeys(_BIG_INT_TYPES, "bigint"),
-    **dict.fromkeys(_FLOAT_TYPES, "float"),
-    **dict.fromkeys(_DOUBLE_TYPES, "double"),
-    **dict.fromkeys(
-        [
-            *[pa.timestamp(unit) for unit in _TIMESTAMP_UNIT],
-            *[
-                pa.timestamp(unit, tz=tz)
-                for unit in _TIMESTAMP_UNIT
-                for tz in pytz.all_timezones
+    # Decimal types are currently not supported
+    _INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
+    _BIG_INT_TYPES = [pa.uint32(), pa.int64()]
+    _FLOAT_TYPES = [pa.float16(), pa.float32()]
+    _DOUBLE_TYPES = [pa.float64()]
+    _TIMESTAMP_UNIT = ["ns", "us", "ms", "s"]
+    _BOOLEAN_TYPES = [pa.bool_()]
+    _STRING_TYPES = [pa.string(), pa.large_string()]
+    _DATE_TYPES = [pa.date32(), pa.date64()]
+    _BINARY_TYPES = [pa.binary(), pa.large_binary()]
+
+    PYARROW_HOPSWORKS_DTYPE_MAPPING = {
+        **dict.fromkeys(_INT_TYPES, "int"),
+        **dict.fromkeys(_BIG_INT_TYPES, "bigint"),
+        **dict.fromkeys(_FLOAT_TYPES, "float"),
+        **dict.fromkeys(_DOUBLE_TYPES, "double"),
+        **dict.fromkeys(
+            [
+                *[pa.timestamp(unit) for unit in _TIMESTAMP_UNIT],
+                *[
+                    pa.timestamp(unit, tz=tz)
+                    for unit in _TIMESTAMP_UNIT
+                    for tz in pytz.all_timezones
+                ],
             ],
-        ],
-        "timestamp",
-    ),
-    **dict.fromkeys(_BOOLEAN_TYPES, "boolean"),
-    **dict.fromkeys(
-        [
-            *_STRING_TYPES,
-            # Category type in pandas stored as dictinoary in pyarrow
-            *[
-                pa.dictionary(
-                    value_type=value_type, index_type=index_type, ordered=ordered
-                )
-                for value_type in _STRING_TYPES
-                for index_type in _INT_TYPES + _BIG_INT_TYPES
-                for ordered in [True, False]
+            "timestamp",
+        ),
+        **dict.fromkeys(_BOOLEAN_TYPES, "boolean"),
+        **dict.fromkeys(
+            [
+                *_STRING_TYPES,
+                # Category type in pandas stored as dictinoary in pyarrow
+                *[
+                    pa.dictionary(
+                        value_type=value_type, index_type=index_type, ordered=ordered
+                    )
+                    for value_type in _STRING_TYPES
+                    for index_type in _INT_TYPES + _BIG_INT_TYPES
+                    for ordered in [True, False]
+                ],
             ],
-        ],
-        "string",
-    ),
-    **dict.fromkeys(_DATE_TYPES, "date"),
-    **dict.fromkeys(_BINARY_TYPES, "binary"),
-}
+            "string",
+        ),
+        **dict.fromkeys(_DATE_TYPES, "date"),
+        **dict.fromkeys(_BINARY_TYPES, "binary"),
+    }
+else:
+    PYARROW_HOPSWORKS_DTYPE_MAPPING = {}
+
+# python cast column to offline type
+if HAS_POLARS:
+    import polars as pl
+
+    polars_offline_dtype_mapping = {
+        "bigint": pl.Int64,
+        "int": pl.Int32,
+        "smallint": pl.Int16,
+        "tinyint": pl.Int8,
+        "float": pl.Float32,
+        "double": pl.Float64,
+    }
+
+    _polars_online_dtype_mapping = {
+        "bigint": pl.Int64,
+        "int": pl.Int32,
+        "smallint": pl.Int16,
+        "tinyint": pl.Int8,
+        "float": pl.Float32,
+        "double": pl.Float64,
+    }
+
+if HAS_PANDAS:
+    import numpy as np
+    import pandas as pd
+
+    pandas_offline_dtype_mapping = {
+        "bigint": pd.Int64Dtype(),
+        "int": pd.Int32Dtype(),
+        "smallint": pd.Int16Dtype(),
+        "tinyint": pd.Int8Dtype(),
+        "float": np.dtype("float32"),
+        "double": np.dtype("float64"),
+    }
+
+    pandas_online_dtype_mapping = {
+        "bigint": pd.Int64Dtype(),
+        "int": pd.Int32Dtype(),
+        "smallint": pd.Int16Dtype(),
+        "tinyint": pd.Int8Dtype(),
+        "float": np.dtype("float32"),
+        "double": np.dtype("float64"),
+    }
 
 
 def convert_pandas_dtype_to_offline_type(arrow_type: str) -> str:
@@ -115,26 +161,6 @@ def convert_pandas_object_type_to_offline_type(arrow_type: str) -> str:
         )
 
     raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
-
-
-# python cast column to offline type
-polars_offline_dtype_mapping = {
-    "bigint": pl.Int64,
-    "int": pl.Int32,
-    "smallint": pl.Int16,
-    "tinyint": pl.Int8,
-    "float": pl.Float32,
-    "double": pl.Float64,
-}
-
-pandas_offline_dtype_mapping = {
-    "bigint": pd.Int64Dtype(),
-    "int": pd.Int32Dtype(),
-    "smallint": pd.Int16Dtype(),
-    "tinyint": pd.Int8Dtype(),
-    "float": np.dtype("float32"),
-    "double": np.dtype("float64"),
-}
 
 
 def cast_pandas_column_to_offline_type(
@@ -209,16 +235,6 @@ def cast_column_to_offline_type(
         return cast_polars_column_to_offline_type(feature_column, offline_type.lower())
 
 
-online_dtype_mapping = {
-    "bigint": pd.Int64Dtype(),
-    "int": pd.Int32Dtype(),
-    "smallint": pd.Int16Dtype(),
-    "tinyint": pd.Int8Dtype(),
-    "float": np.dtype("float32"),
-    "double": np.dtype("float64"),
-}
-
-
 def cast_column_to_online_type(
     feature_column: pd.Series, online_type: str
 ) -> pd.Series:
@@ -241,8 +257,10 @@ def cast_column_to_online_type(
             lambda x: decimal.Decimal(x) if (x is not None) else None
         )
     else:
-        if online_type in online_dtype_mapping:
-            casted_feature = feature_column.astype(online_dtype_mapping[online_type])
+        if online_type in pandas_online_dtype_mapping:
+            casted_feature = feature_column.astype(
+                pandas_online_dtype_mapping[online_type]
+            )
             return casted_feature
         else:
             return feature_column  # handle gracefully, just return the column as-is
