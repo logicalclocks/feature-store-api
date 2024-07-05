@@ -21,9 +21,14 @@ import pytest
 import pytz
 from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.constants import HAS_AIOMYSQL, HAS_SQLALCHEMY
 from hsfs.embedding import EmbeddingFeature, EmbeddingIndex
 from hsfs.feature import Feature
 from mock import patch
+
+
+if HAS_SQLALCHEMY and HAS_AIOMYSQL:
+    from hsfs.core import util_sql
 
 
 class TestUtil:
@@ -209,6 +214,10 @@ class TestUtil:
         util.validate_embedding_feature_type(embedding_index, schema)
         # No exception should be raised
 
+    @pytest.mark.skipif(
+        not HAS_SQLALCHEMY or not HAS_AIOMYSQL,
+        reason="SQLAlchemy or aiomysql is not installed",
+    )
     def test_create_async_engine(self, mocker):
         # Test when get_running_loop() raises a RuntimeError
         with patch("asyncio.get_running_loop", side_effect=RuntimeError):
@@ -218,4 +227,4 @@ class TestUtil:
                 RuntimeError,
                 match="Event loop is not running. Please invoke this co-routine from a running loop or provide an event loop.",
             ):
-                asyncio.run(util.create_async_engine(online_connector, True, 1))
+                asyncio.run(util_sql.create_async_engine(online_connector, True, 1))
