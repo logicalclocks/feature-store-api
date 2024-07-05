@@ -1,7 +1,8 @@
 import json
-import humps
 from typing import Any, Dict
-from hsfs import util, feature_group
+
+import humps
+from hsfs import feature_group, util
 
 
 class FeatureLogging:

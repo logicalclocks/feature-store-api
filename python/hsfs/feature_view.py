@@ -3499,7 +3499,7 @@ class FeatureView:
         if not self.logging_enabled:
             self.enable_logging()
         return self._feature_view_engine.log_features(
-            self, features, prediction, transformed,
+            self, features, predictions, transformed,
             write_options,
             training_dataset_version=(
                 training_dataset_version or self.get_last_accessed_training_dataset()
