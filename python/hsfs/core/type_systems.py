@@ -18,7 +18,7 @@ from __future__ import annotations
 import ast
 import datetime
 import decimal
-from typing import TYPE_CHECKING, List, Literal, Union
+from typing import TYPE_CHECKING, Literal, Union
 
 import pytz
 from hsfs.core.constants import HAS_ARROW, HAS_PANDAS, HAS_POLARS
@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     import numpy as np
     import pandas as pd
     import polars as pl
-    from hsfs import feature
 
 if HAS_ARROW:
     import pyarrow as pa
@@ -265,19 +264,6 @@ def cast_column_to_online_type(
             return casted_feature
         else:
             return feature_column  # handle gracefully, just return the column as-is
-
-
-def cast_columns(
-    df: pd.DataFrame, schema: List[feature.Feature], online: bool = False
-) -> pd.DataFrame:
-    for _feat in schema:
-        if not online:
-            df[_feat.name] = cast_column_to_offline_type(df[_feat.name], _feat.type)
-        else:
-            df[_feat.name] = cast_column_to_online_type(
-                df[_feat.name], _feat.online_type
-            )
-    return df
 
 
 def convert_simple_pandas_dtype_to_offline_type(arrow_type: str) -> str:

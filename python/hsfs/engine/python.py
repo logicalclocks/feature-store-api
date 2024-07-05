@@ -42,6 +42,7 @@ from typing import (
 
 from hsfs.core.type_systems import (
     cast_column_to_offline_type,
+    cast_column_to_online_type,
     convert_spark_type_to_offline_type,
 )
 
@@ -802,7 +803,7 @@ class Engine:
         validation_id: Optional[int] = None,
     ) -> Optional[job.Job]:
         if (
-            isinstance(feature_group, ExternalFeatureGroup)
+            hasattr(feature_group, "EXTERNAL_FEATURE_GROUP")
             and feature_group.online_enabled
         ) or feature_group.stream:
             return self._write_dataframe_kafka(
@@ -1539,6 +1540,19 @@ class Engine:
         config = storage_connector.confluent_options()
         config.update(write_options.get("kafka_producer_config", {}))
         return config
+
+    @staticmethod
+    def cast_columns(
+        df: pd.DataFrame, schema: List[feature.Feature], online: bool = False
+    ) -> pd.DataFrame:
+        for _feat in schema:
+            if not online:
+                df[_feat.name] = cast_column_to_offline_type(df[_feat.name], _feat.type)
+            else:
+                df[_feat.name] = cast_column_to_online_type(
+                    df[_feat.name], _feat.online_type
+                )
+        return df
 
     @staticmethod
     def is_connector_type_supported(connector_type: str) -> bool:
