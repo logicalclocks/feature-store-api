@@ -3910,7 +3910,7 @@ class TestPython:
         consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
         consumer.get_watermark_offsets = mocker.MagicMock(return_value=(0, 11))
         mocker.patch(
-            "hsfs.engine.python.Engine._init_kafka_consumer",
+            "hsfs.core.kafka_engine.init_kafka_consumer",
             return_value=consumer,
         )
 
@@ -3954,7 +3954,7 @@ class TestPython:
         consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
         consumer.get_watermark_offsets = mocker.MagicMock(return_value=(0, 11))
         mocker.patch(
-            "hsfs.engine.python.Engine._init_kafka_consumer",
+            "hsfs.core.kafka_engine.init_kafka_consumer",
             return_value=consumer,
         )
 
@@ -3994,7 +3994,7 @@ class TestPython:
         consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
         consumer.get_watermark_offsets = mocker.MagicMock(return_value=(0, 11))
         mocker.patch(
-            "hsfs.engine.python.Engine._init_kafka_consumer",
+            "hsfs.core.kafka_engine.init_kafka_consumer",
             return_value=consumer,
         )
 
