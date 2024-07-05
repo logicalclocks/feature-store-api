@@ -969,7 +969,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             inference_helper_columns: whether to include inference helper columns or not.
@@ -1196,7 +1196,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         **kwargs,
-    ) -> Tuple[int, "job.Job"]:
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
 
@@ -1429,7 +1429,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         **kwargs,
-    ) -> Tuple[int, "job.Job"]:
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
         The training data can be retrieved by calling `feature_view.get_train_test_split`.
@@ -1719,7 +1719,7 @@ class FeatureView:
         event_time: bool = False,
         training_helper_columns: bool = False,
         **kwargs,
-    ) -> Tuple[int, "job.Job"]:
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
         The training data can be retrieved by calling `feature_view.get_train_validation_test_split`.
@@ -1986,7 +1986,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-    ) -> "job.Job":
+    ) -> job.Job:
         """
         Recreate a training dataset.
 
