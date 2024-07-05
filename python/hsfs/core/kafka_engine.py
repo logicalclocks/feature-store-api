@@ -198,9 +198,10 @@ def get_kafka_config(
 
     if engine == "spark":
         config = storage_connector.spark_options()
+        config.update(write_options)
     elif engine == "confluent":
         config = storage_connector.confluent_options()
-    config.update(write_options.get("kafka_producer_config", {}))
+        config.update(write_options.get("kafka_producer_config", {}))
     return config
 
 

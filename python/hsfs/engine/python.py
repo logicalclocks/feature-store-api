@@ -1231,7 +1231,7 @@ class Engine:
         producer, headers, feature_writers, writer = kafka_engine.init_kafka_resources(
             feature_group,
             offline_write_options,
-            project_id=feature_group.feature_store.project_id,
+            project_id=client.get_instance().project_id,
         )
         if not feature_group._multi_part_insert:
             # set initial_check_point to the current offset

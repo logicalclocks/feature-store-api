@@ -394,7 +394,7 @@ class Engine:
         write_options: Optional[Dict[str, Any]],
     ):
         write_options = kafka_engine.get_kafka_config(
-            feature_group.feature_store_id, write_options, "spark"
+            feature_group.feature_store_id, write_options, engine="spark"
         )
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
@@ -488,7 +488,7 @@ class Engine:
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
         write_options = kafka_engine.get_kafka_config(
-            feature_group.feature_store_id, write_options, "spark"
+            feature_group.feature_store_id, write_options, engine="spark"
         )
 
         serialized_df = self._online_fg_to_avro(

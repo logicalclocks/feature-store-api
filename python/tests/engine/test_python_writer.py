@@ -55,11 +55,6 @@ class TestPythonWriter:
         topic_mock.topics = {topic_name: topic_metadata}
         consumer = mocker.MagicMock()
         consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
-        mocker.patch(
-            "hsfs.engine.python.Consumer",
-            return_value=consumer,
-        )
-        mocker.patch("hsfs.engine.python.Producer")
         python_engine = python.Engine()
 
         fg = feature_group.FeatureGroup(

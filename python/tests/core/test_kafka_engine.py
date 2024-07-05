@@ -30,6 +30,7 @@ class TestKafkaEngine:
         kafka_engine.kafka_produce(
             producer=producer,
             topic_name="test_topic",
+            headers={},
             key=None,
             encoded_row=None,
             acked=None,
@@ -51,6 +52,7 @@ class TestKafkaEngine:
         kafka_engine.kafka_produce(
             producer=producer,
             topic_name="test_topic",
+            headers={},
             key=None,
             encoded_row=None,
             acked=None,
@@ -394,3 +396,124 @@ class TestKafkaEngine:
 
         # Assert
         assert result == ""
+
+    def test_spark_get_kafka_config(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
+        json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
+        sc = storage_connector.StorageConnector.from_response_json(json)
+        mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
+
+        # Act
+        results = kafka_engine.get_kafka_config(
+            1, write_options={"user_opt": "ABC"}, engine="spark"
+        )
+
+        # Assert
+        assert results == {
+            "kafka.bootstrap.servers": "test_bootstrap_servers",
+            "kafka.security.protocol": "test_security_protocol",
+            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "kafka.ssl.key.password": "test_ssl_key_password",
+            "kafka.ssl.keystore.location": "result_from_add_file",
+            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+            "kafka.ssl.truststore.location": "result_from_add_file",
+            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+            "kafka.test_option_name": "test_option_value",
+            "user_opt": "ABC",
+        }
+        assert (
+            mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
+        )
+        assert (
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
+        )
+
+    def test_spark_get_kafka_config_external_client(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
+        json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
+        sc = storage_connector.StorageConnector.from_response_json(json)
+        mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
+
+        # Act
+        results = kafka_engine.get_kafka_config(
+            1, write_options={"user_opt": "ABC"}, engine="spark"
+        )
+
+        # Assert
+        assert results == {
+            "kafka.bootstrap.servers": "test_bootstrap_servers",
+            "kafka.security.protocol": "test_security_protocol",
+            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "kafka.ssl.key.password": "test_ssl_key_password",
+            "kafka.ssl.keystore.location": "result_from_add_file",
+            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+            "kafka.ssl.truststore.location": "result_from_add_file",
+            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+            "kafka.test_option_name": "test_option_value",
+            "user_opt": "ABC",
+        }
+        assert (
+            mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
+        )
+        assert (
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is True
+        )
+
+    def test_spark_get_kafka_config_internal_kafka(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
+        json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
+        sc = storage_connector.StorageConnector.from_response_json(json)
+        mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
+
+        # Act
+        results = kafka_engine.get_kafka_config(
+            1, write_options={"user_opt": "ABC", "internal_kafka": True}, engine="spark"
+        )
+
+        # Assert
+        assert results == {
+            "kafka.bootstrap.servers": "test_bootstrap_servers",
+            "kafka.security.protocol": "test_security_protocol",
+            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "kafka.ssl.key.password": "test_ssl_key_password",
+            "kafka.ssl.keystore.location": "result_from_add_file",
+            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+            "kafka.ssl.truststore.location": "result_from_add_file",
+            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+            "kafka.test_option_name": "test_option_value",
+            "user_opt": "ABC",
+            "internal_kafka": True,
+        }
+        assert (
+            mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
+        )
+        assert (
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
+        )
