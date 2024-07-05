@@ -15,25 +15,12 @@
 #
 
 import os
-from functools import wraps
 
 import pytest
 import requests
 from hsfs.client.base import Client
 from hsfs.client.exceptions import RestAPIError
-
-
-def changes_environ(f):
-    @wraps(f)
-    def g(*args, **kwds):
-        old_environ = os.environ.copy()
-        try:
-            return f(*args, **kwds)
-        finally:
-            os.environ.clear()
-            os.environ.update(old_environ)
-
-    return g
+from tests.util import changes_environ
 
 
 class TestBaseClient:
