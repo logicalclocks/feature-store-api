@@ -859,7 +859,7 @@ class TestPython:
 
         # Assert
         assert str(e_info.value) == (
-            "Incremental queries not supported in the python client."
+            "Incremental queries are not supported in the python client."
             + " Read feature group without timestamp to retrieve latest snapshot or switch to "
             + "environment with Spark Engine."
         )
@@ -893,7 +893,7 @@ class TestPython:
 
         # Assert
         assert str(e_info.value) == (
-            "Incremental queries not supported in the python client."
+            "Incremental queries are not supported in the python client."
             + " Read feature group without timestamp to retrieve latest snapshot or switch to "
             + "environment with Spark Engine."
         )

@@ -534,7 +534,7 @@ class Engine:
             or hudi_fg_alias.left_feature_group_start_timestamp is not None
         ):
             raise FeatureStoreException(
-                "Incremental queries not supported in the python client."
+                "Incremental queries are not supported in the python client."
                 + " Read feature group without timestamp to retrieve latest snapshot or switch to "
                 + "environment with Spark Engine."
             )
