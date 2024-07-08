@@ -21,11 +21,13 @@ import json
 import os
 import re
 import shutil
+import uuid
 import warnings
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
 
 from hsfs.core.feature_view_engine import FeatureViewEngine
+from hsfs.training_dataset_feature import TrainingDatasetFeature
 
 if TYPE_CHECKING:
     import great_expectations
@@ -1078,7 +1080,12 @@ class Engine:
             options.update(provided_options)
         return options
 
-    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
+    def parse_schema_feature_group(self,
+                                   dataframe,
+                                   time_travel_format=None,
+                                   features: Optional[
+                                       List[feature.Feature]] = None,
+                                   ):
         features = []
         using_hudi = time_travel_format == "HUDI"
         for feat in dataframe.schema:
@@ -1403,11 +1410,43 @@ class Engine:
     def is_connector_type_supported(type):
         return True
 
-    @staticmethod
-    def get_feature_logging_df(features, prediction=None, **kwargs):
+    def get_feature_logging_df(self, features,
+                               fg=None,
+                               fg_features: List[TrainingDatasetFeature]=None,
+                               td_predictions: List[TrainingDatasetFeature]=None,
+                               td_col_name=None,
+                               time_col_name=None,
+                               model_col_name=None,
+                               prediction=None,
+                               training_dataset_version=None,
+                               hsml_model=None,
+                               **kwargs):
         # do not take prediction separately because spark ml framework usually return feature together with the prediction
         # and it is costly to join them back
-        return features
+        df = self.convert_to_default_dataframe(features)
+        if td_predictions:
+            for f in td_predictions:
+                if f.name not in df.columns:
+                    df = df.withColumn(f.name, lit(None).cast(
+                        Engine._convert_offline_type_to_spark_type(f.type)))
+
+        uuid_udf = udf(lambda: str(uuid.uuid4()), StringType())
+
+        # Add new columns to the DataFrame
+        df = df.withColumn(td_col_name,
+                                       lit(training_dataset_version).cast(LongType()))
+        if hsml_model is not None:
+            hsml_str = FeatureViewEngine.get_hsml_model_value(hsml_model)
+        else:
+            hsml_str = None
+        df = df.withColumn(model_col_name, lit(hsml_str).cast(StringType()))
+        now = datetime.now()
+        df = df.withColumn(time_col_name,
+                                       lit(now).cast(TimestampType()))
+        df = df.withColumn("log_id", uuid_udf())
+
+        # Select the required columns
+        return df.select(*[feat.name for feat in fg.features])
 
     @staticmethod
     def read_feature_log(query):

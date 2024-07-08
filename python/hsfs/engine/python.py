@@ -1620,7 +1620,6 @@ class Engine:
                                training_dataset_version=None,
                                hsml_model=None,
                                ) -> pd.DataFrame:
-        import uuid
         features = Engine._convert_feature_log_to_df(features, [f.name for f in fg_features])
         if td_predictions:
             prediction = Engine._convert_feature_log_to_df(prediction, [f.name for f in td_predictions])
