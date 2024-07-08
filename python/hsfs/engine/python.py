@@ -827,7 +827,8 @@ class Engine:
                         on_demand=True,
                     )
                 )
-                dropped_features.extend(tf.hopsworks_udf.dropped_features)
+                if tf.hopsworks_udf.dropped_features:
+                    dropped_features.extend(tf.hopsworks_udf.dropped_features)
         for feat_name in arrow_schema.names:
             name = util.autofix_feature_name(feat_name)
             try:
@@ -1364,8 +1365,8 @@ class Engine:
                 raise FeatureStoreException(
                     f"Features {missing_features} specified in the transformation function '{hopsworks_udf.function_name}' are not present in the feature view. Please specify the feature required correctly."
                 )
-
-            dropped_features.update(tf.hopsworks_udf.dropped_features)
+            if tf.hopsworks_udf.dropped_features:
+                dropped_features.update(tf.hopsworks_udf.dropped_features)
             dataset = pd.concat(
                 [
                     dataset,

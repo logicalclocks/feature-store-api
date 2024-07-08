@@ -2135,21 +2135,25 @@ class FeatureGroup(FeatureGroupBase):
         self._writer: Optional[callable] = None
 
         # On-Demand Transformation Functions
-        self._transformation_functions: List[TransformationFunction] = (
-            [
-                TransformationFunction(
-                    featurestore_id,
-                    hopsworks_udf=transformation_function,
-                    version=1,
-                    transformation_type=UDFType.ON_DEMAND,
-                )
-                if not isinstance(transformation_function, TransformationFunction)
-                else transformation_function
-                for transformation_function in transformation_functions
-            ]
-            if transformation_functions
-            else []
-        )
+        self._transformation_functions: List[TransformationFunction] = []
+
+        if transformation_functions:
+            for transformation_function in transformation_functions:
+                if not isinstance(transformation_function, TransformationFunction):
+                    self._transformation_functions.append(
+                        TransformationFunction(
+                            featurestore_id,
+                            hopsworks_udf=transformation_function,
+                            version=1,
+                            transformation_type=UDFType.ON_DEMAND,
+                        )
+                    )
+                else:
+                    if not transformation_function.hopsworks_udf.udf_type:
+                        transformation_function.hopsworks_udf.udf_type = (
+                            UDFType.ON_DEMAND
+                        )
+                    self._transformation_functions.append(transformation_function)
 
         if self._transformation_functions:
             self._transformation_functions = (

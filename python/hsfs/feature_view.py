@@ -120,21 +120,25 @@ class FeatureView:
             training_helper_columns if training_helper_columns else []
         )
 
-        self._transformation_functions: List[TransformationFunction] = (
-            [
-                TransformationFunction(
-                    self.featurestore_id,
-                    hopsworks_udf=transformation_function,
-                    version=1,
-                    transformation_type=UDFType.MODEL_DEPENDENT,
-                )
-                if not isinstance(transformation_function, TransformationFunction)
-                else transformation_function
-                for transformation_function in transformation_functions
-            ]
-            if transformation_functions
-            else []
-        )
+        self._transformation_functions: List[TransformationFunction] = []
+
+        if transformation_functions:
+            for transformation_function in transformation_functions:
+                if not isinstance(transformation_function, TransformationFunction):
+                    self._transformation_functions.append(
+                        TransformationFunction(
+                            self.featurestore_id,
+                            hopsworks_udf=transformation_function,
+                            version=1,
+                            transformation_type=UDFType.MODEL_DEPENDENT,
+                        )
+                    )
+                else:
+                    if not transformation_function.hopsworks_udf.udf_type:
+                        transformation_function.hopsworks_udf.udf_type = (
+                            UDFType.MODEL_DEPENDENT
+                        )
+                    self._transformation_functions.append(transformation_function)
 
         if self._transformation_functions:
             self._transformation_functions = FeatureView._sort_transformation_functions(

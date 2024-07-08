@@ -161,7 +161,7 @@ class TestPythonSparkTransformationFunctions:
             "transformationFeatures": [],
             "statisticsArgumentNames": ["feature"],
             "name": "min_max_scaler",
-            "droppedFeatures": ["feature"],
+            "droppedArgumentNames": ["feature"],
         }
 
         tf_fun = HopsworksUdf.from_response_json(udf_response)
@@ -304,7 +304,7 @@ class TestPythonSparkTransformationFunctions:
             "transformationFeatures": [],
             "statisticsArgumentNames": ["feature"],
             "name": "standard_scaler",
-            "droppedFeatures": ["feature"],
+            "droppedArgumentNames": ["feature"],
         }
 
         tf_fun = HopsworksUdf.from_response_json(udf_response)
@@ -451,7 +451,7 @@ class TestPythonSparkTransformationFunctions:
             "transformationFeatures": [],
             "statisticsArgumentNames": ["feature"],
             "name": "robust_scaler",
-            "droppedFeatures": ["feature"],
+            "droppedArgumentNames": ["feature"],
         }
 
         tf_fun = HopsworksUdf.from_response_json(udf_response)

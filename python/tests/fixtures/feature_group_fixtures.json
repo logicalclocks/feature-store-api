@@ -695,7 +695,7 @@
             "name": "add_two",
             "outputTypes":["double"],
             "transformationFeatures":["data"],
-            "dropped_features":["data1"]
+            "dropped_argument_names":["data1"]
           }
         },
         {
@@ -707,7 +707,7 @@
             "name": "add_one_fs",
             "outputTypes":["double"],
             "transformationFeatures":["col1"],
-            "dropped_features":["data1"]
+            "dropped_argument_names":["data1"]
           }
         }
     ],

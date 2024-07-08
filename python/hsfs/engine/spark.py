@@ -1145,7 +1145,8 @@ class Engine:
                         on_demand=True,
                     )
                 )
-                dropped_features.extend(tf.hopsworks_udf.dropped_features)
+                if tf.hopsworks_udf.dropped_features:
+                    dropped_features.extend(tf.hopsworks_udf.dropped_features)
 
         using_hudi = time_travel_format == "HUDI"
         for feat in dataframe.schema:
@@ -1290,8 +1291,8 @@ class Engine:
                 raise FeatureStoreException(
                     f"Features {missing_features} specified in the transformation function '{hopsworks_udf.function_name}' are not present in the feature view. Please specify the feature required correctly."
                 )
-
-            dropped_features.update(tf.hopsworks_udf.dropped_features)
+            if tf.hopsworks_udf.dropped_features:
+                dropped_features.update(tf.hopsworks_udf.dropped_features)
 
             pandas_udf = hopsworks_udf.get_udf()
             output_col_name = hopsworks_udf.output_column_names[0]

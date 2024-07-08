@@ -241,5 +241,7 @@ class TransformationFunction:
             return (
                 f"Model-Dependent Transformation Function : {repr(self.hopsworks_udf)}"
             )
-        else:
+        elif self.hopsworks_udf._udf_type == UDFType.ON_DEMAND:
             return f"On-Demand Transformation Function : {repr(self.hopsworks_udf)}"
+        else:
+            return f"Transformation Function : {repr(self.hopsworks_udf)}"
