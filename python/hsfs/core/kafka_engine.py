@@ -111,7 +111,7 @@ def init_kafka_producer(
     feature_store_id: int,
     offline_write_options: Dict[str, Any],
 ) -> Producer:
-    if offline_write_options.get("use_async_kafka", False):
+    if offline_write_options.get("use_async_kafka", True):
         return async_kafka.AsyncKafkaProducer(
             get_kafka_config(feature_store_id, offline_write_options)
         )
@@ -163,6 +163,7 @@ def kafka_produce(
                 value=encoded_row,
                 callback=acked,
                 headers=headers,
+                debug_kafka=debug_kafka,
             )
 
             # Trigger internal callbacks to empty op queue
@@ -173,6 +174,25 @@ def kafka_produce(
                 print("Caught: {}".format(e))
             # backoff for 1 second
             producer.poll(1)
+
+
+def kafka_async_produce(
+    producer: Producer,
+    key: str,
+    encoded_row: bytes,
+    topic_name: str,
+    headers: Dict[str, bytes],
+    acked: callable,
+    debug_kafka: bool = False,
+) -> None:
+    producer.produce(
+        topic=topic_name,
+        key=key,
+        value=encoded_row,
+        callback=acked,
+        headers=headers,
+        debug_kafka=debug_kafka,
+    )
 
 
 def encode_complex_features(

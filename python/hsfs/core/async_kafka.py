@@ -49,7 +49,7 @@ def async_acked(
             raise err  # Stop producing and show error
     # update progress bar for each msg
     if not is_multi_part_insert:
-        loop.call_soon_threadsafe(result.set_result, msg)
+        # loop.call_soon_threadsafe(result.set_result, msg)
         progress_bar.update()
 
 
@@ -61,6 +61,10 @@ class AsyncKafkaProducer:
         self._producer = Producer(configs)
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop, name="kafka-poll-thread")
+
+    def start_polling(self) -> None:
+        self._cancelled = False
+        print("Starting kafka-polling-thread", flush=True)
         self._poll_thread.start()
 
     def _poll_loop(self) -> None:
@@ -68,26 +72,27 @@ class AsyncKafkaProducer:
             _n_rows_delivered = self._producer.poll(0.1)
 
     def close(self) -> None:
+        print("Awaiting kafka-polling-thread", flush=True)
         self._cancelled = True
         self._poll_thread.join()
 
     def produce(
         self,
         key: str,
-        encoded_row: bytes,
-        topic_name: str,
+        value: bytes,
+        topic: str,
         headers: Dict[str, Any],
-        acked: Callable,
+        callback: Callable,
         debug_kafka: bool,
     ) -> asyncio.Future[Any]:
         try:
             result = self._loop.create_future()
 
             self._producer.produce(
-                topic=topic_name,
+                topic=topic,
                 key=key,
-                value=encoded_row,
-                callback=functools.partial(acked, result=result, loop=self._loop),
+                value=value,
+                callback=functools.partial(callback, result=result, loop=self._loop),
                 headers=headers,
             )
         except BufferError as e:
@@ -95,3 +100,11 @@ class AsyncKafkaProducer:
                 print(f"Caught BufferError: {str(e)}")
             # backoff for 0.2 seconds
             self._producer.poll(0.2)
+
+    def flush(self, timeout: Optional[float] = None):
+        self.close()
+        print("Flushing kafka producer", flush=True)
+        if timeout is not None:
+            self._producer.flush(timeout)
+        else:
+            self._producer.flush()

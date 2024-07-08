@@ -1235,7 +1235,7 @@ class Engine:
         producer, headers, feature_writers, writer = kafka_engine.init_kafka_resources(
             feature_group,
             offline_write_options,
-            project_id=client.get_instance().project_id,
+            project_id=client.get_instance()._project_id,
         )
         if not feature_group._multi_part_insert:
             # set initial_check_point to the current offset
@@ -1258,6 +1258,7 @@ class Engine:
             row_iterator = dataframe.iter_rows(named=True)
 
         # loop over rows
+        producer.start_polling()
         for row in row_iterator:
             if isinstance(dataframe, pd.DataFrame):
                 # itertuples returns Python NamedTyple, to be able to serialize it using
@@ -1290,7 +1291,7 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            kafka_engine.kafka_produce(
+            kafka_engine.kafka_async_produce(
                 producer=producer,
                 key=key,
                 encoded_row=encoded_row,
@@ -1302,6 +1303,7 @@ class Engine:
 
         # make sure producer blocks and everything is delivered
         if not feature_group._multi_part_insert:
+            print("Flushing producer", flush=True)
             producer.flush()
             progress_bar.close()
 
@@ -1581,49 +1583,72 @@ class Engine:
     def _convert_feature_log_to_df(feature_log, cols):
         if feature_log is None and cols:
             return pd.DataFrame(columns=cols)
-        if not (isinstance(feature_log, (list, np.ndarray, pd.DataFrame, pl.DataFrame))):
+        if not (
+            isinstance(feature_log, (list, np.ndarray, pd.DataFrame, pl.DataFrame))
+        ):
             raise ValueError(f"Type '{type(feature_log)}' not accepted")
         if isinstance(feature_log, list) or isinstance(feature_log, np.ndarray):
-            if isinstance(feature_log[0], list) or isinstance(feature_log[0],
-                                                           np.ndarray):
+            if isinstance(feature_log[0], list) or isinstance(
+                feature_log[0], np.ndarray
+            ):
                 provided_len = len(feature_log[0])
             else:
                 provided_len = 1
-            assert  provided_len == len(cols), f"Expecting {len(cols)} features/labels but {provided_len} provided."
+            assert provided_len == len(
+                cols
+            ), f"Expecting {len(cols)} features/labels but {provided_len} provided."
 
             return pd.DataFrame(feature_log, columns=cols)
         else:
             return feature_log.copy(deep=False)
 
     @staticmethod
-    def get_feature_logging_df(fg,
-                               features,
-                               fg_features: List[TrainingDatasetFeature],
-                               td_predictions: List[TrainingDatasetFeature],
-                               td_col_name,
-                               time_col_name,
-                               model_col_name,
-                               prediction=None,
-                               training_dataset_version=None,
-                               hsml_model=None,
-                               ) -> pd.DataFrame:
+    def get_feature_logging_df(
+        fg,
+        features,
+        fg_features: List[TrainingDatasetFeature],
+        td_predictions: List[TrainingDatasetFeature],
+        td_col_name,
+        time_col_name,
+        model_col_name,
+        prediction=None,
+        training_dataset_version=None,
+        hsml_model=None,
+    ) -> pd.DataFrame:
         import uuid
-        features = Engine._convert_feature_log_to_df(features, [f.name for f in fg_features])
+
+        features = Engine._convert_feature_log_to_df(
+            features, [f.name for f in fg_features]
+        )
         if td_predictions:
-            prediction = Engine._convert_feature_log_to_df(prediction, [f.name for f in td_predictions])
+            prediction = Engine._convert_feature_log_to_df(
+                prediction, [f.name for f in td_predictions]
+            )
             for f in td_predictions:
-                prediction[f.name] = Engine._cast_column_to_offline_type(prediction[f.name], f.type)
+                prediction[f.name] = Engine._cast_column_to_offline_type(
+                    prediction[f.name], f.type
+                )
             if not set(prediction.columns).intersection(set(features.columns)):
                 features = pd.concat([features, prediction], axis=1)
         # need to case the column type as if it is None, type cannot be inferred.
         features[td_col_name] = Engine._cast_column_to_offline_type(
-            pd.Series([training_dataset_version for _ in range(len(features))]), fg.get_feature(td_col_name).type
+            pd.Series([training_dataset_version for _ in range(len(features))]),
+            fg.get_feature(td_col_name).type,
         )
         # _cast_column_to_offline_type cannot cast string type
-        features[model_col_name] = pd.Series([FeatureViewEngine.get_hsml_model_value(hsml_model) if hsml_model else None for _ in range(len(features))], dtype=pd.StringDtype())
+        features[model_col_name] = pd.Series(
+            [
+                FeatureViewEngine.get_hsml_model_value(hsml_model)
+                if hsml_model
+                else None
+                for _ in range(len(features))
+            ],
+            dtype=pd.StringDtype(),
+        )
         now = datetime.now()
         features[time_col_name] = Engine._cast_column_to_offline_type(
-            pd.Series([now for _ in range(len(features))]), fg.get_feature(time_col_name).type
+            pd.Series([now for _ in range(len(features))]),
+            fg.get_feature(time_col_name).type,
         )
         features["log_id"] = [str(uuid.uuid4()) for _ in range(len(features))]
         return features[[feat.name for feat in fg.features]]
