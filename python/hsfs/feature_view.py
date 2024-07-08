@@ -146,6 +146,7 @@ class FeatureView:
             featurestore_id, self.ENTITY_TYPE
         )
         self._logging_enabled = logging_enabled
+        self._feature_logging = None
 
         if self._id:
             self._init_feature_monitoring_engine()
@@ -3463,7 +3464,9 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to enable feature logging.
         """
-        return self._feature_view_engine.enable_feature_logging(self)
+        fv = self._feature_view_engine.enable_feature_logging(self)
+        self._feature_logging = self._feature_view_engine.get_feature_logging(fv)
+        return fv
 
     def log(self,
             features: Union[pd.DataFrame, list[list], np.ndarray],
@@ -3503,7 +3506,7 @@ class FeatureView:
             )
             self.enable_logging()
         return self._feature_view_engine.log_features(
-            self, features, predictions, transformed,
+            self, self._feature_logging, features, predictions, transformed,
             write_options,
             training_dataset_version=(
                 training_dataset_version or self.get_last_accessed_training_dataset()
@@ -3640,7 +3643,9 @@ class FeatureView:
          # Raises
              `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
          """
-        return self._feature_view_engine.delete_feature_logs(self, transformed)
+        return self._feature_view_engine.delete_feature_logs(
+            self, self._feature_logging, transformed
+        )
 
     @staticmethod
     def _update_attribute_if_present(this: "FeatureView", new: Any, key: str) -> None:

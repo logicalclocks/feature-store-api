@@ -1403,7 +1403,7 @@ class Engine:
         return True
 
     @staticmethod
-    def get_feature_logging_df(features, prediction=None):
+    def get_feature_logging_df(features, prediction=None, **kwargs):
         # do not take prediction separately because spark ml framework usually return feature together with the prediction
         # and it is costly to join them back
         return features

@@ -1609,13 +1609,13 @@ class Engine:
             return feature_log.copy(deep=False)
 
     @staticmethod
-    def get_feature_logging_df(fg,
-                               features,
-                               fg_features: List[TrainingDatasetFeature],
-                               td_predictions: List[TrainingDatasetFeature],
-                               td_col_name,
-                               time_col_name,
-                               model_col_name,
+    def get_feature_logging_df(features,
+                               fg=None,
+                               fg_features: List[TrainingDatasetFeature]=None,
+                               td_predictions: List[TrainingDatasetFeature]=None,
+                               td_col_name=None,
+                               time_col_name=None,
+                               model_col_name=None,
                                prediction=None,
                                training_dataset_version=None,
                                hsml_model=None,

@@ -460,4 +460,4 @@ class FeatureViewApi:
                 path_params += [self._TRANSFORMED_lOG]
             else:
                 path_params += [self._UNTRANSFORMED_LOG]
-        _client._send_request("DELETE", path_params, {})
+        return _client._send_request("DELETE", path_params, {})

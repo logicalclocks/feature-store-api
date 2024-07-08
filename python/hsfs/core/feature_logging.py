@@ -26,6 +26,11 @@ class FeatureLogging:
             untransformed_features = FeatureGroup.from_response_json(untransformed_features)
         return cls(json_decamelized.get('id'), transformed_features, untransformed_features)
 
+    def update(self, others):
+        self._transformed_features = others._transformed_features
+        self._untransformed_features = others._untransformed_features
+        return self
+
     @property
     def transformed_features(self) -> "feature_group.FeatureGroup":
         return self._transformed_features

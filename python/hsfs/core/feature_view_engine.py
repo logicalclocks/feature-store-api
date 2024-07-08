@@ -948,29 +948,32 @@ class FeatureViewEngine:
 
     def _get_logging_fg(self, fv, transformed):
         feature_logging = self.get_feature_logging(fv)
+        return self._get_logging_fg_feature_logging(feature_logging, transformed)
+
+    def _get_logging_fg_feature_logging(self, feature_logging, transformed):
         if transformed:
             return feature_logging.transformed_features
         else:
             return feature_logging.untransformed_features
 
-    def log_features(self, fv, features, prediction=None, transformed=False, write_options=None, training_dataset_version=None, hsml_model=None):
+    def log_features(self, fv, feature_logging, features_rows, prediction=None, transformed=False, write_options=None, training_dataset_version=None, hsml_model=None):
         default_write_options = {
             "start_offline_materialization": False,
         }
         if write_options:
             default_write_options.update(write_options)
-        fg = self._get_logging_fg(fv, transformed)
+        fg = self._get_logging_fg_feature_logging(feature_logging, transformed)
         df = engine.get_instance().get_feature_logging_df(
-            fg,
-            features,
-            [feature for feature in fv.features if not feature.label],
-            [feature for feature in fv.features if feature.label],
-            FeatureViewEngine._LOG_TD_VERSION,
-            FeatureViewEngine._LOG_TIME,
-            FeatureViewEngine._HSML_MODEL,
-            prediction,
-            training_dataset_version,
-            hsml_model,
+            features_rows,
+            fg=fg,
+            fg_features=[feature for feature in fv.features if not feature.label],
+            td_predictions=[feature for feature in fv.features if feature.label],
+            td_col_name=FeatureViewEngine._LOG_TD_VERSION,
+            time_col_name=FeatureViewEngine._LOG_TIME,
+            model_col_name=FeatureViewEngine._HSML_MODEL,
+            prediction=prediction,
+            training_dataset_version=training_dataset_version,
+            hsml_model=hsml_model,
         )
         return fg.insert(df, write_options=default_write_options)
 
@@ -1067,7 +1070,8 @@ class FeatureViewEngine:
                     pass
         return jobs
 
-    def delete_feature_logs(self, fv, transformed):
+    def delete_feature_logs(self, fv, feature_logging, transformed):
         self._feature_view_api.delete_feature_logs(
             fv.name, fv.version, transformed
         )
+        feature_logging.update(self.get_feature_logging(fv))
