@@ -32,7 +32,6 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Dict,
     List,
     Literal,
@@ -45,7 +44,6 @@ from typing import (
 if TYPE_CHECKING:
     import great_expectations
 
-import avro
 import boto3
 import hsfs
 import numpy as np
@@ -54,7 +52,6 @@ import polars as pl
 import pyarrow as pa
 import pytz
 from botocore.response import StreamingBody
-from confluent_kafka import Consumer, KafkaError, Producer, TopicPartition
 from hsfs import (
     client,
     feature,
@@ -64,7 +61,6 @@ from hsfs import (
     util,
 )
 from hsfs import storage_connector as sc
-from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query
 from hsfs.core import (
@@ -75,6 +71,7 @@ from hsfs.core import (
     ingestion_job_conf,
     job,
     job_api,
+    kafka_engine,
     statistics_api,
     storage_connector_api,
     training_dataset_api,
@@ -89,18 +86,7 @@ from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from sqlalchemy import sql
-from tqdm.auto import tqdm
 
-
-HAS_FAST = False
-try:
-    from fastavro import schemaless_writer
-    from fastavro.schema import parse_schema
-
-    HAS_FAST = True
-except ImportError:
-    pass
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations
@@ -1239,52 +1225,6 @@ class Engine:
     ) -> np.ndarray:
         return feature_dataframe[feature_name].unique()
 
-    def _init_kafka_producer(
-        self,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        offline_write_options: Dict[str, Any],
-    ) -> Producer:
-        # setup kafka producer
-        return Producer(
-            self._get_kafka_config(
-                feature_group.feature_store_id, offline_write_options
-            )
-        )
-
-    def _init_kafka_consumer(
-        self,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        offline_write_options: Dict[str, Any],
-    ) -> Consumer:
-        # setup kafka consumer
-        consumer_config = self._get_kafka_config(
-            feature_group.feature_store_id, offline_write_options
-        )
-        if "group.id" not in consumer_config:
-            consumer_config["group.id"] = "hsfs_consumer_group"
-
-        return Consumer(consumer_config)
-
-    def _init_kafka_resources(
-        self,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        offline_write_options: Dict[str, Any],
-    ) -> Tuple[Producer, Dict[str, Callable], Callable]:
-        # setup kafka producer
-        producer = self._init_kafka_producer(feature_group, offline_write_options)
-
-        # setup complex feature writers
-        feature_writers = {
-            feature: self._get_encoder_func(
-                feature_group._get_feature_avro_schema(feature)
-            )
-            for feature in feature_group.get_complex_features()
-        }
-
-        # setup row writer function
-        writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
-        return producer, feature_writers, writer
-
     def _write_dataframe_kafka(
         self,
         feature_group: Union[FeatureGroup, ExternalFeatureGroup],
@@ -1292,50 +1232,25 @@ class Engine:
         offline_write_options: Dict[str, Any],
     ) -> Optional[job.Job]:
         initial_check_point = ""
-        if feature_group._multi_part_insert:
-            if feature_group._kafka_producer is None:
-                producer, feature_writers, writer = self._init_kafka_resources(
-                    feature_group, offline_write_options
-                )
-                feature_group._kafka_producer = producer
-                feature_group._feature_writers = feature_writers
-                feature_group._writer = writer
-            else:
-                producer = feature_group._kafka_producer
-                feature_writers = feature_group._feature_writers
-                writer = feature_group._writer
-        else:
-            producer, feature_writers, writer = self._init_kafka_resources(
-                feature_group, offline_write_options
-            )
-
-            # initialize progress bar
-            progress_bar = tqdm(
-                total=dataframe.shape[0],
-                bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
-                "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
-                desc="Uploading Dataframe",
-                mininterval=1,
-            )
-
+        producer, headers, feature_writers, writer = kafka_engine.init_kafka_resources(
+            feature_group,
+            offline_write_options,
+            project_id=client.get_instance().project_id,
+        )
+        if not feature_group._multi_part_insert:
             # set initial_check_point to the current offset
-            initial_check_point = self._kafka_get_offsets(
-                feature_group, offline_write_options, True
+            initial_check_point = kafka_engine.kafka_get_offsets(
+                topic_name=feature_group._online_topic_name,
+                feature_store_id=feature_group.feature_store_id,
+                offline_write_options=offline_write_options,
+                high=True,
             )
 
-        def acked(err: Exception, msg: Any) -> None:
-            if err is not None:
-                if offline_write_options.get("debug_kafka", False):
-                    print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
-                if err.code() in [
-                    KafkaError.TOPIC_AUTHORIZATION_FAILED,
-                    KafkaError._MSG_TIMED_OUT,
-                ]:
-                    progress_bar.colour = "RED"
-                    raise err  # Stop producing and show error
-            # update progress bar for each msg
-            if not feature_group._multi_part_insert:
-                progress_bar.update()
+        acked, progress_bar = kafka_engine.build_ack_callback_and_optional_progress_bar(
+            n_rows=dataframe.shape[0],
+            is_multi_part_insert=feature_group._multi_part_insert,
+            offline_write_options=offline_write_options,
+        )
 
         if isinstance(dataframe, pd.DataFrame):
             row_iterator = dataframe.itertuples(index=False)
@@ -1365,7 +1280,7 @@ class Engine:
                         row[k] = None
 
             # encode complex features
-            row = self._encode_complex_features(feature_writers, row)
+            row = kafka_engine.encode_complex_features(feature_writers, row)
 
             # encode feature row
             with BytesIO() as outf:
@@ -1375,8 +1290,14 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            self._kafka_produce(
-                producer, feature_group, key, encoded_row, acked, offline_write_options
+            kafka_engine.kafka_produce(
+                producer=producer,
+                key=key,
+                encoded_row=encoded_row,
+                topic_name=feature_group._online_topic_name,
+                headers=headers,
+                acked=acked,
+                debug_kafka=offline_write_options.get("debug_kafka", False),
             )
 
         # make sure producer blocks and everything is delivered
@@ -1384,13 +1305,11 @@ class Engine:
             producer.flush()
             progress_bar.close()
 
-        # start materialization job
+        # start materialization job if not an external feature group, otherwise return None
+        if isinstance(feature_group, ExternalFeatureGroup):
+            return None
         # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
-        if (
-            not isinstance(feature_group, ExternalFeatureGroup)
-            and not initial_check_point
-            and not feature_group._multi_part_insert
-        ):
+        if not initial_check_point and not feature_group._multi_part_insert:
             if self._start_offline_materialization(offline_write_options):
                 warnings.warn(
                     "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
@@ -1398,17 +1317,18 @@ class Engine:
                     stacklevel=1,
                 )
             # set the initial_check_point to the lowest offset (it was not set previously due to topic not existing)
-            initial_check_point = self._kafka_get_offsets(
-                feature_group, offline_write_options, False
+            initial_check_point = kafka_engine.kafka_get_offsets(
+                topic_name=feature_group._online_topic_name,
+                feature_store_id=feature_group.feature_store_id,
+                offline_write_options=offline_write_options,
+                high=True,
             )
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")
                 + initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
-        elif not isinstance(
-            feature_group, ExternalFeatureGroup
-        ) and self._start_offline_materialization(offline_write_options):
+        elif self._start_offline_materialization(offline_write_options):
             if not offline_write_options.get(
                 "skip_offsets", False
             ) and self._job_api.last_execution(
@@ -1422,109 +1342,7 @@ class Engine:
                 + initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
-        if isinstance(feature_group, ExternalFeatureGroup):
-            return None
         return feature_group.materialization_job
-
-    def _kafka_get_offsets(
-        self,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        offline_write_options: Dict[str, Any],
-        high: bool,
-    ) -> str:
-        topic_name = feature_group._online_topic_name
-        consumer = self._init_kafka_consumer(feature_group, offline_write_options)
-        topics = consumer.list_topics(
-            timeout=offline_write_options.get("kafka_timeout", 6)
-        ).topics
-        if topic_name in topics.keys():
-            # topic exists
-            offsets = ""
-            tuple_value = int(high)
-            for partition_metadata in topics.get(topic_name).partitions.values():
-                partition = TopicPartition(
-                    topic=topic_name, partition=partition_metadata.id
-                )
-                offsets += f",{partition_metadata.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
-            consumer.close()
-
-            return f" -initialCheckPointString {topic_name + offsets}"
-        return ""
-
-    def _kafka_produce(
-        self,
-        producer: Producer,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        key: str,
-        encoded_row: bytes,
-        acked: callable,
-        offline_write_options: Dict[str, Any],
-    ) -> None:
-        while True:
-            # if BufferError is thrown, we can be sure, message hasn't been send so we retry
-            try:
-                # produce
-                header = {
-                    "projectId": str(feature_group.feature_store.project_id).encode(
-                        "utf8"
-                    ),
-                    "featureGroupId": str(feature_group._id).encode("utf8"),
-                    "subjectId": str(feature_group.subject["id"]).encode("utf8"),
-                }
-
-                producer.produce(
-                    topic=feature_group._online_topic_name,
-                    key=key,
-                    value=encoded_row,
-                    callback=acked,
-                    headers=header,
-                )
-
-                # Trigger internal callbacks to empty op queue
-                producer.poll(0)
-                break
-            except BufferError as e:
-                if offline_write_options.get("debug_kafka", False):
-                    print("Caught: {}".format(e))
-                # backoff for 1 second
-                producer.poll(1)
-
-    def _encode_complex_features(
-        self, feature_writers: Dict[str, callable], row: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        for feature_name, writer in feature_writers.items():
-            with BytesIO() as outf:
-                writer(row[feature_name], outf)
-                row[feature_name] = outf.getvalue()
-        return row
-
-    def _get_encoder_func(self, writer_schema: str) -> callable:
-        if HAS_FAST:
-            schema = json.loads(writer_schema)
-            parsed_schema = parse_schema(schema)
-            return lambda record, outf: schemaless_writer(outf, parsed_schema, record)
-
-        parsed_schema = avro.schema.parse(writer_schema)
-        writer = avro.io.DatumWriter(parsed_schema)
-        return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
-
-    def _get_kafka_config(
-        self, feature_store_id: int, write_options: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        if write_options is None:
-            write_options = {}
-        external = not (
-            isinstance(client.get_instance(), hopsworks.Client)
-            or write_options.get("internal_kafka", False)
-        )
-
-        storage_connector = self._storage_connector_api.get_kafka_connector(
-            feature_store_id, external
-        )
-
-        config = storage_connector.confluent_options()
-        config.update(write_options.get("kafka_producer_config", {}))
-        return config
 
     @staticmethod
     def _convert_pandas_dtype_to_offline_type(arrow_type: str) -> str:

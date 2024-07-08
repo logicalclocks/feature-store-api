@@ -2188,6 +2188,7 @@ class FeatureGroup(FeatureGroupBase):
         self._kafka_producer: Optional["confluent_kafka.Producer"] = None
         self._feature_writers: Optional[Dict[str, callable]] = None
         self._writer: Optional[callable] = None
+        self._kafka_headers: Optional[Dict[str, bytes]] = None
 
     def read(
         self,
@@ -2907,6 +2908,7 @@ class FeatureGroup(FeatureGroupBase):
             self._kafka_producer = None
         self._feature_writers = None
         self._writer = None
+        self._kafka_headers = None
         self._multi_part_insert = False
 
     def insert_stream(
