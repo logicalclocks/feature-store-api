@@ -2955,6 +2955,8 @@ class TestPython:
         mock_td_api.return_value.compute.return_value = mock_job
         mocker.patch("hsfs.util.get_job_url")
 
+        mocker.patch("hsfs.client.get_instance")
+
         python_engine = python.Engine()
 
         fg = feature_group.FeatureGroup.from_response_json(
@@ -3322,6 +3324,8 @@ class TestPython:
             return_value=["", ""],
         )
 
+        mocker.patch("hsfs.client.get_instance")
+
         python_engine = python.Engine()
 
         fg = feature_group.FeatureGroup(
@@ -3377,6 +3381,8 @@ class TestPython:
             return_value=[],
         )
 
+        mocker.patch("hsfs.client.get_instance")
+
         python_engine = python.Engine()
 
         fg = feature_group.FeatureGroup(
@@ -3427,6 +3433,8 @@ class TestPython:
             "hsfs.core.kafka_engine.kafka_get_offsets",
             return_value=" tests_offsets",
         )
+
+        mocker.patch("hsfs.client.get_instance")
 
         python_engine = python.Engine()
 
@@ -3481,6 +3489,8 @@ class TestPython:
             "hsfs.core.kafka_engine.kafka_get_offsets",
             side_effect=["", " tests_offsets"],
         )
+
+        mocker.patch("hsfs.client.get_instance")
 
         python_engine = python.Engine()
 
