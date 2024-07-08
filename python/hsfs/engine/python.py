@@ -1635,3 +1635,8 @@ class Engine:
         features[time_col_name] = pd.Series([now for _ in range(len(features))])
         features["log_id"] = [str(uuid.uuid4()) for _ in range(len(features))]
         return features[[feat.name for feat in fg.features]]
+
+    @staticmethod
+    def read_feature_log(query):
+        df = query.read()
+        return df.drop(["log_id", FeatureViewEngine._LOG_TIME], axis=1)

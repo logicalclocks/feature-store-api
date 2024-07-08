@@ -25,6 +25,7 @@ import warnings
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
 
+from hsfs.core.feature_view_engine import FeatureViewEngine
 
 if TYPE_CHECKING:
     import great_expectations
@@ -1408,6 +1409,10 @@ class Engine:
         # and it is costly to join them back
         return features
 
+    @staticmethod
+    def read_feature_log(query):
+        df = query.read()
+        return df.drop("log_id", FeatureViewEngine._LOG_TIME)
 
 class SchemaError(Exception):
     """Thrown when schemas don't match"""

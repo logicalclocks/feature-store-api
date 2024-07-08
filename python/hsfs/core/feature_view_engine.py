@@ -1000,9 +1000,7 @@ class FeatureViewEngine:
             query = query.filter(fg.get_feature(FeatureViewEngine._HSML_MODEL) == self.get_hsml_model_value(hsml_model))
         if filter:
             query = query.filter(self._convert_to_log_fg_filter(fg, fv, filter, fv_feat_name_map))
-        df = query.read()
-        df = df.drop(["log_id", FeatureViewEngine._LOG_TIME], axis=1)
-        return df
+        return engine.get_instance().read_feature_log(query)
 
     @staticmethod
     def get_hsml_model_value(hsml_model):
