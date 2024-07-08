@@ -60,6 +60,7 @@ def init_kafka_resources(
 ) -> Tuple[
     Producer, Dict[str, bytes], Dict[str, Callable[..., bytes]], Callable[..., bytes] :
 ]:
+    # this function is a caching wrapper around _init_kafka_resources
     if feature_group._multi_part_insert and feature_group._kafka_producer:
         return (
             feature_group._kafka_producer,
@@ -67,31 +68,42 @@ def init_kafka_resources(
             feature_group._feature_writers,
             feature_group._writer,
         )
-    else:
-        # setup kafka producer
-        producer = init_kafka_producer(
-            feature_group.feature_store_id, offline_write_options
-        )
-        # setup complex feature writers
-        feature_writers = {
-            feature: get_encoder_func(feature_group._get_feature_avro_schema(feature))
-            for feature in feature_group.get_complex_features()
-        }
-        # setup row writer function
-        writer = get_encoder_func(feature_group._get_encoded_avro_schema())
+    producer, headers, feature_writers, writer = _init_kafka_resources(
+        feature_group, offline_write_options, project_id
+    )
+    if feature_group._multi_part_insert:
+        feature_group._kafka_producer = producer
+        feature_group._kafka_headers = headers
+        feature_group._feature_writers = feature_writers
+        feature_group._writer = writer
+    return producer, headers, feature_writers, writer
 
-        # custom headers for hopsworks onlineFS
-        headers = {
-            "projectId": str(project_id).encode("utf8"),
-            "featureGroupId": str(feature_group._id).encode("utf8"),
-            "subjectId": str(feature_group.subject["id"]).encode("utf8"),
-        }
-        if feature_group._multi_part_insert:
-            feature_group._kafka_producer = producer
-            feature_group._kafka_headers = headers
-            feature_group._feature_writers = feature_writers
-            feature_group._writer = writer
 
+def _init_kafka_resources(
+    feature_group: Union[FeatureGroup, ExternalFeatureGroup],
+    offline_write_options: Dict[str, Any],
+    project_id: int,
+) -> Tuple[
+    Producer, Dict[str, bytes], Dict[str, Callable[..., bytes]], Callable[..., bytes] :
+]:
+    # setup kafka producer
+    producer = init_kafka_producer(
+        feature_group.feature_store_id, offline_write_options
+    )
+    # setup complex feature writers
+    feature_writers = {
+        feature: get_encoder_func(feature_group._get_feature_avro_schema(feature))
+        for feature in feature_group.get_complex_features()
+    }
+    # setup row writer function
+    writer = get_encoder_func(feature_group._get_encoded_avro_schema())
+
+    # custom headers for hopsworks onlineFS
+    headers = {
+        "projectId": str(project_id).encode("utf8"),
+        "featureGroupId": str(feature_group._id).encode("utf8"),
+        "subjectId": str(feature_group.subject["id"]).encode("utf8"),
+    }
     return producer, headers, feature_writers, writer
 
 

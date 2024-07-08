@@ -62,7 +62,7 @@ class TestFeatureGroupWriter:
             "subjectId": str(12).encode("utf8"),
         }
         mock_init_kafka_resources = mocker.patch(
-            "hsfs.core.kafka_engine.init_kafka_resources",
+            "hsfs.core.kafka_engine._init_kafka_resources",
             return_value=(producer, headers, feature_writers, writer_m),
         )
         mocker.patch("hsfs.core.kafka_engine.encode_complex_features")
@@ -120,7 +120,7 @@ class TestFeatureGroupWriter:
             "subjectId": str(12).encode("utf8"),
         }
         mock_init_kafka_resources = mocker.patch(
-            "hsfs.core.kafka_engine.init_kafka_resources",
+            "hsfs.core.kafka_engine._init_kafka_resources",
             return_value=(producer, headers, feature_writers, writer_m),
         )
         mocker.patch("hsfs.core.kafka_engine.encode_complex_features")
