@@ -15,15 +15,15 @@
 #
 from __future__ import annotations
 
+import functools
 import json
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, Callable, Dict, Literal, Optional, Tuple, Union
 
 from hsfs import client
-from hsfs.client import hopsworks
-from hsfs.core import storage_connector_api
+from hsfs.core import async_kafka, storage_connector_api
 from hsfs.core.constants import HAS_AVRO, HAS_CONFLUENT_KAFKA, HAS_FAST_AVRO
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 
 if HAS_CONFLUENT_KAFKA:
@@ -111,6 +111,10 @@ def init_kafka_producer(
     feature_store_id: int,
     offline_write_options: Dict[str, Any],
 ) -> Producer:
+    if offline_write_options.get("use_async_kafka", False):
+        return async_kafka.AsyncKafkaProducer(
+            get_kafka_config(feature_store_id, offline_write_options)
+        )
     # setup kafka producer
     return Producer(get_kafka_config(feature_store_id, offline_write_options))
 
@@ -200,7 +204,9 @@ def get_kafka_config(
     if write_options is None:
         write_options = {}
     external = not (
-        isinstance(client.get_instance(), hopsworks.Client)
+        hasattr(
+            client.get_instance(), "SECRETS_DIR"
+        )  # check if it is the internal client
         or write_options.get("internal_kafka", False)
     )
 
@@ -231,18 +237,40 @@ def build_ack_callback_and_optional_progress_bar(
     else:
         progress_bar = None
 
-    def acked(err: Exception, msg: Any) -> None:
-        if err is not None:
-            if offline_write_options.get("debug_kafka", False):
-                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
-            if err.code() in [
-                KafkaError.TOPIC_AUTHORIZATION_FAILED,
-                KafkaError._MSG_TIMED_OUT,
-            ]:
-                progress_bar.colour = "RED"
-                raise err  # Stop producing and show error
-        # update progress bar for each msg
-        if not is_multi_part_insert:
-            progress_bar.update()
+    if offline_write_options.get("use_async_kafka", False):
+        acked = functools.partial(
+            sync_acked,
+            debug_kafka=offline_write_options.get("debug_kafka", False),
+            progress_bar=progress_bar,
+            is_multi_part_insert=is_multi_part_insert,
+        )
+    else:
+        acked = functools.partial(
+            async_kafka.async_acked,
+            debug_kafka=offline_write_options.get("debug_kafka", False),
+            progress_bar=progress_bar,
+            is_multi_part_insert=is_multi_part_insert,
+        )
 
     return acked, progress_bar
+
+
+def sync_acked(
+    err: Exception,
+    msg: str,
+    debug_kafka: bool,
+    progress_bar: tqdm,
+    is_multi_part_insert: bool,
+) -> None:
+    if err is not None:
+        if debug_kafka:
+            print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+        if err.code() in [
+            KafkaError.TOPIC_AUTHORIZATION_FAILED,
+            KafkaError._MSG_TIMED_OUT,
+        ]:
+            progress_bar.colour = "RED"
+            raise err  # Stop producing and show error
+    # update progress bar for each msg
+    if not is_multi_part_insert:
+        progress_bar.update()
