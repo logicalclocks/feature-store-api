@@ -3643,6 +3643,8 @@ class FeatureView:
          # Raises
              `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
          """
+        if self._feature_logging is None:
+            self._feature_logging = self._feature_view_engine.get_feature_logging(self)
         return self._feature_view_engine.delete_feature_logs(
             self, self._feature_logging, transformed
         )
