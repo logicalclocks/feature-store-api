@@ -26,6 +26,7 @@ from hsfs import (
 from hsfs.client.exceptions import RestAPIError
 from hsfs.constructor import query, serving_prepared_statement
 from hsfs.core import explicit_provenance, job, training_dataset_job_conf
+from hsfs.core.job import Job
 
 
 class FeatureViewApi:
@@ -43,6 +44,13 @@ class FeatureViewApi:
     _COMPUTE = "compute"
     _PROVENANCE = "provenance"
     _LINKS = "links"
+    _LOGGING = "log"
+    _PAUSE_LOGGING = "pause"
+    _RESUME_LOGGING = "resume"
+    _MATERIALIZE_LOGGING = "materialize"
+    _TRANSFORMED_lOG = "transformed"
+    _UNTRANSFORMED_LOG = "untransformed"
+
 
     def __init__(self, feature_store_id: int) -> None:
         self._feature_store_id = feature_store_id
@@ -358,3 +366,98 @@ class FeatureViewApi:
             explicit_provenance.Links.Type.MODEL,
             training_dataset_version=training_dataset_version,
         )
+
+    def enable_feature_logging(
+        self,
+        feature_view_name: str,
+        feature_view_version: int,):
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            feature_view_name,
+            self._VERSION,
+            feature_view_version,
+            self._LOGGING,
+        ]
+        _client._send_request("PUT", path_params, {})
+
+    def pause_feature_logging(
+        self,
+        feature_view_name: str,
+        feature_view_version: int,):
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            feature_view_name,
+            self._VERSION,
+            feature_view_version,
+            self._LOGGING,
+            self._PAUSE_LOGGING,
+        ]
+        return _client._send_request("POST", path_params, {})
+
+    def resume_feature_logging(
+        self,
+        feature_view_name: str,
+        feature_view_version: int,):
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            feature_view_name,
+            self._VERSION,
+            feature_view_version,
+            self._LOGGING,
+            self._RESUME_LOGGING,
+        ]
+        return _client._send_request("POST", path_params, {})
+
+    def materialize_feature_logging(
+        self,
+        feature_view_name: str,
+        feature_view_version: int,):
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            feature_view_name,
+            self._VERSION,
+            feature_view_version,
+            self._LOGGING,
+            self._MATERIALIZE_LOGGING,
+        ]
+        jobs_json = _client._send_request("POST", path_params, {})
+        jobs = []
+        if jobs_json.get("count", 0) > 1:
+            for item in jobs_json["items"]:
+                jobs.append(Job.from_response_json(item))
+        else:
+            jobs.append(Job.from_response_json(jobs_json))
+        return jobs
+
+    def get_feature_logging(
+        self,
+        feature_view_name: str,
+        feature_view_version: int,):
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            feature_view_name,
+            self._VERSION,
+            feature_view_version,
+            self._LOGGING,
+        ]
+        return _client._send_request("GET", path_params, {})
+
+    def delete_feature_logs(
+        self,
+        feature_view_name: str,
+        feature_view_version: int,
+        transformed: bool = None,
+    ):
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            feature_view_name,
+            self._VERSION,
+            feature_view_version,
+            self._LOGGING,
+        ]
+        if transformed is not None:
+            if transformed:
+                path_params += [self._TRANSFORMED_lOG]
+            else:
+                path_params += [self._UNTRANSFORMED_LOG]
+        _client._send_request("DELETE", path_params, {})

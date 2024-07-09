@@ -100,6 +100,14 @@ class VectorServer:
                 or feat.training_helper_column
             )
         ]
+        self._untransformed_feature_vector_col_name = [
+            feat.name
+            for feat in features
+            if not (
+                feat.label
+                or feat.training_helper_column
+            )
+        ]
         self._inference_helper_col_name = [
             feat.name for feat in features if feat.inference_helper_column
         ]
@@ -250,6 +258,7 @@ class VectorServer:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed=True,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         online_client_choice = self.which_client_and_ensure_initialised(
@@ -281,10 +290,11 @@ class VectorServer:
             vector_db_result=vector_db_features or {},
             allow_missing=allow_missing,
             client=online_client_choice,
+            transformed=transformed,
         )
 
         return self.handle_feature_vector_return_type(
-            vector, batch=False, inference_helper=False, return_type=return_type
+            vector, batch=False, inference_helper=transformed, return_type=return_type
         )
 
     def get_feature_vectors(
@@ -298,6 +308,7 @@ class VectorServer:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed=True,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
@@ -383,13 +394,14 @@ class VectorServer:
                 vector_db_result=vector_db_result,
                 allow_missing=allow_missing,
                 client=online_client_choice,
+                transformed=transformed,
             )
 
             if vector is not None:
                 vectors.append(vector)
 
         return self.handle_feature_vector_return_type(
-            vectors, batch=True, inference_helper=False, return_type=return_type
+            vectors, batch=True, inference_helper=transformed, return_type=return_type
         )
 
     def assemble_feature_vector(
@@ -399,6 +411,7 @@ class VectorServer:
         vector_db_result: Optional[Dict[str, Any]],
         allow_missing: bool,
         client: Literal["rest", "sql"],
+        transformed,
     ) -> Optional[List[Any]]:
         """Assembles serving vector from online feature store."""
         # Errors in batch requests are returned as None values
@@ -435,12 +448,24 @@ class VectorServer:
 
         if len(self.return_feature_value_handlers) > 0:
             self.apply_return_value_handlers(result_dict, client=client)
-        if len(self.transformation_functions) > 0:
+        if len(self.transformation_functions) > 0 and transformed:
             self.apply_transformation(result_dict)
 
         _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)
+        if transformed:
+            return [result_dict.get(fname, None) for fname in self.feature_vector_col_name]
+        else:
+            return [result_dict.get(fname, None) for fname in self._untransformed_feature_vector_col_name]
 
-        return [result_dict.get(fname, None) for fname in self.feature_vector_col_name]
+    def transform_feature_vectors(self, batch_features):
+        return [self.apply_transformation(self.get_untransformed_features_map(features))
+            for features in batch_features
+        ]
+
+    def get_untransformed_features_map(self, features) -> Dict[str, Any]:
+        return dict(
+            [(fname, fvalue) for fname, fvalue
+             in zip(self._untransformed_feature_vector_col_name, features)])
 
     def handle_feature_vector_return_type(
         self,

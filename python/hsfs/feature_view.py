@@ -102,6 +102,7 @@ class FeatureView:
         ] = None,
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[skm.ServingKey]] = None,
+        logging_enabled: Optional[bool] = False,
         **kwargs,
     ) -> None:
         self._name = name
@@ -144,6 +145,7 @@ class FeatureView:
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
+        self._logging_enabled = logging_enabled
 
         if self._id:
             self._init_feature_monitoring_engine()
@@ -463,6 +465,7 @@ class FeatureView:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed: Optional[bool] = True,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -536,6 +539,7 @@ class FeatureView:
             force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
+            transformed: Setting to `False` returns the untransformed feature vectors.
 
         # Returns
             `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
@@ -561,6 +565,7 @@ class FeatureView:
             vector_db_features=vector_db_features,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
+            transformed=transformed,
         )
 
     def get_feature_vectors(
@@ -572,6 +577,7 @@ class FeatureView:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
+        transformed: Optional[bool] = True,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -643,6 +649,7 @@ class FeatureView:
             force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
                 using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
+            transformed: Setting to `False` returns the untransformed feature vectors.
 
         # Returns
             `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
@@ -670,6 +677,7 @@ class FeatureView:
             vector_db_features=vector_db_features,
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
+            transformed=transformed,
         )
 
     def get_inference_helper(
@@ -917,10 +925,12 @@ class FeatureView:
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options: Optional[Dict[str, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         inference_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        transformed: Optional[bool] = True,
+        **kwargs,
     ) -> TrainingDatasetDataFrameTypes:
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -955,11 +965,7 @@ class FeatureView:
             end_time: End event time for the batch query, exclusive. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            read_options: User provided read options.
-                Dictionary of read options for python engine:
-                * key `"use_hive"` and value `True` to read batch data with Hive instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
-                Defaults to `{}`.
+            read_options: User provided read options for python engine, defaults to `{}`:
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
             spine: Spine dataframe with primary key, event time and
@@ -968,7 +974,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             inference_helper_columns: whether to include inference helper columns or not.
@@ -979,6 +985,8 @@ class FeatureView:
             dataframe_type: str, optional. The type of the returned dataframe.
                 Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
                 Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
+            transformed: Setting to `False` returns the untransformed feature vectors.
+
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
@@ -998,10 +1006,11 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
-            primary_keys,
+            kwargs.get("primary_keys") or primary_key,
             event_time,
             inference_helper_columns,
             dataframe_type,
+            transformed=transformed,
         )
 
     def add_tag(self, name: str, value: Any) -> None:
@@ -1191,10 +1200,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
-    ) -> Tuple[int, "job.Job"]:
+        **kwargs,
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
 
@@ -1357,7 +1367,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not. Training helper columns are a
@@ -1392,7 +1402,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1423,10 +1433,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
-    ) -> Tuple[int, "job.Job"]:
+        **kwargs,
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
         The training data can be retrieved by calling `feature_view.get_train_test_split`.
@@ -1635,7 +1646,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -1679,7 +1690,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1712,10 +1723,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
-    ) -> Tuple[int, "job.Job"]:
+        **kwargs,
+    ) -> Tuple[int, job.Job]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
         The training data can be retrieved by calling `feature_view.get_train_validation_test_split`.
@@ -1910,7 +1922,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -1962,7 +1974,7 @@ class FeatureView:
             td,
             write_options or {},
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -1982,7 +1994,7 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-    ) -> "job.Job":
+    ) -> job.Job:
         """
         Recreate a training dataset.
 
@@ -2060,10 +2072,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         Optional[TrainingDatasetDataFrameTypes],  # optional label DataFrame
@@ -2137,13 +2150,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, read_options can contain the
                 following entries:
-                * key `"use_hive"` and value `True` to create in-memory training dataset
-                  with Hive instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
-                  For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`.
                 * key `spark` and value an object of type
                   [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -2154,7 +2162,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2189,7 +2197,7 @@ class FeatureView:
             read_options,
             training_dataset_obj=td,
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2215,10 +2223,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2304,13 +2313,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, read_options can contain the
                 following entries:
-                * key `"use_hive"` and value `True` to create in-memory training dataset
-                  with Hive instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                   [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -2321,7 +2325,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2365,7 +2369,7 @@ class FeatureView:
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2407,10 +2411,11 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2511,13 +2516,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, read_options can contain the
                 following entries:
-                * key `"use_hive"` and value `True` to create in-memory training dataset
-                  with Hive instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                   [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -2528,7 +2528,7 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2585,7 +2585,7 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
             spine=spine,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2624,10 +2624,11 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[str, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         Optional[TrainingDatasetDataFrameTypes],
@@ -2658,15 +2659,10 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
-                * key `"use_hive"` and value `True` to read training dataset
-                  with the Hopsworks API instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2685,7 +2681,7 @@ class FeatureView:
             self,
             read_options,
             training_dataset_version=training_dataset_version,
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2698,10 +2694,11 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2729,15 +2726,10 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
-                * key `"use_hive"` and value `True` to read training dataset
-                  with the Hopsworks API instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2758,7 +2750,7 @@ class FeatureView:
             read_options,
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -2771,10 +2763,11 @@ class FeatureView:
         self,
         training_dataset_version: int,
         read_options: Optional[Dict[str, Any]] = None,
-        primary_keys: bool = False,
+        primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
         dataframe_type: str = "default",
+        **kwargs,
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -2804,15 +2797,10 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
-                * key `"use_hive"` and value `True` to read training dataset
-                  with the Hopsworks API instead of
-                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+            primary_key: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
@@ -2837,7 +2825,7 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
-            primary_keys=primary_keys,
+            primary_keys=kwargs.get("primary_keys") or primary_key,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
             dataframe_type=dataframe_type,
@@ -3403,6 +3391,7 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
+            logging_enabled=json_decamelized.get('enabled_logging', False),
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3437,10 +3426,221 @@ class FeatureView:
             "training_helper_columns",
             "schema",
             "serving_keys",
+            "enabled_logging",
         ]:
             self._update_attribute_if_present(self, other, key)
         self._init_feature_monitoring_engine()
         return self
+
+    def transform_batch_data(self, features):
+        return self._feature_view_engine.transform_batch_data(
+            features, self._batch_scoring_server._transformation_functions
+        )
+
+    def transform_feature_vector(self, features):
+        return self.transform_feature_vectors([features])
+
+    def transform_feature_vectors(self, features):
+        return self._batch_scoring_server.transform_feature_vectors(features)
+
+    def enable_logging(self) -> None:
+        """Enable feature logging for the current feature view.
+
+        This method activates logging of features.
+
+        # Example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # enable logging
+            feature_view.enable_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to enable feature logging.
+        """
+        return self._feature_view_engine.enable_feature_logging(self)
+
+    def log(self,
+            features: Union[pd.DataFrame, list[list], np.ndarray],
+            predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
+            transformed: Optional[bool]=False,
+            write_options: Optional[Dict[str, Any]] = None,
+            training_dataset_version: Optional[int]=None,
+            hsml_model=None,
+            ):
+        """Log features and optionally predictions for the current feature view.
+
+        Note: If features is a `pd.Dataframe`, prediction can be provided as columns in the dataframe.
+
+        # Arguments
+            features: The features to be logged. Can be a pandas DataFrame, a list of lists, or a numpy ndarray.
+            prediction: The predictions to be logged. Can be a pandas DataFrame, a list of lists, or a numpy ndarray. Defaults to None.
+            transformed: Whether the features are transformed. Defaults to False.
+            write_options: Options for writing the log. Defaults to None.
+            training_dataset_version: Version of the training dataset. Defaults to None.
+            hsml_model: `hsml.model.Model` HSML model associated with the log. Defaults to None.
+
+        # Example
+            ```python
+            # log features
+            feature_view.log(features)
+            # log features and predictions
+            feature_view.log(features, prediction)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to log features.
+        """
+        if not self.logging_enabled:
+            warnings.warn(
+                "Feature logging is not enabled. It may take longer to enable logging before logging the features. You can call `feature_view.enable_logging()` to enable logging beforehand.",
+                stacklevel=1,
+            )
+            self.enable_logging()
+        return self._feature_view_engine.log_features(
+            self, features, predictions, transformed,
+            write_options,
+            training_dataset_version=(
+                training_dataset_version or self.get_last_accessed_training_dataset()
+            ),
+            hsml_model=hsml_model
+        )
+
+    def get_log_timeline(self,
+                         wallclock_time: Optional[
+                             Union[str, int, datetime, datetime.date]] = None,
+                         limit: Optional[int] = None,
+                         transformed: Optional[bool] = False,
+                         ):
+        """Retrieve the log timeline for the current feature view.
+
+        # Arguments
+            wallclock_time: Specific time to get the log timeline for. Can be a string, integer, datetime, or date. Defaults to None.
+            limit: Maximum number of entries to retrieve. Defaults to None.
+            transformed: Whether to include transformed logs. Defaults to False.
+
+        # Example
+            ```python
+            # get log timeline
+            log_timeline = feature_view.get_log_timeline(limit=10)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the log timeline.
+        """
+        return self._feature_view_engine.get_log_timeline(
+            self, wallclock_time, limit, transformed
+        )
+
+    def read_log(self,
+                 start_time: Optional[
+                     Union[str, int, datetime, datetime.date]] = None,
+                 end_time: Optional[
+                     Union[str, int, datetime, datetime.date]] = None,
+                 filter: Optional[Union[Filter, Logic]] = None,
+                 transformed: Optional[bool] = False,
+                 training_dataset_version: Optional[int]=None,
+                 hsml_model=None,
+                 ):
+        """Read the log entries for the current feature view.
+            Optionally, filter can be applied to start/end time, training dataset version, hsml model,
+            and custom fitler.
+
+        # Arguments
+            start_time: Start time for the log entries. Can be a string, integer, datetime, or date. Defaults to None.
+            end_time: End time for the log entries. Can be a string, integer, datetime, or date. Defaults to None.
+            filter: Filter to apply on the log entries. Can be a Filter or Logic object. Defaults to None.
+            transformed: Whether to include transformed logs. Defaults to False.
+            training_dataset_version: Version of the training dataset. Defaults to None.
+            hsml_model: HSML model associated with the log. Defaults to None.
+
+        # Example
+            ```python
+            # read all log entries
+            log_entries = feature_view.read_log()
+            # read log entries within time ranges
+            log_entries = feature_view.read_log(start_time="2022-01-01", end_time="2022-01-31")
+            # read log entries of a specific training dataset version
+            log_entries = feature_view.read_log(training_dataset_version=1)
+            # read log entries of a specific hsml model
+            log_entries = feature_view.read_log(hsml_model=Model(1, "dummy", version=1))
+            # read log entries by applying filter on features of feature group `fg` in the feature view
+            log_entries = feature_view.read_log(filter=fg.feature1 > 10)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to read the log entries.
+        """
+        return self._feature_view_engine.read_feature_logs(
+            self, start_time, end_time, filter, transformed, training_dataset_version, hsml_model
+        )
+
+    def pause_logging(self):
+        """Pause scheduled materialization job for the current feature view.
+
+        # Example
+            ```python
+            # pause logging
+            feature_view.pause_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to pause feature logging.
+        """
+        self._feature_view_engine.pause_logging(self)
+
+    def resume_logging(self):
+        """Resume scheduled materialization job for the current feature view.
+
+        # Example
+            ```python
+            # resume logging
+            feature_view.resume_logging()
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to pause feature logging.
+        """
+        self._feature_view_engine.resume_logging(self)
+
+    def materialize_log(self, wait: Optional[bool]=False):
+        """Materialize the log for the current feature view.
+
+        # Arguments
+            wait: Whether to wait for the materialization to complete. Defaults to False.
+
+        # Example
+            ```python
+            # materialize log
+            materialization_result = feature_view.materialize_log(wait=True)
+            ```
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to materialize the log.
+        """
+        return self._feature_view_engine.materialize_feature_logs(self, wait)
+
+    def delete_log(self, transformed: Optional[bool]=None):
+        """Delete the logged feature data for the current feature view.
+
+         # Arguments
+             transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
+
+         # Example
+             ```python
+             # delete log
+             feature_view.delete_log()
+             ```
+
+         # Raises
+             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
+         """
+        return self._feature_view_engine.delete_feature_logs(self, transformed)
 
     @staticmethod
     def _update_attribute_if_present(this: "FeatureView", new: Any, key: str) -> None:
@@ -3474,6 +3674,7 @@ class FeatureView:
             "description": self._description,
             "query": self._query,
             "features": self._features,
+            "enabledLogging": self._logging_enabled,
             "type": "featureViewDTO",
         }
 
@@ -3643,3 +3844,11 @@ class FeatureView:
     @serving_keys.setter
     def serving_keys(self, serving_keys: List[skm.ServingKey]) -> None:
         self._serving_keys = serving_keys
+
+    @property
+    def logging_enabled(self) -> bool:
+        return self._logging_enabled
+
+    @logging_enabled.setter
+    def logging_enabled(self, logging_enabled) -> None:
+        self._logging_enabled = logging_enabled
