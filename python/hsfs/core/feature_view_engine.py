@@ -797,11 +797,6 @@ class FeatureViewEngine:
         else:
             return feature_dataframe
 
-    def transform_batch_data(self, features, transformation_functions):
-        return engine.get_instance()._apply_transformation_function(
-            transformation_functions, dataset=features, inplace=False
-        )
-
     def add_tag(
         self, feature_view_obj, name: str, value, training_dataset_version=None
     ):
