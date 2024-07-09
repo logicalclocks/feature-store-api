@@ -3430,7 +3430,7 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
-            logging_enabled=json_decamelized.get('enabled_logging', False),
+            logging_enabled=json_decamelized.get("enabled_logging", False),
             transformation_functions=[
                 TransformationFunction.from_response_json(transformation_function)
                 for transformation_function in transformation_functions
@@ -3519,14 +3519,15 @@ class FeatureView:
         """
         return self._feature_view_engine.enable_feature_logging(self)
 
-    def log(self,
-            features: Union[pd.DataFrame, list[list], np.ndarray],
-            predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
-            transformed: Optional[bool]=False,
-            write_options: Optional[Dict[str, Any]] = None,
-            training_dataset_version: Optional[int]=None,
-            hsml_model=None,
-            ):
+    def log(
+        self,
+        features: Union[pd.DataFrame, list[list], np.ndarray],
+        predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]] = None,
+        transformed: Optional[bool] = False,
+        write_options: Optional[Dict[str, Any]] = None,
+        training_dataset_version: Optional[int] = None,
+        hsml_model=None,
+    ):
         """Log features and optionally predictions for the current feature view.
 
         Note: If features is a `pd.Dataframe`, prediction can be provided as columns in the dataframe.
@@ -3557,20 +3558,23 @@ class FeatureView:
             )
             self.enable_logging()
         return self._feature_view_engine.log_features(
-            self, features, predictions, transformed,
+            self,
+            features,
+            predictions,
+            transformed,
             write_options,
             training_dataset_version=(
                 training_dataset_version or self.get_last_accessed_training_dataset()
             ),
-            hsml_model=hsml_model
+            hsml_model=hsml_model,
         )
 
-    def get_log_timeline(self,
-                         wallclock_time: Optional[
-                             Union[str, int, datetime, datetime.date]] = None,
-                         limit: Optional[int] = None,
-                         transformed: Optional[bool] = False,
-                         ):
+    def get_log_timeline(
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        limit: Optional[int] = None,
+        transformed: Optional[bool] = False,
+    ):
         """Retrieve the log timeline for the current feature view.
 
         # Arguments
@@ -3591,16 +3595,15 @@ class FeatureView:
             self, wallclock_time, limit, transformed
         )
 
-    def read_log(self,
-                 start_time: Optional[
-                     Union[str, int, datetime, datetime.date]] = None,
-                 end_time: Optional[
-                     Union[str, int, datetime, datetime.date]] = None,
-                 filter: Optional[Union[Filter, Logic]] = None,
-                 transformed: Optional[bool] = False,
-                 training_dataset_version: Optional[int]=None,
-                 hsml_model=None,
-                 ):
+    def read_log(
+        self,
+        start_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        end_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        filter: Optional[Union[Filter, Logic]] = None,
+        transformed: Optional[bool] = False,
+        training_dataset_version: Optional[int] = None,
+        hsml_model=None,
+    ):
         """Read the log entries for the current feature view.
             Optionally, filter can be applied to start/end time, training dataset version, hsml model,
             and custom fitler.
@@ -3631,7 +3634,13 @@ class FeatureView:
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to read the log entries.
         """
         return self._feature_view_engine.read_feature_logs(
-            self, start_time, end_time, filter, transformed, training_dataset_version, hsml_model
+            self,
+            start_time,
+            end_time,
+            filter,
+            transformed,
+            training_dataset_version,
+            hsml_model,
         )
 
     def pause_logging(self):
@@ -3662,7 +3671,7 @@ class FeatureView:
         """
         self._feature_view_engine.resume_logging(self)
 
-    def materialize_log(self, wait: Optional[bool]=False):
+    def materialize_log(self, wait: Optional[bool] = False):
         """Materialize the log for the current feature view.
 
         # Arguments
@@ -3679,21 +3688,21 @@ class FeatureView:
         """
         return self._feature_view_engine.materialize_feature_logs(self, wait)
 
-    def delete_log(self, transformed: Optional[bool]=None):
+    def delete_log(self, transformed: Optional[bool] = None):
         """Delete the logged feature data for the current feature view.
 
-         # Arguments
-             transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
+        # Arguments
+            transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
 
-         # Example
-             ```python
-             # delete log
-             feature_view.delete_log()
-             ```
+        # Example
+            ```python
+            # delete log
+            feature_view.delete_log()
+            ```
 
-         # Raises
-             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
-         """
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
+        """
         return self._feature_view_engine.delete_feature_logs(self, transformed)
 
     @staticmethod
@@ -3741,7 +3750,7 @@ class FeatureView:
             "query": self._query,
             "features": self._features,
             "enabledLogging": self._logging_enabled,
-            "transformation_functions": self._transformation_functions,
+            "transformationFunctions": self._transformation_functions,
             "type": "featureViewDTO",
         }
 
