@@ -116,7 +116,17 @@ public class MainClass {
     LOGGER.info("Hsfs utils write options: {}", writeOptions);
 
     if (op.equals("offline_fg_materialization") || op.equals("offline_fg_backfill")) {
-      SparkEngine.getInstance().streamToHudiTable(streamFeatureGroup, writeOptions);
+      SparkEngine engine = SparkEngine.getInstance();
+      boolean suceeded = false;
+      try {
+        engine.streamToHudiTable(streamFeatureGroup, writeOptions);
+        suceeded = true;
+      } finally {
+        LOGGER.info("Closing spark session...");
+        engine.closeSparkSession();
+        LOGGER.info("Exiting with " + suceeded);
+        System.exit(suceeded ? 0 : 1);
+      }
     }
   }
 }

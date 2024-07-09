@@ -1097,5 +1097,14 @@ public class SparkEngine extends EngineBase {
     }
     return queryName;
   }
-
+  
+  public void closeSparkSession() {
+    if (getSparkSession() != null) {
+      try {
+        getSparkSession().sparkContext().stop();
+      } catch (Exception e) {
+        // No-OP
+      }
+    }
+  }
 }
