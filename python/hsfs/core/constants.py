@@ -1,4 +1,9 @@
 import importlib.util
+import typing
+
+
+# Custom TYPE_CHECKING, for loading typing-only imports during docgen
+TYPE_CHECKING: bool = typing.TYPE_CHECKING
 
 
 # Avro

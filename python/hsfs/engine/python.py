@@ -30,7 +30,6 @@ from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     List,
@@ -39,6 +38,8 @@ from typing import (
     Tuple,
     Union,
 )
+
+from hsfs.core.constants import TYPE_CHECKING
 
 
 if TYPE_CHECKING:

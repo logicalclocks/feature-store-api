@@ -19,7 +19,7 @@ import asyncio
 import json
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from hsfs import util
 from hsfs.core import (
@@ -27,7 +27,7 @@ from hsfs.core import (
     storage_connector_api,
     training_dataset_api,
 )
-from hsfs.core.constants import HAS_AIOMYSQL, HAS_SQLALCHEMY
+from hsfs.core.constants import HAS_AIOMYSQL, HAS_SQLALCHEMY, TYPE_CHECKING
 
 
 if TYPE_CHECKING:

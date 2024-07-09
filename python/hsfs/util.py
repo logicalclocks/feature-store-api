@@ -23,7 +23,6 @@ import threading
 import time
 from datetime import date, datetime, timezone
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -40,6 +39,7 @@ import pandas as pd
 from hsfs import client, feature, serving_key
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_api, variable_api
+from hsfs.core.constants import TYPE_CHECKING
 
 
 if TYPE_CHECKING:

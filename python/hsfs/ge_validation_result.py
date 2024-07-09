@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import datetime
 import json
-from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, Literal, Optional, Union
+
+from hsfs.core.constants import TYPE_CHECKING
 
 
 if TYPE_CHECKING:

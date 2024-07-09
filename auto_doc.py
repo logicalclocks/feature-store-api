@@ -377,6 +377,8 @@ def generate(dest_dir):
     shutil.copyfile(hsfs_dir / "CONTRIBUTING.md", dest_dir / "CONTRIBUTING.md")
     shutil.copyfile(hsfs_dir / "README.md", dest_dir / "index.md")
 
+    import hsfs.core.constants
+    hsfs.core.constants.TYPE_CHECKING = True
     doc_generator.generate(dest_dir / "generated")
 
 

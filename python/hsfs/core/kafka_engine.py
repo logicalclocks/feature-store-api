@@ -17,12 +17,17 @@ from __future__ import annotations
 
 import json
 from io import BytesIO
-from typing import TYPE_CHECKING, Any, Callable, Dict, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Literal, Optional, Tuple, Union
 
 from hsfs import client
 from hsfs.client import hopsworks
 from hsfs.core import storage_connector_api
-from hsfs.core.constants import HAS_AVRO, HAS_CONFLUENT_KAFKA, HAS_FAST_AVRO
+from hsfs.core.constants import (
+    HAS_AVRO,
+    HAS_CONFLUENT_KAFKA,
+    HAS_FAST_AVRO,
+    TYPE_CHECKING,
+)
 from tqdm import tqdm
 
 

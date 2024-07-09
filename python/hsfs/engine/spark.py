@@ -23,7 +23,9 @@ import re
 import shutil
 import warnings
 from datetime import date, datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
+
+from hsfs.core.constants import TYPE_CHECKING
 
 
 if TYPE_CHECKING:

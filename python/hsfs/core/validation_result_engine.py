@@ -16,7 +16,9 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import Dict, List, Union
+
+from hsfs.core.constants import TYPE_CHECKING
 
 
 if TYPE_CHECKING:

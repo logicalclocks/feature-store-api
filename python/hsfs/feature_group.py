@@ -22,7 +22,6 @@ import time
 import warnings
 from datetime import date, datetime
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     List,
@@ -32,6 +31,8 @@ from typing import (
     TypeVar,
     Union,
 )
+
+from hsfs.core.constants import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
