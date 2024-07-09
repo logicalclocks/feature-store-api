@@ -1199,7 +1199,7 @@ class Engine:
             "spark.databricks.delta.schema.autoMerge.enabled", "true"
         ).save(feature_group.location)
 
-    def _apply_transformation_function(self, transformation_functions, dataset):
+    def _apply_transformation_function(self, transformation_functions, dataset, **kwargs):
         # generate transformation function expressions
         transformed_feature_names = []
         transformation_fn_expressions = []
