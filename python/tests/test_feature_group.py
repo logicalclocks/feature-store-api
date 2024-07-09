@@ -32,6 +32,7 @@ from hsfs import (
 from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.engine import python
+from hsfs.hopsworks_udf import UDFType
 
 
 engine.init("python")
@@ -888,4 +889,58 @@ class TestExternalFeatureGroup:
         assert (
             mock_print.call_args[0][0][:63]
             == "Updated expectation suite attached to Feature Group, edit it at"
+        )
+
+    def test_from_response_json_transformation_functions(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["feature_group"]["get_transformations"]["response"]
+
+        # Act
+        fg = feature_group.FeatureGroup.from_response_json(json)
+
+        # Assert
+        assert fg.name == "fg_test"
+        assert fg.version == 1
+        assert fg._feature_store_id == 67
+        assert fg.description == "test_description"
+        assert fg.partition_key == []
+        assert fg.primary_key == ["intt"]
+        assert fg.hudi_precombine_key == "intt"
+        assert fg._feature_store_name == "test_featurestore"
+        assert fg.created == "2022-08-01T11:07:55Z"
+        assert len(fg.transformation_functions) == 2
+        assert (
+            fg.transformation_functions[0].hopsworks_udf.function_name == "add_one_fs"
+        )
+        assert fg.transformation_functions[1].hopsworks_udf.function_name == "add_two"
+        assert (
+            fg.transformation_functions[0].hopsworks_udf._function_source
+            == "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
+        )
+        assert (
+            fg.transformation_functions[1].hopsworks_udf._function_source
+            == "\n@udf(float)\ndef add_two(data1 : pd.Series):\n    return data1 + 2\n"
+        )
+        assert (
+            fg.transformation_functions[0].hopsworks_udf.udf_type == UDFType.ON_DEMAND
+        )
+        assert (
+            fg.transformation_functions[1].hopsworks_udf.udf_type == UDFType.ON_DEMAND
+        )
+        assert isinstance(fg.creator, user.User)
+        assert fg.id == 15
+        assert len(fg.features) == 2
+        assert isinstance(fg.features[0], feature.Feature)
+        assert (
+            fg.location
+            == "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1"
+        )
+        assert fg.online_enabled is True
+        assert fg.time_travel_format == "HUDI"
+        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
+        assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
+        assert fg.event_time is None
+        assert fg.stream is False
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
         )

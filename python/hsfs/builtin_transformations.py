@@ -23,26 +23,26 @@ from hsfs.transformation_statistics import TransformationStatistics
 feature_statistics = TransformationStatistics("feature")
 
 
-@udf(float)
+@udf(float, drop=["feature"])
 def min_max_scaler(feature: pd.Series, statistics=feature_statistics) -> pd.Series:
     return (feature - statistics.feature.min) / (
         statistics.feature.max - statistics.feature.min
     )
 
 
-@udf(float)
+@udf(float, drop=["feature"])
 def standard_scaler(feature: pd.Series, statistics=feature_statistics) -> pd.Series:
     return (feature - statistics.feature.mean) / statistics.feature.stddev
 
 
-@udf(float)
+@udf(float, drop=["feature"])
 def robust_scaler(feature: pd.Series, statistics=feature_statistics) -> pd.Series:
     return (feature - statistics.feature.percentiles[49]) / (
         statistics.feature.percentiles[74] - statistics.feature.percentiles[24]
     )
 
 
-@udf(int)
+@udf(int, drop=["feature"])
 def label_encoder(feature: pd.Series, statistics=feature_statistics) -> pd.Series:
     unique_data = sorted(
         [value for value in statistics.feature.extended_statistics["unique_values"]]
@@ -53,7 +53,7 @@ def label_encoder(feature: pd.Series, statistics=feature_statistics) -> pd.Serie
     )
 
 
-@udf(bool)
+@udf(bool, drop=["feature"])
 def one_hot_encoder(feature: pd.Series, statistics=feature_statistics) -> pd.Series:
     unique_data = [
         value for value in statistics.feature.extended_statistics["unique_values"]

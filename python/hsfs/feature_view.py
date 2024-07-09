@@ -54,7 +54,7 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
 from hsfs.feature import Feature
-from hsfs.hopsworks_udf import HopsworksUdf
+from hsfs.hopsworks_udf import HopsworksUdf, UDFType
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -121,20 +121,25 @@ class FeatureView:
             training_helper_columns if training_helper_columns else []
         )
 
-        self._transformation_functions: List[TransformationFunction] = (
-            [
-                TransformationFunction(
-                    self.featurestore_id,
-                    hopsworks_udf=transformation_function,
-                    version=1,
-                )
-                if not isinstance(transformation_function, TransformationFunction)
-                else transformation_function
-                for transformation_function in transformation_functions
-            ]
-            if transformation_functions
-            else []
-        )
+        self._transformation_functions: List[TransformationFunction] = []
+
+        if transformation_functions:
+            for transformation_function in transformation_functions:
+                if not isinstance(transformation_function, TransformationFunction):
+                    self._transformation_functions.append(
+                        TransformationFunction(
+                            self.featurestore_id,
+                            hopsworks_udf=transformation_function,
+                            version=1,
+                            transformation_type=UDFType.MODEL_DEPENDENT,
+                        )
+                    )
+                else:
+                    if not transformation_function.hopsworks_udf.udf_type:
+                        transformation_function.hopsworks_udf.udf_type = (
+                            UDFType.MODEL_DEPENDENT
+                        )
+                    self._transformation_functions.append(transformation_function)
 
         if self._transformation_functions:
             self._transformation_functions = FeatureView._sort_transformation_functions(
@@ -496,6 +501,7 @@ class FeatureView:
         force_rest_client: bool = False,
         force_sql_client: bool = False,
         transformed: Optional[bool] = True,
+        request_parameters: Optional[Dict[str, Any]] = None,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -570,6 +576,7 @@ class FeatureView:
                 using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
             transformed: Setting to `False` returns the untransformed feature vectors.
+            request_parameters: Request parameters required by on-demand transformation functions to compute on-demand features present in the feature view.
 
         # Returns
             `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
@@ -596,6 +603,7 @@ class FeatureView:
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
             transformed=transformed,
+            request_parameters=request_parameters,
         )
 
     def get_feature_vectors(
@@ -608,6 +616,7 @@ class FeatureView:
         force_rest_client: bool = False,
         force_sql_client: bool = False,
         transformed: Optional[bool] = True,
+        request_parameters: Optional[List[Dict[str, Any]]] = None,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -680,6 +689,7 @@ class FeatureView:
                 using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
             transformed: Setting to `False` returns the untransformed feature vectors.
+            request_parameters: Request parameters required by on-demand transformation functions to compute on-demand features present in the feature view.
 
         # Returns
             `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
@@ -708,6 +718,7 @@ class FeatureView:
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
             transformed=transformed,
+            request_parameters=request_parameters,
         )
 
     def get_inference_helper(
@@ -3432,7 +3443,12 @@ class FeatureView:
             serving_keys=serving_keys,
             logging_enabled=json_decamelized.get("enabled_logging", False),
             transformation_functions=[
-                TransformationFunction.from_response_json(transformation_function)
+                TransformationFunction.from_response_json(
+                    {
+                        **transformation_function,
+                        "transformation_type": UDFType.MODEL_DEPENDENT,
+                    }
+                )
                 for transformation_function in transformation_functions
             ]
             if transformation_functions

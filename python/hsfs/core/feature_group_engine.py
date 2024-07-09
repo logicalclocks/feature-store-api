@@ -88,7 +88,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         validation_options: dict = None,
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
-            feature_dataframe, feature_group.time_travel_format
+            feature_dataframe,
+            feature_group.time_travel_format,
+            feature_group.transformation_functions,
         )
         util.validate_embedding_feature_type(
             feature_group.embedding_index, dataframe_features
@@ -281,7 +283,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             )
 
         dataframe_features = engine.get_instance().parse_schema_feature_group(
-            dataframe, feature_group.time_travel_format
+            dataframe,
+            feature_group.time_travel_format,
+            feature_group.transformation_functions,
         )
         util.validate_embedding_feature_type(
             feature_group.embedding_index, dataframe_features

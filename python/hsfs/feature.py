@@ -54,6 +54,7 @@ class Feature:
                 "hsfs.feature_group.SpineGroup",
             ]
         ] = None,
+        on_demand: bool = False,
         **kwargs,
     ) -> None:
         self._name = util.autofix_feature_name(name)
@@ -68,6 +69,7 @@ class Feature:
             self._feature_group_id = feature_group.id
         else:
             self._feature_group_id = feature_group_id
+        self._on_demand = on_demand
 
     def to_dict(self) -> Dict[str, Any]:
         """Get structured info about specific Feature in python dictionary format.
@@ -94,6 +96,7 @@ class Feature:
             "onlineType": self._online_type,
             "defaultValue": self._default_value,
             "featureGroupId": self._feature_group_id,
+            "onDemand": self.on_demand,
         }
 
     def json(self) -> str:
@@ -207,38 +210,40 @@ class Feature:
     def feature_group_id(self) -> Optional[int]:
         return self._feature_group_id
 
+    @property
+    def on_demand(self) -> bool:
+        """Whether the feature is a on-demand feature computed using on-demand transformation functions"""
+        return self._on_demand
+
+    @on_demand.setter
+    def on_demand(self, on_demand) -> None:
+        self._on_demand = on_demand
+
     def _get_filter_value(self, value: Any) -> Any:
         if self.type == "timestamp":
-            return (datetime.fromtimestamp(
-                util.convert_event_time_to_timestamp(value)/1000)
-                    .strftime("%Y-%m-%d %H:%M:%S")
-                    )
+            return datetime.fromtimestamp(
+                util.convert_event_time_to_timestamp(value) / 1000
+            ).strftime("%Y-%m-%d %H:%M:%S")
         else:
             return value
 
     def __lt__(self, other: Any) -> "filter.Filter":
-        return filter.Filter(self, filter.Filter.LT,
-                             self._get_filter_value(other))
+        return filter.Filter(self, filter.Filter.LT, self._get_filter_value(other))
 
     def __le__(self, other: Any) -> "filter.Filter":
-        return filter.Filter(self, filter.Filter.LE,
-                             self._get_filter_value(other))
+        return filter.Filter(self, filter.Filter.LE, self._get_filter_value(other))
 
     def __eq__(self, other: Any) -> "filter.Filter":
-        return filter.Filter(self, filter.Filter.EQ,
-                             self._get_filter_value(other))
+        return filter.Filter(self, filter.Filter.EQ, self._get_filter_value(other))
 
     def __ne__(self, other: Any) -> "filter.Filter":
-        return filter.Filter(self, filter.Filter.NE,
-                             self._get_filter_value(other))
+        return filter.Filter(self, filter.Filter.NE, self._get_filter_value(other))
 
     def __ge__(self, other: Any) -> "filter.Filter":
-        return filter.Filter(self, filter.Filter.GE,
-                             self._get_filter_value(other))
+        return filter.Filter(self, filter.Filter.GE, self._get_filter_value(other))
 
     def __gt__(self, other: Any) -> "filter.Filter":
-        return filter.Filter(self, filter.Filter.GT,
-                             self._get_filter_value(other))
+        return filter.Filter(self, filter.Filter.GT, self._get_filter_value(other))
 
     def contains(self, other: Union[str, List[Any]]) -> "filter.Filter":
         """

@@ -630,5 +630,127 @@
       "version": 1
     },
     "headers": null
+  },
+  "get_transformations": {
+    "response": {
+      "type": "cachedFeaturegroupDTO",
+      "validation_type": "test_validation_type",
+      "created": "2022-08-01T11:07:55Z",
+      "creator": {
+        "email": "admin@hopsworks.ai",
+        "firstName": "Admin",
+        "lastName": "Admin",
+        "maxNumProjects": 0,
+        "numActiveProjects": 0,
+        "numRemainingProjects": 0,
+        "status": 0,
+        "testUser": false,
+        "tos": false,
+        "toursState": 0,
+        "twoFactor": false
+      },
+      "description": "test_description",
+      "featurestoreId": 67,
+      "featurestoreName": "test_featurestore",
+      "id": 15,
+      "location": "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1",
+      "name": "fg_test",
+      "statisticsConfig": {
+        "columns": [],
+        "correlations": false,
+        "enabled": true,
+        "exactUniqueness": false,
+        "histograms": false
+      },
+      "version": 1,
+      "features": [
+        {
+          "defaultValue": null,
+          "featureGroupId": 15,
+          "hudiPrecombineKey": true,
+          "name": "intt",
+          "onlineType": "int",
+          "partition": false,
+          "primary": true,
+          "type": "int"
+        },
+        {
+          "defaultValue": null,
+          "featureGroupId": 15,
+          "hudiPrecombineKey": false,
+          "name": "stringt",
+          "onlineType": "varchar(1000)",
+          "partition": false,
+          "primary": false,
+          "type": "string"
+        }
+      ],
+      "transformation_functions":[
+        {
+          "id" : 1,
+          "version": 2,
+          "featurestoreId": 11,
+          "hopsworksUdf":{
+            "sourceCode": "\n@udf(float)\ndef add_two(data1 : pd.Series):\n    return data1 + 2\n",
+            "name": "add_two",
+            "outputTypes":["double"],
+            "transformationFeatures":["data"],
+            "dropped_argument_names":["data1"]
+          }
+        },
+        {
+          "id" : 2,
+          "version": 1,
+          "featurestoreId": 11,
+          "hopsworksUdf":{
+            "sourceCode": "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
+            "name": "add_one_fs",
+            "outputTypes":["double"],
+            "transformationFeatures":["col1"],
+            "dropped_argument_names":["data1"]
+          }
+        }
+    ],
+      "onlineTopicName": "119_15_fg_test_1_onlinefs",
+      "onlineEnabled": true,
+      "timeTravelFormat": "HUDI",
+      "expectationSuite": {
+        "expectation_suite_name": "test_expectation_suite_name",
+        "expectations": [
+          {
+            "expectation_type": "1",
+            "kwargs": "{ \"kwargs_key\": \"kwargs_value\" }",
+            "meta": "{ \"meta_key\": \"meta_value\" }",
+            "id": 32
+          }
+        ],
+        "meta": "{ \"great_expectations_version\": \"0.15.12\", \"key\": \"value\" }",
+        "id": 21,
+        "data_asset_type": "test_data_asset_type",
+        "ge_cloud_id": "test_ge_cloud_id",
+        "run_validation": "test_run_validation",
+        "validation_ingestion_policy": "test_validation_ingestion_policy",
+        "feature_store_id": 67,
+        "feature_group_id": 15,
+        "href": "test_/featurestores/67/featuregroups/15/expectationsuite",
+        "expand": "test_expand",
+        "items": "test_items",
+        "type": "expectationSuiteDTO",
+        "created": "test_created"
+      }
+    },
+    "method": "GET",
+    "path_params": [
+      "project",
+      "119",
+      "featurestores",
+      67,
+      "featuregroups",
+      "fg_test"
+    ],
+    "query_params": {
+      "version": 1
+    },
+    "headers": null
   }
 }

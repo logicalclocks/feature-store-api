@@ -35,7 +35,7 @@ from hsfs.constructor import hudi_feature_group_alias, query
 from hsfs.core import training_dataset_engine
 from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.engine import spark
-from hsfs.hopsworks_udf import udf
+from hsfs.hopsworks_udf import UDFType, udf
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 from pyspark.sql import DataFrame
 from pyspark.sql.types import (
@@ -470,7 +470,6 @@ class TestSpark:
 
         # Assert
         result_df = result.toPandas()
-        print(result_df)
         assert list(result_df) == list(expected)
         for column in list(result_df):
             assert result_df[column].equals(result_df[column])
@@ -644,6 +643,51 @@ class TestSpark:
         # Assert
         assert mock_spark_engine_save_online_dataframe.call_count == 0
         assert mock_spark_engine_save_offline_dataframe.call_count == 1
+
+    def test_save_dataframe_transformations(self, mocker):
+        # Arrange
+        mock_spark_engine_save_online_dataframe = mocker.patch(
+            "hsfs.engine.spark.Engine._save_online_dataframe"
+        )
+        mock_spark_engine_save_offline_dataframe = mocker.patch(
+            "hsfs.engine.spark.Engine._save_offline_dataframe"
+        )
+        mock_spark_engine_apply_transformations = mocker.patch(
+            "hsfs.engine.spark.Engine._apply_transformation_function"
+        )
+
+        spark_engine = spark.Engine()
+
+        @udf(int)
+        def test(feature):
+            return feature + 1
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            transformation_functions=[test],
+        )
+
+        # Act
+        spark_engine.save_dataframe(
+            feature_group=fg,
+            dataframe=None,
+            operation=None,
+            online_enabled=None,
+            storage=None,
+            offline_write_options=None,
+            online_write_options=None,
+            validation_id=None,
+        )
+
+        # Assert
+        assert mock_spark_engine_save_online_dataframe.call_count == 0
+        assert mock_spark_engine_save_offline_dataframe.call_count == 1
+        assert mock_spark_engine_apply_transformations.call_count == 1
 
     def test_save_dataframe_storage_offline(self, mocker):
         # Arrange
@@ -979,6 +1023,135 @@ class TestSpark:
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
             == 0
         )
+
+    def test_save_stream_dataframe_transformations(self, mocker, backend_fixtures):
+        # Arrange
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
+        mock_spark_engine_online_fg_to_avro = mocker.patch(
+            "hsfs.engine.spark.Engine._online_fg_to_avro"
+        )
+
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
+
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
+
+        mock_spark_engine_apply_transformations = mocker.patch(
+            "hsfs.engine.spark.Engine._apply_transformation_function"
+        )
+
+        json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
+        sc = storage_connector.StorageConnector.from_response_json(json)
+        mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
+
+        spark_engine = spark.Engine()
+
+        @udf(int)
+        def test(feature):
+            return feature + 1
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            online_topic_name="test_online_topic_name",
+            transformation_functions=[test],
+        )
+        fg.feature_store = mocker.Mock()
+        project_id = 1
+        fg.feature_store.project_id = project_id
+
+        mock_client_get_instance.return_value._project_name = "test_project_name"
+
+        # Act
+        spark_engine.save_stream_dataframe(
+            feature_group=fg,
+            dataframe=None,
+            query_name=None,
+            output_mode="test_mode",
+            await_termination=None,
+            timeout=None,
+            checkpoint_dir=None,
+            write_options={"test_name": "test_value"},
+        )
+
+        # Assert
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.call_args[0][0]
+            == "headers"
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.call_args[
+                0
+            ][0]
+            == "test_mode"
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.call_args[
+                0
+            ][0]
+            == "kafka"
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
+                0
+            ][0]
+            == "checkpointLocation"
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
+                0
+            ][1]
+            == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}-checkpoint"
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
+                1
+            ]
+            == {
+                "kafka.bootstrap.servers": "test_bootstrap_servers",
+                "kafka.security.protocol": "test_security_protocol",
+                "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+                "kafka.ssl.key.password": "test_ssl_key_password",
+                "kafka.ssl.keystore.location": "result_from_add_file",
+                "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+                "kafka.ssl.truststore.location": "result_from_add_file",
+                "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+                "kafka.test_option_name": "test_option_value",
+                "test_name": "test_value",
+            }
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
+                0
+            ][0]
+            == "topic"
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
+                0
+            ][1]
+            == "test_online_topic_name"
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+                0
+            ][0]
+            == self._get_spark_query_name(project_id, fg)
+        )
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
+            == 0
+        )
+        assert mock_spark_engine_apply_transformations.call_count == 1
 
     def test_save_stream_dataframe_query_name(self, mocker, backend_fixtures):
         # Arrange
@@ -2676,6 +2849,7 @@ class TestSpark:
         tf = transformation_function.TransformationFunction(
             featurestore_id=99,
             hopsworks_udf=plus_one,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         f = training_dataset_feature.TrainingDatasetFeature(
@@ -2725,6 +2899,7 @@ class TestSpark:
         tf = transformation_function.TransformationFunction(
             featurestore_id=99,
             hopsworks_udf=plus_one,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         transformation_fn_dict = dict()
@@ -3714,6 +3889,81 @@ class TestSpark:
         assert mock_spark_engine_convert_spark_type.call_count == 2
         assert mock_spark_engine_convert_spark_type.call_args[0][1] is False
 
+    def test_parse_schema_feature_group_transformations(self, mocker):
+        # Arrange
+        mock_spark_engine_convert_spark_type = mocker.patch(
+            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
+        )
+
+        spark_engine = spark.Engine()
+
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"]}
+        df = pd.DataFrame(data=d)
+
+        @udf(int)
+        def test(feature):
+            return feature + 1
+
+        tf_function = transformation_function.TransformationFunction(
+            featurestore_id=10,
+            hopsworks_udf=test,
+            version=1,
+            transformation_type=UDFType.ON_DEMAND,
+        )
+
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+
+        # Act
+        result = spark_engine.parse_schema_feature_group(
+            dataframe=spark_df,
+            time_travel_format=None,
+            transformation_functions=[tf_function],
+        )
+
+        # Assert
+        assert result[0].name == "col_0"
+        assert result[1].name == "col_1"
+        assert result[2].name == "test"
+        assert mock_spark_engine_convert_spark_type.call_count == 2
+        assert mock_spark_engine_convert_spark_type.call_args[0][1] is False
+
+    def test_parse_schema_feature_group_transformations_dropped(self, mocker):
+        # Arrange
+        mock_spark_engine_convert_spark_type = mocker.patch(
+            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
+        )
+
+        spark_engine = spark.Engine()
+
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"]}
+        df = pd.DataFrame(data=d)
+
+        @udf(int, drop="feature")
+        def test(feature):
+            return feature + 1
+
+        tf_function = transformation_function.TransformationFunction(
+            featurestore_id=10,
+            hopsworks_udf=test("col_0"),
+            version=1,
+            transformation_type=UDFType.ON_DEMAND,
+        )
+
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+
+        # Act
+        result = spark_engine.parse_schema_feature_group(
+            dataframe=spark_df,
+            time_travel_format=None,
+            transformation_functions=[tf_function],
+        )
+
+        # Assert
+        assert result[0].name == "col_1"
+        assert result[1].name == "test"
+        assert mock_spark_engine_convert_spark_type.call_count == 2
+        assert mock_spark_engine_convert_spark_type.call_args[0][1] is False
+
     def test_parse_schema_feature_group_hudi(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
@@ -4333,13 +4583,12 @@ class TestSpark:
         engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        @udf(int)
+        @udf(int, drop=["col1"])
         def plus_one(col1):
             return col1 + 1
 
         tf = transformation_function.TransformationFunction(
-            99,
-            hopsworks_udf=plus_one,
+            99, hopsworks_udf=plus_one, transformation_type=UDFType.MODEL_DEPENDENT
         )
 
         f = feature.Feature(name="col_0", type=IntegerType(), index=0)
@@ -4393,13 +4642,12 @@ class TestSpark:
         engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
-        @udf([int, int])
+        @udf([int, int], drop=["col1"])
         def plus_two(col1):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col1 + 2})
 
         tf = transformation_function.TransformationFunction(
-            99,
-            hopsworks_udf=plus_two,
+            99, hopsworks_udf=plus_two, transformation_type=UDFType.MODEL_DEPENDENT
         )
 
         f = feature.Feature(name="col_0", type=IntegerType(), index=0)
@@ -4459,8 +4707,130 @@ class TestSpark:
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
 
         tf = transformation_function.TransformationFunction(
-            99,
-            hopsworks_udf=test,
+            99, hopsworks_udf=test, transformation_type=UDFType.MODEL_DEPENDENT
+        )
+
+        f = feature.Feature(name="col_0", type=IntegerType(), index=0)
+        f1 = feature.Feature(name="col_1", type=StringType(), index=1)
+        f2 = feature.Feature(name="col_2", type=IntegerType(), index=1)
+        features = [f, f1, f2]
+        fg1 = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=features,
+            id=11,
+            stream=False,
+        )
+        fv = feature_view.FeatureView(
+            name="test",
+            featurestore_id=99,
+            query=fg1.select_all(),
+            transformation_functions=[tf("col_0", "col_2")],
+        )
+
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "col_2": [10, 11]}
+        df = pd.DataFrame(data=d)
+
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+
+        expected_df = pd.DataFrame(
+            data={
+                "col_0": [1, 2],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [10, 11],
+                "test_col_0_col_2_0": [2, 3],
+                "test_col_0_col_2_1": [12, 13],
+            }
+        )
+
+        expected_spark_df = spark_engine._spark_session.createDataFrame(expected_df)
+
+        # Act
+        result = spark_engine._apply_transformation_function(
+            transformation_functions=fv.transformation_functions,
+            dataset=spark_df,
+        )
+        # Assert
+        assert result.schema == expected_spark_df.schema
+        assert result.collect() == expected_spark_df.collect()
+
+    def test_apply_transformation_function_multiple_input_output_drop_some(
+        self, mocker
+    ):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        engine._engine_type = "spark"
+        spark_engine = spark.Engine()
+
+        @udf([int, int], drop=["col1"])
+        def test(col1, col2):
+            return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
+
+        tf = transformation_function.TransformationFunction(
+            99, hopsworks_udf=test, transformation_type=UDFType.MODEL_DEPENDENT
+        )
+
+        f = feature.Feature(name="col_0", type=IntegerType(), index=0)
+        f1 = feature.Feature(name="col_1", type=StringType(), index=1)
+        f2 = feature.Feature(name="col_2", type=IntegerType(), index=1)
+        features = [f, f1, f2]
+        fg1 = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=features,
+            id=11,
+            stream=False,
+        )
+        fv = feature_view.FeatureView(
+            name="test",
+            featurestore_id=99,
+            query=fg1.select_all(),
+            transformation_functions=[tf("col_0", "col_2")],
+        )
+
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "col_2": [10, 11]}
+        df = pd.DataFrame(data=d)
+
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+
+        expected_df = pd.DataFrame(
+            data={
+                "col_1": ["test_1", "test_2"],
+                "col_2": [10, 11],
+                "test_col_0_col_2_0": [2, 3],
+                "test_col_0_col_2_1": [12, 13],
+            }
+        )
+
+        expected_spark_df = spark_engine._spark_session.createDataFrame(expected_df)
+
+        # Act
+        result = spark_engine._apply_transformation_function(
+            transformation_functions=fv.transformation_functions,
+            dataset=spark_df,
+        )
+        # Assert
+        assert result.schema == expected_spark_df.schema
+        assert result.collect() == expected_spark_df.collect()
+
+    def test_apply_transformation_function_multiple_input_output_drop_all(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        engine._engine_type = "spark"
+        spark_engine = spark.Engine()
+
+        @udf([int, int], drop=["col1", "col2"])
+        def test(col1, col2):
+            return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
+
+        tf = transformation_function.TransformationFunction(
+            99, hopsworks_udf=test, transformation_type=UDFType.MODEL_DEPENDENT
         )
 
         f = feature.Feature(name="col_0", type=IntegerType(), index=0)

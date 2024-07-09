@@ -37,8 +37,9 @@ from hsfs.core import inode, job
 from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.engine import python
 from hsfs.expectation_suite import ExpectationSuite
-from hsfs.hopsworks_udf import udf
+from hsfs.hopsworks_udf import UDFType, udf
 from hsfs.training_dataset_feature import TrainingDatasetFeature
+from hsfs.transformation_function import TransformationFunction
 from polars.testing import assert_frame_equal as polars_assert_frame_equal
 
 
@@ -1448,13 +1449,77 @@ class TestPython:
         result = python_engine.parse_schema_feature_group(
             dataframe=df, time_travel_format=None
         )
-        print(result)
 
         # Assert
         assert len(result) == 3
         assert result[0].name == "col1"
         assert result[1].name == "col2"
         assert result[2].name == "date"
+
+    def test_parse_schema_feature_group_transformation_functions(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
+
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        @udf(int)
+        def test(feature):
+            return feature + 1
+
+        transformation_function = TransformationFunction(
+            featurestore_id=10,
+            hopsworks_udf=test,
+            version=1,
+            transformation_type=UDFType.ON_DEMAND,
+        )
+
+        # Act
+        result = python_engine.parse_schema_feature_group(
+            dataframe=df,
+            time_travel_format=None,
+            transformation_functions=[transformation_function],
+        )
+
+        # Assert
+        assert len(result) == 3
+        assert result[0].name == "col1"
+        assert result[1].name == "col2"
+        assert result[2].name == "test"
+
+    def test_parse_schema_feature_group_transformation_functions_drop(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
+
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        @udf(int, drop="feature")
+        def test(feature):
+            return feature + 1
+
+        transformation_function = TransformationFunction(
+            featurestore_id=10,
+            hopsworks_udf=test("col2"),
+            version=1,
+            transformation_type=UDFType.ON_DEMAND,
+        )
+
+        # Act
+        result = python_engine.parse_schema_feature_group(
+            dataframe=df,
+            time_travel_format=None,
+            transformation_functions=[transformation_function],
+        )
+
+        # Assert
+        assert len(result) == 2
+        assert result[0].name == "col1"
+        assert result[1].name == "test"
 
     def test_parse_schema_training_dataset(self):
         # Arrange
@@ -2124,6 +2189,52 @@ class TestPython:
         assert mock_python_engine_write_dataframe_kafka.call_count == 0
         assert mock_python_engine_legacy_save_dataframe.call_count == 1
 
+    def test_save_dataframe_transformation_functions(self, mocker):
+        # Arrange
+        mock_python_engine_write_dataframe_kafka = mocker.patch(
+            "hsfs.engine.python.Engine._write_dataframe_kafka"
+        )
+        mock_python_engine_legacy_save_dataframe = mocker.patch(
+            "hsfs.engine.python.Engine.legacy_save_dataframe"
+        )
+        mock_python_engine_apply_transformations = mocker.patch(
+            "hsfs.engine.python.Engine._apply_transformation_function"
+        )
+
+        python_engine = python.Engine()
+
+        @udf(int)
+        def test(feature):
+            return feature + 1
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+            transformation_functions=[test],
+        )
+
+        # Act
+        python_engine.save_dataframe(
+            feature_group=fg,
+            dataframe=None,
+            operation=None,
+            online_enabled=None,
+            storage=None,
+            offline_write_options=None,
+            online_write_options=None,
+            validation_id=None,
+        )
+
+        # Assert
+        assert mock_python_engine_write_dataframe_kafka.call_count == 0
+        assert mock_python_engine_legacy_save_dataframe.call_count == 1
+        assert mock_python_engine_apply_transformations.call_count == 1
+
     def test_save_dataframe_stream(self, mocker):
         # Arrange
         mock_python_engine_write_dataframe_kafka = mocker.patch(
@@ -2202,6 +2313,7 @@ class TestPython:
         mocker.patch(
             "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
         )
+        mock_feature_view = mocker.patch("hsfs.feature_view.FeatureView")
 
         python_engine = python.Engine()
 
@@ -2218,7 +2330,7 @@ class TestPython:
         # Act
         python_engine.get_training_data(
             training_dataset_obj=td,
-            feature_view_obj=None,
+            feature_view_obj=mock_feature_view,
             query_obj=mocker.Mock(),
             read_options=None,
             dataframe_type="default",
@@ -2952,6 +3064,7 @@ class TestPython:
 
     def test_write_training_dataset_query_td(self, mocker, backend_fixtures):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_job = mocker.patch("hsfs.core.job.Job")
@@ -2961,8 +3074,6 @@ class TestPython:
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
         mock_td_api.return_value.compute.return_value = mock_job
         mocker.patch("hsfs.util.get_job_url")
-
-        mocker.patch("hsfs.client.get_instance")
 
         python_engine = python.Engine()
 
@@ -2998,6 +3109,7 @@ class TestPython:
 
     def test_write_training_dataset_query_fv(self, mocker, backend_fixtures):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_job = mocker.patch("hsfs.core.job.Job")
@@ -3257,7 +3369,7 @@ class TestPython:
         engine._engine_type = "python"
         python_engine = python.Engine()
 
-        @udf([int, int])
+        @udf([int, int], drop=["col1"])
         def plus_two(col1):
             return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col1 + 2})
 
@@ -3331,8 +3443,109 @@ class TestPython:
         )
 
         # Assert
+        assert all(
+            result.columns
+            == ["col1", "col2", "plus_two_col1_col2_0", "plus_two_col1_col2_1"]
+        )
+        assert len(result) == 2
+        assert result["col1"][0] == 1
+        assert result["col1"][1] == 2
+        assert result["col2"][0] == 10
+        assert result["col2"][1] == 11
+        assert result["plus_two_col1_col2_0"][0] == 2
+        assert result["plus_two_col1_col2_0"][1] == 3
+        assert result["plus_two_col1_col2_1"][0] == 12
+        assert result["plus_two_col1_col2_1"][1] == 13
+
+    def test_apply_transformation_function_multiple_input_output_drop_all(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
+        engine._engine_type = "python"
+        python_engine = python.Engine()
+
+        @udf([int, int], drop=["col1", "col2"])
+        def plus_two(col1, col2):
+            return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
+
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
+            featurestore_id=99,
+            transformation_functions=[plus_two],
+        )
+
+        df = pd.DataFrame(data={"col1": [1, 2], "col2": [10, 11]})
+
+        # Act
+        result = python_engine._apply_transformation_function(
+            transformation_functions=fv.transformation_functions, dataset=df
+        )
+
+        # Assert
         assert all(result.columns == ["plus_two_col1_col2_0", "plus_two_col1_col2_1"])
         assert len(result) == 2
+        assert result["plus_two_col1_col2_0"][0] == 2
+        assert result["plus_two_col1_col2_0"][1] == 3
+        assert result["plus_two_col1_col2_1"][0] == 12
+        assert result["plus_two_col1_col2_1"][1] == 13
+
+    def test_apply_transformation_function_multiple_input_output_drop_some(
+        self, mocker
+    ):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
+        engine._engine_type = "python"
+        python_engine = python.Engine()
+
+        @udf([int, int], drop=["col1"])
+        def plus_two(col1, col2):
+            return pd.DataFrame({"new_col1": col1 + 1, "new_col2": col2 + 2})
+
+        fg = feature_group.FeatureGroup(
+            name="test1",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            features=[feature.Feature("id"), feature.Feature("tf_name")],
+            id=11,
+            stream=False,
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg.select_all(),
+            featurestore_id=99,
+            transformation_functions=[plus_two],
+        )
+
+        df = pd.DataFrame(data={"col1": [1, 2], "col2": [10, 11]})
+
+        # Act
+        result = python_engine._apply_transformation_function(
+            transformation_functions=fv.transformation_functions, dataset=df
+        )
+
+        # Assert
+        assert all(
+            result.columns == ["col2", "plus_two_col1_col2_0", "plus_two_col1_col2_1"]
+        )
+        assert len(result) == 2
+        assert result["col2"][0] == 10
+        assert result["col2"][1] == 11
         assert result["plus_two_col1_col2_0"][0] == 2
         assert result["plus_two_col1_col2_0"][1] == 3
         assert result["plus_two_col1_col2_1"][0] == 12

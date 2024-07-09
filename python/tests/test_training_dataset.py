@@ -57,7 +57,6 @@ class TestTrainingDataset:
         assert td._from_query == "test_from_query"
         assert td._querydto == "test_querydto"
         assert td.feature_store_id == 22
-        assert td.transformation_functions == "test_transformation_functions"
         assert td.train_split == "test_train_split"
         assert td.training_dataset_type == "HOPSFS_TRAINING_DATASET"
         assert isinstance(td.storage_connector, storage_connector.JdbcConnector)
@@ -102,7 +101,6 @@ class TestTrainingDataset:
         assert td._from_query is None
         assert td._querydto is None
         assert td.feature_store_id == 22
-        assert td.transformation_functions is None
         assert td.train_split is None
         assert td.training_dataset_type is None
         assert isinstance(td.storage_connector, storage_connector.JdbcConnector)

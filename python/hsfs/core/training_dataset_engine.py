@@ -22,7 +22,6 @@ from hsfs.constructor import query
 from hsfs.core import (
     tags_api,
     training_dataset_api,
-    transformation_function_engine,
 )
 
 
@@ -38,11 +37,6 @@ class TrainingDatasetEngine:
             feature_store_id
         )
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(
-                feature_store_id
-            )
-        )
 
     def save(self, training_dataset, features, user_write_options):
         if isinstance(features, query.Query):
@@ -53,9 +47,6 @@ class TrainingDatasetEngine:
                 )
                 for label_name in training_dataset.label
             ]
-            self._transformation_function_engine.attach_transformation_fn(
-                training_dataset
-            )
         else:
             features = engine.get_instance().convert_to_default_dataframe(features)
             training_dataset._features = (
@@ -66,19 +57,11 @@ class TrainingDatasetEngine:
                     if feature.name == label_name:
                         feature.label = True
 
-            # check if user provided transformation functions and throw error as transformation functions work only
-            # with query objects
-            if training_dataset.transformation_functions:
-                raise ValueError(
-                    "Transformation functions can only be applied to training datasets generated from Query object"
-                )
-
         if len(training_dataset.splits) > 0 and training_dataset.train_split is None:
             training_dataset.train_split = "train"
             warnings.warn(
                 "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
-                "used for training) was provided. Setting this property to `train`. The statistics of this "
-                "split will be used for transformation functions.",
+                "used for training) was provided. Setting this property to `train`. ",
                 stacklevel=1,
             )
 

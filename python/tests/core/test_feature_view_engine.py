@@ -29,9 +29,7 @@ from hsfs.constructor import fs_query
 from hsfs.constructor.query import Query
 from hsfs.core import arrow_flight_client, feature_view_engine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.hopsworks_udf import udf
 from hsfs.storage_connector import BigQueryConnector, StorageConnector
-from hsfs.transformation_function import TransformationFunction
 
 
 engine.init("python")
@@ -349,9 +347,6 @@ class TestFeatureViewEngine:
         feature_store_id = 99
 
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
-        )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -387,9 +382,6 @@ class TestFeatureViewEngine:
         feature_store_id = 99
 
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
-        )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -554,74 +546,6 @@ class TestFeatureViewEngine:
         assert "pit_query" == result
         assert mock_fv_api.return_value.get_batch_query.call_count == 1
         assert mock_qc_api.return_value.construct_query.call_count == 1
-
-    def test_get_attached_transformation_fn(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-
-        fv_engine = feature_view_engine.FeatureViewEngine(
-            feature_store_id=feature_store_id
-        )
-
-        @udf(int)
-        def test2(col1):
-            return col1 + 1
-
-        tf = TransformationFunction(
-            featurestore_id=10,
-            hopsworks_udf=test2,
-        )
-
-        mock_fv_api.return_value.get_attached_transformation_fn.return_value = [tf]
-
-        # Act
-        result = fv_engine.get_attached_transformation_fn(name="fv_name", version=1)
-
-        # Assert
-        assert result == [tf]
-        assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
-
-    def test_get_attached_transformation_fn_multiple(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-
-        fv_engine = feature_view_engine.FeatureViewEngine(
-            feature_store_id=feature_store_id
-        )
-
-        @udf(int)
-        def test1(col1):
-            return col1 + 1
-
-        tf1 = TransformationFunction(
-            featurestore_id=10,
-            hopsworks_udf=test1,
-        )
-
-        @udf(int)
-        def test2(col1):
-            return col1 + 2
-
-        tf2 = TransformationFunction(
-            featurestore_id=10,
-            hopsworks_udf=test2,
-        )
-
-        mock_fv_api.return_value.get_attached_transformation_fn.return_value = [
-            tf1,
-            tf2,
-        ]
-
-        # Act
-        result = fv_engine.get_attached_transformation_fn(name="fv_name", version=1)
-
-        # Assert
-        assert result == [tf1, tf2]
-        assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
 
     def test_create_training_dataset(self, mocker):
         # Arrange
