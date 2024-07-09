@@ -1196,7 +1196,7 @@ class Engine:
             str, transformation_function_attached.TransformationFunctionAttached
         ],
         dataset: Union[pd.DataFrame, pl.DataFrame],
-        inplace=False,
+        inplace=True,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         for (
             feature_name,
@@ -1205,7 +1205,7 @@ class Engine:
             if isinstance(dataset, pl.DataFrame) or isinstance(
                 dataset, pl.dataframe.frame.DataFrame
             ):
-                if inplace:
+                if not inplace:
                     dataset = dataset.clone()
                 dataset = dataset.with_columns(
                     pl.col(feature_name).map_elements(
@@ -1213,7 +1213,7 @@ class Engine:
                     )
                 )
             else:
-                if inplace:
+                if not inplace:
                     dataset = pd.DataFrame.copy(dataset)
                 dataset[feature_name] = dataset[feature_name].map(
                     transformation_fn.transformation_fn
