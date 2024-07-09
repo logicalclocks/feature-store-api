@@ -451,8 +451,6 @@ class FeatureStore:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 If running queries on the online feature store, users can provide an entry `{'external': True}`,
                 this instructs the library to use the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) to establish the connection to the online feature store.
                 If not set, or set to False, the online feature store storage connector is used which relies on
@@ -1476,6 +1474,7 @@ class FeatureStore:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
+        logging_enabled: Optional[bool] = False,
     ) -> feature_view.FeatureView:
         """Create a feature view metadata object and saved it to hopsworks.
 
@@ -1563,6 +1562,7 @@ class FeatureStore:
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no
                 transformations.
+            logging_enabled: If true, enable feature logging for the feature view.
 
         # Returns:
             `FeatureView`: The feature view metadata object.
@@ -1578,6 +1578,7 @@ class FeatureStore:
             training_helper_columns=training_helper_columns or [],
             transformation_functions=transformation_functions or {},
             featurestore_name=self._name,
+            logging_enabled=logging_enabled,
         )
         return self._feature_view_engine.save(feat_view)
 
@@ -1592,6 +1593,7 @@ class FeatureStore:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
+        logging_enabled: Optional[bool] = False,
     ) -> feature_view.FeatureView:
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
         existing feature view metadata object.
@@ -1641,6 +1643,7 @@ class FeatureStore:
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no
                 transformations.
+            logging_enabled: If true, enable feature logging for the feature view.
 
         # Returns:
             `FeatureView`: The feature view metadata object.
@@ -1661,6 +1664,7 @@ class FeatureStore:
                     inference_helper_columns=inference_helper_columns or [],
                     training_helper_columns=training_helper_columns or [],
                     transformation_functions=transformation_functions or {},
+                    logging_enabled=logging_enabled,
                 )
             else:
                 raise e

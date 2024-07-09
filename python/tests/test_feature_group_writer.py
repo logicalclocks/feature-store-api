@@ -56,11 +56,16 @@ class TestFeatureGroupWriter:
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
+        headers = {
+            "projectId": str(99).encode("utf8"),
+            "featureGroupId": str(32).encode("utf8"),
+            "subjectId": str(12).encode("utf8"),
+        }
         mock_init_kafka_resources = mocker.patch(
-            "hsfs.engine.python.Engine._init_kafka_resources",
-            return_value=(producer, feature_writers, writer_m),
+            "hsfs.core.kafka_engine._init_kafka_resources",
+            return_value=(producer, headers, feature_writers, writer_m),
         )
-        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
+        mocker.patch("hsfs.core.kafka_engine.encode_complex_features")
         mocker.patch("hsfs.core.job.Job")
         mocker.patch("hsfs.engine.get_type", return_value="python")
 
@@ -86,6 +91,7 @@ class TestFeatureGroupWriter:
             assert writer._feature_group._kafka_producer == producer
             assert writer._feature_group._feature_writers == feature_writers
             assert writer._feature_group._writer == writer_m
+            assert writer._feature_group._kafka_headers == headers
 
             writer.insert(dataframe_fixture_basic)
             # after second insert should have been called only once
@@ -96,6 +102,7 @@ class TestFeatureGroupWriter:
         assert fg._multi_part_insert is False
         assert fg._kafka_producer is None
         assert fg._feature_writers is None
+        assert fg._kafka_headers is None
         assert fg._writer is None
 
     def test_fg_writer_without_context_manager(self, mocker, dataframe_fixture_basic):
@@ -107,11 +114,16 @@ class TestFeatureGroupWriter:
             mocker.MagicMock(),
             mocker.MagicMock(),
         )
+        headers = {
+            "projectId": str(99).encode("utf8"),
+            "featureGroupId": str(32).encode("utf8"),
+            "subjectId": str(12).encode("utf8"),
+        }
         mock_init_kafka_resources = mocker.patch(
-            "hsfs.engine.python.Engine._init_kafka_resources",
-            return_value=(producer, feature_writers, writer_m),
+            "hsfs.core.kafka_engine._init_kafka_resources",
+            return_value=(producer, headers, feature_writers, writer_m),
         )
-        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
+        mocker.patch("hsfs.core.kafka_engine.encode_complex_features")
         mocker.patch("hsfs.core.job.Job")
         mocker.patch("hsfs.engine.get_type", return_value="python")
 
@@ -133,6 +145,7 @@ class TestFeatureGroupWriter:
         assert fg._multi_part_insert is True
         assert fg._kafka_producer == producer
         assert fg._feature_writers == feature_writers
+        assert fg._kafka_headers == headers
         assert fg._writer == writer_m
 
         fg.multi_part_insert(dataframe_fixture_basic)
@@ -145,4 +158,5 @@ class TestFeatureGroupWriter:
         assert fg._multi_part_insert is False
         assert fg._kafka_producer is None
         assert fg._feature_writers is None
+        assert fg._kafka_headers is None
         assert fg._writer is None

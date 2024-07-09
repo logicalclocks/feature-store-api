@@ -140,6 +140,7 @@ class FeatureGroupBase:
         self._notification_topic_name = notification_topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
+        self._feature_store = None
         self._variable_api: VariableApi = VariableApi()
 
         self._multi_part_insert: bool = False
@@ -2187,6 +2188,7 @@ class FeatureGroup(FeatureGroupBase):
         self._kafka_producer: Optional["confluent_kafka.Producer"] = None
         self._feature_writers: Optional[Dict[str, callable]] = None
         self._writer: Optional[callable] = None
+        self._kafka_headers: Optional[Dict[str, bytes]] = None
 
     def read(
         self,
@@ -2241,12 +2243,8 @@ class FeatureGroup(FeatureGroupBase):
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
-                * key `"use_hive"` and value `True` to read feature group
-                  with Hive instead of [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `"pandas_types"` and value `True` to retrieve columns as
                   [Pandas nullable types](https://pandas.pydata.org/docs/user_guide/integer_na.html)
                   rather than numpy/object(string) types (experimental).
@@ -2331,9 +2329,6 @@ class FeatureGroup(FeatureGroupBase):
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine:
-                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
-                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
 
         # Returns
@@ -2913,6 +2908,7 @@ class FeatureGroup(FeatureGroupBase):
             self._kafka_producer = None
         self._feature_writers = None
         self._writer = None
+        self._kafka_headers = None
         self._multi_part_insert = False
 
     def insert_stream(

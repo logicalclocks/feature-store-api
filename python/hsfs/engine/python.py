@@ -18,7 +18,6 @@ from __future__ import annotations
 import ast
 import decimal
 import json
-import logging
 import math
 import numbers
 import os
@@ -33,7 +32,6 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Dict,
     List,
     Literal,
@@ -46,7 +44,6 @@ from typing import (
 if TYPE_CHECKING:
     import great_expectations
 
-import avro
 import boto3
 import hsfs
 import numpy as np
@@ -55,7 +52,6 @@ import polars as pl
 import pyarrow as pa
 import pytz
 from botocore.response import StreamingBody
-from confluent_kafka import Consumer, KafkaError, Producer, TopicPartition
 from hsfs import (
     client,
     feature,
@@ -65,7 +61,6 @@ from hsfs import (
     util,
 )
 from hsfs import storage_connector as sc
-from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query
 from hsfs.core import (
@@ -76,40 +71,31 @@ from hsfs.core import (
     ingestion_job_conf,
     job,
     job_api,
+    kafka_engine,
     statistics_api,
     storage_connector_api,
     training_dataset_api,
     training_dataset_job_conf,
     transformation_function_engine,
-    variable_api,
 )
-from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
+from hsfs.core.constants import HAS_AIOMYSQL, HAS_GREAT_EXPECTATIONS, HAS_SQLALCHEMY
+from hsfs.core.feature_view_engine import FeatureViewEngine
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import uses_great_expectations
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
+from hsfs.training_dataset_feature import TrainingDatasetFeature
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from pyhive import hive
-from pyhive.exc import OperationalError
-from sqlalchemy import sql
-from thrift.transport.TTransport import TTransportException
-from tqdm.auto import tqdm
 
-
-# Disable pyhive INFO logging
-logging.getLogger("pyhive").setLevel(logging.WARNING)
-
-HAS_FAST = False
-try:
-    from fastavro import schemaless_writer
-    from fastavro.schema import parse_schema
-
-    HAS_FAST = True
-except ImportError:
-    pass
 
 if HAS_GREAT_EXPECTATIONS:
     import great_expectations
+
+if HAS_AIOMYSQL and HAS_SQLALCHEMY:
+    from hsfs.core import util_sql
+
+if HAS_SQLALCHEMY:
+    from sqlalchemy import sql
 
 # Decimal types are currently not supported
 _INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
@@ -177,7 +163,7 @@ class Engine:
         self,
         sql_query: str,
         feature_store: feature_store.FeatureStore,
-        online_conn: Optional["sc.OnlineStorageConnector"],
+        online_conn: Optional["sc.JdbcConnector"],
         dataframe_type: str,
         read_options: Optional[Dict[str, Any]],
         schema: Optional[List["feature.Feature"]] = None,
@@ -185,10 +171,8 @@ class Engine:
         if not online_conn:
             return self._sql_offline(
                 sql_query,
-                feature_store,
                 dataframe_type,
                 schema,
-                hive_config=read_options.get("hive_config") if read_options else None,
                 arrow_flight_config=read_options.get("arrow_flight_config", {})
                 if read_options
                 else {},
@@ -218,10 +202,8 @@ class Engine:
     def _sql_offline(
         self,
         sql_query: str,
-        feature_store: feature_store.FeatureStore,
         dataframe_type: str,
         schema: Optional[List["feature.Feature"]] = None,
-        hive_config: Optional[Dict[str, Any]] = None,
         arrow_flight_config: Optional[Dict[str, Any]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         self._validate_dataframe_type(dataframe_type)
@@ -234,26 +216,9 @@ class Engine:
                 dataframe_type,
             )
         else:
-            with self._create_hive_connection(
-                feature_store, hive_config=hive_config
-            ) as hive_conn:
-                # Suppress SQLAlchemy pandas warning
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", UserWarning)
-                    if dataframe_type.lower() == "polars":
-                        result_df = util.run_with_loading_animation(
-                            "Reading data from Hopsworks, using Hive",
-                            pl.read_database,
-                            sql_query,
-                            hive_conn,
-                        )
-                    else:
-                        result_df = util.run_with_loading_animation(
-                            "Reading data from Hopsworks, using Hive",
-                            pd.read_sql,
-                            sql_query,
-                            hive_conn,
-                        )
+            raise ValueError(
+                "Reading data with Hive is not supported when using hopsworks client version >= 4.0"
+            )
         if schema:
             result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -261,15 +226,14 @@ class Engine:
     def _jdbc(
         self,
         sql_query: str,
-        connector: "sc.OnlineStorageConnector",
+        connector: sc.JdbcConnector,
         dataframe_type: str,
         read_options: Optional[Dict[str, Any]],
-        schema: Optional[List["feature.Feature"]] = None,
+        schema: Optional[List[feature.Feature]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         self._validate_dataframe_type(dataframe_type)
-
         if self._mysql_online_fs_engine is None:
-            self._mysql_online_fs_engine = util.create_mysql_engine(
+            self._mysql_online_fs_engine = util_sql.create_mysql_engine(
                 connector,
                 (
                     isinstance(client.get_instance(), client.external.Client)
@@ -290,11 +254,11 @@ class Engine:
 
     def read(
         self,
-        storage_connector: "sc.StorageConnector",
+        storage_connector: sc.StorageConnector,
         data_format: str,
         read_options: Optional[Dict[str, Any]],
         location: Optional[str],
-        dataframe_type: str,
+        dataframe_type: Literal["polars", "pandas", "default"],
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
@@ -345,7 +309,9 @@ class Engine:
                 )
             )
 
-    def _read_polars(self, data_format: str, obj: Any) -> pl.DataFrame:
+    def _read_polars(
+        self, data_format: Literal["csv", "tsv", "parquet"], obj: Any
+    ) -> pl.DataFrame:
         if data_format.lower() == "csv":
             return pl.read_csv(obj)
         elif data_format.lower() == "tsv":
@@ -520,7 +486,7 @@ class Engine:
         sql_query: str,
         feature_store: feature_store.FeatureStore,
         n: int,
-        online_conn: "sc.OnlineStorageConnector",
+        online_conn: "sc.JdbcConnector",
         read_options: Optional[Dict[str, Any]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         return self.sql(
@@ -562,8 +528,8 @@ class Engine:
             or hudi_fg_alias.left_feature_group_start_timestamp is not None
         ):
             raise FeatureStoreException(
-                "Hive engine on Python environments does not support incremental queries. "
-                + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+                "Incremental queries are not supported in the python client."
+                + " Read feature group without timestamp to retrieve latest snapshot or switch to "
                 + "environment with Spark Engine."
             )
 
@@ -1134,41 +1100,6 @@ class Engine:
         )
         return td_job
 
-    def _create_hive_connection(
-        self,
-        feature_store: feature_store.FeatureStore,
-        hive_config: Optional[Dict[str, Any]] = None,
-    ) -> hive.Connection:
-        host = variable_api.VariableApi().get_loadbalancer_external_domain()
-        if host == "":
-            # If the load balancer is not configured, then fall back to use
-            # the hive server on the head node
-            host = client.get_instance().host
-
-        try:
-            return hive.Connection(
-                host=host,
-                port=9085,
-                # database needs to be set every time, 'default' doesn't work in pyhive
-                database=feature_store,
-                configuration=hive_config,
-                auth="CERTIFICATES",
-                truststore=client.get_instance()._get_jks_trust_store_path(),
-                keystore=client.get_instance()._get_jks_key_store_path(),
-                keystore_password=client.get_instance()._cert_key,
-            )
-        except (TTransportException, AttributeError) as err:
-            raise ValueError(
-                f"Cannot connect to hive server. Please check the host name '{client.get_instance()._host}' "
-                "is correct and make sure port '9085' is open on host server."
-            ) from err
-        except OperationalError as err:
-            if err.args[0].status.statusCode == 3:
-                raise RuntimeError(
-                    f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
-                    f" It is possible to request access from data owners of '{feature_store}'."
-                ) from err
-
     def _return_dataframe_type(
         self, dataframe: Union[pd.DataFrame, pl.DataFrame], dataframe_type: str
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
@@ -1255,6 +1186,7 @@ class Engine:
             str, transformation_function_attached.TransformationFunctionAttached
         ],
         dataset: Union[pd.DataFrame, pl.DataFrame],
+        inplace=True,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
         for (
             feature_name,
@@ -1269,6 +1201,7 @@ class Engine:
                     )
                 )
             else:
+                dataset = pd.DataFrame.copy(dataset)
                 dataset[feature_name] = dataset[feature_name].map(
                     transformation_fn.transformation_fn
                 )
@@ -1292,52 +1225,6 @@ class Engine:
     ) -> np.ndarray:
         return feature_dataframe[feature_name].unique()
 
-    def _init_kafka_producer(
-        self,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        offline_write_options: Dict[str, Any],
-    ) -> Producer:
-        # setup kafka producer
-        return Producer(
-            self._get_kafka_config(
-                feature_group.feature_store_id, offline_write_options
-            )
-        )
-
-    def _init_kafka_consumer(
-        self,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        offline_write_options: Dict[str, Any],
-    ) -> Consumer:
-        # setup kafka consumer
-        consumer_config = self._get_kafka_config(
-            feature_group.feature_store_id, offline_write_options
-        )
-        if "group.id" not in consumer_config:
-            consumer_config["group.id"] = "hsfs_consumer_group"
-
-        return Consumer(consumer_config)
-
-    def _init_kafka_resources(
-        self,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        offline_write_options: Dict[str, Any],
-    ) -> Tuple[Producer, Dict[str, Callable], Callable]:
-        # setup kafka producer
-        producer = self._init_kafka_producer(feature_group, offline_write_options)
-
-        # setup complex feature writers
-        feature_writers = {
-            feature: self._get_encoder_func(
-                feature_group._get_feature_avro_schema(feature)
-            )
-            for feature in feature_group.get_complex_features()
-        }
-
-        # setup row writer function
-        writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
-        return producer, feature_writers, writer
-
     def _write_dataframe_kafka(
         self,
         feature_group: Union[FeatureGroup, ExternalFeatureGroup],
@@ -1345,50 +1232,25 @@ class Engine:
         offline_write_options: Dict[str, Any],
     ) -> Optional[job.Job]:
         initial_check_point = ""
-        if feature_group._multi_part_insert:
-            if feature_group._kafka_producer is None:
-                producer, feature_writers, writer = self._init_kafka_resources(
-                    feature_group, offline_write_options
-                )
-                feature_group._kafka_producer = producer
-                feature_group._feature_writers = feature_writers
-                feature_group._writer = writer
-            else:
-                producer = feature_group._kafka_producer
-                feature_writers = feature_group._feature_writers
-                writer = feature_group._writer
-        else:
-            producer, feature_writers, writer = self._init_kafka_resources(
-                feature_group, offline_write_options
-            )
-
-            # initialize progress bar
-            progress_bar = tqdm(
-                total=dataframe.shape[0],
-                bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
-                "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
-                desc="Uploading Dataframe",
-                mininterval=1,
-            )
-
+        producer, headers, feature_writers, writer = kafka_engine.init_kafka_resources(
+            feature_group,
+            offline_write_options,
+            project_id=client.get_instance()._project_id,
+        )
+        if not feature_group._multi_part_insert:
             # set initial_check_point to the current offset
-            initial_check_point = self._kafka_get_offsets(
-                feature_group, offline_write_options, True
+            initial_check_point = kafka_engine.kafka_get_offsets(
+                topic_name=feature_group._online_topic_name,
+                feature_store_id=feature_group.feature_store_id,
+                offline_write_options=offline_write_options,
+                high=True,
             )
 
-        def acked(err: Exception, msg: Any) -> None:
-            if err is not None:
-                if offline_write_options.get("debug_kafka", False):
-                    print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
-                if err.code() in [
-                    KafkaError.TOPIC_AUTHORIZATION_FAILED,
-                    KafkaError._MSG_TIMED_OUT,
-                ]:
-                    progress_bar.colour = "RED"
-                    raise err  # Stop producing and show error
-            # update progress bar for each msg
-            if not feature_group._multi_part_insert:
-                progress_bar.update()
+        acked, progress_bar = kafka_engine.build_ack_callback_and_optional_progress_bar(
+            n_rows=dataframe.shape[0],
+            is_multi_part_insert=feature_group._multi_part_insert,
+            offline_write_options=offline_write_options,
+        )
 
         if isinstance(dataframe, pd.DataFrame):
             row_iterator = dataframe.itertuples(index=False)
@@ -1418,7 +1280,7 @@ class Engine:
                         row[k] = None
 
             # encode complex features
-            row = self._encode_complex_features(feature_writers, row)
+            row = kafka_engine.encode_complex_features(feature_writers, row)
 
             # encode feature row
             with BytesIO() as outf:
@@ -1428,8 +1290,14 @@ class Engine:
             # assemble key
             key = "".join([str(row[pk]) for pk in sorted(feature_group.primary_key)])
 
-            self._kafka_produce(
-                producer, feature_group, key, encoded_row, acked, offline_write_options
+            kafka_engine.kafka_produce(
+                producer=producer,
+                key=key,
+                encoded_row=encoded_row,
+                topic_name=feature_group._online_topic_name,
+                headers=headers,
+                acked=acked,
+                debug_kafka=offline_write_options.get("debug_kafka", False),
             )
 
         # make sure producer blocks and everything is delivered
@@ -1437,13 +1305,11 @@ class Engine:
             producer.flush()
             progress_bar.close()
 
-        # start materialization job
+        # start materialization job if not an external feature group, otherwise return None
+        if isinstance(feature_group, ExternalFeatureGroup):
+            return None
         # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
-        if (
-            not isinstance(feature_group, ExternalFeatureGroup)
-            and not initial_check_point
-            and not feature_group._multi_part_insert
-        ):
+        if not initial_check_point and not feature_group._multi_part_insert:
             if self._start_offline_materialization(offline_write_options):
                 warnings.warn(
                     "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
@@ -1451,17 +1317,18 @@ class Engine:
                     stacklevel=1,
                 )
             # set the initial_check_point to the lowest offset (it was not set previously due to topic not existing)
-            initial_check_point = self._kafka_get_offsets(
-                feature_group, offline_write_options, False
+            initial_check_point = kafka_engine.kafka_get_offsets(
+                topic_name=feature_group._online_topic_name,
+                feature_store_id=feature_group.feature_store_id,
+                offline_write_options=offline_write_options,
+                high=True,
             )
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")
                 + initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
-        elif not isinstance(
-            feature_group, ExternalFeatureGroup
-        ) and self._start_offline_materialization(offline_write_options):
+        elif self._start_offline_materialization(offline_write_options):
             if not offline_write_options.get(
                 "skip_offsets", False
             ) and self._job_api.last_execution(
@@ -1475,109 +1342,7 @@ class Engine:
                 + initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
-        if isinstance(feature_group, ExternalFeatureGroup):
-            return None
         return feature_group.materialization_job
-
-    def _kafka_get_offsets(
-        self,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        offline_write_options: Dict[str, Any],
-        high: bool,
-    ) -> str:
-        topic_name = feature_group._online_topic_name
-        consumer = self._init_kafka_consumer(feature_group, offline_write_options)
-        topics = consumer.list_topics(
-            timeout=offline_write_options.get("kafka_timeout", 6)
-        ).topics
-        if topic_name in topics.keys():
-            # topic exists
-            offsets = ""
-            tuple_value = int(high)
-            for partition_metadata in topics.get(topic_name).partitions.values():
-                partition = TopicPartition(
-                    topic=topic_name, partition=partition_metadata.id
-                )
-                offsets += f",{partition_metadata.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
-            consumer.close()
-
-            return f" -initialCheckPointString {topic_name + offsets}"
-        return ""
-
-    def _kafka_produce(
-        self,
-        producer: Producer,
-        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
-        key: str,
-        encoded_row: bytes,
-        acked: callable,
-        offline_write_options: Dict[str, Any],
-    ) -> None:
-        while True:
-            # if BufferError is thrown, we can be sure, message hasn't been send so we retry
-            try:
-                # produce
-                header = {
-                    "projectId": str(feature_group.feature_store.project_id).encode(
-                        "utf8"
-                    ),
-                    "featureGroupId": str(feature_group._id).encode("utf8"),
-                    "subjectId": str(feature_group.subject["id"]).encode("utf8"),
-                }
-
-                producer.produce(
-                    topic=feature_group._online_topic_name,
-                    key=key,
-                    value=encoded_row,
-                    callback=acked,
-                    headers=header,
-                )
-
-                # Trigger internal callbacks to empty op queue
-                producer.poll(0)
-                break
-            except BufferError as e:
-                if offline_write_options.get("debug_kafka", False):
-                    print("Caught: {}".format(e))
-                # backoff for 1 second
-                producer.poll(1)
-
-    def _encode_complex_features(
-        self, feature_writers: Dict[str, callable], row: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        for feature_name, writer in feature_writers.items():
-            with BytesIO() as outf:
-                writer(row[feature_name], outf)
-                row[feature_name] = outf.getvalue()
-        return row
-
-    def _get_encoder_func(self, writer_schema: str) -> callable:
-        if HAS_FAST:
-            schema = json.loads(writer_schema)
-            parsed_schema = parse_schema(schema)
-            return lambda record, outf: schemaless_writer(outf, parsed_schema, record)
-
-        parsed_schema = avro.schema.parse(writer_schema)
-        writer = avro.io.DatumWriter(parsed_schema)
-        return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
-
-    def _get_kafka_config(
-        self, feature_store_id: int, write_options: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        if write_options is None:
-            write_options = {}
-        external = not (
-            isinstance(client.get_instance(), hopsworks.Client)
-            or write_options.get("internal_kafka", False)
-        )
-
-        storage_connector = self._storage_connector_api.get_kafka_connector(
-            feature_store_id, external
-        )
-
-        config = storage_connector.confluent_options()
-        config.update(write_options.get("kafka_producer_config", {}))
-        return config
 
     @staticmethod
     def _convert_pandas_dtype_to_offline_type(arrow_type: str) -> str:
@@ -1811,3 +1576,54 @@ class Engine:
                 return True
         else:
             return True
+
+    @staticmethod
+    def _convert_feature_log_to_df(feature_log, cols):
+        if feature_log is None and cols:
+            return pd.DataFrame(columns=cols)
+        if not (isinstance(feature_log, (list, np.ndarray, pd.DataFrame, pl.DataFrame))):
+            raise ValueError(f"Type '{type(feature_log)}' not accepted")
+        if isinstance(feature_log, list) or isinstance(feature_log, np.ndarray):
+            if isinstance(feature_log[0], list) or isinstance(feature_log[0],
+                                                           np.ndarray):
+                provided_len = len(feature_log[0])
+            else:
+                provided_len = 1
+            assert  provided_len == len(cols), f"Expecting {len(cols)} features/labels but {provided_len} provided."
+
+            return pd.DataFrame(feature_log, columns=cols)
+        else:
+            return feature_log.copy(deep=False)
+
+    @staticmethod
+    def get_feature_logging_df(fg,
+                               features,
+                               fg_features: List[TrainingDatasetFeature],
+                               td_predictions: List[TrainingDatasetFeature],
+                               td_col_name,
+                               time_col_name,
+                               model_col_name,
+                               prediction=None,
+                               training_dataset_version=None,
+                               hsml_model=None,
+                               ) -> pd.DataFrame:
+        import uuid
+        features = Engine._convert_feature_log_to_df(features, [f.name for f in fg_features])
+        if td_predictions:
+            prediction = Engine._convert_feature_log_to_df(prediction, [f.name for f in td_predictions])
+            for f in td_predictions:
+                prediction[f.name] = Engine._cast_column_to_offline_type(prediction[f.name], f.type)
+            if not set(prediction.columns).intersection(set(features.columns)):
+                features = pd.concat([features, prediction], axis=1)
+        # need to case the column type as if it is None, type cannot be inferred.
+        features[td_col_name] = Engine._cast_column_to_offline_type(
+            pd.Series([training_dataset_version for _ in range(len(features))]), fg.get_feature(td_col_name).type
+        )
+        # _cast_column_to_offline_type cannot cast string type
+        features[model_col_name] = pd.Series([FeatureViewEngine.get_hsml_model_value(hsml_model) if hsml_model else None for _ in range(len(features))], dtype=pd.StringDtype())
+        now = datetime.now()
+        features[time_col_name] = Engine._cast_column_to_offline_type(
+            pd.Series([now for _ in range(len(features))]), fg.get_feature(time_col_name).type
+        )
+        features["log_id"] = [str(uuid.uuid4()) for _ in range(len(features))]
+        return features[[feat.name for feat in fg.features]]
