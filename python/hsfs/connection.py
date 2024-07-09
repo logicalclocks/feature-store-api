@@ -19,7 +19,7 @@ import importlib.util
 import os
 from typing import Any, Optional
 
-from hsfs import client, engine, feature_store, usage, util
+from hsfs import client, engine, usage, util
 from hsfs.core import (
     feature_store_api,
     hosts_api,
@@ -27,9 +27,14 @@ from hsfs.core import (
     services_api,
     variable_api,
 )
+from hsfs.core.constants import TYPE_CHECKING
 from hsfs.core.opensearch import OpenSearchClientSingleton
 from hsfs.decorators import connected, not_connected
 from requests.exceptions import ConnectionError
+
+
+if TYPE_CHECKING:
+    from hsfs import feature_store
 
 
 AWS_DEFAULT_REGION = "default"

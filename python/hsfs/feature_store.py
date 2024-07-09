@@ -18,25 +18,16 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, Union
 
 import humps
-import numpy
-import numpy as np
-import pandas as pd
-import polars as pl
 from hsfs import (
-    expectation_suite,
-    feature,
     feature_group,
-    feature_view,
-    storage_connector,
     training_dataset,
     usage,
     util,
 )
 from hsfs.client import exceptions
-from hsfs.constructor.query import Query
 from hsfs.core import (
     arrow_flight_client,
     feature_group_api,
@@ -46,10 +37,26 @@ from hsfs.core import (
     training_dataset_api,
     transformation_function_engine,
 )
+from hsfs.core.constants import TYPE_CHECKING
 from hsfs.decorators import typechecked
-from hsfs.embedding import EmbeddingIndex
-from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
+
+
+if TYPE_CHECKING:
+    import great_expectations
+    import numpy as np
+    import pandas as pd
+    import polars as pl
+    import pyspark
+    from hsfs import (
+        expectation_suite,
+        feature,
+        feature_view,
+        storage_connector,
+    )
+    from hsfs.constructor.query import Query
+    from hsfs.embedding import EmbeddingIndex
+    from hsfs.statistics_config import StatisticsConfig
 
 
 @typechecked
@@ -504,7 +511,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[
                 expectation_suite.ExpectationSuite,
-                TypeVar("great_expectations.core.ExpectationSuite"),
+                great_expectations.core.ExpectationSuite,
             ]
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = None,
@@ -637,7 +644,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[
                 expectation_suite.ExpectationSuite,
-                TypeVar("great_expectations.core.ExpectationSuite"),
+                great_expectations.core.ExpectationSuite,
             ]
         ] = None,
         event_time: Optional[str] = None,
@@ -786,7 +793,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[
                 expectation_suite.ExpectationSuite,
-                TypeVar("great_expectations.core.ExpectationSuite"),
+                great_expectations.core.ExpectationSuite,
             ]
         ] = None,
         topic_name: Optional[str] = None,
@@ -899,7 +906,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[
                 expectation_suite.ExpectationSuite,
-                TypeVar("great_expectations.core.ExpectationSuite"),
+                great_expectations.core.ExpectationSuite,
             ]
         ] = None,
         online_enabled: bool = False,
@@ -1043,8 +1050,8 @@ class FeatureStore:
         features: Optional[List[feature.Feature]] = None,
         dataframe: Union[
             pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
+            pyspark.sql.DataFrame,
+            pyspark.RDD,
             np.ndarray,
             List[list],
         ] = None,
@@ -1191,7 +1198,7 @@ class FeatureStore:
         label: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
         train_split: str = None,
-    ) -> "training_dataset.TrainingDataset":
+    ) -> training_dataset.TrainingDataset:
         """Create a training dataset metadata object.
 
         !!! warning "Deprecated"
@@ -1292,14 +1299,14 @@ class FeatureStore:
             str,
             bytes,
             int,
-            numpy.int8,
-            numpy.int16,
-            numpy.int32,
-            numpy.int64,
+            np.int8,
+            np.int16,
+            np.int32,
+            np.int64,
             float,
-            numpy.float64,
+            np.float64,
             datetime.datetime,
-            numpy.datetime64,
+            np.datetime64,
             datetime.date,
             bool,
         ],

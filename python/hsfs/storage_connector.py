@@ -21,14 +21,19 @@ import os
 import re
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, Union
 
 import humps
-import numpy as np
-import pandas as pd
-import polars as pl
 from hsfs import client, engine
 from hsfs.core import storage_connector_api
+from hsfs.core.constants import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
+    import polars as pl
+    import pyspark
 
 
 _logger = logging.getLogger(__name__)
@@ -138,8 +143,8 @@ class StorageConnector(ABC):
         path: Optional[str] = None,
         dataframe_type: str = "default",
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         np.ndarray,
         pl.DataFrame,
@@ -358,8 +363,8 @@ class S3Connector(StorageConnector):
         path: str = "",
         dataframe_type: str = "default",
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         np.ndarray,
         pl.DataFrame,
@@ -554,8 +559,8 @@ class RedshiftConnector(StorageConnector):
         path: Optional[str] = None,
         dataframe_type: str = "default",
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         np.ndarray,
         pl.DataFrame,
@@ -708,8 +713,8 @@ class AdlsConnector(StorageConnector):
         path: str = "",
         dataframe_type: str = "default",
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         np.ndarray,
         pl.DataFrame,
@@ -909,8 +914,8 @@ class SnowflakeConnector(StorageConnector):
         path: Optional[str] = None,
         dataframe_type: str = "default",
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         np.ndarray,
         pl.DataFrame,
@@ -1001,8 +1006,8 @@ class JdbcConnector(StorageConnector):
         path: Optional[str] = None,
         dataframe_type: str = "default",
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         np.ndarray,
         pl.DataFrame,
@@ -1296,8 +1301,8 @@ class KafkaConnector(StorageConnector):
         options: Optional[Dict[str, Any]] = None,
         include_metadata: bool = False,
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.sql.streaming.StreamingQuery"),
+        pyspark.sql.DataFrame,
+        pyspark.sql.streaming.StreamingQuery,
     ]:
         """Reads a Kafka stream from a topic or multiple topics into a Dataframe.
 
@@ -1422,8 +1427,8 @@ class GcsConnector(StorageConnector):
         path: str = "",
         dataframe_type: str = "default",
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         np.ndarray,
         pl.DataFrame,
@@ -1606,8 +1611,8 @@ class BigQueryConnector(StorageConnector):
         path: Optional[str] = None,
         dataframe_type: str = "default",
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         np.ndarray,
         pl.DataFrame,

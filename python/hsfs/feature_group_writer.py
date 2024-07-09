@@ -15,12 +15,17 @@
 #
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-import numpy as np
-import pandas as pd
-from hsfs.core.job import Job
-from hsfs.validation_report import ValidationReport
+from hsfs.core.constants import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
+    import pyspark
+    from hsfs.core.job import Job
+    from hsfs.validation_report import ValidationReport
 
 
 class FeatureGroupWriter:
@@ -34,8 +39,8 @@ class FeatureGroupWriter:
         self,
         features: Union[
             pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
+            pyspark.sql.DataFrame,
+            pyspark.RDD,
             np.ndarray,
             List[list],
         ],

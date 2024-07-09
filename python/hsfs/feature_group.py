@@ -28,44 +28,26 @@ from typing import (
     Literal,
     Optional,
     Tuple,
-    TypeVar,
     Union,
 )
 
-from hsfs.core.constants import TYPE_CHECKING
-
-
-if TYPE_CHECKING:
-    import great_expectations
-
 import avro.schema
-import confluent_kafka
 import humps
-import numpy as np
-import pandas as pd
-import polars as pl
 from hsfs import (
     engine,
     feature,
     feature_group_writer,
-    tag,
     user,
     util,
-)
-from hsfs import (
-    feature_store as feature_store_mod,
 )
 from hsfs import (
     storage_connector as sc,
 )
 from hsfs.client.exceptions import FeatureStoreException, RestAPIError
-from hsfs.constructor import filter, query
-from hsfs.constructor.filter import Filter, Logic
+from hsfs.constructor import query
 from hsfs.core import (
     code_engine,
-    deltastreamer_jobconf,
     expectation_suite_engine,
-    explicit_provenance,
     external_feature_group_engine,
     feature_group_engine,
     feature_monitoring_config_engine,
@@ -78,12 +60,10 @@ from hsfs.core import (
     validation_report_engine,
     validation_result_engine,
 )
-from hsfs.core import feature_monitoring_config as fmc
-from hsfs.core import feature_monitoring_result as fmr
 from hsfs.core.constants import (
     HAS_GREAT_EXPECTATIONS,
+    TYPE_CHECKING,
 )
-from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core.vector_db_client import VectorDbClient
 
@@ -91,10 +71,26 @@ from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked, uses_great_expectations
 from hsfs.embedding import EmbeddingIndex
 from hsfs.expectation_suite import ExpectationSuite
-from hsfs.ge_validation_result import ValidationResult
-from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
+
+
+if TYPE_CHECKING:
+    import confluent_kafka
+    import great_expectations
+    import numpy as np
+    import pandas as pd
+    import polars as pl
+    import pyspark
+    from hsfs import tag
+    from hsfs.constructor.filter import Filter, Logic
+    from hsfs.core import deltastreamer_jobconf, explicit_provenance
+    from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+    from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
+    from hsfs.core.job import Job
+    from hsfs.feature_store import FeatureStore
+    from hsfs.ge_validation_result import ValidationResult
+    from hsfs.statistics import Statistics
 
 
 if HAS_GREAT_EXPECTATIONS:
@@ -406,7 +402,7 @@ class FeatureGroupBase:
         else:
             return self.select_all()
 
-    def filter(self, f: Union[filter.Filter, filter.Logic]) -> query.Query:
+    def filter(self, f: Union[Filter, Logic]) -> query.Query:
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
@@ -1241,9 +1237,7 @@ class FeatureGroupBase:
     @uses_great_expectations
     def validate(
         self,
-        dataframe: Optional[
-            Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
-        ] = None,
+        dataframe: Optional[Union[pd.DataFrame, pyspark.sql.DataFrame]] = None,
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[str, Any]] = None,
@@ -1334,7 +1328,7 @@ class FeatureGroupBase:
         name: Optional[str] = None,
         feature_name: Optional[str] = None,
         config_id: Optional[int] = None,
-    ) -> Union[fmc.FeatureMonitoringConfig, List[fmc.FeatureMonitoringConfig], None]:
+    ) -> Union[FeatureMonitoringConfig, List[FeatureMonitoringConfig], None]:
         """Fetch all feature monitoring configs attached to the feature group, or fetch by name or feature name only.
         If no arguments is provided the method will return all feature monitoring configs
         attached to the feature group, meaning all feature monitoring configs that are attach
@@ -1396,7 +1390,7 @@ class FeatureGroupBase:
         start_time: Optional[Union[int, str, datetime, date]] = None,
         end_time: Optional[Union[int, str, datetime, date]] = None,
         with_statistics: Optional[bool] = True,
-    ) -> List[fmr.FeatureMonitoringResult]:
+    ) -> List[FeatureMonitoringResult]:
         """Fetch feature monitoring history for a given feature monitoring config.
 
         !!! example
@@ -1464,7 +1458,7 @@ class FeatureGroupBase:
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         cron_expression: Optional[str] = "0 0 12 ? * * *",
-    ) -> fmc.FeatureMonitoringConfig:
+    ) -> FeatureMonitoringConfig:
         """Run a job to compute statistics on snapshot of feature data on a schedule.
 
         !!! experimental
@@ -1530,7 +1524,7 @@ class FeatureGroupBase:
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         cron_expression: Optional[str] = "0 0 12 ? * * *",
-    ) -> fmc.FeatureMonitoringConfig:
+    ) -> FeatureMonitoringConfig:
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
 
         !!! experimental
@@ -1653,7 +1647,7 @@ class FeatureGroupBase:
         return self._feature_store_id
 
     @property
-    def feature_store(self) -> feature_store_mod.FeatureStore:
+    def feature_store(self) -> FeatureStore:
         if self._feature_store is None:
             self._feature_store = feature_store_api.FeatureStoreApi().get(
                 self._feature_store_id
@@ -1661,7 +1655,7 @@ class FeatureGroupBase:
         return self._feature_store
 
     @feature_store.setter
-    def feature_store(self, feature_store: feature_store_mod.FeatureStore) -> None:
+    def feature_store(self, feature_store: FeatureStore) -> None:
         self._feature_store = feature_store
 
     @property
@@ -2123,7 +2117,7 @@ class FeatureGroup(FeatureGroupBase):
         self._parents = parents
         self._deltastreamer_jobconf = delta_streamer_job_conf
 
-        self._materialization_job: "Job" = None
+        self._materialization_job: Job = None
 
         if self._id:
             # initialized by backend
@@ -2179,14 +2173,14 @@ class FeatureGroup(FeatureGroupBase):
             )
             self.statistics_config = statistics_config
 
-        self._feature_group_engine: "feature_group_engine.FeatureGroupEngine" = (
+        self._feature_group_engine: feature_group_engine.FeatureGroupEngine = (
             feature_group_engine.FeatureGroupEngine(featurestore_id)
         )
-        self._vector_db_client: Optional["VectorDbClient"] = None
+        self._vector_db_client: Optional[VectorDbClient] = None
         self._href: Optional[str] = href
 
         # cache for optimized writes
-        self._kafka_producer: Optional["confluent_kafka.Producer"] = None
+        self._kafka_producer: Optional[confluent_kafka.Producer] = None
         self._feature_writers: Optional[Dict[str, callable]] = None
         self._writer: Optional[callable] = None
         self._kafka_headers: Optional[Dict[str, bytes]] = None
@@ -2201,8 +2195,8 @@ class FeatureGroup(FeatureGroupBase):
         pd.DataFrame,
         np.ndarray,
         List[List[Any]],
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pl.DataFrame,
     ]:
         """
@@ -2306,8 +2300,8 @@ class FeatureGroup(FeatureGroupBase):
         pd.DataFrame,
         np.ndarray,
         List[List[Any]],
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pl.DataFrame,
     ]:
         """Reads updates of this feature that occurred between specified points in time.
@@ -2446,8 +2440,8 @@ class FeatureGroup(FeatureGroupBase):
         features: Union[
             pd.DataFrame,
             pl.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
+            pyspark.sql.DataFrame,
+            pyspark.RDD,
             np.ndarray,
             List[feature.Feature],
         ] = None,
@@ -2455,7 +2449,7 @@ class FeatureGroup(FeatureGroupBase):
         validation_options: Optional[Dict[str, Any]] = None,
         wait: bool = False,
     ) -> Tuple[
-        Optional["Job"],
+        Optional[Job],
         Optional[great_expectations.core.ExpectationSuiteValidationResult],
     ]:
         """Persist the metadata and materialize the feature group to the feature store.
@@ -2575,8 +2569,8 @@ class FeatureGroup(FeatureGroupBase):
         features: Union[
             pd.DataFrame,
             pl.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
+            pyspark.sql.DataFrame,
+            pyspark.RDD,
             np.ndarray,
             List[list],
         ],
@@ -2752,8 +2746,8 @@ class FeatureGroup(FeatureGroupBase):
             Union[
                 pd.DataFrame,
                 pl.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
+                pyspark.sql.DataFrame,
+                pyspark.RDD,
                 np.ndarray,
                 List[list],
             ]
@@ -2914,14 +2908,14 @@ class FeatureGroup(FeatureGroupBase):
 
     def insert_stream(
         self,
-        features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        features: pyspark.sql.DataFrame,
         query_name: Optional[str] = None,
         output_mode: Optional[str] = "append",
         await_termination: bool = False,
         timeout: Optional[int] = None,
         checkpoint_dir: Optional[str] = None,
         write_options: Optional[Dict[str, Any]] = None,
-    ) -> TypeVar("StreamingQuery"):
+    ) -> pyspark.sql.streaming.StreamingQuery:
         """Ingest a Spark Structured Streaming Dataframe to the online feature store.
 
         This method creates a long running Spark Streaming Query, you can control the
@@ -3047,7 +3041,7 @@ class FeatureGroup(FeatureGroupBase):
 
     def commit_delete_record(
         self,
-        delete_df: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        delete_df: pyspark.sql.DataFrame,
         write_options: Optional[Dict[Any, Any]] = None,
     ) -> None:
         """Drops records present in the provided DataFrame and commits it as update to this
@@ -3164,7 +3158,7 @@ class FeatureGroup(FeatureGroupBase):
         from_commit_time: Optional[Union[str, int, datetime, date]] = None,
         to_commit_time: Optional[Union[str, int, datetime, date]] = None,
         feature_names: Optional[List[str]] = None,
-    ) -> Optional[Union["Statistics", List["Statistics"]]]:
+    ) -> Optional[Union[Statistics, List[Statistics]]]:
         """Returns the statistics computed on a specific commit window for this feature group. If time travel is not enabled, it raises an exception.
 
         If `from_commit_time` is `None`, the commit window starts from the first commit.
@@ -3397,13 +3391,13 @@ class FeatureGroup(FeatureGroupBase):
         return self._stream
 
     @property
-    def parents(self) -> List["explicit_provenance.Links"]:
+    def parents(self) -> List[explicit_provenance.Links]:
         """Parent feature groups as origin of the data in the current feature group.
         This is part of explicit provenance"""
         return self._parents
 
     @property
-    def materialization_job(self) -> Optional["Job"]:
+    def materialization_job(self) -> Optional[Job]:
         """Get the Job object reference for the materialization job for this
         Feature Group."""
         if self._materialization_job is not None:
@@ -3428,7 +3422,7 @@ class FeatureGroup(FeatureGroupBase):
             raise FeatureStoreException("No materialization job was found")
 
     @property
-    def statistics(self) -> "Statistics":
+    def statistics(self) -> Statistics:
         """Get the latest computed statistics for the whole feature group."""
         if self._is_time_travel_enabled():
             # retrieve the latests statistics computed on the whole Feature Group, including all the commits.
@@ -3463,7 +3457,7 @@ class FeatureGroup(FeatureGroupBase):
         self._stream = stream
 
     @parents.setter
-    def parents(self, new_parents: "explicit_provenance.Links") -> None:
+    def parents(self, new_parents: explicit_provenance.Links) -> None:
         self._parents = new_parents
 
 
@@ -3611,8 +3605,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self,
         features: Union[
             pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
+            pyspark.sql.DataFrame,
+            pyspark.RDD,
             np.ndarray,
             List[list],
         ],
@@ -3728,8 +3722,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online: bool = False,
         read_options: Optional[Dict[str, Any]] = None,
     ) -> Union[
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
         pd.DataFrame,
         pl.DataFrame,
         np.ndarray,
@@ -4126,7 +4120,7 @@ class SpineGroup(FeatureGroupBase):
     @property
     def dataframe(
         self,
-    ) -> Optional[Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]]:
+    ) -> Optional[Union[pd.DataFrame, pyspark.sql.DataFrame]]:
         """Spine dataframe with primary key, event time and
         label column to use for point in time join when fetching features.
         """
@@ -4140,8 +4134,8 @@ class SpineGroup(FeatureGroupBase):
                 pd.DataFrame,
                 pl.DataFrame,
                 np.ndarray,
-                TypeVar("pyspark.sql.DataFrame"),
-                TypeVar("pyspark.RDD"),
+                pyspark.sql.DataFrame,
+                pyspark.RDD,
             ]
         ],
     ) -> None:

@@ -18,16 +18,14 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, Optional
 
-from hsfs.core.constants import TYPE_CHECKING
+import humps
+from hsfs import util
+from hsfs.core.constants import HAS_GREAT_EXPECTATIONS, TYPE_CHECKING
+from hsfs.decorators import uses_great_expectations
 
 
 if TYPE_CHECKING:
     import great_expectations
-
-import humps
-from hsfs import util
-from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
-from hsfs.decorators import uses_great_expectations
 
 
 if HAS_GREAT_EXPECTATIONS:

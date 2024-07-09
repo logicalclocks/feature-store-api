@@ -16,11 +16,9 @@ from __future__ import annotations
 
 import json
 import warnings
-from typing import Any, Dict, List, Optional, Set, TypeVar, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import humps
-import numpy as np
-import pandas as pd
 from hsfs import client, engine, training_dataset_feature, util
 from hsfs.client.exceptions import RestAPIError
 from hsfs.constructor import filter, query
@@ -32,9 +30,16 @@ from hsfs.core import (
     transformation_function_engine,
     vector_server,
 )
+from hsfs.core.constants import TYPE_CHECKING
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.storage_connector import HopsFSConnector, StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
+
+
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
+    import pyspark
 
 
 class TrainingDatasetBase:
@@ -604,8 +609,8 @@ class TrainingDataset(TrainingDatasetBase):
         features: Union[
             query.Query,
             pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
+            pyspark.sql.DataFrame,
+            pyspark.RDD,
             np.ndarray,
             List[list],
         ],
@@ -668,8 +673,8 @@ class TrainingDataset(TrainingDatasetBase):
         features: Union[
             query.Query,
             pd.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
+            pyspark.sql.DataFrame,
+            pyspark.RDD,
             np.ndarray,
             List[list],
         ],

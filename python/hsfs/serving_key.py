@@ -19,8 +19,12 @@ import json
 from typing import Any, Dict, List, Optional, Union
 
 import humps
-from hsfs import feature_group as fg_mod
 from hsfs import util
+from hsfs.core.constants import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 
 
 class ServingKey:
@@ -29,7 +33,7 @@ class ServingKey:
         feature_name: str,
         join_index: int,
         feature_group: Optional[
-            Union[Dict[str, Any], fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup]
+            Union[Dict[str, Any], FeatureGroup, ExternalFeatureGroup]
         ] = None,
         required: bool = True,
         prefix: str = "",
@@ -105,7 +109,7 @@ class ServingKey:
         return self._join_index
 
     @property
-    def feature_group(self) -> Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup]:
+    def feature_group(self) -> Union[FeatureGroup, ExternalFeatureGroup]:
         return self._feature_group
 
     @property

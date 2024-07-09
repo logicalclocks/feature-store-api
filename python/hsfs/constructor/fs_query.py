@@ -15,11 +15,16 @@
 #
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, Union
 
 import humps
 from hsfs import engine
 from hsfs.constructor import external_feature_group_alias, hudi_feature_group_alias
+from hsfs.core.constants import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    import pyspark
 
 
 class FsQuery:
@@ -96,7 +101,7 @@ class FsQuery:
     def register_external(
         self,
         spine: Optional[
-            Union[TypeVar("pyspark.sql.DataFrame"), TypeVar("pyspark.RDD")]
+            Union[pyspark.sql.DataFrame, pyspark.RDD]
         ] = None,
     ) -> None:
         if self._on_demand_fg_aliases is None:

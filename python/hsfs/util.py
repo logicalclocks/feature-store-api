@@ -35,7 +35,6 @@ from typing import (
 )
 from urllib.parse import urljoin, urlparse
 
-import pandas as pd
 from hsfs import client, feature, serving_key
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_api, variable_api
@@ -44,6 +43,7 @@ from hsfs.core.constants import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import feature_group
+    import pandas as pd
     from hsfs.constructor import serving_prepared_statement
 
 
@@ -222,7 +222,8 @@ def convert_event_time_to_timestamp(
         return None
     if isinstance(event_time, str):
         return get_timestamp_from_date_string(event_time)
-    elif isinstance(event_time, pd._libs.tslibs.timestamps.Timestamp):
+    elif hasattr(event_time, "to_numpy"):
+        # to_numpy is only in pd._libs.tslibs.timestamps.Timestamp
         # convert to unix epoch time in milliseconds.
         event_time = event_time.to_pydatetime()
         # convert to unix epoch time in milliseconds.

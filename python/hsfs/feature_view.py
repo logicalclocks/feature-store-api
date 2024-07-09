@@ -20,66 +20,70 @@ import json
 import logging
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import humps
-import numpy as np
-import pandas as pd
-import polars as pl
+import pyspark.sql
+from hsfs import serving_key as skm
 from hsfs import (
-    feature_group,
-    storage_connector,
-    tag,
     training_dataset,
     training_dataset_feature,
     usage,
     util,
 )
-from hsfs import serving_key as skm
-from hsfs import transformation_function as tfm
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.constructor import filter, query
-from hsfs.constructor.filter import Filter, Logic
+from hsfs.constructor import query
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import (
-    explicit_provenance,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
     feature_view_engine,
-    job,
     statistics_engine,
     transformation_function_engine,
     vector_server,
 )
-from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
+from hsfs.core.constants import TYPE_CHECKING
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
-from hsfs.feature import Feature
-from hsfs.statistics import Statistics
-from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
+    import polars as pl
+    import pyspark
+    from hsfs import storage_connector, tag
+    from hsfs.constructor.filter import Filter, Logic
+    from hsfs.core import explicit_provenance, job
+    from hsfs.feature import Feature
+    from hsfs.feature_group import FeatureGroup, SpineGroup
+    from hsfs.statistics import Statistics
+    from hsfs.statistics_config import StatisticsConfig
+    from hsfs.transformation_function import TransformationFunction
+
+    TrainingDatasetDataFrameTypes = Union[
+        pd.DataFrame,
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
+        np.ndarray,
+        List[List[Any]],
+        pl.DataFrame,
+    ]
+
+    SpineDataFrameTypes = Union[
+        pd.DataFrame,
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
+        np.ndarray,
+        List[List[Any]],
+        SpineGroup,
+    ]
+
+
 _logger = logging.getLogger(__name__)
-
-TrainingDatasetDataFrameTypes = Union[
-    pd.DataFrame,
-    TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-    TypeVar("pyspark.RDD"),  # noqa: F821
-    np.ndarray,
-    List[List[Any]],
-    pl.DataFrame,
-]
-
-SplineDataFrameTypes = Union[
-    pd.DataFrame,
-    TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-    TypeVar("pyspark.RDD"),  # noqa: F821
-    np.ndarray,
-    List[List[Any]],
-    TypeVar("SplineGroup"),  # noqa: F821
-]
 
 
 @typechecked
@@ -97,9 +101,7 @@ class FeatureView:
         labels: Optional[List[str]] = None,
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
-        transformation_functions: Optional[
-            Dict[str, tfm.TransformationFunction]
-        ] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[skm.ServingKey]] = None,
         logging_enabled: Optional[bool] = False,
@@ -915,7 +917,7 @@ class FeatureView:
 
     def _get_embedding_fgs(
         self,
-    ) -> Set[feature_group.FeatureGroup]:
+    ) -> Set[FeatureGroup]:
         return set([fg for fg in self.query.featuregroups if fg.embedding_index])
 
     @usage.method_logger
@@ -924,7 +926,7 @@ class FeatureView:
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options: Optional[Dict[str, Any]] = None,
-        spine: Optional[SplineDataFrameTypes] = None,
+        spine: Optional[SpineDataFrameTypes] = None,
         primary_key: bool = False,
         event_time: bool = False,
         inference_helper_columns: bool = False,
@@ -1041,7 +1043,7 @@ class FeatureView:
         """
         return self._feature_view_engine.add_tag(self, name, value)
 
-    def get_tag(self, name: str) -> "tag.Tag":
+    def get_tag(self, name: str) -> tag.Tag:
         """Get the tags of a feature view.
 
         !!! example
@@ -1090,7 +1092,7 @@ class FeatureView:
         """
         return self._feature_view_engine.get_tags(self)
 
-    def get_parent_feature_groups(self) -> "explicit_provenance.Links":
+    def get_parent_feature_groups(self) -> explicit_provenance.Links:
         """Get the parents of this feature view, based on explicit provenance.
         Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
@@ -1138,7 +1140,7 @@ class FeatureView:
 
     def get_models_provenance(
         self, training_dataset_version: Optional[int] = None
-    ) -> "explicit_provenance.Links":
+    ) -> explicit_provenance.Links:
         """Get the generated models using this feature view, based on explicit
         provenance. These models can be accessible or inaccessible. Explicit
         provenance does not track deleted generated model links, so deleted
@@ -1193,13 +1195,13 @@ class FeatureView:
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
-        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
+        extra_filter: Optional[Union[Filter, Logic]] = None,
         data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[SplineDataFrameTypes] = None,
+        spine: Optional[SpineDataFrameTypes] = None,
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
@@ -1426,13 +1428,13 @@ class FeatureView:
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
-        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
+        extra_filter: Optional[Union[Filter, Logic]] = None,
         data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[SplineDataFrameTypes] = None,
+        spine: Optional[SpineDataFrameTypes] = None,
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
@@ -1716,13 +1718,13 @@ class FeatureView:
         storage_connector: Optional[storage_connector.StorageConnector] = None,
         location: Optional[str] = "",
         description: Optional[str] = "",
-        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
+        extra_filter: Optional[Union[Filter, Logic]] = None,
         data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[SplineDataFrameTypes] = None,
+        spine: Optional[SpineDataFrameTypes] = None,
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
@@ -1993,7 +1995,7 @@ class FeatureView:
         training_dataset_version: int,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[SplineDataFrameTypes] = None,
+        spine: Optional[SpineDataFrameTypes] = None,
     ) -> job.Job:
         """
         Recreate a training dataset.
@@ -2068,10 +2070,10 @@ class FeatureView:
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
         description: Optional[str] = "",
-        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
+        extra_filter: Optional[Union[Filter, Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[SplineDataFrameTypes] = None,
+        spine: Optional[SpineDataFrameTypes] = None,
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
@@ -2219,10 +2221,10 @@ class FeatureView:
         test_start: Optional[Union[str, int, datetime, date]] = "",
         test_end: Optional[Union[str, int, datetime, date]] = "",
         description: Optional[str] = "",
-        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
+        extra_filter: Optional[Union[Filter, Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[SplineDataFrameTypes] = None,
+        spine: Optional[SpineDataFrameTypes] = None,
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
@@ -2407,10 +2409,10 @@ class FeatureView:
         test_start: Optional[Union[str, int, datetime, date]] = "",
         test_end: Optional[Union[str, int, datetime, date]] = "",
         description: Optional[str] = "",
-        extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
+        extra_filter: Optional[Union[Filter, Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[SplineDataFrameTypes] = None,
+        spine: Optional[SpineDataFrameTypes] = None,
         primary_key: bool = False,
         event_time: bool = False,
         training_helper_columns: bool = False,
@@ -2898,7 +2900,7 @@ class FeatureView:
         self,
         training_dataset_version: int,
         name: str,
-        value: Union[Dict[str, Any], "tag.Tag"],
+        value: Union[Dict[str, Any], tag.Tag],
     ) -> None:
         """Attach a tag to a training dataset.
 
@@ -2933,7 +2935,7 @@ class FeatureView:
     @usage.method_logger
     def get_training_dataset_tag(
         self, training_dataset_version: int, name: str
-    ) -> "tag.Tag":
+    ) -> tag.Tag:
         """Get the tags of a training dataset.
 
         !!! example
@@ -2968,7 +2970,7 @@ class FeatureView:
     @usage.method_logger
     def get_training_dataset_tags(
         self, training_dataset_version: int
-    ) -> Dict[str, "tag.Tag"]:
+    ) -> Dict[str, tag.Tag]:
         """Returns all tags attached to a training dataset.
 
         !!! example
@@ -3391,7 +3393,7 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
-            logging_enabled=json_decamelized.get('enabled_logging', False),
+            logging_enabled=json_decamelized.get("enabled_logging", False),
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3465,14 +3467,15 @@ class FeatureView:
         """
         return self._feature_view_engine.enable_feature_logging(self)
 
-    def log(self,
-            features: Union[pd.DataFrame, list[list], np.ndarray],
-            predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
-            transformed: Optional[bool]=False,
-            write_options: Optional[Dict[str, Any]] = None,
-            training_dataset_version: Optional[int]=None,
-            hsml_model=None,
-            ):
+    def log(
+        self,
+        features: Union[pd.DataFrame, list[list], np.ndarray],
+        predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]] = None,
+        transformed: Optional[bool] = False,
+        write_options: Optional[Dict[str, Any]] = None,
+        training_dataset_version: Optional[int] = None,
+        hsml_model=None,
+    ):
         """Log features and optionally predictions for the current feature view.
 
         Note: If features is a `pd.Dataframe`, prediction can be provided as columns in the dataframe.
@@ -3503,20 +3506,23 @@ class FeatureView:
             )
             self.enable_logging()
         return self._feature_view_engine.log_features(
-            self, features, predictions, transformed,
+            self,
+            features,
+            predictions,
+            transformed,
             write_options,
             training_dataset_version=(
                 training_dataset_version or self.get_last_accessed_training_dataset()
             ),
-            hsml_model=hsml_model
+            hsml_model=hsml_model,
         )
 
-    def get_log_timeline(self,
-                         wallclock_time: Optional[
-                             Union[str, int, datetime, datetime.date]] = None,
-                         limit: Optional[int] = None,
-                         transformed: Optional[bool] = False,
-                         ):
+    def get_log_timeline(
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        limit: Optional[int] = None,
+        transformed: Optional[bool] = False,
+    ):
         """Retrieve the log timeline for the current feature view.
 
         # Arguments
@@ -3537,16 +3543,15 @@ class FeatureView:
             self, wallclock_time, limit, transformed
         )
 
-    def read_log(self,
-                 start_time: Optional[
-                     Union[str, int, datetime, datetime.date]] = None,
-                 end_time: Optional[
-                     Union[str, int, datetime, datetime.date]] = None,
-                 filter: Optional[Union[Filter, Logic]] = None,
-                 transformed: Optional[bool] = False,
-                 training_dataset_version: Optional[int]=None,
-                 hsml_model=None,
-                 ):
+    def read_log(
+        self,
+        start_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        end_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        filter: Optional[Union[Filter, Logic]] = None,
+        transformed: Optional[bool] = False,
+        training_dataset_version: Optional[int] = None,
+        hsml_model=None,
+    ):
         """Read the log entries for the current feature view.
             Optionally, filter can be applied to start/end time, training dataset version, hsml model,
             and custom fitler.
@@ -3577,7 +3582,13 @@ class FeatureView:
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to read the log entries.
         """
         return self._feature_view_engine.read_feature_logs(
-            self, start_time, end_time, filter, transformed, training_dataset_version, hsml_model
+            self,
+            start_time,
+            end_time,
+            filter,
+            transformed,
+            training_dataset_version,
+            hsml_model,
         )
 
     def pause_logging(self):
@@ -3608,7 +3619,7 @@ class FeatureView:
         """
         self._feature_view_engine.resume_logging(self)
 
-    def materialize_log(self, wait: Optional[bool]=False):
+    def materialize_log(self, wait: Optional[bool] = False):
         """Materialize the log for the current feature view.
 
         # Arguments
@@ -3625,21 +3636,21 @@ class FeatureView:
         """
         return self._feature_view_engine.materialize_feature_logs(self, wait)
 
-    def delete_log(self, transformed: Optional[bool]=None):
+    def delete_log(self, transformed: Optional[bool] = None):
         """Delete the logged feature data for the current feature view.
 
-         # Arguments
-             transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
+        # Arguments
+            transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
 
-         # Example
-             ```python
-             # delete log
-             feature_view.delete_log()
-             ```
+        # Example
+            ```python
+            # delete log
+            feature_view.delete_log()
+            ```
 
-         # Raises
-             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
-         """
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
+        """
         return self._feature_view_engine.delete_feature_logs(self, transformed)
 
     @staticmethod
@@ -3780,14 +3791,14 @@ class FeatureView:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, tfm.TransformationFunction]:
+    ) -> Dict[str, TransformationFunction]:
         """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
     def transformation_functions(
         self,
-        transformation_functions: Dict[str, tfm.TransformationFunction],
+        transformation_functions: Dict[str, TransformationFunction],
     ) -> None:
         self._transformation_functions = transformation_functions
 

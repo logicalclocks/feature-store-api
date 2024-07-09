@@ -18,20 +18,26 @@ from __future__ import annotations
 import json
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import humps
-import numpy as np
-import pandas as pd
-from hsfs import engine, storage_connector, util
+from hsfs import engine, util
 from hsfs import feature_group as fg_mod
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
-from hsfs.constructor.fs_query import FsQuery
 from hsfs.core import arrow_flight_client, query_constructor_api, storage_connector_api
+from hsfs.core.constants import TYPE_CHECKING
 from hsfs.decorators import typechecked
-from hsfs.feature import Feature
+
+
+if TYPE_CHECKING:
+    import numpy as np
+    import pandas as pd
+    import pyspark
+    from hsfs import storage_connector
+    from hsfs.constructor.fs_query import FsQuery
+    from hsfs.feature import Feature
 
 
 @typechecked
@@ -59,7 +65,7 @@ class Query:
             fg_mod.ExternalFeatureGroup,
             fg_mod.SpineGroup,
         ],
-        left_features: List[Union[str, "Feature"]],
+        left_features: List[Union[str, Feature]],
         feature_store_name: Optional[str] = None,
         feature_store_id: Optional[int] = None,
         left_feature_group_start_time: Optional[Union[str, int, date, datetime]] = None,
@@ -87,7 +93,7 @@ class Query:
     def _prep_read(
         self, online: bool, read_options: Dict[str, Any]
     ) -> Tuple[
-        Union[str, Dict[str, Any]], Optional["storage_connector.StorageConnector"]
+        Union[str, Dict[str, Any]], Optional[storage_connector.StorageConnector]
     ]:
         self._check_read_supported(online)
         fs_query = self._query_constructor_api.construct_query(self)
@@ -141,8 +147,8 @@ class Query:
         pd.DataFrame,
         np.ndarray,
         List[List[Any]],
-        TypeVar("pyspark.sql.DataFrame"),
-        TypeVar("pyspark.RDD"),
+        pyspark.sql.DataFrame,
+        pyspark.RDD,
     ]:
         """Read the specified query into a DataFrame.
 
@@ -595,7 +601,7 @@ class Query:
         return self._to_string(fs_query, online, arrow_flight)
 
     def _to_string(
-        self, fs_query: "FsQuery", online: bool = False, asof: bool = False
+        self, fs_query: FsQuery, online: bool = False, asof: bool = False
     ) -> str:
         if online:
             return fs_query.query_online
@@ -633,7 +639,7 @@ class Query:
     ) -> None:
         self._left_feature_group_end_time = left_feature_group_end_time
 
-    def append_feature(self, feature: Union[str, "Feature"]) -> "Query":
+    def append_feature(self, feature: Union[str, Feature]) -> Query:
         """
         Append a feature to the query.
 
@@ -699,7 +705,7 @@ class Query:
         self,
         feature_name: str,
     ) -> Tuple[
-        "Feature",
+        Feature,
         Optional[str],
         Union[
             fg_mod.FeatureGroup,
@@ -785,7 +791,7 @@ class Query:
         return filters
 
     @property
-    def features(self) -> List["Feature"]:
+    def features(self) -> List[Feature]:
         """List of all features in the query"""
         features = []
         for feat in self._left_features:
@@ -797,7 +803,7 @@ class Query:
 
         return features
 
-    def get_feature(self, feature_name: str) -> "Feature":
+    def get_feature(self, feature_name: str) -> Feature:
         """
         Get a feature by name.
 
