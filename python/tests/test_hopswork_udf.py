@@ -746,6 +746,7 @@ def test_function():
 
         with pytest.raises(FeatureStoreException) as exe:
             test_func._validate_udf_type()
+            test_func.get_udf()
 
         assert str(exe.value) == "UDF Type cannot be None"
 
