@@ -3426,7 +3426,7 @@ class FeatureView:
             "training_helper_columns",
             "schema",
             "serving_keys",
-            "enabled_logging",
+            "logging_enabled",
         ]:
             self._update_attribute_if_present(self, other, key)
         self._init_feature_monitoring_engine()
