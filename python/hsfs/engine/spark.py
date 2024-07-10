@@ -87,6 +87,7 @@ from hsfs import (
     client,
     feature,
     feature_view,
+    training_dataset,
     training_dataset_feature,
     transformation_function,
     util,
