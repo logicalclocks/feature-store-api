@@ -294,7 +294,4 @@ if __name__ == "__main__":
         run_feature_monitoring(job_conf)
 
     if spark is not None:
-        try:
-            spark.stop()
-        except Exception as e:
-            pass
+        spark.stop()

@@ -1100,11 +1100,7 @@ public class SparkEngine extends EngineBase {
   
   public void closeSparkSession() {
     if (getSparkSession() != null) {
-      try {
-        getSparkSession().stop();
-      } catch (Exception e) {
-        // No-OP
-      }
+      getSparkSession().stop();
     }
   }
 }
