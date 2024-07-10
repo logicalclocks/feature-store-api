@@ -292,3 +292,6 @@ if __name__ == "__main__":
         import_fg(job_conf)
     elif args.op == "run_feature_monitoring":
         run_feature_monitoring(job_conf)
+
+    if spark is not None:
+        spark.stop()
