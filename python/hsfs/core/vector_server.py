@@ -539,7 +539,7 @@ class VectorServer:
             len(self.model_dependent_transformation_functions) > 0
             or len(self.on_demand_transformation_functions) > 0
         ) and transformed:
-            self.apply_transformation(result_dict, request_parameters)
+            self.apply_transformation(result_dict, request_parameters or {})
 
         _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)
         if transformed:
