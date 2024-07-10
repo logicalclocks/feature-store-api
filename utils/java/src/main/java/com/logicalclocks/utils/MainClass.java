@@ -118,5 +118,9 @@ public class MainClass {
     if (op.equals("offline_fg_materialization") || op.equals("offline_fg_backfill")) {
       SparkEngine.getInstance().streamToHudiTable(streamFeatureGroup, writeOptions);
     }
+    
+    LOGGER.info("Closing spark session...");
+    SparkEngine.getInstance().closeSparkSession();
+    System.exit(0);
   }
 }
