@@ -29,3 +29,9 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "tests"
+]
+addopts = "--ignore=python/tests/test_helper/"

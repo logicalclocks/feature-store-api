@@ -16,26 +16,28 @@
 from __future__ import annotations
 
 import datetime
+import os
 import statistics
 
-import numpy as np
 import pandas as pd
 import pytest
-import pytz
 import tzlocal
 from hsfs import (
+    engine,
     training_dataset,
     training_dataset_feature,
     transformation_function,
 )
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.core.transformation_function_engine import TransformationFunctionEngine
 from hsfs.engine import python, spark
+from hsfs.hopsworks_udf import HopsworksUdf, udf
 from pyspark.sql.types import (
     BooleanType,
     DateType,
     DoubleType,
     IntegerType,
+    LongType,
     StringType,
     StructField,
     StructType,
@@ -43,28 +45,13 @@ from pyspark.sql.types import (
 )
 
 
+# TODO : Remove skipping UT in windows after Greater expectations has been upgraded to 1.0 or after it has been made optional
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="Skip tests in windows since it fails due to dependency problem with greater expectations 0.18.2, Fixed on upgrading to 1.0",
+)
 class TestPythonSparkTransformationFunctions:
-    def _create_training_dataset(
-        self, tf_fun, output_type=None, name=None, col="col_0"
-    ):
-        if isinstance(tf_fun, str):
-            tf = transformation_function.TransformationFunction(
-                name=name,
-                featurestore_id=99,
-                transformation_fn=None,
-                source_code_content=tf_fun,
-                output_type=output_type,
-            )
-        else:
-            tf = transformation_function.TransformationFunction(
-                featurestore_id=99,
-                transformation_fn=tf_fun,
-                builtin_source_code=None,
-                output_type=output_type,
-            )
-        transformation_fn_dict = dict()
-        transformation_fn_dict[col] = tf
-
+    def _create_training_dataset(self):
         f = training_dataset_feature.TrainingDatasetFeature(
             name="col_0", type=IntegerType(), index=0
         )
@@ -83,18 +70,18 @@ class TestPythonSparkTransformationFunctions:
             featurestore_id=99,
             splits={},
             features=features,
-            transformation_functions=transformation_fn_dict,
         )
 
         return td
 
-    def _validate_on_python_engine(self, td, df, expected_df):
+    def _validate_on_python_engine(self, td, df, expected_df, transformation_functions):
         # Arrange
+        engine._engine_type = "python"
         python_engine = python.Engine()
 
         # Act
         result = python_engine._apply_transformation_function(
-            transformation_functions=td.transformation_functions,
+            transformation_functions=transformation_functions,
             dataset=df,
         )
 
@@ -102,13 +89,16 @@ class TestPythonSparkTransformationFunctions:
         assert list(result.dtypes) == list(expected_df.dtypes)
         assert result.equals(expected_df)
 
-    def _validate_on_spark_engine(self, td, spark_df, expected_spark_df):
+    def _validate_on_spark_engine(
+        self, td, spark_df, expected_spark_df, transformation_functions
+    ):
         # Arrange
+        engine._engine_type = "spark"
         spark_engine = spark.Engine()
 
         # Act
         result = spark_engine._apply_transformation_function(
-            transformation_functions=td.transformation_functions,
+            transformation_functions=transformation_functions,
             dataset=spark_df,
         )
 
@@ -116,9 +106,87 @@ class TestPythonSparkTransformationFunctions:
         assert result.schema == expected_spark_df.schema
         assert result.collect() == expected_spark_df.collect()
 
+    def test_apply_builtin_minmax_from_backend(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.core.statistics_engine.StatisticsEngine._save_statistics")
+        spark_engine = spark.Engine()
+
+        schema = StructType(
+            [
+                StructField("col_0", IntegerType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+        df = pd.DataFrame(
+            data={
+                "col_0": [1, 2],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
+
+        expected_schema = StructType(
+            [
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+                StructField("min_max_scaler_col_0_", DoubleType(), True),
+            ]
+        )
+        expected_df = pd.DataFrame(
+            data={
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+                "min_max_scaler_col_0_": [0.0, 1.0],
+            }
+        )
+        expected_spark_df = spark_engine._spark_session.createDataFrame(
+            expected_df, schema=expected_schema
+        )
+
+        # Arrange
+        tf_fun_source = (
+            "import numpy as np\nimport pandas as pd\nfrom hsfs.transformation_statistics import TransformationStatistics\n"
+            "from hsfs.hopsworks_udf import udf\n"
+            'feature_statistics = TransformationStatistics("feature")\n'
+            "@udf(float)\n"
+            "def min_max_scaler(feature: pd.Series, statistics = feature_statistics) -> pd.Series:\n"
+            "    return (feature - statistics.feature.min) / (statistics.feature.max - statistics.feature.min)"
+        )
+        udf_response = {
+            "sourceCode": tf_fun_source,
+            "outputTypes": ["double"],
+            "transformationFeatures": [],
+            "statisticsArgumentNames": ["feature"],
+            "name": "min_max_scaler",
+        }
+
+        tf_fun = HopsworksUdf.from_response_json(udf_response)
+
+        td = self._create_training_dataset()
+
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun("col_0"), featurestore_id=99
+            )
+        ]
+
+        transformation_functions[0].hopsworks_udf.transformation_statistics = [
+            FeatureDescriptiveStatistics(feature_name="col_0", min=1, max=2)
+        ]
+
+        # Assert
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
+
     def test_apply_builtin_minmax(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.core.statistics_engine.StatisticsEngine._save_statistics")
         spark_engine = spark.Engine()
 
         schema = StructType(
@@ -139,16 +207,16 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", DoubleType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("min_max_scaler_col_0_", DoubleType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [0.5, 1.0],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "min_max_scaler_col_0_": [0.0, 1.0],
             }
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
@@ -156,34 +224,30 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        tf_fun = (
-            '{"module_imports": "from datetime import datetime", "transformer_code": '
-            '"def min_max_scaler(value, min_value,max_value):\\n    if value is None:\\n        '
-            "return None\\n    else:\\n        try:\\n            return (value - min_value) / (max_value - min_value)\\n"
-            '        except ZeroDivisionError:\\n            return 0\\n"}'
-        )
+        from hsfs.builtin_transformations import min_max_scaler
 
-        td = self._create_training_dataset(tf_fun, "DOUBLE", "min_max_scaler")
+        td = self._create_training_dataset()
 
-        td.transformation_functions["col_0"] = (
-            TransformationFunctionEngine.populate_builtin_fn_arguments(
-                "col_0",
-                td.transformation_functions["col_0"],
-                [
-                    FeatureDescriptiveStatistics(
-                        feature_name="col_0", feature_type="Integral", min=0, max=2
-                    )
-                ],
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=min_max_scaler("col_0"), featurestore_id=99
             )
-        )
+        ]
+
+        transformation_functions[0].hopsworks_udf.transformation_statistics = [
+            FeatureDescriptiveStatistics(feature_name="col_0", min=1, max=2)
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
-    def test_apply_builtin_labelencoder(self, mocker):
+    def test_apply_builtin_standard_scaler_from_backend(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.core.statistics_engine.StatisticsEngine._save_statistics")
         spark_engine = spark.Engine()
 
         schema = StructType(
@@ -204,53 +268,64 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", IntegerType(), True),
-                StructField("col_1", IntegerType(), True),
+                StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("standard_scaler_col_0_", DoubleType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [1, 2],
-                "col_1": [0, 1],
+                "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "standard_scaler_col_0_": [-1.0, 1.0],
             }
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
-        expected_df["col_1"] = expected_df["col_1"].astype(pd.Int32Dtype())
 
         # Arrange
-        tf_fun = (
-            '{"module_imports": "", "transformer_code": "# label encoder\\n'
-            "def label_encoder(value, value_to_index):\\n"
-            "    # define a mapping of values to integers\\n"
-            '    return value_to_index[value]"}'
+        tf_fun_source = (
+            "import numpy as np\nimport pandas as pd\nfrom hsfs.transformation_statistics import TransformationStatistics\n"
+            "from hsfs.hopsworks_udf import udf\n"
+            'feature_statistics = TransformationStatistics("feature")\n'
+            "@udf(float)\n"
+            "def standard_scaler(feature: pd.Series, statistics = feature_statistics) -> pd.Series:\n"
+            "    return (feature - statistics.feature.mean) / statistics.feature.stddev"
         )
+        udf_response = {
+            "sourceCode": tf_fun_source,
+            "outputTypes": ["double"],
+            "transformationFeatures": [],
+            "statisticsArgumentNames": ["feature"],
+            "name": "standard_scaler",
+        }
 
-        td = self._create_training_dataset(tf_fun, "INT", "label_encoder", "col_1")
+        tf_fun = HopsworksUdf.from_response_json(udf_response)
 
-        td.transformation_functions["col_1"] = (
-            TransformationFunctionEngine.populate_builtin_fn_arguments(
-                "col_1",
-                td.transformation_functions["col_1"],
-                [
-                    FeatureDescriptiveStatistics(
-                        feature_name="col_1",
-                        extended_statistics={"unique_values": ["test_1", "test_2"]},
-                    )
-                ],
+        td = self._create_training_dataset()
+
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun("col_0"), featurestore_id=99
             )
-        )
+        ]
+        mean = statistics.mean([1, 2])
+        stddev = statistics.pstdev([1, 2])
+        transformation_functions[0].hopsworks_udf.transformation_statistics = [
+            FeatureDescriptiveStatistics(feature_name="col_0", mean=mean, stddev=stddev)
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_builtin_standard_scaler(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.core.statistics_engine.StatisticsEngine._save_statistics")
         spark_engine = spark.Engine()
 
         schema = StructType(
@@ -271,16 +346,16 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", DoubleType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("standard_scaler_col_0_", DoubleType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [-1.0, 1.0],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "standard_scaler_col_0_": [-1.0, 1.0],
             }
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
@@ -288,39 +363,32 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        tf_fun = (
-            '{"module_imports": "from datetime import datetime", "transformer_code": "'
-            "def standard_scaler(value, mean, std_dev):\\n    if value is None:\\n        return None\\n    "
-            "else:\\n        try:\\n            return (value - mean) / std_dev\\n        except "
-            'ZeroDivisionError:\\n            return 0\\n"}'
-        )
+        from hsfs.builtin_transformations import standard_scaler
 
-        td = self._create_training_dataset(tf_fun, "DOUBLE", "standard_scaler")
+        td = self._create_training_dataset()
+
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=standard_scaler("col_0"), featurestore_id=99
+            )
+        ]
 
         mean = statistics.mean([1, 2])
         stddev = statistics.pstdev([1, 2])
-        td.transformation_functions["col_0"] = (
-            TransformationFunctionEngine.populate_builtin_fn_arguments(
-                "col_0",
-                td.transformation_functions["col_0"],
-                [
-                    FeatureDescriptiveStatistics(
-                        feature_name="col_0",
-                        feature_type="Integral",
-                        mean=mean,
-                        stddev=stddev,
-                    )
-                ],
-            )
-        )
+        transformation_functions[0].hopsworks_udf.transformation_statistics = [
+            FeatureDescriptiveStatistics(feature_name="col_0", mean=mean, stddev=stddev)
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
-    def test_apply_builtin_robustscaler(self, mocker):
+    def test_apply_builtin_robust_scaler_from_backend(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.core.statistics_engine.StatisticsEngine._save_statistics")
         spark_engine = spark.Engine()
 
         schema = StructType(
@@ -341,16 +409,16 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", DoubleType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("robust_scaler_col_0_", DoubleType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [-1.0, 0.0],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "robust_scaler_col_0_": [-1.0, 0],
             }
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
@@ -358,36 +426,110 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        tf_fun = (
-            '{"module_imports": "from datetime import datetime", "transformer_code": "'
-            "def robust_scaler(value, p25, p50, p75):\\n    if value is None:\\n        "
-            "return None\\n    else:\\n        try:\\n            return (value - p50) / (p75 - p25)\\n        "
-            'except ZeroDivisionError:\\n            return 0\\n"}\n'
+        tf_fun_source = (
+            "import numpy as np\nimport pandas as pd\nfrom hsfs.transformation_statistics import TransformationStatistics\n"
+            "from hsfs.hopsworks_udf import udf\n"
+            'feature_statistics = TransformationStatistics("feature")\n'
+            "@udf(float)\n"
+            "def robust_scaler(feature: pd.Series, statistics = feature_statistics) -> pd.Series:\n"
+            "    return (feature - statistics.feature.percentiles[49]) / (statistics.feature.percentiles[74] - "
+            "statistics.feature.percentiles[24])"
+        )
+        udf_response = {
+            "sourceCode": tf_fun_source,
+            "outputTypes": ["double"],
+            "transformationFeatures": [],
+            "statisticsArgumentNames": ["feature"],
+            "name": "robust_scaler",
+        }
+
+        tf_fun = HopsworksUdf.from_response_json(udf_response)
+
+        td = self._create_training_dataset()
+
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun("col_0"), featurestore_id=99
+            )
+        ]
+        percentiles = [1] * 100
+        percentiles[24] = 1
+        percentiles[49] = 2
+        percentiles[74] = 2
+        transformation_functions[0].hopsworks_udf.transformation_statistics = [
+            FeatureDescriptiveStatistics(feature_name="col_0", percentiles=percentiles)
+        ]
+
+        # Assert
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
         )
 
-        td = self._create_training_dataset(tf_fun, "DOUBLE", "robust_scaler")
+    def test_apply_builtin_robust_scaler(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.core.statistics_engine.StatisticsEngine._save_statistics")
+        spark_engine = spark.Engine()
+
+        schema = StructType(
+            [
+                StructField("col_0", IntegerType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+        df = pd.DataFrame(
+            data={
+                "col_0": [1, 2],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
+
+        expected_schema = StructType(
+            [
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+                StructField("robust_scaler_col_0_", DoubleType(), True),
+            ]
+        )
+        expected_df = pd.DataFrame(
+            data={
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+                "robust_scaler_col_0_": [-1.0, 0],
+            }
+        )
+        expected_spark_df = spark_engine._spark_session.createDataFrame(
+            expected_df, schema=expected_schema
+        )
+
+        # Arrange
+        from hsfs.builtin_transformations import robust_scaler
+
+        td = self._create_training_dataset()
+
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=robust_scaler("col_0"), featurestore_id=99
+            )
+        ]
 
         percentiles = [1] * 100
         percentiles[24] = 1
         percentiles[49] = 2
         percentiles[74] = 2
-        td.transformation_functions["col_0"] = (
-            TransformationFunctionEngine.populate_builtin_fn_arguments(
-                "col_0",
-                td.transformation_functions["col_0"],
-                [
-                    FeatureDescriptiveStatistics(
-                        feature_name="col_0",
-                        feature_type="Integral",
-                        percentiles=percentiles,
-                    )
-                ],
-            )
-        )
+        transformation_functions[0].hopsworks_udf.transformation_statistics = [
+            FeatureDescriptiveStatistics(feature_name="col_0", percentiles=percentiles)
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_plus_one_int(self, mocker):
         # Arrange
@@ -412,32 +554,40 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", IntegerType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("tf_fun_col_0_", LongType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [2, 3],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "tf_fun_col_0_": [2, 3],
             }
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
-        expected_df["col_0"] = expected_df["col_0"].astype(pd.Int32Dtype())
 
         # Arrange
-        def tf_fun(a) -> int:
-            return a + 1
+        @udf(int)
+        def tf_fun(col_0):
+            return col_0 + 1
 
-        td = self._create_training_dataset(tf_fun, "int")
+        td = self._create_training_dataset()
+
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun, featurestore_id=99
+            )
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_plus_one_str(self, mocker):
         # Arrange
@@ -446,14 +596,14 @@ class TestPythonSparkTransformationFunctions:
 
         schema = StructType(
             [
-                StructField("col_0", IntegerType(), True),
+                StructField("col_0", StringType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
             ]
         )
         df = pd.DataFrame(
             data={
-                "col_0": [1, 2],
+                "col_0": ["1", "2"],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
@@ -462,16 +612,16 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", StringType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("tf_fun_col_0_", StringType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": ["2", "3"],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "tf_fun_col_0_": ["11", "21"],
             }
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
@@ -479,14 +629,22 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        def tf_fun(a) -> int:
-            return a + 1
+        @udf(str)
+        def tf_fun(col_0):
+            return col_0 + "1"
 
-        td = self._create_training_dataset(tf_fun, "string")
+        td = self._create_training_dataset()
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun, featurestore_id=99
+            )
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_plus_one_double(self, mocker):
         # Arrange
@@ -510,16 +668,16 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", DoubleType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("tf_fun_col_0_", DoubleType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [2.0, 3.0],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "tf_fun_col_0_": [2.0, 3.0],
             }
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
@@ -528,14 +686,22 @@ class TestPythonSparkTransformationFunctions:
         spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
 
         # Arrange
-        def tf_fun(a) -> np.float64:
-            return a + 1.0
+        @udf(float)
+        def tf_fun(col_0):
+            return col_0 + 1.0
 
-        td = self._create_training_dataset(tf_fun, "double")
+        td = self._create_training_dataset()
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun, featurestore_id=99
+            )
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_plus_one_datetime_no_tz(self, mocker):
         # Arrange
@@ -544,14 +710,17 @@ class TestPythonSparkTransformationFunctions:
 
         schema = StructType(
             [
-                StructField("col_0", IntegerType(), True),
+                StructField("col_0", TimestampType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
             ]
         )
         df = pd.DataFrame(
             data={
-                "col_0": [1640995200, 1640995201],
+                "col_0": [
+                    datetime.datetime.utcfromtimestamp(1640995200),
+                    datetime.datetime.utcfromtimestamp(1640995201),
+                ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
@@ -561,40 +730,54 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", TimestampType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("tf_fun_col_0_", TimestampType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [
-                    datetime.datetime.utcfromtimestamp(1640995201),
-                    datetime.datetime.utcfromtimestamp(1640995202),
-                ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "tf_fun_col_0_": [
+                    datetime.datetime.utcfromtimestamp(1640995200)
+                    + datetime.timedelta(milliseconds=1),
+                    datetime.datetime.utcfromtimestamp(1640995201)
+                    + datetime.timedelta(milliseconds=1),
+                ],
             }
         )
         # convert timestamps to current timezone
         local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
-        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            str(local_tz)
-        )
+        expected_df_localized["tf_fun_col_0_"] = expected_df_localized[
+            "tf_fun_col_0_"
+        ].dt.tz_localize(str(local_tz))
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
         )
 
         # Arrange
-        def tf_fun(a) -> datetime.datetime:
-            return datetime.datetime.utcfromtimestamp(a + 1)
+        @udf(datetime.datetime)
+        def tf_fun(col_0):
+            import datetime
 
-        td = self._create_training_dataset(tf_fun, "datetime")
+            return col_0 + datetime.timedelta(milliseconds=1)
+
+        td = self._create_training_dataset()
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun, featurestore_id=99
+            )
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(
+            td, df, expected_df_localized, transformation_functions
+        )
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_plus_one_datetime_tz_utc(self, mocker):
         # Arrange
@@ -603,14 +786,17 @@ class TestPythonSparkTransformationFunctions:
 
         schema = StructType(
             [
-                StructField("col_0", IntegerType(), True),
+                StructField("col_0", TimestampType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
             ]
         )
         df = pd.DataFrame(
             data={
-                "col_0": [1640995200, 1640995201],
+                "col_0": [
+                    datetime.datetime.utcfromtimestamp(1640995200),
+                    datetime.datetime.utcfromtimestamp(1640995201),
+                ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
@@ -619,42 +805,56 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", TimestampType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("tf_fun_col_0_", TimestampType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": [
-                    datetime.datetime.utcfromtimestamp(1640995201),
-                    datetime.datetime.utcfromtimestamp(1640995202),
-                ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "tf_fun_col_0_": [
+                    datetime.datetime.utcfromtimestamp(1640995200)
+                    + datetime.timedelta(milliseconds=1),
+                    datetime.datetime.utcfromtimestamp(1640995201)
+                    + datetime.timedelta(milliseconds=1),
+                ],
             }
         )
         # convert timestamps to current timezone
         local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
-        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            str(local_tz)
-        )
+        expected_df_localized["tf_fun_col_0_"] = expected_df_localized[
+            "tf_fun_col_0_"
+        ].dt.tz_localize(str(local_tz))
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
         )
 
         # Arrange
-        def tf_fun(a) -> datetime.datetime:
-            return datetime.datetime.utcfromtimestamp(a + 1).replace(
-                tzinfo=datetime.timezone.utc
+        @udf(datetime.datetime)
+        def tf_fun(col_0) -> datetime.datetime:
+            import datetime
+
+            return (col_0 + datetime.timedelta(milliseconds=1)).dt.tz_localize(
+                datetime.timezone.utc
             )
 
-        td = self._create_training_dataset(tf_fun, "datetime")
+        td = self._create_training_dataset()
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun, featurestore_id=99
+            )
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(
+            td, df, expected_df_localized, transformation_functions
+        )
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_plus_one_datetime_tz_pst(self, mocker):
         # Arrange
@@ -663,14 +863,17 @@ class TestPythonSparkTransformationFunctions:
 
         schema = StructType(
             [
-                StructField("col_0", IntegerType(), True),
+                StructField("col_0", TimestampType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
             ]
         )
         df = pd.DataFrame(
             data={
-                "col_0": [1640995200, 1640995201],
+                "col_0": [
+                    datetime.datetime.utcfromtimestamp(1640995200),
+                    datetime.datetime.utcfromtimestamp(1640995201),
+                ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
@@ -679,42 +882,58 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", TimestampType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("tf_fun_col_0_", TimestampType(), True),
             ]
         )
 
         expected_df = pd.DataFrame(
             data={
-                "col_0": [
-                    datetime.datetime.utcfromtimestamp(1641024001),
-                    datetime.datetime.utcfromtimestamp(1641024002),
-                ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "tf_fun_col_0_": [
+                    datetime.datetime.utcfromtimestamp(1640995200)
+                    + datetime.timedelta(milliseconds=1),
+                    datetime.datetime.utcfromtimestamp(1640995201)
+                    + datetime.timedelta(milliseconds=1),
+                ],
             }
         )
         # convert timestamps to current timezone
         local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
-        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            str(local_tz)
-        )
+        expected_df_localized["tf_fun_col_0_"] = expected_df_localized[
+            "tf_fun_col_0_"
+        ].dt.tz_localize(str(local_tz))
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
         )
 
         # Arrange
-        def tf_fun(a) -> datetime.datetime:
-            pdt = pytz.timezone("US/Pacific")
-            return pdt.localize(datetime.datetime.utcfromtimestamp(a + 1))
+        @udf(datetime.datetime)
+        def tf_fun(col_0) -> datetime.datetime:
+            import datetime
 
-        td = self._create_training_dataset(tf_fun, "datetime")
+            import pytz
+
+            pdt = pytz.timezone("US/Pacific")
+            return (col_0 + datetime.timedelta(milliseconds=1)).dt.tz_localize(pdt)
+
+        td = self._create_training_dataset()
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun, featurestore_id=99
+            )
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(
+            td, df, expected_df_localized, transformation_functions
+        )
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_plus_one_datetime_ts_none(self, mocker):
         # Arrange
@@ -723,14 +942,17 @@ class TestPythonSparkTransformationFunctions:
 
         schema = StructType(
             [
-                StructField("col_0", IntegerType(), True),
+                StructField("col_0", TimestampType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
             ]
         )
         df = pd.DataFrame(
             data={
-                "col_0": [1640995200, 1640995201],
+                "col_0": [
+                    datetime.datetime.utcfromtimestamp(1640995200),
+                    datetime.datetime.utcfromtimestamp(1640995201),
+                ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
@@ -739,43 +961,59 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-                StructField("col_0", TimestampType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("tf_fun_col_0_", TimestampType(), True),
             ]
         )
 
         expected_df = pd.DataFrame(
             data={
-                "col_0": [
-                    None,
-                    datetime.datetime.utcfromtimestamp(1640995202),
-                ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "tf_fun_col_0_": [
+                    None,
+                    datetime.datetime.utcfromtimestamp(1640995201)
+                    + datetime.timedelta(milliseconds=1),
+                ],
             }
         )
         # convert timestamps to current timezone
         local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
-        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            str(local_tz)
-        )
+        expected_df_localized["tf_fun_col_0_"] = expected_df_localized[
+            "tf_fun_col_0_"
+        ].dt.tz_localize(str(local_tz))
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
         )
 
         # Arrange
-        def tf_fun(a) -> datetime.datetime:
-            return (
-                None if a == 1640995200 else datetime.datetime.utcfromtimestamp(a + 1)
+        @udf(datetime.datetime)
+        def tf_fun(col_0) -> datetime.datetime:
+            import datetime
+
+            return pd.Series(
+                None
+                if data == datetime.datetime.utcfromtimestamp(1640995200)
+                else data + datetime.timedelta(milliseconds=1)
+                for data in col_0
             )
 
-        td = self._create_training_dataset(tf_fun, "datetime")
+        td = self._create_training_dataset()
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun, featurestore_id=99
+            )
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(
+            td, df, expected_df_localized, transformation_functions
+        )
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
     def test_apply_plus_one_date(self, mocker):
         # Arrange
@@ -784,84 +1022,40 @@ class TestPythonSparkTransformationFunctions:
 
         schema = StructType(
             [
-                StructField("col_0", IntegerType(), True),
-                StructField("col_1", StringType(), True),
-                StructField("col_2", BooleanType(), True),
-            ]
-        )
-        df = pd.DataFrame(
-            data={
-                "col_0": [1641045600, 1641132000],
-                "col_1": ["test_1", "test_2"],
-                "col_2": [True, False],
-            }
-        )
-        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
-
-        expected_schema = StructType(
-            [
                 StructField("col_0", DateType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
             ]
         )
-        expected_df = pd.DataFrame(
+        df = pd.DataFrame(
             data={
                 "col_0": [
-                    datetime.datetime.utcfromtimestamp(1641045601).date(),
-                    datetime.datetime.utcfromtimestamp(1641132001).date(),
+                    datetime.datetime.utcfromtimestamp(1641045600).date(),
+                    datetime.datetime.utcfromtimestamp(1641132000).date(),
                 ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
         )
-        expected_spark_df = spark_engine._spark_session.createDataFrame(
-            expected_df, schema=expected_schema
-        )
-
-        # Arrange
-        def tf_fun(a) -> datetime.datetime:
-            return datetime.datetime.utcfromtimestamp(a + 1)
-
-        td = self._create_training_dataset(tf_fun, "date")
-
-        # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
-
-    def test_apply_plus_one_no_type(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.client.get_instance")
-        spark_engine = spark.Engine()
-
-        schema = StructType(
-            [
-                StructField("col_0", IntegerType(), True),
-                StructField("col_1", StringType(), True),
-                StructField("col_2", BooleanType(), True),
-            ]
-        )
-        df = pd.DataFrame(
-            data={
-                "col_0": [1, 2],
-                "col_1": ["test_1", "test_2"],
-                "col_2": [True, False],
-            }
-        )
         spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
 
         expected_schema = StructType(
             [
-                StructField("col_0", StringType(), True),
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
+                StructField("tf_fun_col_0_", DateType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-                "col_0": ["2", "3"],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
+                "tf_fun_col_0_": [
+                    datetime.datetime.utcfromtimestamp(1641045600).date()
+                    + datetime.timedelta(days=1),
+                    datetime.datetime.utcfromtimestamp(1641132000).date()
+                    + datetime.timedelta(days=1),
+                ],
             }
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
@@ -869,75 +1063,37 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        def tf_fun(a) -> int:
-            return a + 1
+        @udf(datetime.date)
+        def tf_fun(col_0):
+            import datetime
 
-        td = self._create_training_dataset(tf_fun)
+            return col_0 + datetime.timedelta(days=1)
 
-        # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
-
-    def test_apply_plus_one_empty_type(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.client.get_instance")
-        spark_engine = spark.Engine()
-
-        schema = StructType(
-            [
-                StructField("col_0", IntegerType(), True),
-                StructField("col_1", StringType(), True),
-                StructField("col_2", BooleanType(), True),
-            ]
-        )
-        df = pd.DataFrame(
-            data={
-                "col_0": [1, 2],
-                "col_1": ["test_1", "test_2"],
-                "col_2": [True, False],
-            }
-        )
-        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
-
-        expected_schema = StructType(
-            [
-                StructField("col_0", StringType(), True),
-                StructField("col_1", StringType(), True),
-                StructField("col_2", BooleanType(), True),
-            ]
-        )
-        expected_df = pd.DataFrame(
-            data={
-                "col_0": ["2", "3"],
-                "col_1": ["test_1", "test_2"],
-                "col_2": [True, False],
-            }
-        )
-        expected_spark_df = spark_engine._spark_session.createDataFrame(
-            expected_df, schema=expected_schema
-        )
-
-        # Arrange
-        def tf_fun(a) -> int:
-            return a + 1
-
-        td = self._create_training_dataset(tf_fun, "")
+        td = self._create_training_dataset()
+        transformation_functions = [
+            transformation_function.TransformationFunction(
+                hopsworks_udf=tf_fun, featurestore_id=99
+            )
+        ]
 
         # Assert
-        self._validate_on_python_engine(td, df, expected_df)
-        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+        self._validate_on_python_engine(td, df, expected_df, transformation_functions)
+        self._validate_on_spark_engine(
+            td, spark_df, expected_spark_df, transformation_functions
+        )
 
-    def test_apply_plus_one_date_not_supported_type(self, mocker):
+    def test_apply_plus_one_invalid_type(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
 
         # Arrange
-        def tf_fun(a) -> int:
-            return a + 1
+        with pytest.raises(FeatureStoreException) as e_info:
 
-        # Act
-        with pytest.raises(TypeError) as e_info:
-            self._create_training_dataset(tf_fun, list)
+            @udf(list)
+            def tf_fun(a):
+                return a + 1
 
-        # Assert
-        assert str(e_info.value) == "Not supported type <class 'list'>."
+        assert (
+            str(e_info.value)
+            == f"Output type {list} is not supported. Please refer to the documentation to get more information on the supported types."
+        )

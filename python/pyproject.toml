@@ -124,7 +124,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
-    "java",
+    "java"
 ]
 
 # Same as Black.
