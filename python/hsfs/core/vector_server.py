@@ -31,16 +31,12 @@ from hsfs import (
     client,
     feature_view,
     training_dataset,
+    transformation_function,
 )
 from hsfs import (
     serving_key as sk_mod,
 )
-from hsfs import (
-    training_dataset_feature as tdf_mod,
-)
-from hsfs import (
-    transformation_function_attached as tfa_mod,
-)
+from hsfs import training_dataset_feature as tdf_mod
 from hsfs.client import exceptions, online_store_rest_client
 from hsfs.core import (
     online_store_rest_client_engine,
@@ -111,7 +107,7 @@ class VectorServer:
         self._inference_helper_col_name = [
             feat.name for feat in features if feat.inference_helper_column
         ]
-
+        self._transformed_feature_vector_col_name: List[str] = None
         self._skip_fg_ids = skip_fg_ids or set()
         self._serving_keys = serving_keys or []
         self._required_serving_keys = []
@@ -119,9 +115,9 @@ class VectorServer:
         self._transformation_function_engine = (
             tf_engine_mod.TransformationFunctionEngine(feature_store_id)
         )
-        self._transformation_functions: Dict[
-            str, tfa_mod.TransformationFunctionAttached
-        ] = {}
+        self._transformation_functions: List[
+            transformation_function.TransformationFunction
+        ] = []
         self._sql_client = None
 
         self._rest_client_engine = None
@@ -135,7 +131,7 @@ class VectorServer:
 
     def init_serving(
         self,
-        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
+        entity: Union[feature_view.FeatureView],
         external: Optional[bool] = None,
         inference_helper_columns: bool = False,
         options: Optional[Dict[str, Any]] = None,
@@ -197,14 +193,12 @@ class VectorServer:
 
     def init_transformation(
         self,
-        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
+        entity: Union[feature_view.FeatureView],
     ):
         # attach transformation functions
-        self._transformation_functions = (
-            self.transformation_function_engine.get_ready_to_use_transformation_fns(
-                entity,
-                self._training_dataset_version,
-            )
+        self._transformation_functions = tf_engine_mod.TransformationFunctionEngine.get_ready_to_use_transformation_fns(
+            entity,
+            self._training_dataset_version,
         )
 
     def setup_sql_client(
@@ -313,7 +307,6 @@ class VectorServer:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = []
-
         # Assertions on passed_features and vector_db_features
         assert (
             passed_features is None
@@ -453,7 +446,10 @@ class VectorServer:
 
         _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)
         if transformed:
-            return [result_dict.get(fname, None) for fname in self.feature_vector_col_name]
+            return [
+                result_dict.get(fname, None)
+                for fname in self.transformed_feature_vector_col_name
+            ]
         else:
             return [result_dict.get(fname, None) for fname in self._untransformed_feature_vector_col_name]
 
@@ -661,15 +657,21 @@ class VectorServer:
             self.default_client = self.DEFAULT_SQL_CLIENT
             self._init_sql_client = True
 
-    def apply_transformation(self, row_dict: Dict[str, Any]):
-        matching_keys = set(self.transformation_functions.keys()).intersection(
-            row_dict.keys()
-        )
-        _logger.debug("Applying transformation functions to : %s", matching_keys)
-        for feature_name in matching_keys:
-            row_dict[feature_name] = self.transformation_functions[
-                feature_name
-            ].transformation_fn(row_dict[feature_name])
+    def apply_transformation(self, row_dict: dict):
+        _logger.debug("Applying transformation functions.")
+        for tf in self.transformation_functions:
+            features = [
+                pd.Series(row_dict[feature])
+                for feature in tf.hopsworks_udf.transformation_features
+            ]
+            transformed_result = tf.hopsworks_udf.get_udf(force_python_udf=True)(
+                *features
+            )  # Get only python compatible UDF irrespective of engine
+            if isinstance(transformed_result, pd.Series):
+                row_dict[transformed_result.name] = transformed_result.values[0]
+            else:
+                for col in transformed_result:
+                    row_dict[col] = transformed_result[col].values[0]
         return row_dict
 
     def apply_return_value_handlers(
@@ -705,6 +707,7 @@ class VectorServer:
             for f in self._features
             if f.is_complex()
         }
+
         if len(complex_feature_schemas) == 0:
             return {}
         else:
@@ -901,7 +904,6 @@ class VectorServer:
                 passed_feature_names = passed_feature_names.union(
                     vector_db_features.keys()
                 )
-
             neither_fetched_nor_passed = fetched_features.difference(
                 passed_feature_names
             )
@@ -1032,9 +1034,7 @@ class VectorServer:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, tfa_mod.TransformationFunctionAttached]:
-        if self._transformation_functions is None:
-            self._transformation_functions = {}
+    ) -> Optional[List[transformation_functions.TransformationFunction]]:
         return self._transformation_functions
 
     @property
@@ -1127,3 +1127,24 @@ class VectorServer:
 
         _logger.debug(f"Default Online Store Client is set to {default_client}.")
         self._default_client = default_client
+
+    @property
+    def transformed_feature_vector_col_name(self):
+        if self._transformed_feature_vector_col_name is None:
+            transformation_features = []
+            output_column_names = []
+            for transformation_function in self._transformation_functions:
+                transformation_features += (
+                    transformation_function.hopsworks_udf.transformation_features
+                )
+                output_column_names += (
+                    transformation_function.hopsworks_udf.output_column_names
+                )
+
+            self._transformed_feature_vector_col_name = [
+                feature
+                for feature in self._feature_vector_col_name
+                if feature not in transformation_features
+            ]
+            self._transformed_feature_vector_col_name.extend(output_column_names)
+        return self._transformed_feature_vector_col_name

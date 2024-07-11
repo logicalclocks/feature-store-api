@@ -15,7 +15,6 @@
 #
 from __future__ import annotations
 
-import copy
 import json
 import logging
 import warnings
@@ -36,7 +35,6 @@ from hsfs import (
     util,
 )
 from hsfs import serving_key as skm
-from hsfs import transformation_function as tfm
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
@@ -56,9 +54,11 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
 from hsfs.feature import Feature
+from hsfs.hopsworks_udf import HopsworksUdf
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.transformation_function import TransformationFunction
 
 
 _logger = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ class FeatureView:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[
-            Dict[str, tfm.TransformationFunction]
+            List[Union[TransformationFunction, HopsworksUdf]]
         ] = None,
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[skm.ServingKey]] = None,
@@ -120,14 +120,27 @@ class FeatureView:
         self._training_helper_columns = (
             training_helper_columns if training_helper_columns else []
         )
-        self._transformation_functions = (
-            {
-                ft_name: copy.deepcopy(transformation_functions[ft_name])
-                for ft_name in transformation_functions
-            }
+
+        self._transformation_functions: List[TransformationFunction] = (
+            [
+                TransformationFunction(
+                    self.featurestore_id,
+                    hopsworks_udf=transformation_function,
+                    version=1,
+                )
+                if not isinstance(transformation_function, TransformationFunction)
+                else transformation_function
+                for transformation_function in transformation_functions
+            ]
             if transformation_functions
-            else {}
+            else []
         )
+
+        if self._transformation_functions:
+            self._transformation_functions = FeatureView._sort_transformation_functions(
+                self._transformation_functions
+            )
+
         self._features = []
         self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
             feature_view_engine.FeatureViewEngine(featurestore_id)
@@ -371,6 +384,23 @@ class FeatureView:
             self._vector_db_client = VectorDbClient(
                 self.query, serving_keys=self._serving_keys
             )
+
+    @staticmethod
+    def _sort_transformation_functions(
+        transformation_functions: List[TransformationFunction],
+    ) -> List[TransformationFunction]:
+        """
+        Function that sorts transformation functions in the order of the output column names.
+
+        The list of transformation functions are sorted based on the output columns names to maintain consistent ordering.
+
+        # Arguments
+            transformation_functions:  `List[TransformationFunction]`. List of transformation functions to be sorted
+
+        # Returns
+            `List[TransformationFunction]`: List of transformation functions to be sorted
+        """
+        return sorted(transformation_functions, key=lambda x: x.output_column_names[0])
 
     def init_batch_scoring(
         self,
@@ -3375,6 +3405,14 @@ class FeatureView:
 
     @classmethod
     def from_response_json(cls, json_dict: Dict[str, Any]) -> "FeatureView":
+        """
+        Function that constructs the class object from its json serialization.
+
+        # Arguments
+            json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
+        # Returns
+            `TransformationFunction`: Json deserialized class object.
+        """
         json_decamelized = humps.decamelize(json_dict)
 
         serving_keys = json_decamelized.get("serving_keys", None)
@@ -3382,6 +3420,7 @@ class FeatureView:
             serving_keys = [
                 skm.ServingKey.from_response_json(sk) for sk in serving_keys
             ]
+        transformation_functions = json_decamelized.get("transformation_functions", {})
         fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
@@ -3391,7 +3430,13 @@ class FeatureView:
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
             serving_keys=serving_keys,
-            logging_enabled=json_decamelized.get('enabled_logging', False),
+            logging_enabled=json_decamelized.get("enabled_logging", False),
+            transformation_functions=[
+                TransformationFunction.from_response_json(transformation_function)
+                for transformation_function in transformation_functions
+            ]
+            if transformation_functions
+            else [],
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -3413,6 +3458,14 @@ class FeatureView:
         return fv
 
     def update_from_response_json(self, json_dict: Dict[str, Any]) -> "FeatureView":
+        """
+        Function that updates the class object from its json serialization.
+
+        # Arguments
+            json_dict: `Dict[str, Any]`. Json serialized dictionary for the class.
+        # Returns
+            `TransformationFunction`: Json deserialized class object.
+        """
         other = self.from_response_json(json_dict)
         for key in [
             "name",
@@ -3424,6 +3477,7 @@ class FeatureView:
             "labels",
             "inference_helper_columns",
             "training_helper_columns",
+            "transformation_functions",
             "schema",
             "serving_keys",
             "logging_enabled",
@@ -3465,14 +3519,15 @@ class FeatureView:
         """
         return self._feature_view_engine.enable_feature_logging(self)
 
-    def log(self,
-            features: Union[pd.DataFrame, list[list], np.ndarray],
-            predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]]=None,
-            transformed: Optional[bool]=False,
-            write_options: Optional[Dict[str, Any]] = None,
-            training_dataset_version: Optional[int]=None,
-            hsml_model=None,
-            ):
+    def log(
+        self,
+        features: Union[pd.DataFrame, list[list], np.ndarray],
+        predictions: Optional[Union[pd.DataFrame, list[list], np.ndarray]] = None,
+        transformed: Optional[bool] = False,
+        write_options: Optional[Dict[str, Any]] = None,
+        training_dataset_version: Optional[int] = None,
+        hsml_model=None,
+    ):
         """Log features and optionally predictions for the current feature view.
 
         Note: If features is a `pd.Dataframe`, prediction can be provided as columns in the dataframe.
@@ -3503,20 +3558,23 @@ class FeatureView:
             )
             self.enable_logging()
         return self._feature_view_engine.log_features(
-            self, features, predictions, transformed,
+            self,
+            features,
+            predictions,
+            transformed,
             write_options,
             training_dataset_version=(
                 training_dataset_version or self.get_last_accessed_training_dataset()
             ),
-            hsml_model=hsml_model
+            hsml_model=hsml_model,
         )
 
-    def get_log_timeline(self,
-                         wallclock_time: Optional[
-                             Union[str, int, datetime, datetime.date]] = None,
-                         limit: Optional[int] = None,
-                         transformed: Optional[bool] = False,
-                         ):
+    def get_log_timeline(
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        limit: Optional[int] = None,
+        transformed: Optional[bool] = False,
+    ):
         """Retrieve the log timeline for the current feature view.
 
         # Arguments
@@ -3537,16 +3595,15 @@ class FeatureView:
             self, wallclock_time, limit, transformed
         )
 
-    def read_log(self,
-                 start_time: Optional[
-                     Union[str, int, datetime, datetime.date]] = None,
-                 end_time: Optional[
-                     Union[str, int, datetime, datetime.date]] = None,
-                 filter: Optional[Union[Filter, Logic]] = None,
-                 transformed: Optional[bool] = False,
-                 training_dataset_version: Optional[int]=None,
-                 hsml_model=None,
-                 ):
+    def read_log(
+        self,
+        start_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        end_time: Optional[Union[str, int, datetime, datetime.date]] = None,
+        filter: Optional[Union[Filter, Logic]] = None,
+        transformed: Optional[bool] = False,
+        training_dataset_version: Optional[int] = None,
+        hsml_model=None,
+    ):
         """Read the log entries for the current feature view.
             Optionally, filter can be applied to start/end time, training dataset version, hsml model,
             and custom fitler.
@@ -3577,7 +3634,13 @@ class FeatureView:
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to read the log entries.
         """
         return self._feature_view_engine.read_feature_logs(
-            self, start_time, end_time, filter, transformed, training_dataset_version, hsml_model
+            self,
+            start_time,
+            end_time,
+            filter,
+            transformed,
+            training_dataset_version,
+            hsml_model,
         )
 
     def pause_logging(self):
@@ -3608,7 +3671,7 @@ class FeatureView:
         """
         self._feature_view_engine.resume_logging(self)
 
-    def materialize_log(self, wait: Optional[bool]=False):
+    def materialize_log(self, wait: Optional[bool] = False):
         """Materialize the log for the current feature view.
 
         # Arguments
@@ -3625,21 +3688,21 @@ class FeatureView:
         """
         return self._feature_view_engine.materialize_feature_logs(self, wait)
 
-    def delete_log(self, transformed: Optional[bool]=None):
+    def delete_log(self, transformed: Optional[bool] = None):
         """Delete the logged feature data for the current feature view.
 
-         # Arguments
-             transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
+        # Arguments
+            transformed: Whether to delete transformed logs. Defaults to None. Delete both transformed and untransformed logs.
 
-         # Example
-             ```python
-             # delete log
-             feature_view.delete_log()
-             ```
+        # Example
+            ```python
+            # delete log
+            feature_view.delete_log()
+            ```
 
-         # Raises
-             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
-         """
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the log.
+        """
         return self._feature_view_engine.delete_feature_logs(self, transformed)
 
     @staticmethod
@@ -3664,9 +3727,21 @@ class FeatureView:
         )
 
     def json(self) -> str:
+        """
+        Convert class into its json serialized form.
+
+        # Returns
+            `str`: Json serialized object.
+        """
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert class into a dictionary.
+
+        # Returns
+            `Dict`: Dictionary that contains all data required to json serialize the object.
+        """
         return {
             "featurestoreId": self._featurestore_id,
             "name": self._name,
@@ -3675,6 +3750,7 @@ class FeatureView:
             "query": self._query,
             "features": self._features,
             "enabledLogging": self._logging_enabled,
+            "transformationFunctions": self._transformation_functions,
             "type": "featureViewDTO",
         }
 
@@ -3780,14 +3856,14 @@ class FeatureView:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, tfm.TransformationFunction]:
+    ) -> List[TransformationFunction]:
         """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
     def transformation_functions(
         self,
-        transformation_functions: Dict[str, tfm.TransformationFunction],
+        transformation_functions: List[TransformationFunction],
     ) -> None:
         self._transformation_functions = transformation_functions
 
@@ -3852,3 +3928,17 @@ class FeatureView:
     @logging_enabled.setter
     def logging_enabled(self, logging_enabled) -> None:
         self._logging_enabled = logging_enabled
+
+    def transformed_features(self) -> List[str]:
+        """Name of features of a feature view after transformation functions have been applied"""
+        transformation_features = set()
+        transformed_column_names = []
+        for tf in self.transformation_functions:
+            transformed_column_names.extend(tf.output_column_names)
+            transformation_features.update(tf.hopsworks_udf.transformation_features)
+
+        return [
+            feature.name
+            for feature in self.features
+            if feature.name not in transformation_features
+        ] + transformed_column_names

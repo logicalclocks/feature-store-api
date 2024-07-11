@@ -15,7 +15,7 @@
 #
 
 
-from hsfs import feature_group, training_dataset_feature, transformation_function
+from hsfs import feature_group, training_dataset_feature
 
 
 class TestTrainingDatasetFeature:
@@ -37,11 +37,6 @@ class TestTrainingDatasetFeature:
             td_feature._feature_group_feature_name == "test_feature_group_feature_name"
         )
         assert td_feature.label == "test_label"
-        assert len(td_feature.transformation_function) == 1
-        assert isinstance(
-            td_feature.transformation_function[0],
-            transformation_function.TransformationFunction,
-        )
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -61,4 +56,3 @@ class TestTrainingDatasetFeature:
         assert td_feature._feature_group is None
         assert td_feature._feature_group_feature_name is None
         assert td_feature.label is False
-        assert td_feature.transformation_function is None
