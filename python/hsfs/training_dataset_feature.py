@@ -15,10 +15,14 @@
 #
 from __future__ import annotations
 
+from typing import Optional
+
 import humps
 from hsfs import feature as feature_mod
 from hsfs import feature_group as feature_group_mod
 from hsfs import util
+from hsfs.hopsworks_udf import UDFType
+from hsfs.transformation_function import TransformationFunction
 
 
 class TrainingDatasetFeature:
@@ -32,6 +36,7 @@ class TrainingDatasetFeature:
         label=False,
         inference_helper_column=False,
         training_helper_column=False,
+        transformation_function: Optional[TransformationFunction] = None,
         **kwargs,
     ):
         self._name = util.autofix_feature_name(name)
@@ -47,6 +52,10 @@ class TrainingDatasetFeature:
         self._inference_helper_column = inference_helper_column
         self._training_helper_column = training_helper_column
 
+        self._on_demand_transformation_function: Optional[TransformationFunction] = (
+            transformation_function if transformation_function else None
+        )
+
     def to_dict(self):
         return {
             "name": self._name,
@@ -57,11 +66,21 @@ class TrainingDatasetFeature:
             "trainingHelperColumn": self._training_helper_column,
             "featureGroupFeatureName": self._feature_group_feature_name,
             "featuregroup": self._feature_group,
+            "transformation_function": self._on_demand_transformation_function,
         }
 
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        if json_decamelized.get("transformation_function", False):
+            json_decamelized["transformation_function"]["transformation_type"] = (
+                UDFType.ON_DEMAND
+            )
+            json_decamelized["transformation_function"] = (
+                TransformationFunction.from_response_json(
+                    json_decamelized.get("transformation_function")
+                )
+            )
         return cls(**json_decamelized)
 
     def is_complex(self):
@@ -111,6 +130,11 @@ class TrainingDatasetFeature:
         self._inference_helper_column = inference_helper_column
 
     @property
+    def on_demand_transformation_function(self) -> TransformationFunction:
+        """Whether the feature is a on-demand feature computed using on-demand transformation functions"""
+        return self._on_demand_transformation_function
+
+    @property
     def training_helper_column(self):
         """Indicator if it is feature."""
         return self._training_helper_column
@@ -128,4 +152,4 @@ class TrainingDatasetFeature:
         return self._feature_group_feature_name
 
     def __repr__(self):
-        return f"Training Dataset Feature({self._name!r}, {self._type!r}, {self._index!r}, {self._label}, {self._feature_group_feature_name}, {self._feature_group.id!r})"
+        return f"Training Dataset Feature({self._name!r}, {self._type!r}, {self._index!r}, {self._label}, {self._feature_group_feature_name}, {self._feature_group.id!r}, {self.on_demand_transformation_function})"

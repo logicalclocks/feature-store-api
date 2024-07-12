@@ -24,7 +24,7 @@ from hsfs import (
     transformation_function,
 )
 from hsfs.core import transformation_function_engine
-from hsfs.hopsworks_udf import udf
+from hsfs.hopsworks_udf import UDFType, udf
 
 
 fg1 = feature_group.FeatureGroup(
@@ -98,6 +98,7 @@ class TestTransformationFunctionEngine:
         tf = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         # Act
@@ -125,6 +126,7 @@ class TestTransformationFunctionEngine:
         tf1 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction1,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         @udf(float)
@@ -134,6 +136,7 @@ class TestTransformationFunctionEngine:
         tf2 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction2,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         transformations = [tf1, tf2]
@@ -166,6 +169,7 @@ class TestTransformationFunctionEngine:
         tf1 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction1,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         @udf(float)
@@ -175,6 +179,7 @@ class TestTransformationFunctionEngine:
         tf2 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction2,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         transformations = [tf1, tf2]
@@ -207,6 +212,7 @@ class TestTransformationFunctionEngine:
         tf1 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction1,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         # Act
@@ -266,6 +272,7 @@ class TestTransformationFunctionEngine:
         tf1 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction1,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         fg1 = feature_group.FeatureGroup(
@@ -325,6 +332,7 @@ class TestTransformationFunctionEngine:
         tf1 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction1,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         fg1 = feature_group.FeatureGroup(
@@ -383,6 +391,7 @@ class TestTransformationFunctionEngine:
         tf1 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction1,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         fg1 = feature_group.FeatureGroup(
@@ -439,6 +448,7 @@ class TestTransformationFunctionEngine:
         tf1 = transformation_function.TransformationFunction(
             feature_store_id,
             hopsworks_udf=testFunction1,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         fg1 = feature_group.FeatureGroup(

@@ -18,7 +18,7 @@ import warnings
 from hsfs import feature_view, training_dataset_feature
 from hsfs.constructor import fs_query, query
 from hsfs.feature_store import FeatureStore
-from hsfs.hopsworks_udf import udf
+from hsfs.hopsworks_udf import UDFType, udf
 
 
 class TestFeatureView:
@@ -106,6 +106,15 @@ class TestFeatureView:
             fv.transformation_functions[1].hopsworks_udf._function_source
             == "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n"
         )
+        assert (
+            fv.transformation_functions[0].hopsworks_udf.udf_type
+            == UDFType.MODEL_DEPENDENT
+        )
+        assert (
+            fv.transformation_functions[1].hopsworks_udf.udf_type
+            == UDFType.MODEL_DEPENDENT
+        )
+
         assert len(fv.schema) == 2
         assert isinstance(fv.schema[0], training_dataset_feature.TrainingDatasetFeature)
 

@@ -65,6 +65,84 @@
       "label": "test_label"
     }
   },
+  "get_transformations": {
+    "response": {
+        "name": "test_name",
+        "type": "test_type",
+        "index": "test_index",
+        "transformation_function": {
+          "id" : 2,
+          "version": 1,
+          "featurestoreId": 11,
+          "hopsworksUdf":{
+            "sourceCode": "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
+            "name": "add_one_fs",
+            "outputTypes":["double"],
+            "transformationFeatures":["col1"],
+            "dropped_argument_names":["data1"]
+          }
+        },
+        "featuregroup": {
+          "type": "cachedFeaturegroupDTO",
+          "validation_type": "test_validation_type",
+          "created": "2022-08-01T11:07:55Z",
+          "creator": {
+            "email": "admin@hopsworks.ai",
+            "firstName": "Admin",
+            "lastName": "Admin",
+            "maxNumProjects": 0,
+            "numActiveProjects": 0,
+            "numRemainingProjects": 0,
+            "status": 0,
+            "testUser": false,
+            "tos": false,
+            "toursState": 0,
+            "twoFactor": false
+          },
+          "description": "test_description",
+          "featurestoreId": 67,
+          "featurestoreName": "test_featurestore",
+          "id": 15,
+          "location": "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1",
+          "name": "fg_test",
+          "statisticsConfig": {
+            "columns": [],
+            "correlations": false,
+            "enabled": true,
+            "exactUniqueness": false,
+            "histograms": false
+          },
+          "version": 1,
+          "features": [
+            {
+              "defaultValue": null,
+              "featureGroupId": 15,
+              "hudiPrecombineKey": true,
+              "name": "intt",
+              "onlineType": "int",
+              "partition": false,
+              "primary": true,
+              "type": "int"
+            },
+            {
+              "defaultValue": null,
+              "featureGroupId": 15,
+              "hudiPrecombineKey": false,
+              "name": "stringt",
+              "onlineType": "varchar(1000)",
+              "partition": false,
+              "primary": false,
+              "type": "string"
+            }
+          ],
+          "onlineTopicName": "119_15_fg_test_1_onlinefs",
+          "onlineEnabled": true,
+          "timeTravelFormat": "HUDI"
+        },
+        "feature_group_feature_name": "test_feature_group_feature_name",
+        "label": "test_label"
+      }
+  },
   "get_fraud_online_training_dataset_features": {
     "response": [
       {

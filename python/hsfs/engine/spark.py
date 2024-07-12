@@ -358,6 +358,10 @@ class Engine:
         validation_id=None,
     ):
         try:
+            if feature_group.transformation_functions:
+                dataframe = self._apply_transformation_function(
+                    feature_group.transformation_functions, dataframe
+                )
             if (
                 isinstance(feature_group, fg_mod.ExternalFeatureGroup)
                 and feature_group.online_enabled
@@ -402,6 +406,11 @@ class Engine:
         checkpoint_dir: Optional[str],
         write_options: Optional[Dict[str, Any]],
     ):
+        if feature_group.transformation_functions:
+            dataframe = self._apply_transformation_function(
+                feature_group.transformation_functions, dataframe
+            )
+
         write_options = kafka_engine.get_kafka_config(
             feature_group.feature_store_id, write_options, engine="spark"
         )
@@ -1137,8 +1146,13 @@ class Engine:
             options.update(provided_options)
         return options
 
-    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
+    def parse_schema_feature_group(
+        self,
+        dataframe,
+        time_travel_format=None,
+    ):
         features = []
+
         using_hudi = time_travel_format == "HUDI"
         for feat in dataframe.schema:
             name = util.autofix_feature_name(feat.name)
@@ -1266,7 +1280,7 @@ class Engine:
         # Raises
             `FeatureStoreException`: If any of the features mentioned in the transformation function is not present in the Feature View.
         """
-        transformed_features = set()
+        dropped_features = set()
         transformations = []
         transformation_features = []
         output_col_names = []
@@ -1281,8 +1295,8 @@ class Engine:
                 raise FeatureStoreException(
                     f"Features {missing_features} specified in the transformation function '{hopsworks_udf.function_name}' are not present in the feature view. Please specify the feature required correctly."
                 )
-
-            transformed_features.update(tf.hopsworks_udf.transformation_features)
+            if tf.hopsworks_udf.dropped_features:
+                dropped_features.update(tf.hopsworks_udf.dropped_features)
 
             pandas_udf = hopsworks_udf.get_udf()
             output_col_name = hopsworks_udf.output_column_names[0]
@@ -1298,7 +1312,7 @@ class Engine:
 
         untransformed_columns = []  # Untransformed column maintained as a list since order is imported while selecting features.
         for column in dataset.columns:
-            if column not in transformed_features:
+            if column not in dropped_features:
                 untransformed_columns.append(column)
         # Applying transformations
         transformed_dataset = dataset.select(
