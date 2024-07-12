@@ -781,9 +781,6 @@ class Engine:
         self,
         dataframe: Union[pd.DataFrame, pl.DataFrame],
         time_travel_format: Optional[str] = None,
-        transformation_functions: Optional[
-            List[transformation_function.TransformationFunction]
-        ] = None,
     ) -> List[feature.Feature]:
         if isinstance(dataframe, pd.DataFrame):
             arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
@@ -792,20 +789,6 @@ class Engine:
         ):
             arrow_schema = dataframe.to_arrow().schema
         features = []
-        transformed_features = []
-        dropped_features = []
-
-        if transformation_functions:
-            for tf in transformation_functions:
-                transformed_features.append(
-                    feature.Feature(
-                        tf.hopsworks_udf.output_column_names[0],
-                        tf.hopsworks_udf.return_types[0],
-                        on_demand=True,
-                    )
-                )
-                if tf.hopsworks_udf.dropped_features:
-                    dropped_features.extend(tf.hopsworks_udf.dropped_features)
         for feat_name in arrow_schema.names:
             name = util.autofix_feature_name(feat_name)
             try:
@@ -814,10 +797,9 @@ class Engine:
                 )
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}") from e
-            if name not in dropped_features:
-                features.append(feature.Feature(name, converted_type))
+            features.append(feature.Feature(name, converted_type))
 
-        return features + transformed_features
+        return features
 
     def parse_schema_training_dataset(
         self, dataframe: Union[pd.DataFrame, pl.DataFrame]

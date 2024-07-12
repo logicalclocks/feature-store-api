@@ -37,9 +37,8 @@ from hsfs.core import inode, job
 from hsfs.core.constants import HAS_GREAT_EXPECTATIONS
 from hsfs.engine import python
 from hsfs.expectation_suite import ExpectationSuite
-from hsfs.hopsworks_udf import UDFType, udf
+from hsfs.hopsworks_udf import udf
 from hsfs.training_dataset_feature import TrainingDatasetFeature
-from hsfs.transformation_function import TransformationFunction
 from polars.testing import assert_frame_equal as polars_assert_frame_equal
 
 
@@ -1455,71 +1454,6 @@ class TestPython:
         assert result[0].name == "col1"
         assert result[1].name == "col2"
         assert result[2].name == "date"
-
-    def test_parse_schema_feature_group_transformation_functions(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
-
-        python_engine = python.Engine()
-
-        d = {"Col1": [1, 2], "col2": [3, 4]}
-        df = pd.DataFrame(data=d)
-
-        @udf(int)
-        def test(feature):
-            return feature + 1
-
-        transformation_function = TransformationFunction(
-            featurestore_id=10,
-            hopsworks_udf=test,
-            version=1,
-            transformation_type=UDFType.ON_DEMAND,
-        )
-
-        # Act
-        result = python_engine.parse_schema_feature_group(
-            dataframe=df,
-            time_travel_format=None,
-            transformation_functions=[transformation_function],
-        )
-
-        # Assert
-        assert len(result) == 3
-        assert result[0].name == "col1"
-        assert result[1].name == "col2"
-        assert result[2].name == "test"
-
-    def test_parse_schema_feature_group_transformation_functions_drop(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
-
-        python_engine = python.Engine()
-
-        d = {"Col1": [1, 2], "col2": [3, 4]}
-        df = pd.DataFrame(data=d)
-
-        @udf(int, drop="feature")
-        def test(feature):
-            return feature + 1
-
-        transformation_function = TransformationFunction(
-            featurestore_id=10,
-            hopsworks_udf=test("col2"),
-            version=1,
-            transformation_type=UDFType.ON_DEMAND,
-        )
-
-        # Act
-        result = python_engine.parse_schema_feature_group(
-            dataframe=df,
-            time_travel_format=None,
-            transformation_functions=[transformation_function],
-        )
-
-        # Assert
-        assert len(result) == 2
-        assert result[0].name == "col1"
-        assert result[1].name == "test"
 
     def test_parse_schema_training_dataset(self):
         # Arrange

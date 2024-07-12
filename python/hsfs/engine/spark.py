@@ -1150,25 +1150,8 @@ class Engine:
         self,
         dataframe,
         time_travel_format=None,
-        transformation_functions: Optional[
-            List[transformation_function.TransformationFunction]
-        ] = None,
     ):
         features = []
-        transformed_features = []
-        dropped_features = []
-
-        if transformation_functions:
-            for tf in transformation_functions:
-                transformed_features.append(
-                    feature.Feature(
-                        tf.hopsworks_udf.output_column_names[0],
-                        tf.hopsworks_udf.return_types[0],
-                        on_demand=True,
-                    )
-                )
-                if tf.hopsworks_udf.dropped_features:
-                    dropped_features.extend(tf.hopsworks_udf.dropped_features)
 
         using_hudi = time_travel_format == "HUDI"
         for feat in dataframe.schema:
@@ -1179,13 +1162,12 @@ class Engine:
                 )
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{feat.name}': {str(e)}") from e
-            if name not in dropped_features:
-                features.append(
-                    feature.Feature(
-                        name, converted_type, feat.metadata.get("description", None)
-                    )
+            features.append(
+                feature.Feature(
+                    name, converted_type, feat.metadata.get("description", None)
                 )
-        return features + transformed_features
+            )
+        return features
 
     def parse_schema_training_dataset(self, dataframe):
         return [

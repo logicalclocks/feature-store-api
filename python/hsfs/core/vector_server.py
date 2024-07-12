@@ -577,7 +577,9 @@ class VectorServer:
             feature_vectors = feature_vectors.to_dict(orient="records")
 
         elif isinstance(feature_vectors, list) and feature_vectors:
-            if isinstance(feature_vectors[0], list):
+            if all(
+                isinstance(feature_vector, list) for feature_vector in feature_vectors
+            ):
                 return_type = "list"
                 feature_vectors = [
                     self.get_untransformed_features_map(feature_vector)
@@ -610,7 +612,7 @@ class VectorServer:
         if not self._model_dependent_transformation_functions:
             warnings.warn(
                 "Feature view does not have any attached model-dependent transformations. Returning input feature vectors.",
-                stacklevel=1,
+                stacklevel=0,
             )
             return feature_vectors
 

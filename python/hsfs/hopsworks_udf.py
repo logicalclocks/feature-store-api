@@ -115,17 +115,28 @@ class HopsworksUdf:
     The class generates uses the metadata to dynamically generate user defined functions based on the
     engine it is executed in.
 
+    Arguments
+    ---------
+        func : `Union[Callable, str]`. The transformation function object or the source code of the transformation function.
+        return_types : `Union[List[type], type, List[str], str]`. A python type or a list of python types that denotes the data types of the columns output from the transformation functions.
+        name : `Optional[str]`. Name of the transformation function.
+        transformation_features : `Optional[List[TransformationFeature]]`. A list of objects of `TransformationFeature` that maps the feature used for transformation to their corresponding statistics argument names if any
+        transformation_function_argument_names : `Optional[List[TransformationFeature]]`. The argument names of the transformation function.
+        dropped_argument_names : `Optional[List[str]]`. The arguments to be dropped from the finial DataFrame after the transformation functions are applied.
+        dropped_feature_names : `Optional[List[str]]`. The feature name corresponding to the arguments names that are dropped
+        feature_name_prefix: `Optional[str]` = None. Prefixes if any used in the feature view.
+
     Attributes
     ----------
-        function_name (str) : Name of the UDF
-        udf_type (UDFType): Type of the UDF can be either \"model dependent\" or \"on-demand\".
-        return_types (List[str]): The data types of the columns returned from the UDF.
-        transformation_features (List[str]) : List of feature names to which the transformation function would be applied.
-        output_column_names (List[str]): Column names of the DataFrame returned after application of the transformation function.
-        dropped_features (List[str]): List of features that will be dropped after the UDF is applied.
-        transformation_statistics (Dict[str, FeatureDescriptiveStatistics]): Dictionary that maps the statistics_argument name in the function to the actual statistics variable.
-        statistics_required (bool) : True if statistics is required for any of the parameters of the UDF.
-        statistics_features (List[str]) : List of feature names that requires statistics.
+        function_name `str` : Name of the UDF
+        udf_type `UDFType`: Type of the UDF can be either \"model dependent\" or \"on-demand\".
+        return_types `List[str]`: The data types of the columns returned from the UDF.
+        transformation_features `List[str]` : List of feature names to which the transformation function would be applied.
+        output_column_names `List[str]`: Column names of the DataFrame returned after application of the transformation function.
+        dropped_features `List[str]`: List of features that will be dropped after the UDF is applied.
+        transformation_statistics `Dict[str, FeatureDescriptiveStatistics]`: Dictionary that maps the statistics_argument name in the function to the actual statistics variable.
+        statistics_required `bool` : True if statistics is required for any of the parameters of the UDF.
+        statistics_features `List[str]` : List of feature names that requires statistics.
     """
 
     # Mapping for converting python types to spark types - required for creating pandas UDF's.

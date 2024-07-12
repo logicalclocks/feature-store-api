@@ -2570,6 +2570,11 @@ class FeatureGroup(FeatureGroupBase):
             # This is consistent with the behavior of the insert method where the feature list wins over the
             # dataframe structure
             self._features = self._features if len(self._features) > 0 else features
+
+            self._features = self._feature_group_engine._update_feature_group_schema_on_demand_transformations(
+                self, self._features
+            )
+
             self._feature_group_engine.save_feature_group_metadata(
                 self, None, write_options or {}
             )
