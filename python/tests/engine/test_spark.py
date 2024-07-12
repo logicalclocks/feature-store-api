@@ -3867,7 +3867,7 @@ class TestSpark:
     def test_parse_schema_feature_group(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
+            "hsfs.engine.spark.Engine._convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3892,7 +3892,7 @@ class TestSpark:
     def test_parse_schema_feature_group_hudi(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
+            "hsfs.engine.spark.Engine._convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3917,7 +3917,7 @@ class TestSpark:
     def test_parse_schema_feature_group_value_error(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
+            "hsfs.engine.spark.Engine._convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3964,7 +3964,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=IntegerType(),
             using_hudi=False,
         )
@@ -4043,7 +4043,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=ByteType(),
             using_hudi=True,
         )
@@ -4056,7 +4056,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=ShortType(),
             using_hudi=True,
         )
@@ -4069,7 +4069,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=BooleanType(),
             using_hudi=True,
         )
@@ -4082,7 +4082,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=IntegerType(),
             using_hudi=True,
         )
@@ -4095,7 +4095,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=LongType(),
             using_hudi=True,
         )
@@ -4108,7 +4108,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=FloatType(),
             using_hudi=True,
         )
@@ -4121,7 +4121,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=DoubleType(),
             using_hudi=True,
         )
@@ -4134,7 +4134,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=DecimalType(),
             using_hudi=True,
         )
@@ -4147,7 +4147,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=TimestampType(),
             using_hudi=True,
         )
@@ -4160,7 +4160,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=DateType(),
             using_hudi=True,
         )
@@ -4173,7 +4173,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=StringType(),
             using_hudi=True,
         )
@@ -4186,7 +4186,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=StructType(),
             using_hudi=True,
         )
@@ -4199,7 +4199,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type_to_offline_type(
+        result = spark_engine._convert_spark_type_to_offline_type(
             spark_type=BinaryType(),
             using_hudi=True,
         )
@@ -4213,7 +4213,7 @@ class TestSpark:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            spark_engine.convert_spark_type_to_offline_type(
+            spark_engine._convert_spark_type_to_offline_type(
                 spark_type=MapType(StringType(), StringType()),
                 using_hudi=True,
             )

@@ -354,47 +354,6 @@ def get_job_url(href: str) -> str:
     return ui_url.geturl()
 
 
-def translate_legacy_spark_type(
-    output_type: str,
-) -> Literal[
-    "STRING",
-    "BINARY",
-    "BYTE",
-    "SHORT",
-    "INT",
-    "LONG",
-    "FLOAT",
-    "DOUBLE",
-    "TIMESTAMP",
-    "DATE",
-    "BOOLEAN",
-]:
-    if output_type == "StringType()":
-        return "STRING"
-    elif output_type == "BinaryType()":
-        return "BINARY"
-    elif output_type == "ByteType()":
-        return "BYTE"
-    elif output_type == "ShortType()":
-        return "SHORT"
-    elif output_type == "IntegerType()":
-        return "INT"
-    elif output_type == "LongType()":
-        return "LONG"
-    elif output_type == "FloatType()":
-        return "FLOAT"
-    elif output_type == "DoubleType()":
-        return "DOUBLE"
-    elif output_type == "TimestampType()":
-        return "TIMESTAMP"
-    elif output_type == "DateType()":
-        return "DATE"
-    elif output_type == "BooleanType()":
-        return "BOOLEAN"
-    else:
-        return "STRING"  # handle gracefully, and return STRING type, the default for spark udfs
-
-
 def _loading_animation(message: str, stop_event: threading.Event) -> None:
     for char in itertools.cycle([".", "..", "...", ""]):
         if stop_event.is_set():

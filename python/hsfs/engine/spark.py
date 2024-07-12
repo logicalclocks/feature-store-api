@@ -1157,7 +1157,7 @@ class Engine:
         for feat in dataframe.schema:
             name = util.autofix_feature_name(feat.name)
             try:
-                converted_type = Engine.convert_spark_type_to_offline_type(
+                converted_type = Engine._convert_spark_type_to_offline_type(
                     feat.dataType, using_hudi
                 )
             except ValueError as e:
@@ -1396,7 +1396,7 @@ class Engine:
         return [field[feature_name] for field in unique_values]
 
     @staticmethod
-    def convert_spark_type_to_offline_type(spark_type, using_hudi):
+    def _convert_spark_type_to_offline_type(spark_type, using_hudi):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
         # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
