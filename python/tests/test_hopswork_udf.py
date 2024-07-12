@@ -19,7 +19,7 @@ from datetime import date, datetime, time
 import pandas as pd
 import pytest
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.hopsworks_udf import HopsworksUdf, TransformationFeature, udf
+from hsfs.hopsworks_udf import HopsworksUdf, TransformationFeature, UDFType, udf
 
 
 class TestHopsworksUdf:
@@ -330,14 +330,56 @@ def test_function():
         def test_func(col1):
             return col1 + 1
 
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
         assert test_func._get_output_column_names() == ["test_func_col1_"]
+
+        test_func.udf_type = UDFType.ON_DEMAND
+        assert test_func._get_output_column_names() == ["test_func"]
+
+    def test_generate_output_column_names_one_argument_one_output_type_prefix(self):
+        @udf(int)
+        def test_func(col1):
+            return col1 + 1
+
+        test_func._feature_name_prefix = "prefix_"
+
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+        assert test_func._get_output_column_names() == ["test_func_prefix_col1_"]
+        assert test_func.output_column_names == ["prefix_test_func_prefix_col1_"]
+
+        test_func.udf_type = UDFType.ON_DEMAND
+        assert test_func._get_output_column_names() == ["test_func"]
+        assert test_func.output_column_names == ["prefix_test_func"]
 
     def test_generate_output_column_names_multiple_argument_one_output_type(self):
         @udf(int)
         def test_func(col1, col2, col3):
             return col1 + 1
 
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
         assert test_func._get_output_column_names() == ["test_func_col1_col2_col3_"]
+        test_func.udf_type = UDFType.ON_DEMAND
+        assert test_func._get_output_column_names() == ["test_func"]
+
+    def test_generate_output_column_names_multiple_argument_one_output_type_prefix(
+        self,
+    ):
+        @udf(int)
+        def test_func(col1, col2, col3):
+            return col1 + 1
+
+        test_func._feature_name_prefix = "prefix_"
+
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+        assert test_func._get_output_column_names() == [
+            "test_func_prefix_col1_prefix_col2_prefix_col3_"
+        ]
+        assert test_func.output_column_names == [
+            "prefix_test_func_prefix_col1_prefix_col2_prefix_col3_"
+        ]
+        test_func.udf_type = UDFType.ON_DEMAND
+        assert test_func._get_output_column_names() == ["test_func"]
+        assert test_func.output_column_names == ["prefix_test_func"]
 
     def test_generate_output_column_names_single_argument_multiple_output_type(self):
         @udf([int, float, int])
@@ -346,10 +388,34 @@ def test_function():
                 {"col1": [col1 + 1], "col2": [col1 + 1], "col3": [col1 + 1]}
             )
 
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
         assert test_func._get_output_column_names() == [
             "test_func_col1_0",
             "test_func_col1_1",
             "test_func_col1_2",
+        ]
+
+    def test_generate_output_column_names_single_argument_multiple_output_type_prefix(
+        self,
+    ):
+        @udf([int, float, int])
+        def test_func(col1):
+            return pd.DataFrame(
+                {"col1": [col1 + 1], "col2": [col1 + 1], "col3": [col1 + 1]}
+            )
+
+        test_func._feature_name_prefix = "prefix_"
+
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+        assert test_func._get_output_column_names() == [
+            "test_func_prefix_col1_0",
+            "test_func_prefix_col1_1",
+            "test_func_prefix_col1_2",
+        ]
+        assert test_func.output_column_names == [
+            "prefix_test_func_prefix_col1_0",
+            "prefix_test_func_prefix_col1_1",
+            "prefix_test_func_prefix_col1_2",
         ]
 
     def test_generate_output_column_names_multiple_argument_multiple_output_type(self):
@@ -359,11 +425,97 @@ def test_function():
                 {"col1": [col1 + 1], "col2": [col2 + 1], "col3": [col3 + 1]}
             )
 
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
         assert test_func._get_output_column_names() == [
             "test_func_col1_col2_col3_0",
             "test_func_col1_col2_col3_1",
             "test_func_col1_col2_col3_2",
         ]
+
+    def test_generate_output_column_names_multiple_argument_multiple_output_type_prefix(
+        self,
+    ):
+        @udf([int, float, int])
+        def test_func(col1, col2, col3):
+            return pd.DataFrame(
+                {"col1": [col1 + 1], "col2": [col2 + 1], "col3": [col3 + 1]}
+            )
+
+        test_func._feature_name_prefix = "prefix_"
+
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+        assert test_func._get_output_column_names() == [
+            "test_func_prefix_col1_prefix_col2_prefix_col3_0",
+            "test_func_prefix_col1_prefix_col2_prefix_col3_1",
+            "test_func_prefix_col1_prefix_col2_prefix_col3_2",
+        ]
+        assert test_func.output_column_names == [
+            "prefix_test_func_prefix_col1_prefix_col2_prefix_col3_0",
+            "prefix_test_func_prefix_col1_prefix_col2_prefix_col3_1",
+            "prefix_test_func_prefix_col1_prefix_col2_prefix_col3_2",
+        ]
+
+    def test_drop_features_one_element(self):
+        @udf([int, float, int], drop="col1")
+        def test_func(col1, col2, col3):
+            return pd.DataFrame(
+                {"col1": [col1 + 1], "col2": [col2 + 1], "col3": [col3 + 1]}
+            )
+
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+
+        assert test_func.dropped_features == ["col1"]
+
+    def test_drop_features_one_element_prefix(self):
+        @udf([int, float, int], drop="col1")
+        def test_func(col1, col2, col3):
+            return pd.DataFrame(
+                {"col1": [col1 + 1], "col2": [col2 + 1], "col3": [col3 + 1]}
+            )
+
+        test_func._feature_name_prefix = "prefix_"
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+
+        assert test_func._dropped_features == ["col1"]
+        assert test_func.dropped_features == ["prefix_col1"]
+
+    def test_drop_features_multiple_element(self):
+        @udf([int, float, int], drop=["col1", "col2"])
+        def test_func(col1, col2, col3):
+            return pd.DataFrame(
+                {"col1": [col1 + 1], "col2": [col2 + 1], "col3": [col3 + 1]}
+            )
+
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+
+        assert test_func.dropped_features == ["col1", "col2"]
+
+    def test_drop_features_multiple_element_prefix(self):
+        @udf([int, float, int], drop=["col1", "col2"])
+        def test_func(col1, col2, col3):
+            return pd.DataFrame(
+                {"col1": [col1 + 1], "col2": [col2 + 1], "col3": [col3 + 1]}
+            )
+
+        test_func._feature_name_prefix = "prefix_"
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+
+        assert test_func._dropped_features == ["col1", "col2"]
+        assert test_func.dropped_features == ["prefix_col1", "prefix_col2"]
+
+    def test_drop_features_invalid(self):
+        with pytest.raises(FeatureStoreException) as exp:
+
+            @udf([int, float, int], drop=["col1", "invalid_col"])
+            def test_func(col1, col2, col3):
+                return pd.DataFrame(
+                    {"col1": [col1 + 1], "col2": [col2 + 1], "col3": [col3 + 1]}
+                )
+
+        assert (
+            str(exp.value)
+            == "Cannot drop features 'invalid_col' as they are not features given as arguments in the defined UDF."
+        )
 
     def test_create_pandas_udf_return_schema_from_list_one_output_type(self):
         @udf(int)
@@ -388,29 +540,44 @@ def test_function():
                 }
             )
 
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
+
         assert (
             test_func._create_pandas_udf_return_schema_from_list()
             == "`test_func_col1_0` bigint, `test_func_col1_1` double, `test_func_col1_2` string, `test_func_col1_3` date, `test_func_col1_4` timestamp, `test_func_col1_5` timestamp, `test_func_col1_6` boolean"
         )
 
     def test_hopsworks_wrapper_single_output(self):
+        test_dataframe = pd.DataFrame({"col1": [1, 2, 3, 4]})
+
         @udf(int)
         def test_func(col1):
             return col1 + 1
 
-        renaming_wrapper_function = test_func.hopsworksUdf_wrapper()
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
 
-        test_dataframe = pd.DataFrame({"col1": [1, 2, 3, 4]})
+        renaming_wrapper_function = test_func.hopsworksUdf_wrapper()
 
         result = renaming_wrapper_function(test_dataframe["col1"])
 
         assert result.name == "test_func_col1_"
         assert result.values.tolist() == [2, 3, 4, 5]
 
+        test_func.udf_type = UDFType.ON_DEMAND
+
+        renaming_wrapper_function = test_func.hopsworksUdf_wrapper()
+
+        result = renaming_wrapper_function(test_dataframe["col1"])
+
+        assert result.name == "test_func"
+        assert result.values.tolist() == [2, 3, 4, 5]
+
     def test_hopsworks_wrapper_multiple_output(self):
         @udf([int, float])
         def test_func(col1, col2):
             return pd.DataFrame({"out1": col1 + 1, "out2": col2 + 2})
+
+        test_func.udf_type = UDFType.MODEL_DEPENDENT
 
         renaming_wrapper_function = test_func.hopsworksUdf_wrapper()
 
@@ -436,6 +603,16 @@ def test_function():
         assert test_func("new_feature").transformation_features == ["new_feature"]
         assert test_func("new_feature").statistics_features == []
 
+        # Test with prefix
+        test_func._feature_name_prefix = "prefix_"
+        assert test_func.transformation_features == ["prefix_col1"]
+        assert test_func.statistics_features == []
+
+        assert test_func("new_feature").transformation_features == [
+            "prefix_new_feature"
+        ]
+        assert test_func("new_feature").statistics_features == []
+
     def test_HopsworkUDf_call_one_argument_statistics(self):
         from hsfs.transformation_statistics import TransformationStatistics
 
@@ -450,6 +627,18 @@ def test_function():
         assert test_func._statistics_argument_names == ["col1"]
 
         assert test_func("new_feature").transformation_features == ["new_feature"]
+        assert test_func("new_feature").statistics_features == ["new_feature"]
+        assert test_func("new_feature")._statistics_argument_names == ["col1"]
+
+        # Test with prefix
+        test_func._feature_name_prefix = "prefix_"
+        assert test_func.transformation_features == ["prefix_col1"]
+        assert test_func.statistics_features == ["col1"]
+        assert test_func._statistics_argument_names == ["col1"]
+
+        assert test_func("new_feature").transformation_features == [
+            "prefix_new_feature"
+        ]
         assert test_func("new_feature").statistics_features == ["new_feature"]
         assert test_func("new_feature")._statistics_argument_names == ["col1"]
 
@@ -471,3 +660,122 @@ def test_function():
             "col1",
             "col3",
         ]
+
+    def test_validate_and_convert_drop_features(self):
+        dropped_features = "feature1"
+        transformation_feature = ["feature1", "feature2"]
+        feature_name_prefix = None
+
+        dropped_features = HopsworksUdf._validate_and_convert_drop_features(
+            dropped_features, transformation_feature, feature_name_prefix
+        )
+
+        assert dropped_features == ["feature1"]
+
+    def test_validate_and_convert_drop_features_dropped_list(self):
+        dropped_features = ["feature1", "feature2"]
+        transformation_feature = ["feature1", "feature2", "feature3"]
+        feature_name_prefix = None
+
+        dropped_features = HopsworksUdf._validate_and_convert_drop_features(
+            dropped_features, transformation_feature, feature_name_prefix
+        )
+
+        assert dropped_features == ["feature1", "feature2"]
+
+    def test_validate_and_convert_drop_features_dropped_invalid(self):
+        dropped_features = "feature4"
+        transformation_feature = ["feature1", "feature2", "feature3"]
+        feature_name_prefix = None
+
+        with pytest.raises(FeatureStoreException) as exp:
+            HopsworksUdf._validate_and_convert_drop_features(
+                dropped_features, transformation_feature, feature_name_prefix
+            )
+
+        assert (
+            str(exp.value)
+            == "Cannot drop features 'feature4' as they are not features given as arguments in the defined UDF."
+        )
+
+    def test_validate_and_convert_drop_features_dropped_invalid_list(self):
+        dropped_features = ["feature4", "feature5"]
+        transformation_feature = ["feature1", "feature2", "feature3"]
+        feature_name_prefix = None
+
+        with pytest.raises(FeatureStoreException) as exp:
+            HopsworksUdf._validate_and_convert_drop_features(
+                dropped_features, transformation_feature, feature_name_prefix
+            )
+
+        assert (
+            str(exp.value)
+            == "Cannot drop features 'feature4', 'feature5' as they are not features given as arguments in the defined UDF."
+        )
+
+    def test_validate_and_convert_drop_features_dropped_list_prefix(self):
+        dropped_features = ["feature1", "feature2"]
+        transformation_feature = ["test_feature1", "test_feature2", "test_feature3"]
+        feature_name_prefix = "test_"
+
+        dropped_features = HopsworksUdf._validate_and_convert_drop_features(
+            dropped_features, transformation_feature, feature_name_prefix
+        )
+
+        assert dropped_features == ["feature1", "feature2"]
+
+    def test_validate_and_convert_drop_features_dropped_prefix_invalid(self):
+        dropped_features = ["feature1", "feature2"]
+        transformation_feature = ["feature1", "feature2", "feature3"]
+        feature_name_prefix = "test_"
+
+        with pytest.raises(FeatureStoreException) as exp:
+            HopsworksUdf._validate_and_convert_drop_features(
+                dropped_features, transformation_feature, feature_name_prefix
+            )
+
+        assert (
+            str(exp.value)
+            == "Cannot drop features 'test_feature1', 'test_feature2' as they are not features given as arguments in the defined UDF."
+        )
+
+    def test_validate_udf_type_None(self):
+        @udf(int)
+        def test_func(col1):
+            return col1 + 1
+
+        with pytest.raises(FeatureStoreException) as exe:
+            test_func._validate_udf_type()
+            test_func.get_udf()
+
+        assert str(exe.value) == "UDF Type cannot be None"
+
+    def test_validate_udf_type_on_demand_multiple_output(self):
+        @udf([int, float])
+        def test_func(col1, col2):
+            return pd.DataFrame({"out1": col1 + 1, "out2": col2 + 2})
+
+        with pytest.raises(FeatureStoreException) as exe:
+            test_func.udf_type = UDFType.ON_DEMAND
+
+        assert (
+            str(exe.value)
+            == "On-Demand Transformation functions can only return one column as output"
+        )
+
+    def test_validate_udf_type_on_demand_statistics(self):
+        from hsfs.transformation_statistics import TransformationStatistics
+
+        stats = TransformationStatistics("col1")
+
+        @udf(int)
+        def test_func(col1, statistics=stats):
+            return col1 + statistics.col1.mean
+
+        with pytest.raises(FeatureStoreException) as exe:
+            test_func.udf_type = UDFType.ON_DEMAND
+
+        assert (
+            str(exe.value)
+            == "On-Demand Transformation functions cannot use statistics, please remove statistics parameters from the functions"
+        )

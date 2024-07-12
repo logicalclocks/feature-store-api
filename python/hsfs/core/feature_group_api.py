@@ -51,6 +51,9 @@ class FeatureGroupApi:
             feature_group_instance.feature_store_id,
             "featuregroups",
         ]
+        query_params = {
+            "expand": ["features", "expectationsuite", "transformationfunctions"]
+        }
         headers = {"content-type": "application/json"}
         feature_group_object = feature_group_instance.update_from_response_json(
             _client._send_request(
@@ -58,6 +61,7 @@ class FeatureGroupApi:
                 path_params,
                 headers=headers,
                 data=feature_group_instance.json(),
+                query_params=query_params,
             ),
         )
         return feature_group_object
@@ -93,7 +97,11 @@ class FeatureGroupApi:
             "featuregroups",
             name,
         ]
-        query_params = None if version is None else {"version": version}
+        query_params = {
+            "expand": ["features", "expectationsuite", "transformationfunctions"]
+        }
+        if version is not None:
+            query_params["version"] = version
 
         fg_objs = []
         # In principle unique names are enforced across fg type and this should therefore
@@ -157,8 +165,10 @@ class FeatureGroupApi:
             "featuregroups",
             feature_group_id,
         ]
-
-        fg_json = _client._send_request("GET", path_params)
+        query_params = {
+            "expand": ["features", "expectationsuite", "transformationfunctions"]
+        }
+        fg_json = _client._send_request("GET", path_params, query_params)
         if (
             fg_json["type"] == FeatureGroupApi.BACKEND_FG_STREAM
             or fg_json["type"] == FeatureGroupApi.BACKEND_FG_BATCH

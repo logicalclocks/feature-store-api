@@ -8,7 +8,8 @@
         "sourceCode": "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
         "name": "add_one_fs",
         "outputTypes":["double"],
-        "transformationFeatures":["col1"]
+        "transformationFeatures":["col1"],
+        "dropped_argument_names":["data1"]
       }
     }
   },
@@ -22,7 +23,8 @@
         "name": "add_mean_fs",
         "outputTypes":["double"],
         "transformationFeatures":["data"],
-        "statisticsArgumentNames":["data1"]
+        "statisticsArgumentNames":["data1"],
+        "dropped_argument_names":["data1"]
       }
     }
   },
@@ -36,7 +38,8 @@
         "name": "test_func",
         "outputTypes":["string"],
         "transformationFeatures":["feature1", "feature2", "feature3"],
-        "statisticsArgumentNames":["data1", "data2"]
+        "statisticsArgumentNames":["data1", "data2"],
+        "dropped_argument_names":["data1", "data2", "data3"]
       }
     }
   },
@@ -50,7 +53,8 @@
         "name": "test_func",
         "outputTypes":["string", "double"],
         "transformationFeatures":["feature1", "feature2", "feature3"],
-        "statisticsArgumentNames":["data1", "data2"]
+        "statisticsArgumentNames":["data1", "data2"],
+        "dropped_argument_names":["data1", "data2", "data3"]
       }
     }
   },
@@ -67,7 +71,8 @@
             "name": "add_mean_fs",
             "outputTypes":["double"],
             "transformationFeatures":["data"],
-            "statisticsArgumentNames":["data1"]
+            "statisticsArgumentNames":["data1"],
+            "dropped_argument_names":["data1"]
           }
         },
         {
@@ -78,7 +83,8 @@
             "sourceCode": "\n@udf(float)\ndef add_one_fs(data1 : pd.Series):\n    return data1 + 1\n",
             "name": "add_one_fs",
             "outputTypes":["double"],
-            "transformationFeatures":["col1"]
+            "transformationFeatures":["col1"],
+            "dropped_argument_names":["data1"]
           }
         }
       ]
@@ -97,7 +103,8 @@
             "name": "add_mean_fs",
             "outputTypes":["double"],
             "transformationFeatures":["data"],
-            "statisticsArgumentNames":["data1"]
+            "statisticsArgumentNames":["data1"],
+            "dropped_argument_names":["data1"]
           }
         }
       ]

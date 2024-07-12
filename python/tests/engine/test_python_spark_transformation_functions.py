@@ -31,7 +31,7 @@ from hsfs import (
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs.engine import python, spark
-from hsfs.hopsworks_udf import HopsworksUdf, udf
+from hsfs.hopsworks_udf import HopsworksUdf, UDFType, udf
 from pyspark.sql.types import (
     BooleanType,
     DateType,
@@ -161,6 +161,7 @@ class TestPythonSparkTransformationFunctions:
             "transformationFeatures": [],
             "statisticsArgumentNames": ["feature"],
             "name": "min_max_scaler",
+            "droppedArgumentNames": ["feature"],
         }
 
         tf_fun = HopsworksUdf.from_response_json(udf_response)
@@ -169,7 +170,9 @@ class TestPythonSparkTransformationFunctions:
 
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun("col_0"), featurestore_id=99
+                hopsworks_udf=tf_fun("col_0"),
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -230,7 +233,9 @@ class TestPythonSparkTransformationFunctions:
 
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=min_max_scaler("col_0"), featurestore_id=99
+                hopsworks_udf=min_max_scaler("col_0"),
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -299,6 +304,7 @@ class TestPythonSparkTransformationFunctions:
             "transformationFeatures": [],
             "statisticsArgumentNames": ["feature"],
             "name": "standard_scaler",
+            "droppedArgumentNames": ["feature"],
         }
 
         tf_fun = HopsworksUdf.from_response_json(udf_response)
@@ -307,7 +313,9 @@ class TestPythonSparkTransformationFunctions:
 
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun("col_0"), featurestore_id=99
+                hopsworks_udf=tf_fun("col_0"),
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
         mean = statistics.mean([1, 2])
@@ -369,7 +377,9 @@ class TestPythonSparkTransformationFunctions:
 
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=standard_scaler("col_0"), featurestore_id=99
+                hopsworks_udf=standard_scaler("col_0"),
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -441,6 +451,7 @@ class TestPythonSparkTransformationFunctions:
             "transformationFeatures": [],
             "statisticsArgumentNames": ["feature"],
             "name": "robust_scaler",
+            "droppedArgumentNames": ["feature"],
         }
 
         tf_fun = HopsworksUdf.from_response_json(udf_response)
@@ -449,7 +460,9 @@ class TestPythonSparkTransformationFunctions:
 
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun("col_0"), featurestore_id=99
+                hopsworks_udf=tf_fun("col_0"),
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
         percentiles = [1] * 100
@@ -513,7 +526,9 @@ class TestPythonSparkTransformationFunctions:
 
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=robust_scaler("col_0"), featurestore_id=99
+                hopsworks_udf=robust_scaler("col_0"),
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -571,7 +586,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @udf(int)
+        @udf(int, drop=["col_0"])
         def tf_fun(col_0):
             return col_0 + 1
 
@@ -579,7 +594,9 @@ class TestPythonSparkTransformationFunctions:
 
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun, featurestore_id=99
+                hopsworks_udf=tf_fun,
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -629,14 +646,16 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @udf(str)
+        @udf(str, drop="col_0")
         def tf_fun(col_0):
             return col_0 + "1"
 
         td = self._create_training_dataset()
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun, featurestore_id=99
+                hopsworks_udf=tf_fun,
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -686,14 +705,16 @@ class TestPythonSparkTransformationFunctions:
         spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
 
         # Arrange
-        @udf(float)
+        @udf(float, drop="col_0")
         def tf_fun(col_0):
             return col_0 + 1.0
 
         td = self._create_training_dataset()
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun, featurestore_id=99
+                hopsworks_udf=tf_fun,
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -758,7 +779,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @udf(datetime.datetime)
+        @udf(datetime.datetime, drop="col_0")
         def tf_fun(col_0):
             import datetime
 
@@ -767,7 +788,9 @@ class TestPythonSparkTransformationFunctions:
         td = self._create_training_dataset()
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun, featurestore_id=99
+                hopsworks_udf=tf_fun,
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -833,7 +856,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @udf(datetime.datetime)
+        @udf(datetime.datetime, drop="col_0")
         def tf_fun(col_0) -> datetime.datetime:
             import datetime
 
@@ -844,7 +867,9 @@ class TestPythonSparkTransformationFunctions:
         td = self._create_training_dataset()
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun, featurestore_id=99
+                hopsworks_udf=tf_fun,
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -911,7 +936,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @udf(datetime.datetime)
+        @udf(datetime.datetime, drop="col_0")
         def tf_fun(col_0) -> datetime.datetime:
             import datetime
 
@@ -923,7 +948,9 @@ class TestPythonSparkTransformationFunctions:
         td = self._create_training_dataset()
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun, featurestore_id=99
+                hopsworks_udf=tf_fun,
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -989,7 +1016,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @udf(datetime.datetime)
+        @udf(datetime.datetime, drop=["col_0"])
         def tf_fun(col_0) -> datetime.datetime:
             import datetime
 
@@ -1003,7 +1030,9 @@ class TestPythonSparkTransformationFunctions:
         td = self._create_training_dataset()
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun, featurestore_id=99
+                hopsworks_udf=tf_fun,
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -1063,7 +1092,7 @@ class TestPythonSparkTransformationFunctions:
         )
 
         # Arrange
-        @udf(datetime.date)
+        @udf(datetime.date, drop=["col_0"])
         def tf_fun(col_0):
             import datetime
 
@@ -1072,7 +1101,9 @@ class TestPythonSparkTransformationFunctions:
         td = self._create_training_dataset()
         transformation_functions = [
             transformation_function.TransformationFunction(
-                hopsworks_udf=tf_fun, featurestore_id=99
+                hopsworks_udf=tf_fun,
+                featurestore_id=99,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
         ]
 
@@ -1089,7 +1120,7 @@ class TestPythonSparkTransformationFunctions:
         # Arrange
         with pytest.raises(FeatureStoreException) as e_info:
 
-            @udf(list)
+            @udf(list, drop="a")
             def tf_fun(a):
                 return a + 1
 

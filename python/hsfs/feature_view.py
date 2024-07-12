@@ -19,7 +19,18 @@ import json
 import logging
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import humps
 import numpy as np
@@ -54,7 +65,7 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
 from hsfs.feature import Feature
-from hsfs.hopsworks_udf import HopsworksUdf
+from hsfs.hopsworks_udf import HopsworksUdf, UDFType
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -121,20 +132,25 @@ class FeatureView:
             training_helper_columns if training_helper_columns else []
         )
 
-        self._transformation_functions: List[TransformationFunction] = (
-            [
-                TransformationFunction(
-                    self.featurestore_id,
-                    hopsworks_udf=transformation_function,
-                    version=1,
-                )
-                if not isinstance(transformation_function, TransformationFunction)
-                else transformation_function
-                for transformation_function in transformation_functions
-            ]
-            if transformation_functions
-            else []
-        )
+        self._transformation_functions: List[TransformationFunction] = []
+
+        if transformation_functions:
+            for transformation_function in transformation_functions:
+                if not isinstance(transformation_function, TransformationFunction):
+                    self._transformation_functions.append(
+                        TransformationFunction(
+                            self.featurestore_id,
+                            hopsworks_udf=transformation_function,
+                            version=1,
+                            transformation_type=UDFType.MODEL_DEPENDENT,
+                        )
+                    )
+                else:
+                    if not transformation_function.hopsworks_udf.udf_type:
+                        transformation_function.hopsworks_udf.udf_type = (
+                            UDFType.MODEL_DEPENDENT
+                        )
+                    self._transformation_functions.append(transformation_function)
 
         if self._transformation_functions:
             self._transformation_functions = FeatureView._sort_transformation_functions(
@@ -496,6 +512,7 @@ class FeatureView:
         force_rest_client: bool = False,
         force_sql_client: bool = False,
         transformed: Optional[bool] = True,
+        request_parameters: Optional[Dict[str, Any]] = None,
     ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -570,6 +587,7 @@ class FeatureView:
                 using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
             transformed: Setting to `False` returns the untransformed feature vectors.
+            request_parameters: Request parameters required by on-demand transformation functions to compute on-demand features present in the feature view.
 
         # Returns
             `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
@@ -596,6 +614,7 @@ class FeatureView:
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
             transformed=transformed,
+            request_parameters=request_parameters,
         )
 
     def get_feature_vectors(
@@ -608,6 +627,7 @@ class FeatureView:
         force_rest_client: bool = False,
         force_sql_client: bool = False,
         transformed: Optional[bool] = True,
+        request_parameters: Optional[List[Dict[str, Any]]] = None,
     ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -680,6 +700,7 @@ class FeatureView:
                 using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
             transformed: Setting to `False` returns the untransformed feature vectors.
+            request_parameters: Request parameters required by on-demand transformation functions to compute on-demand features present in the feature view.
 
         # Returns
             `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
@@ -708,6 +729,7 @@ class FeatureView:
             force_rest_client=force_rest_client,
             force_sql_client=force_sql_client,
             transformed=transformed,
+            request_parameters=request_parameters,
         )
 
     def get_inference_helper(
@@ -1033,7 +1055,7 @@ class FeatureView:
             start_time,
             end_time,
             self._batch_scoring_server.training_dataset_version,
-            self._batch_scoring_server._transformation_functions,
+            self._batch_scoring_server._model_dependent_transformation_functions,
             read_options,
             spine,
             kwargs.get("primary_keys") or primary_key,
@@ -3432,7 +3454,12 @@ class FeatureView:
             serving_keys=serving_keys,
             logging_enabled=json_decamelized.get("enabled_logging", False),
             transformation_functions=[
-                TransformationFunction.from_response_json(transformation_function)
+                TransformationFunction.from_response_json(
+                    {
+                        **transformation_function,
+                        "transformation_type": UDFType.MODEL_DEPENDENT,
+                    }
+                )
                 for transformation_function in transformation_functions
             ]
             if transformation_functions
@@ -3486,16 +3513,62 @@ class FeatureView:
         self._init_feature_monitoring_engine()
         return self
 
-    def transform_batch_data(self, features):
-        return self._feature_view_engine.transform_batch_data(
-            features, self._batch_scoring_server._transformation_functions
+    def compute_on_demand_features(
+        self,
+        feature_vector: Union[List[Any], List[List[Any]], pd.DataFrame, pl.DataFrame],
+        request_parameters: Optional[
+            Union[List[Dict[str, Any]], Dict[str, Any]]
+        ] = None,
+        external: Optional[bool] = None,
+    ):
+        """
+        Function computes on-demand features present in the feature view.
+
+        # Arguments
+            feature_vector: `Union[List[Any], List[List[Any]], pd.DataFrame, pl.DataFrame]`. The feature vector to be transformed.
+            request_parameters: Request parameters required by on-demand transformation functions to compute on-demand features present in the feature view.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+        # Returns
+            `Union[List[Any], List[List[Any]], pd.DataFrame, pl.DataFrame]`: The feature vector that contains all on-demand features in the feature view.
+        """
+        if self._vector_server is None:
+            self.init_serving(external=external)
+
+        return self._batch_scoring_server.compute_on_demand_features(
+            feature_vectors=feature_vector, request_parameters=request_parameters
         )
 
-    def transform_feature_vector(self, features):
-        return self.transform_feature_vectors([features])
+    def transform(
+        self,
+        feature_vector: Union[List[Any], List[List[Any]], pd.DataFrame, pl.DataFrame],
+        external: Optional[bool] = None,
+    ):
+        """
+        Transform the input feature vector by applying Model-dependent transformations attached to the feature view.
 
-    def transform_feature_vectors(self, features):
-        return self._batch_scoring_server.transform_feature_vectors(features)
+        !!! warning "List input must match the schema of the feature view"
+                    If features are provided as a List to the transform function. Make sure that the input are ordered to match the schema
+                    in the feature view.
+        # Arguments
+            feature_vector: `Union[List[Any], List[List[Any]], pd.DataFrame, pl.DataFrame]`. The feature vector to be transformed.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+        # Returns
+            `Union[List[Any], List[List[Any]], pd.DataFrame, pl.DataFrame]`: The transformed feature vector obtained by applying Model-Dependent Transformations.
+        """
+        if self._vector_server is None:
+            self.init_serving(external=external)
+
+        return self._batch_scoring_server.transform(feature_vectors=feature_vector)
 
     def enable_logging(self) -> None:
         """Enable feature logging for the current feature view.
@@ -3866,6 +3939,25 @@ class FeatureView:
         transformation_functions: List[TransformationFunction],
     ) -> None:
         self._transformation_functions = transformation_functions
+
+    @property
+    def model_dependent_tranformation_functions(self) -> Dict["str", Callable]:
+        """Get Model-Dependent transformations as a dictionary mapping transformed feature names to transformation function"""
+        return {
+            transformation_function.hopsworks_udf.output_column_names[
+                0
+            ]: transformation_function.hopsworks_udf.get_udf()
+            for transformation_function in self.transformation_functions
+        }
+
+    @property
+    def on_demand_tranformation_functions(self) -> Dict["str", Callable]:
+        """Get On-Demand transformations as a dictionary mapping on-demand feature names to transformation function"""
+        return {
+            feature.on_demand_transformation_function.hopsworks_udf.function_name: feature.on_demand_transformation_function.hopsworks_udf.get_udf()
+            for feature in self.features
+            if feature.on_demand_transformation_function
+        }
 
     @property
     def schema(self) -> List[training_dataset_feature.TrainingDatasetFeature]:

@@ -18,6 +18,7 @@ import pytest
 from hsfs import feature, feature_group, feature_group_commit, validation_report
 from hsfs.client import exceptions
 from hsfs.core import feature_group_engine
+from hsfs.hopsworks_udf import udf
 
 
 class TestFeatureGroupEngine:
@@ -1356,3 +1357,86 @@ class TestFeatureGroupEngine:
         ] == "Feature Group created successfully, explore it at \n{}".format(
             feature_group_url
         )
+
+    def test_update_feature_group_schema_on_demand_transformations(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+        mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
+        )
+        mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
+
+        @udf(int)
+        def test(feature):
+            return feature + 1
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            transformation_functions=[test("col2")],
+        )
+        f = feature.Feature(name="col1", type="str")
+        f1 = feature.Feature(name="col2", type="str")
+
+        # Act
+        result = fg_engine._update_feature_group_schema_on_demand_transformations(
+            feature_group=fg, features=[f, f1]
+        )
+
+        # Assert
+        assert len(result) == 3
+        assert result[0].name == "col1"
+        assert result[1].name == "col2"
+        assert result[2].name == "test"
+
+    def test_update_feature_group_schema_on_demand_transformations_drop(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+        mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
+        )
+        mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
+
+        @udf(int, drop="feature")
+        def test(feature):
+            return feature + 1
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            transformation_functions=[test("col2")],
+        )
+        f = feature.Feature(name="col1", type="str")
+        f1 = feature.Feature(name="col2", type="str")
+
+        # Act
+        result = fg_engine._update_feature_group_schema_on_demand_transformations(
+            feature_group=fg, features=[f, f1]
+        )
+
+        # Assert
+        assert len(result) == 2
+        assert result[0].name == "col1"
+        assert result[1].name == "test"

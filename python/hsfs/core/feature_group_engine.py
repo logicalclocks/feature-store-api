@@ -15,8 +15,9 @@
 from __future__ import annotations
 
 import warnings
+from typing import List
 
-from hsfs import engine, util
+from hsfs import engine, feature, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import delta_engine, feature_group_base_engine, hudi_engine
@@ -30,6 +31,40 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         # cache online feature store connector
         self._online_conn = None
 
+    def _update_feature_group_schema_on_demand_transformations(
+        self, feature_group: fg.FeatureGroup, features: List[feature.Feature]
+    ):
+        """
+        Function to update feature group schema based on the on demand transformation available in the feature group.
+
+        # Arguments:
+            feature_group: fg.FeatureGroup. The feature group for which the schema has to be updated.
+            features: List[feature.Feature]. List of features currently in the feature group
+        # Returns:
+            Updated list of features. That has on-demand features and removes dropped features.
+        """
+        if not feature_group.transformation_functions:
+            return features
+        else:
+            transformed_features = []
+            dropped_features = []
+            for tf in feature_group.transformation_functions:
+                transformed_features.append(
+                    feature.Feature(
+                        tf.hopsworks_udf.output_column_names[0],
+                        tf.hopsworks_udf.return_types[0],
+                        on_demand=True,
+                    )
+                )
+                if tf.hopsworks_udf.dropped_features:
+                    dropped_features.extend(tf.hopsworks_udf.dropped_features)
+            updated_schema = []
+
+            for feat in features:
+                if feat.name not in dropped_features:
+                    updated_schema.append(feat)
+            return updated_schema + transformed_features
+
     def save(
         self,
         feature_group,
@@ -39,6 +74,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
+        )
+        dataframe_features = (
+            self._update_feature_group_schema_on_demand_transformations(
+                feature_group=feature_group, features=dataframe_features
+            )
         )
         util.validate_embedding_feature_type(
             feature_group.embedding_index, dataframe_features
@@ -89,6 +129,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
+        )
+        dataframe_features = (
+            self._update_feature_group_schema_on_demand_transformations(
+                feature_group=feature_group, features=dataframe_features
+            )
         )
         util.validate_embedding_feature_type(
             feature_group.embedding_index, dataframe_features
@@ -282,6 +327,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             dataframe, feature_group.time_travel_format
+        )
+        dataframe_features = (
+            self._update_feature_group_schema_on_demand_transformations(
+                feature_group=feature_group, features=dataframe_features
+            )
         )
         util.validate_embedding_feature_type(
             feature_group.embedding_index, dataframe_features

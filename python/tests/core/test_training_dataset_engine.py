@@ -14,16 +14,13 @@
 #   limitations under the License.
 #
 
-import pytest
 from hsfs import (
     feature_group,
     training_dataset,
     training_dataset_feature,
-    transformation_function,
 )
 from hsfs.constructor import query
 from hsfs.core import training_dataset_engine
-from hsfs.hopsworks_udf import udf
 
 
 class TestTrainingDatasetEngine:
@@ -32,9 +29,6 @@ class TestTrainingDatasetEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
@@ -76,9 +70,6 @@ class TestTrainingDatasetEngine:
         mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
 
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
         mocker.patch("hsfs.engine.get_instance")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
 
@@ -107,70 +98,12 @@ class TestTrainingDatasetEngine:
         assert td._features[0].label is True
         assert td._features[1].label is True
 
-    def test_save_transformation_functions(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-
-        @udf(int)
-        def plus_one(a):
-            return a + 1
-
-        tf = transformation_function.TransformationFunction(
-            hopsworks_udf=plus_one, featurestore_id=99
-        )
-
-        td = training_dataset.TrainingDataset(
-            name="test",
-            version=1,
-            data_format="CSV",
-            featurestore_id=feature_store_id,
-            splits={},
-            label=["f", "f_wrong"],
-            transformation_functions=tf,
-        )
-
-        td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
-
-        f = training_dataset_feature.TrainingDatasetFeature(
-            name="f", type="str", label=False
-        )
-        f1 = training_dataset_feature.TrainingDatasetFeature(
-            name="f1", type="int", label=False
-        )
-
-        features = [f, f1]
-
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
-
-        # Act
-        with pytest.raises(ValueError) as e_info:
-            td_engine.save(training_dataset=td, features=None, user_write_options=None)
-
-        # Assert
-        assert mock_td_api.return_value.post.call_count == 0
-        assert len(td._features) == 2
-        assert td._features[0].label is True
-        assert td._features[1].label is False
-        assert (
-            str(e_info.value)
-            == "Transformation functions can only be applied to training datasets generated from Query object"
-        )
-
     def test_save_splits(self, mocker):
         # Arrange
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
+
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
         mock_warning = mocker.patch("warnings.warn")
@@ -209,8 +142,7 @@ class TestTrainingDatasetEngine:
         assert (
             mock_warning.call_args[0][0]
             == "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
-            "used for training) was provided. Setting this property to `train`. The statistics of this "
-            "split will be used for transformation functions."
+            "used for training) was provided. Setting this property to `train`. "
         )
 
     def test_insert(self, mocker):

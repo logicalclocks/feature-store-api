@@ -17,7 +17,7 @@
 
 import pytest
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.hopsworks_udf import udf
+from hsfs.hopsworks_udf import UDFType, udf
 from hsfs.transformation_function import TransformationFunction
 
 
@@ -27,7 +27,7 @@ class TestTransformationFunction:
         json = backend_fixtures["transformation_function"][
             "get_one_argument_no_statistics_function"
         ]["response"]
-
+        json["transformation_type"] = UDFType.MODEL_DEPENDENT
         # Act
         tf = TransformationFunction.from_response_json(json)
 
@@ -51,6 +51,7 @@ class TestTransformationFunction:
         json = backend_fixtures["transformation_function"][
             "get_one_argument_with_statistics_function"
         ]["response"]
+        json["transformation_type"] = UDFType.MODEL_DEPENDENT
 
         # Act
         tf = TransformationFunction.from_response_json(json)
@@ -77,6 +78,7 @@ class TestTransformationFunction:
         json = backend_fixtures["transformation_function"][
             "get_multiple_argument_with_statistics_function"
         ]["response"]
+        json["transformation_type"] = UDFType.MODEL_DEPENDENT
 
         # Act
         tf = TransformationFunction.from_response_json(json)
@@ -105,6 +107,7 @@ class TestTransformationFunction:
         json = backend_fixtures["transformation_function"][
             "get_multiple_return_type_functions"
         ]["response"]
+        json["transformation_type"] = UDFType.MODEL_DEPENDENT
 
         # Act
         tf = TransformationFunction.from_response_json(json)
@@ -141,6 +144,8 @@ class TestTransformationFunction:
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["transformation_function"]["get_list"]["response"]
+        for response_json in json["items"]:
+            response_json["transformation_type"] = UDFType.MODEL_DEPENDENT
 
         # Act
         tf_list = TransformationFunction.from_response_json(json)
@@ -182,6 +187,8 @@ class TestTransformationFunction:
         json = backend_fixtures["transformation_function"]["get_list_one_argument"][
             "response"
         ]
+        for response_json in json["items"]:
+            response_json["transformation_type"] = UDFType.MODEL_DEPENDENT
 
         # Act
         tf = TransformationFunction.from_response_json(json)
@@ -210,6 +217,7 @@ class TestTransformationFunction:
             TransformationFunction(
                 featurestore_id=10,
                 hopsworks_udf=test,
+                transformation_type=UDFType.MODEL_DEPENDENT,
             )
 
         assert (
@@ -225,6 +233,7 @@ class TestTransformationFunction:
         tf = TransformationFunction(
             featurestore_id=10,
             hopsworks_udf=test2,
+            transformation_type=UDFType.MODEL_DEPENDENT,
         )
 
         assert tf.hopsworks_udf == test2
