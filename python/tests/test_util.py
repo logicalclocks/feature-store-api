@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import asyncio
 from datetime import date, datetime
 
 import pytest
@@ -22,6 +23,7 @@ from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.embedding import EmbeddingFeature, EmbeddingIndex
 from hsfs.feature import Feature
+from mock import patch
 
 
 class TestUtil:
@@ -206,3 +208,14 @@ class TestUtil:
         # Call the method with an empty schema
         util.validate_embedding_feature_type(embedding_index, schema)
         # No exception should be raised
+
+    def test_create_async_engine(self, mocker):
+        # Test when get_running_loop() raises a RuntimeError
+        with patch("asyncio.get_running_loop", side_effect=RuntimeError):
+            # mock storage connector
+            online_connector = patch.object(util, "get_online_connector")
+            with pytest.raises(
+                RuntimeError,
+                match="Event loop is not running. Please invoke this co-routine from a running loop or provide an event loop.",
+            ):
+                asyncio.run(util.create_async_engine(online_connector, True, 1))
