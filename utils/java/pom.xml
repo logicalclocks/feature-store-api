@@ -63,7 +63,6 @@
             <artifactId>commons-cli</artifactId>
             <version>1.4</version>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -109,6 +108,7 @@
                 <configuration>
                     <artifactSet>
                         <includes>
+                            <include>commons-cli:commons-cli</include>
                             <include>com.logicalclocks:*</include>
                         </includes>
                     </artifactSet>
