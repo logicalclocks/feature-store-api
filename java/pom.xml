@@ -27,7 +27,7 @@
         <lombok.version>1.18.10</lombok.version>
         <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
         <deequ.version>1.1.0.6-SNAPSHOT</deequ.version>
-        <hudi.version>0.12.3.0</hudi.version>
+        <hudi.version>0.14.0.0</hudi.version>
         <awssdk.version>2.10.40</awssdk.version>
         <scala.version>2.12.10</scala.version>
         <scala-short.version>2.12</scala-short.version>
