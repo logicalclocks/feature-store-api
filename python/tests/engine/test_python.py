@@ -18,7 +18,6 @@ from datetime import date, datetime
 
 import numpy as np
 import pandas as pd
-import polars as pl
 import pyarrow as pa
 import pytest
 from confluent_kafka.admin import PartitionMetadata, TopicMetadata
@@ -35,9 +34,14 @@ from hsfs.client import exceptions
 from hsfs.constructor import query
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
 from hsfs.core import inode, job
+from hsfs.core.constants import HAS_POLARS
 from hsfs.engine import python
 from hsfs.training_dataset_feature import TrainingDatasetFeature
-from polars.testing import assert_frame_equal as polars_assert_frame_equal
+
+
+if HAS_POLARS:
+    import polars as pl
+    from polars.testing import assert_frame_equal as polars_assert_frame_equal
 
 
 class TestPython:
@@ -278,6 +282,10 @@ class TestPython:
         assert isinstance(dataframe, pd.DataFrame)
         assert len(dataframe) == 0
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_read_hopsfs_connector_empty_dataframe_polars(self, mocker):
         # Arrange
 
@@ -429,6 +437,10 @@ class TestPython:
         assert mock_pandas_read_csv.call_count == 0
         assert mock_pandas_read_parquet.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_read_polars_csv(self, mocker):
         # Arrange
         mock_pandas_read_csv = mocker.patch("polars.read_csv")
@@ -443,6 +455,10 @@ class TestPython:
         assert mock_pandas_read_csv.call_count == 1
         assert mock_pandas_read_parquet.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_read_polars_tsv(self, mocker):
         # Arrange
         mock_pandas_read_csv = mocker.patch("polars.read_csv")
@@ -457,6 +473,10 @@ class TestPython:
         assert mock_pandas_read_csv.call_count == 1
         assert mock_pandas_read_parquet.call_count == 0
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_read_polars_parquet(self, mocker):
         # Arrange
         mock_pandas_read_csv = mocker.patch("polars.read_csv")
@@ -474,6 +494,10 @@ class TestPython:
         assert mock_pandas_read_csv.call_count == 0
         assert mock_pandas_read_parquet.call_count == 1
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_read_polars_other(self, mocker):
         # Arrange
         mock_pandas_read_csv = mocker.patch("polars.read_csv")
@@ -1013,6 +1037,10 @@ class TestPython:
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 3
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_profile_polars(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_statistics = mocker.patch(
@@ -1051,6 +1079,10 @@ class TestPython:
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 3
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_profile_polars_with_null_column(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_statistics = mocker.patch(
@@ -1365,6 +1397,10 @@ class TestPython:
             "Feature names are sanitized to use underscore '_' in the feature store."
         )
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_convert_to_default_dataframe_polars(self, mocker):
         # Arrange
         mock_warnings = mocker.patch("warnings.warn")
@@ -1431,6 +1467,10 @@ class TestPython:
         assert result[0].name == "col1"
         assert result[1].name == "col2"
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_parse_schema_feature_group_polars(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
@@ -2317,6 +2357,10 @@ class TestPython:
         assert isinstance(result_df, pd.DataFrame)
         assert result_df_split is None
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_split_labels_dataframe_type_polars(self):
         # Arrange
         python_engine = python.Engine()
@@ -2412,6 +2456,10 @@ class TestPython:
         assert isinstance(result_df, pd.DataFrame)
         assert isinstance(result_df_split, pd.Series)
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_split_labels_labels_dataframe_type_polars(self):
         # Arrange
         python_engine = python.Engine()
@@ -3093,6 +3141,10 @@ class TestPython:
         # Assert
         assert str(result) == "   col1  col2\n0     1     3\n1     2     4"
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_return_dataframe_type_polars(self):
         # Arrange
         python_engine = python.Engine()
@@ -3269,6 +3321,10 @@ class TestPython:
         assert result["tf_name"][0] == 2
         assert result["tf_name"][1] == 3
 
+    @pytest.mark.skipif(
+        not HAS_POLARS,
+        reason="Polars is not installed.",
+    )
     def test_apply_transformation_function_polars(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
@@ -3763,7 +3819,7 @@ class TestPython:
             args="defaults tests_offsets",
             await_termination=False,
         )
-    
+
     def test_materialization_kafka_skip_offsets(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
@@ -3805,7 +3861,10 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_materialization": True, "skip_offsets": True},
+            offline_write_options={
+                "start_offline_materialization": True,
+                "skip_offsets": True,
+            },
         )
 
         # Assert

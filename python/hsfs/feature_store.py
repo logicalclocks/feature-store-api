@@ -18,14 +18,13 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
 
 import great_expectations as ge
 import humps
 import numpy
 import numpy as np
 import pandas as pd
-import polars as pl
 from hsfs import (
     expectation_suite,
     feature,
@@ -51,6 +50,10 @@ from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
+
+
+if TYPE_CHECKING:
+    import polars as pl
 
 
 @typechecked

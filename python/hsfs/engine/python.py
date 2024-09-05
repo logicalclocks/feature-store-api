@@ -30,7 +30,17 @@ import warnings
 from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import avro
 import boto3
@@ -38,7 +48,6 @@ import great_expectations as ge
 import hsfs
 import numpy as np
 import pandas as pd
-import polars as pl
 import pyarrow as pa
 import pytz
 from botocore.response import StreamingBody
@@ -70,6 +79,7 @@ from hsfs.core import (
     transformation_function_engine,
     variable_api,
 )
+from hsfs.core.constants import HAS_POLARS, polars_not_installed_message
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.training_dataset import TrainingDataset
@@ -83,6 +93,9 @@ from tqdm.auto import tqdm
 
 # Disable pyhive INFO logging
 logging.getLogger("pyhive").setLevel(logging.WARNING)
+
+if HAS_POLARS or TYPE_CHECKING:
+    import polars as pl
 
 HAS_FAST = False
 try:
@@ -206,7 +219,6 @@ class Engine:
         hive_config: Optional[Dict[str, Any]] = None,
         arrow_flight_config: Optional[Dict[str, Any]] = None,
     ) -> Union[pd.DataFrame, pl.DataFrame]:
-
         self._validate_dataframe_type(dataframe_type)
         if isinstance(sql_query, dict) and "query_string" in sql_query:
             result_df = util.run_with_loading_animation(
@@ -224,12 +236,15 @@ class Engine:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", UserWarning)
                     if dataframe_type.lower() == "polars":
-                        result_df = util.run_with_loading_animation(
-                            "Reading data from Hopsworks, using Hive",
-                            pl.read_database,
-                            sql_query,
-                            hive_conn,
-                        )
+                        if HAS_POLARS:
+                            result_df = util.run_with_loading_animation(
+                                "Reading data from Hopsworks, using Hive",
+                                pl.read_database,
+                                sql_query,
+                                hive_conn,
+                            )
+                        else:
+                            raise ModuleNotFoundError(polars_not_installed_message)
                     else:
                         result_df = util.run_with_loading_animation(
                             "Reading data from Hopsworks, using Hive",
@@ -264,7 +279,10 @@ class Engine:
             if "sqlalchemy" in str(type(mysql_conn)):
                 sql_query = sql.text(sql_query)
             if dataframe_type.lower() == "polars":
-                result_df = pl.read_database(sql_query, mysql_conn)
+                if HAS_POLARS:
+                    result_df = pl.read_database(sql_query, mysql_conn)
+                else:
+                    raise ModuleNotFoundError(polars_not_installed_message)
             else:
                 result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:
@@ -300,6 +318,8 @@ class Engine:
             # Below check performed since some files materialized when creating training data are empty
             # If empty dataframe is in df_list then polars cannot concatenate df_list due to schema mismatch
             # However if the entire split contains only empty files which can occur when the data size is very small then one of the empty dataframe is return so that the column names can be accessed.
+            if not HAS_POLARS:
+                raise ModuleNotFoundError(polars_not_installed_message)
             non_empty_df_list = [df for df in df_list if not df.is_empty()]
             if non_empty_df_list:
                 return self._return_dataframe_type(
@@ -329,6 +349,8 @@ class Engine:
             )
 
     def _read_polars(self, data_format: str, obj: Any) -> pl.DataFrame:
+        if not HAS_POLARS:
+            raise ModuleNotFoundError(polars_not_installed_message)
         if data_format.lower() == "csv":
             return pl.read_csv(obj)
         elif data_format.lower() == "tsv":
@@ -510,13 +532,20 @@ class Engine:
             sql_query, feature_store, online_conn, "default", read_options or {}
         ).head(n)
 
-    def read_vector_db(self, feature_group: "hsfs.feature_group.FeatureGroup", n: int =None, dataframe_type: str="default") -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
+    def read_vector_db(
+        self,
+        feature_group: "hsfs.feature_group.FeatureGroup",
+        n: int = None,
+        dataframe_type: str = "default",
+    ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[List[Any]]]:
         dataframe_type = dataframe_type.lower()
         self._validate_dataframe_type(dataframe_type)
 
         results = VectorDbClient.read_feature_group(feature_group, n)
         feature_names = [f.name for f in feature_group.features]
         if dataframe_type == "polars":
+            if not HAS_POLARS:
+                raise ModuleNotFoundError(polars_not_installed_message)
             df = pl.DataFrame(results, schema=feature_names)
         else:
             df = pd.DataFrame(results, columns=feature_names, index=None)
@@ -576,7 +605,9 @@ class Engine:
         exact_uniqueness: bool = True,
     ) -> str:
         # TODO: add statistics for correlations, histograms and exact_uniqueness
-        if isinstance(df, pl.DataFrame) or isinstance(df, pl.dataframe.frame.DataFrame):
+        if HAS_POLARS and (
+            isinstance(df, pl.DataFrame) or isinstance(df, pl.dataframe.frame.DataFrame)
+        ):
             arrow_schema = df.to_arrow().schema
         else:
             arrow_schema = pa.Schema.from_pandas(df, preserve_index=False)
@@ -589,8 +620,9 @@ class Engine:
                 or pa.types.is_large_list(field.type)
                 or pa.types.is_struct(field.type)
             ) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
-                if isinstance(df, pl.DataFrame) or isinstance(
-                    df, pl.dataframe.frame.DataFrame
+                if HAS_POLARS and (
+                    isinstance(df, pl.DataFrame)
+                    or isinstance(df, pl.dataframe.frame.DataFrame)
                 ):
                     df = df.with_columns(pl.col(field.name).cast(pl.String))
                 else:
@@ -609,8 +641,9 @@ class Engine:
             stats[col] = df[col].describe().to_dict()
         final_stats = []
         for col in relevant_columns:
-            if isinstance(df, pl.DataFrame) or isinstance(
-                df, pl.dataframe.frame.DataFrame
+            if HAS_POLARS and (
+                isinstance(df, pl.DataFrame)
+                or isinstance(df, pl.dataframe.frame.DataFrame)
             ):
                 stats[col] = dict(zip(stats["statistic"], stats[col]))
             # set data type
@@ -694,8 +727,9 @@ class Engine:
     ) -> ge.core.ExpectationSuiteValidationResult:
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
-        if isinstance(dataframe, pl.DataFrame) or isinstance(
-            dataframe, pl.dataframe.frame.DataFrame
+        if HAS_POLARS and (
+            isinstance(dataframe, pl.DataFrame)
+            or isinstance(dataframe, pl.dataframe.frame.DataFrame)
         ):
             warnings.warn(
                 "Currently Great Expectations does not support Polars dataframes. This operation will convert to Pandas dataframe that can be slow.",
@@ -716,10 +750,12 @@ class Engine:
     def convert_to_default_dataframe(
         self, dataframe: Union[pd.DataFrame, pl.DataFrame, pl.dataframe.frame.DataFrame]
     ) -> Optional[pd.DataFrame]:
-        if (
-            isinstance(dataframe, pd.DataFrame)
-            or isinstance(dataframe, pl.DataFrame)
-            or isinstance(dataframe, pl.dataframe.frame.DataFrame)
+        if isinstance(dataframe, pd.DataFrame) or (
+            HAS_POLARS
+            and (
+                isinstance(dataframe, pl.DataFrame)
+                or isinstance(dataframe, pl.dataframe.frame.DataFrame)
+            )
         ):
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
@@ -762,7 +798,7 @@ class Engine:
                     dataframe_copy[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
                     dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
-                elif isinstance(dataframe_copy[col].dtype, pl.Datetime):
+                elif HAS_POLARS and isinstance(dataframe_copy[col].dtype, pl.Datetime):
                     dataframe_copy = dataframe_copy.with_columns(
                         pl.col(col).dt.replace_time_zone(None)
                     )
@@ -782,8 +818,10 @@ class Engine:
     ) -> List[feature.Feature]:
         if isinstance(dataframe, pd.DataFrame):
             arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
-        elif isinstance(dataframe, pl.DataFrame) or isinstance(
-            dataframe, pl.dataframe.frame.DataFrame
+        elif (
+            HAS_POLARS
+            and isinstance(dataframe, pl.DataFrame)
+            or isinstance(dataframe, pl.dataframe.frame.DataFrame)
         ):
             arrow_schema = dataframe.to_arrow().schema
         features = []
@@ -1005,13 +1043,16 @@ class Engine:
             groups += [i] * int(df_size * split.percentage)
         groups += [len(splits) - 1] * (df_size - len(groups))
         random.shuffle(groups)
-        if isinstance(df, pl.DataFrame) or isinstance(df, pl.dataframe.frame.DataFrame):
+        if HAS_POLARS and (
+            isinstance(df, pl.DataFrame) or isinstance(df, pl.dataframe.frame.DataFrame)
+        ):
             df = df.with_columns(pl.Series(name=split_column, values=groups))
         else:
             df[split_column] = groups
         for i, split in enumerate(splits):
-            if isinstance(df, pl.DataFrame) or isinstance(
-                df, pl.dataframe.frame.DataFrame
+            if HAS_POLARS and (
+                isinstance(df, pl.DataFrame)
+                or isinstance(df, pl.dataframe.frame.DataFrame)
             ):
                 split_df = df.filter(pl.col(split_column) == i).drop(split_column)
             else:
@@ -1237,8 +1278,9 @@ class Engine:
             feature_name,
             transformation_fn,
         ) in transformation_functions.items():
-            if isinstance(dataset, pl.DataFrame) or isinstance(
-                dataset, pl.dataframe.frame.DataFrame
+            if HAS_POLARS and (
+                isinstance(dataset, pl.DataFrame)
+                or isinstance(dataset, pl.dataframe.frame.DataFrame)
             ):
                 dataset = dataset.with_columns(
                     pl.col(feature_name).map_elements(
@@ -1251,8 +1293,11 @@ class Engine:
                 )
             # The below functions is not required for Polars since polars does have object types like pandas
             if not (
-                isinstance(dataset, pl.DataFrame)
-                or isinstance(dataset, pl.dataframe.frame.DataFrame)
+                HAS_POLARS
+                and (
+                    isinstance(dataset, pl.DataFrame)
+                    or isinstance(dataset, pl.dataframe.frame.DataFrame)
+                )
             ):
                 offline_type = Engine.convert_spark_type_to_offline_type(
                     transformation_fn.output_type
@@ -1439,8 +1484,11 @@ class Engine:
         elif not isinstance(
             feature_group, ExternalFeatureGroup
         ) and self._start_offline_materialization(offline_write_options):
-            if (not offline_write_options.get("skip_offsets", False)
-                and self._job_api.last_execution(feature_group.materialization_job)): # always skip offsets if executing job for the first time
+            if not offline_write_options.get(
+                "skip_offsets", False
+            ) and self._job_api.last_execution(
+                feature_group.materialization_job
+            ):  # always skip offsets if executing job for the first time
                 # don't provide the current offsets (read from where the job last left off)
                 initial_check_point = ""
             # provide the initial_check_point as it will reduce the read amplification of materialization job
@@ -1638,12 +1686,12 @@ class Engine:
         offline_type = offline_type.lower()
         if offline_type == "timestamp":
             # convert (if tz!=UTC) to utc, then make timezone unaware
-            if isinstance(feature_column, pl.Series):
+            if HAS_POLARS and isinstance(feature_column, pl.Series):
                 return feature_column.cast(pl.Datetime(time_zone=None))
             else:
                 return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
         elif offline_type == "date":
-            if isinstance(feature_column, pl.Series):
+            if HAS_POLARS and isinstance(feature_column, pl.Series):
                 return feature_column.cast(pl.Date)
             else:
                 return pd.to_datetime(feature_column, utc=True).dt.date
@@ -1652,7 +1700,7 @@ class Engine:
             or offline_type.startswith("struct<")
             or offline_type == "boolean"
         ):
-            if isinstance(feature_column, pl.Series):
+            if HAS_POLARS and isinstance(feature_column, pl.Series):
                 return feature_column.map_elements(
                     lambda x: (ast.literal_eval(x) if isinstance(x, str) else x)
                     if (x is not None and x != "")
@@ -1665,14 +1713,14 @@ class Engine:
                     else None
                 )
         elif offline_type == "string":
-            if isinstance(feature_column, pl.Series):
+            if HAS_POLARS and isinstance(feature_column, pl.Series):
                 return feature_column.map_elements(
                     lambda x: str(x) if x is not None else None
                 )
             else:
                 return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif offline_type.startswith("decimal"):
-            if isinstance(feature_column, pl.Series):
+            if HAS_POLARS and isinstance(feature_column, pl.Series):
                 return feature_column.map_elements(
                     lambda x: decimal.Decimal(x) if (x is not None) else None
                 )
@@ -1681,7 +1729,7 @@ class Engine:
                     lambda x: decimal.Decimal(x) if (x is not None) else None
                 )
         else:
-            if isinstance(feature_column, pl.Series):
+            if HAS_POLARS and isinstance(feature_column, pl.Series):
                 offline_dtype_mapping = {
                     "bigint": pl.Int64,
                     "int": pl.Int32,
@@ -1700,7 +1748,7 @@ class Engine:
                     "double": np.dtype("float64"),
                 }
             if offline_type in offline_dtype_mapping:
-                if isinstance(feature_column, pl.Series):
+                if HAS_POLARS and isinstance(feature_column, pl.Series):
                     casted_feature = feature_column.cast(
                         offline_dtype_mapping[offline_type]
                     )

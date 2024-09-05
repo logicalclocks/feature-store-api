@@ -46,7 +46,6 @@ dependencies = [
     "fsspec",
     "retrying",
     "hopsworks_aiomysql[sa]==0.2.1",
-    "polars>=0.20.18,<=0.21.0",
     "opensearch-py>=1.1.0,<=2.4.2",
 ]
 
@@ -81,6 +80,7 @@ python = [
     "fastavro>=1.4.11,<=1.8.4",
     "tqdm",
 ]
+polars=["polars>=0.20.18,<=0.21.0"]
 
 [build-system]
 requires = ["setuptools", "wheel"]

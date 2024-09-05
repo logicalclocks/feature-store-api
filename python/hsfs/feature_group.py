@@ -21,7 +21,7 @@ import logging
 import time
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 import avro.schema
 import confluent_kafka
@@ -29,7 +29,6 @@ import great_expectations as ge
 import humps
 import numpy as np
 import pandas as pd
-import polars as pl
 from hsfs import (
     engine,
     feature,
@@ -77,6 +76,9 @@ from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
+
+if TYPE_CHECKING:
+    import polars as pl
 
 _logger = logging.getLogger(__name__)
 
@@ -543,8 +545,13 @@ class FeatureGroupBase:
         """
         storage_connector_provenance = self.get_storage_connector_provenance()
 
-        if storage_connector_provenance.inaccessible or storage_connector_provenance.deleted:
-            _logger.info("The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`")
+        if (
+            storage_connector_provenance.inaccessible
+            or storage_connector_provenance.deleted
+        ):
+            _logger.info(
+                "The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`"
+            )
 
         if storage_connector_provenance.accessible:
             return storage_connector_provenance.accessible[0]
