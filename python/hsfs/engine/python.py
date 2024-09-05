@@ -235,15 +235,15 @@ class Engine:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", UserWarning)
                     if dataframe_type.lower() == "polars":
-                        if HAS_POLARS:
-                            result_df = util.run_with_loading_animation(
-                                "Reading data from Hopsworks, using Hive",
-                                pl.read_database,
-                                sql_query,
-                                hive_conn,
-                            )
-                        else:
+                        if not HAS_POLARS:
                             raise ModuleNotFoundError(polars_not_installed_message)
+
+                        result_df = util.run_with_loading_animation(
+                            "Reading data from Hopsworks, using Hive",
+                            pl.read_database,
+                            sql_query,
+                            hive_conn,
+                        )
                     else:
                         result_df = util.run_with_loading_animation(
                             "Reading data from Hopsworks, using Hive",
@@ -278,10 +278,10 @@ class Engine:
             if "sqlalchemy" in str(type(mysql_conn)):
                 sql_query = sql.text(sql_query)
             if dataframe_type.lower() == "polars":
-                if HAS_POLARS:
-                    result_df = pl.read_database(sql_query, mysql_conn)
-                else:
+                if not HAS_POLARS:
                     raise ModuleNotFoundError(polars_not_installed_message)
+
+                result_df = pl.read_database(sql_query, mysql_conn)
             else:
                 result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:

@@ -403,10 +403,9 @@ class ArrowFlightClient:
         reader = self._connection.do_get(info.endpoints[0].ticket, options)
         _logger.debug("Dataset fetched. Converting to dataframe %s.", dataframe_type)
         if dataframe_type.lower() == "polars":
-            if HAS_POLARS:
-                return pl.from_arrow(reader.read_all())
-            else:
+            if not HAS_POLARS:
                 raise ModuleNotFoundError(polars_not_installed_message)
+            return pl.from_arrow(reader.read_all())
         else:
             return reader.read_pandas()
 

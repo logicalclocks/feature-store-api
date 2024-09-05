@@ -500,16 +500,14 @@ class VectorServer:
                 return pandas_df
         elif return_type.lower() == "polars":
             _logger.debug("Returning feature vector as polars dataframe")
-            if HAS_POLARS:
-                return pl.DataFrame(
-                    feature_vectorz if batch else [feature_vectorz],
-                    schema=self._feature_vector_col_name
-                    if not inference_helper
-                    else None,
-                    orient="row",
-                )
-            else:
+            if not HAS_POLARS:
                 raise ModuleNotFoundError(polars_not_installed_message)
+
+            return pl.DataFrame(
+                feature_vectorz if batch else [feature_vectorz],
+                schema=self._feature_vector_col_name if not inference_helper else None,
+                orient="row",
+            )
         else:
             raise ValueError(
                 f"""Unknown return type. Supported return types are {"'list', 'numpy'" if not inference_helper else "'dict'"}, 'polars' and 'pandas''"""
