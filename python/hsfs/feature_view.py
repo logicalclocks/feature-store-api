@@ -21,7 +21,6 @@ import logging
 import warnings
 from datetime import date, datetime
 from typing import (
-    TYPE_CHECKING,
     Any,
     Dict,
     List,
@@ -62,6 +61,7 @@ from hsfs.core import (
 )
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
+from hsfs.core.constants import HAS_POLARS
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
@@ -71,7 +71,7 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
-if TYPE_CHECKING:
+if HAS_POLARS:
     import polars as pl
 
     TrainingDatasetDataFrameTypes = Union[

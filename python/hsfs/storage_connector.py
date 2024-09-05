@@ -21,16 +21,17 @@ import os
 import re
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import humps
 import numpy as np
 import pandas as pd
 from hsfs import client, engine
 from hsfs.core import storage_connector_api
+from hsfs.core.constants import HAS_POLARS
 
 
-if TYPE_CHECKING:
+if HAS_POLARS:
     import polars as pl
 
 _logger = logging.getLogger(__name__)

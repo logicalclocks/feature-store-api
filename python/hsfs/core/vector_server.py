@@ -21,7 +21,6 @@ from base64 import b64decode
 from datetime import datetime, timezone
 from io import BytesIO
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -70,7 +69,7 @@ try:
 except ImportError:
     from avro.io import BinaryDecoder
 
-if HAS_POLARS or TYPE_CHECKING:
+if HAS_POLARS or HAS_POLARS:
     import polars as pl
 
 _logger = logging.getLogger(__name__)

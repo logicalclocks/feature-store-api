@@ -31,7 +31,6 @@ from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -94,7 +93,7 @@ from tqdm.auto import tqdm
 # Disable pyhive INFO logging
 logging.getLogger("pyhive").setLevel(logging.WARNING)
 
-if HAS_POLARS or TYPE_CHECKING:
+if HAS_POLARS:
     import polars as pl
 
 HAS_FAST = False

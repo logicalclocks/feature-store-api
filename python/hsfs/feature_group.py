@@ -21,7 +21,7 @@ import logging
 import time
 import warnings
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 import avro.schema
 import confluent_kafka
@@ -65,6 +65,7 @@ from hsfs.core import (
 )
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
+from hsfs.core.constants import HAS_POLARS
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core.vector_db_client import VectorDbClient
@@ -77,7 +78,7 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
 
-if TYPE_CHECKING:
+if HAS_POLARS:
     import polars as pl
 
 _logger = logging.getLogger(__name__)
