@@ -69,7 +69,7 @@ try:
 except ImportError:
     from avro.io import BinaryDecoder
 
-if HAS_POLARS or HAS_POLARS:
+if HAS_POLARS:
     import polars as pl
 
 _logger = logging.getLogger(__name__)
