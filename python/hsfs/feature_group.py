@@ -29,7 +29,6 @@ import great_expectations as ge
 import humps
 import numpy as np
 import pandas as pd
-import polars as pl
 from hsfs import (
     engine,
     feature,
@@ -66,6 +65,7 @@ from hsfs.core import (
 )
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
+from hsfs.core.constants import HAS_POLARS
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core.vector_db_client import VectorDbClient
@@ -77,6 +77,9 @@ from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
+
+if HAS_POLARS:
+    import polars as pl
 
 _logger = logging.getLogger(__name__)
 
@@ -543,8 +546,13 @@ class FeatureGroupBase:
         """
         storage_connector_provenance = self.get_storage_connector_provenance()
 
-        if storage_connector_provenance.inaccessible or storage_connector_provenance.deleted:
-            _logger.info("The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`")
+        if (
+            storage_connector_provenance.inaccessible
+            or storage_connector_provenance.deleted
+        ):
+            _logger.info(
+                "The parent storage connector is deleted or inaccessible. For more details access `get_storage_connector_provenance`"
+            )
 
         if storage_connector_provenance.accessible:
             return storage_connector_provenance.accessible[0]

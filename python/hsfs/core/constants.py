@@ -1,5 +1,5 @@
 #
-#   Copyright 2020 Logical Clocks AB
+#   Copyright 2024 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -14,4 +14,15 @@
 #   limitations under the License.
 #
 
-__version__ = "3.8.0rc1"
+import importlib.util
+
+
+polars_not_installed_message = (
+    "Polars package not found. "
+    "If you want to use Polars with Hopsworks you can install the corresponding extras "
+    """`pip install hopsworks[polars]` or `pip install "hopsworks[polars]"` if using zsh. """
+    "You can also install polars directly in your environment e.g `pip install polars`. "
+    "You will need to restart your kernel if applicable."
+)
+
+HAS_POLARS: bool = importlib.util.find_spec("polars") is not None

@@ -23,17 +23,21 @@ import warnings
 from functools import wraps
 from typing import Any, Dict, Optional, Union
 
-import polars as pl
 import pyarrow
 import pyarrow._flight
 import pyarrow.flight
 from hsfs import client, feature_group, util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query
+from hsfs.core.constants import HAS_POLARS, polars_not_installed_message
 from hsfs.core.variable_api import VariableApi
 from hsfs.storage_connector import StorageConnector
 from pyarrow.flight import FlightServerError
 from retrying import retry
+
+
+if HAS_POLARS:
+    import polars as pl
 
 
 _logger = logging.getLogger(__name__)
@@ -399,6 +403,8 @@ class ArrowFlightClient:
         reader = self._connection.do_get(info.endpoints[0].ticket, options)
         _logger.debug("Dataset fetched. Converting to dataframe %s.", dataframe_type)
         if dataframe_type.lower() == "polars":
+            if not HAS_POLARS:
+                raise ModuleNotFoundError(polars_not_installed_message)
             return pl.from_arrow(reader.read_all())
         else:
             return reader.read_pandas()

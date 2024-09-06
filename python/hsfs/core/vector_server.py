@@ -20,13 +20,22 @@ import logging
 from base64 import b64decode
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import avro.io
 import avro.schema
 import numpy as np
 import pandas as pd
-import polars as pl
 from hsfs import (
     client,
     feature_view,
@@ -49,6 +58,7 @@ from hsfs.core import (
 from hsfs.core import (
     transformation_function_engine as tf_engine_mod,
 )
+from hsfs.core.constants import HAS_POLARS, polars_not_installed_message
 
 
 HAS_FASTAVRO = False
@@ -58,6 +68,9 @@ try:
     HAS_FASTAVRO = True
 except ImportError:
     from avro.io import BinaryDecoder
+
+if HAS_POLARS:
+    import polars as pl
 
 _logger = logging.getLogger(__name__)
 
@@ -487,6 +500,9 @@ class VectorServer:
                 return pandas_df
         elif return_type.lower() == "polars":
             _logger.debug("Returning feature vector as polars dataframe")
+            if not HAS_POLARS:
+                raise ModuleNotFoundError(polars_not_installed_message)
+
             return pl.DataFrame(
                 feature_vectorz if batch else [feature_vectorz],
                 schema=self._feature_vector_col_name if not inference_helper else None,

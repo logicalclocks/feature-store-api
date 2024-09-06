@@ -20,12 +20,21 @@ import json
 import logging
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import humps
 import numpy as np
 import pandas as pd
-import polars as pl
 from hsfs import (
     feature_group,
     storage_connector,
@@ -52,6 +61,7 @@ from hsfs.core import (
 )
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
+from hsfs.core.constants import HAS_POLARS
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
@@ -61,25 +71,29 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
+if HAS_POLARS:
+    import polars as pl
+
+    TrainingDatasetDataFrameTypes = Union[
+        pd.DataFrame,
+        TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        TypeVar("pyspark.RDD"),  # noqa: F821
+        np.ndarray,
+        List[List[Any]],
+        pl.DataFrame,
+    ]
+
+    SplineDataFrameTypes = Union[
+        pd.DataFrame,
+        TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        TypeVar("pyspark.RDD"),  # noqa: F821
+        np.ndarray,
+        List[List[Any]],
+        TypeVar("SplineGroup"),  # noqa: F821
+    ]
+
+
 _logger = logging.getLogger(__name__)
-
-TrainingDatasetDataFrameTypes = Union[
-    pd.DataFrame,
-    TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-    TypeVar("pyspark.RDD"),  # noqa: F821
-    np.ndarray,
-    List[List[Any]],
-    pl.DataFrame,
-]
-
-SplineDataFrameTypes = Union[
-    pd.DataFrame,
-    TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-    TypeVar("pyspark.RDD"),  # noqa: F821
-    np.ndarray,
-    List[List[Any]],
-    TypeVar("SplineGroup"),  # noqa: F821
-]
 
 
 @typechecked

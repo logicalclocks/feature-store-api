@@ -26,10 +26,13 @@ from typing import Any, Dict, List, Optional, TypeVar, Union
 import humps
 import numpy as np
 import pandas as pd
-import polars as pl
 from hsfs import client, engine
 from hsfs.core import storage_connector_api
+from hsfs.core.constants import HAS_POLARS
 
+
+if HAS_POLARS:
+    import polars as pl
 
 _logger = logging.getLogger(__name__)
 
@@ -211,7 +214,9 @@ class StorageConnector(ABC):
         feature_groups_provenance = self.get_feature_groups_provenance()
 
         if feature_groups_provenance.inaccessible or feature_groups_provenance.deleted:
-            _logger.info("There are deleted or inaccessible feature groups. For more details access `get_feature_groups_provenance`")
+            _logger.info(
+                "There are deleted or inaccessible feature groups. For more details access `get_feature_groups_provenance`"
+            )
 
         if feature_groups_provenance.accessible:
             return feature_groups_provenance.accessible
