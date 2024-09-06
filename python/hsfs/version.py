@@ -14,4 +14,4 @@
 #   limitations under the License.
 #
 
-__version__ = "3.8.0rc0"
+__version__ = "3.8.0rc1"
