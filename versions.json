@@ -7,10 +7,16 @@
     ]
   },
   {
+    "version": "3.8.0-RC1",
+    "title": "3.8.0-RC1",
+    "aliases": [
+      "3.8"
+    ]
+  },
+  {
     "version": "3.8.0-RC0",
     "title": "3.8.0-RC0",
     "aliases": [
-      "3.8",
       "latest"
     ]
   },
