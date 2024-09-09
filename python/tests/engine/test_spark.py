@@ -4105,7 +4105,7 @@ class TestSpark:
         assert mock_spark_engine_setup_adls_hadoop_conf.call_count == 0
         assert mock_spark_engine_setup_gcp_hadoop_conf.call_count == 0
 
-    def test_setup_s3_hadoop_conf(self, mocker):
+    def test_setup_s3_hadoop_conf_legacy(self, mocker):
         # Arrange
         mock_pyspark_getOrCreate = mocker.patch(
             "pyspark.sql.session.SparkSession.builder.getOrCreate"
@@ -4117,6 +4117,7 @@ class TestSpark:
             id=1,
             name="test_connector",
             featurestore_id=99,
+            bucket="bucket-name",
             access_key="1",
             secret_key="2",
             server_encryption_algorithm="3",
@@ -4135,7 +4136,7 @@ class TestSpark:
         assert result == "s3a_test_path"
         assert (
             mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.call_count
-            == 7
+            == 14
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.s3a.access.key", s3_connector.access_key
@@ -4159,6 +4160,65 @@ class TestSpark:
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.s3a.endpoint", s3_connector.arguments.get("fs.s3a.endpoint")
+        )
+
+    def test_setup_s3_hadoop_conf_bucket_scope(self, mocker):
+        # Arrange
+        mock_pyspark_getOrCreate = mocker.patch(
+            "pyspark.sql.session.SparkSession.builder.getOrCreate"
+        )
+
+        spark_engine = spark.Engine()
+
+        s3_connector = storage_connector.S3Connector(
+            id=1,
+            name="test_connector",
+            featurestore_id=99,
+            bucket="bucket-name",
+            access_key="1",
+            secret_key="2",
+            server_encryption_algorithm="3",
+            server_encryption_key="4",
+            session_token="5",
+            arguments=[{"name": "fs.s3a.endpoint", "value": "testEndpoint"}],
+        )
+
+        # Act
+        result = spark_engine._setup_s3_hadoop_conf(
+            storage_connector=s3_connector,
+            path="s3_test_path",
+        )
+
+        # Assert
+        assert result == "s3a_test_path"
+        assert (
+            mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.call_count
+            == 14
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.access.key", s3_connector.access_key
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.secret.key", s3_connector.secret_key
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.server-side-encryption-algorithm",
+            s3_connector.server_encryption_algorithm,
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.server-side-encryption-key",
+            s3_connector.server_encryption_key,
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.aws.credentials.provider",
+            "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.session.token", s3_connector.session_token
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.endpoint",
+            s3_connector.arguments.get("fs.s3a.endpoint"),
         )
 
     def test_setup_adls_hadoop_conf(self, mocker):

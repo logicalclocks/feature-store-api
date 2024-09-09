@@ -1047,40 +1047,53 @@ class Engine:
             return path
 
     def _setup_s3_hadoop_conf(self, storage_connector, path):
-        FS_S3_ENDPOINT = "fs.s3a.endpoint"
+        # For legacy behaviour set the S3 values at global level
+        self._set_s3_hadoop_conf(storage_connector, "fs.s3a")
+
+        # Set credentials at bucket level as well to allow users to use multiple
+        # storage connector in the same application.
+        self._set_s3_hadoop_conf(
+            storage_connector, f"fs.s3a.bucket.{storage_connector.bucket}"
+        )
+        return path.replace("s3", "s3a", 1) if path is not None else None
+
+    def _set_s3_hadoop_conf(self, storage_connector, prefix):
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.access.key", storage_connector.access_key
+                f"{prefix}.access.key", storage_connector.access_key
             )
         if storage_connector.secret_key:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.secret.key", storage_connector.secret_key
+                f"{prefix}.secret.key", storage_connector.secret_key
             )
         if storage_connector.server_encryption_algorithm:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.server-side-encryption-algorithm",
+                f"{prefix}.server-side-encryption-algorithm",
                 storage_connector.server_encryption_algorithm,
             )
         if storage_connector.server_encryption_key:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.server-side-encryption-key",
+                f"{prefix}.server-side-encryption-key",
                 storage_connector.server_encryption_key,
             )
         if storage_connector.session_token:
+            print(f"session token set for {prefix}")
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.aws.credentials.provider",
+                f"{prefix}.aws.credentials.provider",
                 "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
             )
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.session.token",
+                f"{prefix}.session.token",
                 storage_connector.session_token,
             )
+
+        # This is the name of the property as expected from the user, without the bucket name.
+        FS_S3_ENDPOINT = "fs.s3a.endpoint"
         if FS_S3_ENDPOINT in storage_connector.arguments:
             self._spark_context._jsc.hadoopConfiguration().set(
-                FS_S3_ENDPOINT, storage_connector.spark_options().get(FS_S3_ENDPOINT)
+                f"{prefix}.endpoint",
+                storage_connector.spark_options().get(FS_S3_ENDPOINT),
             )
-
-        return path.replace("s3", "s3a", 1) if path is not None else None
 
     def _setup_adls_hadoop_conf(self, storage_connector, path):
         for k, v in storage_connector.spark_options().items():
