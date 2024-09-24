@@ -1574,9 +1574,8 @@ class BigQueryConnector(StorageConnector):
         """Return options to be passed to an external BigQuery connector library"""
         props = {
             "key_path": self._key_path,
-            "project_id": self._query_project,
+            "project_id": self._parent_project,
             "dataset_id": self._dataset,
-            "parent_project": self._parent_project,
         }
         return props
 

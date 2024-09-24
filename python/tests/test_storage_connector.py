@@ -800,7 +800,7 @@ class TestGcsConnector:
 class TestBigQueryConnector:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["storage_connector"]["get_big_query"]["response"]
+        json = backend_fixtures["storage_connector"]["get_big_query_table"]["response"]
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -815,7 +815,6 @@ class TestBigQueryConnector:
         assert sc.dataset == "test_dataset"
         assert sc.query_table == "test_query_table"
         assert sc.query_project == "test_query_project"
-        assert sc.materialization_dataset == "test_materialization_dataset"
         assert sc.arguments == {"test_name": "test_value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
@@ -850,7 +849,7 @@ class TestBigQueryConnector:
         credentialsFile = tmp_path / "bigquery.json"
         credentialsFile.write_text(credentials)
 
-        json = backend_fixtures["storage_connector"]["get_big_query"]["response"]
+        json = backend_fixtures["storage_connector"]["get_big_query_table"]["response"]
         if isinstance(tmp_path, WindowsPath):
             json["key_path"] = "file:///" + str(credentialsFile.resolve()).replace(
                 "\\", "/"
@@ -891,9 +890,7 @@ class TestBigQueryConnector:
         credentials = '{"type": "service_account", "project_id": "test"}'
         credentialsFile = tmp_path / "bigquery.json"
         credentialsFile.write_text(credentials)
-        json = backend_fixtures["storage_connector"]["get_big_query"]["response"]
-        # remove property for query
-        json.pop("materialization_dataset")
+        json = backend_fixtures["storage_connector"]["get_big_query_table"]["response"]
         if isinstance(tmp_path, WindowsPath):
             json["key_path"] = "file:///" + str(credentialsFile.resolve()).replace(
                 "\\", "/"
@@ -905,3 +902,15 @@ class TestBigQueryConnector:
         # Assert
         with pytest.raises(ValueError):
             sc.read(query="select * from")
+
+    def test_connector_options(self, backend_fixtures):
+        # Arrange
+        engine.set_instance("python", python.Engine())
+        json = backend_fixtures["storage_connector"]["get_big_query_query"]["response"]
+        sc = storage_connector.StorageConnector.from_response_json(json)
+
+        # Act
+        options = sc.connector_options()
+
+        # Assert
+        assert options["project_id"] == "test_parent_project"
