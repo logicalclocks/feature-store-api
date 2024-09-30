@@ -172,6 +172,8 @@ class DeltaEngine:
     @staticmethod
     def _get_last_commit_metadata(spark_context, base_path):
         fg_source_table = DeltaTable.forPath(spark_context, base_path)
+
+        # Get info about the latest commit
         last_commit = fg_source_table.history(1).first().asDict()
         version = last_commit["version"]
         commit_timestamp = util.convert_event_time_to_timestamp(
@@ -179,6 +181,12 @@ class DeltaEngine:
         )
         commit_date_string = util.get_hudi_datestr_from_timestamp(commit_timestamp)
         operation_metrics = last_commit["operationMetrics"]
+
+        # Get info about the oldest remaining commit
+        oldest_commit = fg_source_table.history().orderBy("version").first().asDict()
+        oldest_commit_timestamp = util.convert_event_time_to_timestamp(
+            oldest_commit["timestamp"]
+        )
 
         if version == 0:
             fg_commit = feature_group_commit.FeatureGroupCommit(
@@ -188,7 +196,7 @@ class DeltaEngine:
                 rows_inserted=operation_metrics["numOutputRows"],
                 rows_updated=0,
                 rows_deleted=0,
-                last_active_commit_time=commit_timestamp,
+                last_active_commit_time=oldest_commit_timestamp,
             )
         else:
             fg_commit = feature_group_commit.FeatureGroupCommit(
@@ -198,7 +206,7 @@ class DeltaEngine:
                 rows_inserted=operation_metrics["numTargetRowsInserted"],
                 rows_updated=operation_metrics["numTargetRowsUpdated"],
                 rows_deleted=operation_metrics["numTargetRowsDeleted"],
-                last_active_commit_time=commit_timestamp,
+                last_active_commit_time=oldest_commit_timestamp,
             )
 
         return fg_commit
