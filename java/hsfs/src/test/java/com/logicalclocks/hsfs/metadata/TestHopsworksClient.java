@@ -46,4 +46,12 @@ public class TestHopsworksClient {
     Assertions.assertEquals("{\"email\":\"test@test.com\",\"firstName\":\"test\",\"lastName\":\"de la Rúa Martínez\"}",
         json);
   }
+
+  // FSTORE-1562: readCertKey throws NullPointerException if
+  @Test
+  public void testReadCertKey_failure() {
+    String key = HopsworksHttpClient.readCertKey("/this/path/does/not/exists");
+    Assertions.assertNull(key);
+  }
+
 }

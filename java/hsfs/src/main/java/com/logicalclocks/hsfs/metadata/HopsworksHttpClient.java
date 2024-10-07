@@ -22,12 +22,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.ResponseHandler;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 public interface HopsworksHttpClient {
-  static final Logger LOGGER = null;
+  Logger LOGGER = LoggerFactory.getLogger(HopsworksHttpClient.class);
 
   <T> T handleRequest(HttpRequest request, ResponseHandler<T> responseHandler)
       throws IOException, FeatureStoreException;
@@ -46,7 +48,7 @@ public interface HopsworksHttpClient {
 
   static String readCertKey(String materialPwd) {
     try {
-      return FileUtils.readFileToString(new File(materialPwd));
+      return FileUtils.readFileToString(new File(materialPwd), Charset.defaultCharset());
     } catch (IOException ex) {
       LOGGER.warn("Failed to get cert password.", ex);
     }
