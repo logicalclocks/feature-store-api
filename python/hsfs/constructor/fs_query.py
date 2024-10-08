@@ -35,6 +35,7 @@ class FsQuery:
         expand: Optional[List[str]] = None,
         items: Optional[List[Dict[str, Any]]] = None,
         type: Optional[str] = None,
+        delta_cached_feature_groups: Optional[List[Dict[str, Any]]] = None,
         **kwargs,
     ) -> None:
         self._query = query
@@ -59,6 +60,14 @@ class FsQuery:
             ]
         else:
             self._hudi_cached_feature_groups = []
+
+        if delta_cached_feature_groups is not None:
+            self._delta_cached_feature_groups = [
+                hudi_feature_group_alias.HudiFeatureGroupAlias.from_response_json(fg)
+                for fg in delta_cached_feature_groups
+            ]
+        else:
+            self._delta_cached_feature_groups = []
 
     @classmethod
     def from_response_json(cls, json_dict: Dict[str, Any]) -> "FsQuery":
@@ -127,7 +136,7 @@ class FsQuery:
         feature_store_name: str,
         read_options: Optional[Dict[str, Any]],
     ) -> None:
-        for hudi_fg in self._hudi_cached_feature_groups:
+        for hudi_fg in self._delta_cached_feature_groups:
             engine.get_instance().register_delta_temporary_table(
                 hudi_fg, feature_store_id, feature_store_name, read_options
             )

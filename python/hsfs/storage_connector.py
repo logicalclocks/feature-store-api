@@ -133,6 +133,10 @@ class StorageConnector(ABC):
     def spark_options(self) -> None:
         pass
 
+    def prepare_spark(self, path: Optional[str] = None) -> Optional[str]:
+        _logger.info("This Storage Connector cannot be prepared for Spark.")
+        return path
+
     def read(
         self,
         query: Optional[str] = None,
@@ -269,6 +273,7 @@ class S3Connector(StorageConnector):
         server_encryption_algorithm: Optional[str] = None,
         server_encryption_key: Optional[str] = None,
         bucket: Optional[str] = None,
+        region: Optional[str] = None,
         session_token: Optional[str] = None,
         iam_role: Optional[str] = None,
         arguments: Optional[Dict[str, Any]] = None,
@@ -282,6 +287,7 @@ class S3Connector(StorageConnector):
         self._server_encryption_algorithm = server_encryption_algorithm
         self._server_encryption_key = server_encryption_key
         self._bucket = bucket
+        self._region = region
         self._session_token = session_token
         self._iam_role = iam_role
         self._arguments = (
@@ -312,6 +318,11 @@ class S3Connector(StorageConnector):
     def bucket(self) -> Optional[str]:
         """Return the bucket for S3 connectors."""
         return self._bucket
+
+    @property
+    def region(self) -> Optional[str]:
+        """Return the region for S3 connectors."""
+        return self._region
 
     @property
     def session_token(self) -> Optional[str]:
@@ -355,6 +366,15 @@ class S3Connector(StorageConnector):
         """
         return engine.get_instance().setup_storage_connector(self, path)
 
+    def connector_options(self) -> Dict[str, Any]:
+        """Return options to be passed to an external S3 connector library"""
+        return {
+            "access_key": self.access_key,
+            "secret_key": self.secret_key,
+            "session_token": self.session_token,
+            "region": self.region,
+        }
+
     def read(
         self,
         query: Optional[str] = None,
@@ -392,7 +412,7 @@ class S3Connector(StorageConnector):
             if options is not None
             else self.spark_options()
         )
-        if not path.startswith("s3://"):
+        if not path.startswith(("s3://", "s3a://")):
             path = self._get_path(path)
             print(
                 "Prepending default bucket specified on connector, final path: {}".format(

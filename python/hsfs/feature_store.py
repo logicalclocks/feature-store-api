@@ -514,6 +514,10 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
+        storage_connector: Union[
+            storage_connector.StorageConnector, Dict[str, Any]
+        ] = None,
+        path: Optional[str] = None,
     ) -> "feature_group.FeatureGroup":
         """Create a feature group metadata object.
 
@@ -596,6 +600,10 @@ class FeatureStore:
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
+            storage_connector: the storage connector used to establish connectivity
+                with the data source.
+            path: The location within the scope of the storage connector, from where to read
+                the data for the external feature group
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -620,6 +628,8 @@ class FeatureStore:
             parents=parents or [],
             topic_name=topic_name,
             notification_topic_name=notification_topic_name,
+            storage_connector=storage_connector,
+            path=path,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -646,6 +656,10 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
+        storage_connector: Union[
+            storage_connector.StorageConnector, Dict[str, Any]
+        ] = None,
+        path: Optional[str] = None,
     ) -> Union[
         "feature_group.FeatureGroup",
         "feature_group.ExternalFeatureGroup",
@@ -730,6 +744,10 @@ class FeatureStore:
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
+            storage_connector: the storage connector used to establish connectivity
+                with the data source.
+            path: The location within the scope of the storage connector, from where to read
+                the data for the external feature group
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -763,6 +781,8 @@ class FeatureStore:
                     parents=parents or [],
                     topic_name=topic_name,
                     notification_topic_name=notification_topic_name,
+                    storage_connector=storage_connector,
+                    path=path,
                 )
                 feature_group_object.feature_store = self
                 return feature_group_object
@@ -802,7 +822,7 @@ class FeatureStore:
 
         # Arguments
             name: Name of the external feature group to create.
-            storage_connector: the storage connector to use to establish connectivity
+            storage_connector: the storage connector used to establish connectivity
                 with the data source.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
@@ -948,7 +968,7 @@ class FeatureStore:
 
         # Arguments
             name: Name of the external feature group to create.
-            storage_connector: the storage connector to use to establish connectivity
+            storage_connector: the storage connector used to establish connectivity
                 with the data source.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the

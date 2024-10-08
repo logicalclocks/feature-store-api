@@ -556,6 +556,12 @@ class Engine:
         # No op to avoid query failure
         pass
 
+    def register_delta_temporary_table(
+        self, delta_fg_alias, feature_store_id, feature_store_name, read_options
+    ):
+        # No op to avoid query failure
+        pass
+
     def register_hudi_temporary_table(
         self,
         hudi_fg_alias: "hsfs.constructor.hudi_feature_group_alias.HudiFeatureGroupAlias",
@@ -1220,7 +1226,9 @@ class Engine:
         )
 
     def save_empty_dataframe(
-        self, feature_group: Union[FeatureGroup, ExternalFeatureGroup]
+        self,
+        feature_group: Union[FeatureGroup, ExternalFeatureGroup],
+        new_features=None,
     ) -> None:
         """Wrapper around save_dataframe in order to provide no-op."""
         pass

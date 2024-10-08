@@ -524,6 +524,54 @@ class TestFeatureGroupEngine:
         # Assert
         assert mock_hudi_engine.return_value.delete_record.call_count == 1
 
+    def test_clean_delta(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.engine.get_instance")
+        mock_hudi_engine = mocker.patch("hsfs.core.delta_engine.DeltaEngine")
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            time_travel_format="DELTA",
+        )
+
+        # Act
+        fg_engine.delta_vacuum(feature_group=fg, retention_hours=200)
+
+        # Assert
+        assert mock_hudi_engine.return_value.vacuum.call_count == 1
+
+    def test_clean_hudi(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            time_travel_format="HUDI",
+        )
+
+        # Act
+        fg_engine.delta_vacuum(feature_group=fg, retention_hours=200)
+
     def test_sql(self, mocker):
         # Arrange
         feature_store_id = 99

@@ -59,19 +59,11 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
 
   @Getter
   @Setter
-  private StorageConnector storageConnector;
-
-  @Getter
-  @Setter
   private String query;
 
   @Getter
   @Setter
   private ExternalDataFormat dataFormat;
-
-  @Getter
-  @Setter
-  private String path;
 
   @Getter
   @Setter

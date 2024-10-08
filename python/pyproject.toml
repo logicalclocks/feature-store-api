@@ -66,6 +66,7 @@ dev-pandas1 = [
     "moto[s3]==5.0.0",
     "pandas<=1.5.3",
     "sqlalchemy<=1.4.48",
+    "delta-spark==1.0.1"
 ]
 hive = [
     "pyhopshive[thrift]",

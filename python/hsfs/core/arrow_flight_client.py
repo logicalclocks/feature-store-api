@@ -119,7 +119,13 @@ def _is_query_supported_rec(query: query.Query):
         and query._left_feature_group.storage_connector.type
         in ArrowFlightClient.SUPPORTED_EXTERNAL_CONNECTORS
     )
-    supported = hudi_no_time_travel or supported_connector
+    delta_s3 = (
+        isinstance(query._left_feature_group, feature_group.FeatureGroup)
+        and query._left_feature_group.time_travel_format == "DELTA"
+        and query._left_feature_group.storage_connector
+        and query._left_feature_group.storage_connector.type == StorageConnector.S3
+    )
+    supported = hudi_no_time_travel or supported_connector or delta_s3
     for j in query._joins:
         supported &= _is_query_supported_rec(j._query)
     return supported
@@ -547,6 +553,7 @@ class ArrowFlightClient:
 def _serialize_featuregroup_connector(fg, query, on_demand_fg_aliases):
     connector = {}
     if isinstance(fg, feature_group.ExternalFeatureGroup):
+        connector["time_travel_type"] = None
         connector["type"] = fg.storage_connector.type
         connector["options"] = fg.storage_connector.connector_options()
         connector["query"] = fg.query[:-1] if fg.query.endswith(";") else fg.query
@@ -564,8 +571,25 @@ def _serialize_featuregroup_connector(fg, query, on_demand_fg_aliases):
                     connector["filters"] = _serialize_filter_expression(
                         join_obj._query._filter, join_obj._query, True
                     )
+    elif fg.time_travel_format == "DELTA":
+        connector["time_travel_type"] = "delta"
+        connector["type"] = fg.storage_connector.type
+        connector["options"] = fg.storage_connector.connector_options()
+        if fg.storage_connector.type == StorageConnector.S3:
+            connector["options"]["path"] = fg.location
+        connector["query"] = ""
+        if query._left_feature_group == fg:
+            connector["filters"] = _serialize_filter_expression(
+                query._filter, query, True
+            )
+        else:
+            for join_obj in query._joins:
+                if join_obj._query._left_feature_group == fg:
+                    connector["filters"] = _serialize_filter_expression(
+                        join_obj._query._filter, join_obj._query, True
+                    )
     else:
-        connector["type"] = "hudi"
+        connector["time_travel_type"] = "hudi"
     return connector
 
 

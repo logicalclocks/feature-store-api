@@ -128,7 +128,7 @@ public class FeatureGroupUtils {
     }
 
     SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPattern);
-    Long commitTimeStamp = dateFormat.parse(tempDate).getTime();;
+    Long commitTimeStamp = dateFormat.parse(tempDate).getTime();
 
     return commitTimeStamp;
   }

@@ -25,6 +25,7 @@ import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.Storage;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 
 import com.logicalclocks.hsfs.metadata.Statistics;
@@ -50,9 +51,10 @@ public class StreamFeatureGroup extends FeatureGroupBase<DataStream<?>> {
 
   @Builder
   public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-      List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
-      boolean onlineEnabled, List<Feature> features, StatisticsConfig statisticsConfig,
-      String onlineTopicName, String topicName, String notificationTopicName, String eventTime) {
+                            List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
+                            boolean onlineEnabled, List<Feature> features, StatisticsConfig statisticsConfig,
+                            String onlineTopicName, String topicName, String notificationTopicName, String eventTime,
+                            StorageConnector storageConnector, String path) {
     this();
     this.featureStore = featureStore;
     this.name = name;
@@ -70,6 +72,8 @@ public class StreamFeatureGroup extends FeatureGroupBase<DataStream<?>> {
     this.topicName = topicName;
     this.notificationTopicName = notificationTopicName;
     this.eventTime = eventTime;
+    this.storageConnector = storageConnector;
+    this.path = path;
   }
 
   public StreamFeatureGroup() {

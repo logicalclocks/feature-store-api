@@ -170,43 +170,6 @@ class TestSpark:
         # Arrange
         mocker.patch("hsfs.client.get_instance")
         mock_sc_read = mocker.patch("hsfs.storage_connector.JdbcConnector.read")
-        mock_pyspark_getOrCreate = mocker.patch(
-            "pyspark.sql.session.SparkSession.builder.getOrCreate"
-        )
-
-        spark_engine = spark.Engine()
-
-        jdbc_connector = storage_connector.JdbcConnector(
-            id=1,
-            name="test_connector",
-            featurestore_id=1,
-            connection_string="",
-            arguments="",
-        )
-
-        external_fg = feature_group.ExternalFeatureGroup(
-            storage_connector=jdbc_connector, id=10
-        )
-
-        # Act
-        spark_engine.register_external_temporary_table(
-            external_fg=external_fg,
-            alias=None,
-        )
-
-        # Assert
-        assert (
-            mock_pyspark_getOrCreate.return_value.sparkContext.textFile.call_count == 0
-        )
-        assert mock_sc_read.return_value.createOrReplaceTempView.call_count == 1
-
-    def test_register_external_temporary_table_external_fg_location(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.client.get_instance")
-        mock_sc_read = mocker.patch("hsfs.storage_connector.JdbcConnector.read")
-        mock_pyspark_getOrCreate = mocker.patch(
-            "pyspark.sql.session.SparkSession.builder.getOrCreate"
-        )
 
         spark_engine = spark.Engine()
 
@@ -229,9 +192,6 @@ class TestSpark:
         )
 
         # Assert
-        assert (
-            mock_pyspark_getOrCreate.return_value.sparkContext.textFile.call_count == 1
-        )
         assert mock_sc_read.return_value.createOrReplaceTempView.call_count == 1
 
     def test_register_hudi_temporary_table(self, mocker):
@@ -4109,11 +4069,11 @@ class TestSpark:
         # Act
         result = spark_engine._setup_s3_hadoop_conf(
             storage_connector=s3_connector,
-            path="s3_test_path",
+            path="s3://_test_path",
         )
 
         # Assert
-        assert result == "s3a_test_path"
+        assert result == "s3a://_test_path"
         assert (
             mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.call_count
             == 14
@@ -4166,11 +4126,11 @@ class TestSpark:
         # Act
         result = spark_engine._setup_s3_hadoop_conf(
             storage_connector=s3_connector,
-            path="s3_test_path",
+            path="s3://_test_path",
         )
 
         # Assert
-        assert result == "s3a_test_path"
+        assert result == "s3a://_test_path"
         assert (
             mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.call_count
             == 14
@@ -4272,7 +4232,9 @@ class TestSpark:
         mock_spark_engine_save_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.save_dataframe"
         )
-        mock_spark_table = mocker.patch("pyspark.sql.session.SparkSession.table")
+        mock_spark_read = mocker.patch("pyspark.sql.SparkSession.read")
+        mock_format = mocker.Mock()
+        mock_spark_read.format.return_value = mock_format
 
         # Arrange
         spark_engine = spark.Engine()
@@ -4292,7 +4254,7 @@ class TestSpark:
 
         # Assert
         assert mock_spark_engine_save_dataframe.call_count == 1
-        assert mock_spark_table.call_count == 1
+        assert mock_spark_read.format.call_count == 1
 
     def test_apply_transformation_function(self, mocker):
         # Arrange

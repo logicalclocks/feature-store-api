@@ -67,7 +67,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("primaryKey"), Collections.singletonList("partitionKey"), "hudiPrecombineKey",
-        true, features, null, "onlineTopicName", null, null, null);
+        true, features, null, "onlineTopicName", null, null, null, null, null);
 
     Exception pkException = assertThrows(FeatureStoreException.class, () -> {
       featureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -93,7 +93,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), null, null,
-        true, features, null, "onlineTopicName", null, null, "eventTime");
+        true, features, null, "onlineTopicName", null, null, "eventTime", null, null);
 
     Exception eventTimeException = assertThrows(FeatureStoreException.class, () -> {
       streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -119,7 +119,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), Collections.singletonList("partitionKey"), "hudiPrecombineKey",
-        true, features, null, "onlineTopicName", null, null, null);
+        true, features, null, "onlineTopicName", null, null, null,  null, null);
 
     Exception partitionException = assertThrows(FeatureStoreException.class, () -> {
       streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -164,7 +164,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), null, null,
-        true, features, null, "onlineTopicName", null, null, "eventTime");
+        true, features, null, "onlineTopicName", null, null, "eventTime",  null, null);
     featureGroup.featureGroupEngine = featureGroupEngine;
 
     // Act

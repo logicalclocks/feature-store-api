@@ -199,6 +199,20 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             )
             return hudi_engine_instance.delete_record(delete_df, write_options)
 
+    @staticmethod
+    def delta_vacuum(feature_group, retention_hours):
+        if feature_group.time_travel_format == "DELTA":
+            delta_engine_instance = delta_engine.DeltaEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                engine.get_instance()._spark_session,
+                engine.get_instance()._spark_context,
+            )
+            return delta_engine_instance.vacuum(retention_hours)
+        else:
+            return None
+
     def sql(self, query, feature_store_name, dataframe_type, online, read_options):
         if online and self._online_conn is None:
             self._online_conn = self._storage_connector_api.get_online_connector(
@@ -238,7 +252,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if feature_group.time_travel_format == "DELTA":
             engine.get_instance().add_cols_to_delta_table(feature_group, new_features)
         else:
-            engine.get_instance().save_empty_dataframe(feature_group)
+            engine.get_instance().save_empty_dataframe(
+                feature_group, new_features=new_features
+            )
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
