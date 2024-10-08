@@ -135,7 +135,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public void delete() throws FeatureStoreException, IOException {
     FeatureViewBase.LOGGER.warn("JobWarning: All jobs associated to feature view `" + name + "`, version `"
         + version + "` will be removed.");
@@ -163,7 +162,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public void clean(FeatureStore featureStore, String featureViewName, Integer featureViewVersion)
       throws FeatureStoreException, IOException {
     featureViewEngine.delete(featureStore, featureViewName, featureViewVersion);
@@ -190,7 +188,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public FeatureView update(FeatureView other) throws FeatureStoreException, IOException {
     return featureViewEngine.update(other);
   }
@@ -216,7 +213,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws ParseException In case it's unable to parse strings dates to date types.
    */
   @JsonIgnore
-  @Override
   public String getBatchQuery() throws FeatureStoreException, IOException, ParseException {
     return getBatchQuery(null, null);
   }
@@ -246,7 +242,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
   @JsonIgnore
-  @Override
   public String getBatchQuery(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException {
     return featureViewEngine.getBatchQueryString(
@@ -306,7 +301,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
   @JsonIgnore
-  @Override
   public Dataset<Row> getBatchData(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException {
     return getBatchData(startTime, endTime, Maps.newHashMap());
@@ -342,7 +336,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
   @JsonIgnore
-  @Override
   public Dataset<Row> getBatchData(String startTime, String endTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return featureViewEngine.getBatchData(
@@ -378,7 +371,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
     featureViewEngine.addTag(this, name, value);
   }
@@ -403,7 +395,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws IOException Generic IO exception.
    */
   @JsonIgnore
-  @Override
   public Map<String, Object> getTags() throws FeatureStoreException, IOException {
     return featureViewEngine.getTags(this);
   }
@@ -429,7 +420,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws IOException Generic IO exception.
    */
   @JsonIgnore
-  @Override
   public Object getTag(String name) throws FeatureStoreException, IOException {
     return featureViewEngine.getTag(this, name);
   }
@@ -452,7 +442,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTag(this, name);
   }
@@ -1061,7 +1050,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse strings dates to date types.
    */
-  @Override
   public List<Dataset<Row>> getTrainingData(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
@@ -1124,7 +1112,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse strings dates to date types.
    */
-  @Override
   public List<Dataset<Row>> getTrainTestSplit(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
@@ -1188,7 +1175,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse strings dates to date types.
    */
-  @Override
   public List<Dataset<Row>> getTrainValidationTestSplit(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
@@ -1712,7 +1698,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public void purgeTrainingData(Integer version) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingDatasetOnly(this, version);
   }
@@ -1734,7 +1719,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public void purgeAllTrainingData() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingDatasetOnly(this);
   }
@@ -1757,7 +1741,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public void deleteTrainingDataset(Integer version) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this, version);
   }
@@ -1779,7 +1762,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public void deleteAllTrainingDatasets() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this);
   }

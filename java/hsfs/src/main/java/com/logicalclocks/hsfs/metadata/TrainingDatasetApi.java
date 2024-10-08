@@ -72,8 +72,8 @@ public class TrainingDatasetApi {
     for (TrainingDatasetBase td : trainingDatasetBases) {
       td.setFeatureStore(featureStoreBase);
       td.getFeatures().stream()
-          .filter(f -> f.getFeatureGroup() != null)
-          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
+          .filter(f -> f.getFeaturegroup() != null)
+          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStoreBase));
       rewriteLocation(td);
     }
     return Arrays.asList(trainingDatasetBases);
