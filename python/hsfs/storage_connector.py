@@ -368,6 +368,7 @@ class S3Connector(StorageConnector):
 
     def connector_options(self) -> Dict[str, Any]:
         """Return options to be passed to an external S3 connector library"""
+        self.refetch()
         return {
             "access_key": self.access_key,
             "secret_key": self.secret_key,
