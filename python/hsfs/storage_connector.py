@@ -368,12 +368,16 @@ class S3Connector(StorageConnector):
 
     def connector_options(self) -> Dict[str, Any]:
         """Return options to be passed to an external S3 connector library"""
-        return {
+        self.refetch()
+        options = {
             "access_key": self.access_key,
             "secret_key": self.secret_key,
             "session_token": self.session_token,
             "region": self.region,
         }
+        if self.arguments.get("fs.s3a.endpoint"):
+            options["endpoint"] = self.arguments.get("fs.s3a.endpoint")
+        return options
 
     def read(
         self,
