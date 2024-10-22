@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import weakref
 from typing import Any, Optional
 
 from hsfs import client, engine, feature_store, usage, util
@@ -209,6 +210,7 @@ class Connection:
             ```
         """
         self._connected = True
+        finalizer = weakref.finalize(self, self.close)
         try:
             # determine engine, needed to init client
             if (self._engine is not None and self._engine.lower() == "spark") or (
@@ -263,6 +265,7 @@ class Connection:
             )
         except (TypeError, ConnectionError):
             self._connected = False
+            finalizer.detach()
             raise
         print("Connected. Call `.close()` to terminate connection gracefully.")
 
@@ -272,7 +275,7 @@ class Connection:
         This will clean up any materialized certificates on the local file system of
         external environments such as AWS SageMaker.
 
-        Usage is recommended but optional.
+        Usage is optional.
 
         !!! example
             ```python
@@ -281,6 +284,8 @@ class Connection:
             conn.close()
             ```
         """
+        if not self._connected:
+            return  # the connection is already closed
         OpenSearchClientSingleton().close()
         client.stop()
         self._feature_store_api = None
