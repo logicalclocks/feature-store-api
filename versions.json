@@ -47,15 +47,14 @@
     "version": "3.7.9",
     "title": "3.7.9",
     "aliases": [
-      "3.7"
+      "3.7",
+      "latest"
     ]
   },
   {
     "version": "3.7.8",
     "title": "3.7.8",
-    "aliases": [
-      "latest"
-    ]
+    "aliases": []
   },
   {
     "version": "3.7.6",
