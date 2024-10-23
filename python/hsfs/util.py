@@ -15,27 +15,26 @@
 #
 from __future__ import annotations
 
-import re
-import json
-from typing import Union
-import pandas as pd
-import numpy as np
-import time
-import threading
+import asyncio
 import itertools
-
-from datetime import datetime, date, timezone
+import json
+import re
+import threading
+import time
+from datetime import date, datetime, timezone
+from typing import Union
 from urllib.parse import urljoin, urlparse
 
+import numpy as np
+import pandas as pd
+from aiomysql.sa import create_engine as async_create_engine
 from sqlalchemy import create_engine
+from sqlalchemy.engine.url import make_url
 
 from hsfs import client, feature
 from hsfs import feature_group as fg_mod
 from hsfs.client import exceptions
 from hsfs.core import variable_api
-from aiomysql.sa import create_engine as async_create_engine
-import asyncio
-from sqlalchemy.engine.url import make_url
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
 
@@ -167,6 +166,9 @@ async def create_async_engine(
     else:
         hostname = url.host
 
+    if options is None:
+        options = {}
+
     pool = await async_create_engine(
         host=hostname,
         port=3306,
@@ -174,13 +176,10 @@ async def create_async_engine(
         password=online_options["password"],
         db=url.database,
         loop=asyncio.get_running_loop(),
-        minsize=(
-            options.get("minsize", default_min_size) if options else default_min_size
-        ),
-        maxsize=(
-            options.get("maxsize", default_min_size) if options else default_min_size
-        ),
-        pool_recycle=(options.get("pool_recycle", -1) if options else -1),
+        minsize=options.get("minsize", default_min_size),
+        maxsize=options.get("maxsize", default_min_size),
+        pool_recycle=options.get("pool_recycle", -1),
+        autocommit=options.get("autocommit", True),
     )
     return pool
 
