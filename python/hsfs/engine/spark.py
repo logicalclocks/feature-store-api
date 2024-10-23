@@ -183,7 +183,7 @@ class Engine:
                 external_fg.query,
                 external_fg.data_format,
                 external_fg.options,
-                external_fg.prepare_spark_location(),
+                external_fg.storage_connector._get_path(external_fg.path), # cant rely on location since this method can be used before FG is saved
             )
         else:
             external_dataset = external_fg.dataframe
