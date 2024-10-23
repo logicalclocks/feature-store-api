@@ -44,11 +44,17 @@
     "aliases": []
   },
   {
+    "version": "3.7.9",
+    "title": "3.7.9",
+    "aliases": [
+      "3.7"
+    ]
+  },
+  {
     "version": "3.7.8",
     "title": "3.7.8",
     "aliases": [
-      "latest",
-      "3.7"
+      "latest"
     ]
   },
   {
