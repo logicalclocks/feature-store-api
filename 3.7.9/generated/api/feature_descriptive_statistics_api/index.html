@@ -1693,7 +1693,7 @@ You're not viewing the latest version of the documentation.
 
 
 <h1 id="feature-descriptive-statistics">Feature Descriptive Statistics<a class="headerlink" href="#feature-descriptive-statistics" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L24">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L24">[source]</a></span></p>
 <h3 id="featuredescriptivestatistics">FeatureDescriptiveStatistics<a class="headerlink" href="#featuredescriptivestatistics" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">feature_descriptive_statistics</span><span class="o">.</span><span class="n">FeatureDescriptiveStatistics</span><span class="p">(</span>
     <span class="n">feature_name</span><span class="p">,</span>
@@ -1720,19 +1720,19 @@ You're not viewing the latest version of the documentation.
 </code></pre></div>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L245">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L245">[source]</a></span></p>
 <h3 id="approx_num_distinct_values">approx_num_distinct_values<a class="headerlink" href="#approx_num_distinct_values" title="Permanent link">#</a></h3>
 <p>Approximate number of distinct values.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L230">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L230">[source]</a></span></p>
 <h3 id="completeness">completeness<a class="headerlink" href="#completeness" title="Permanent link">#</a></h3>
 <p>Fraction of non-null values in a column.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L225">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L225">[source]</a></span></p>
 <h3 id="count">count<a class="headerlink" href="#count" title="Permanent link">#</a></h3>
 <p>Number of values.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L280">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L280">[source]</a></span></p>
 <h3 id="distinctness">distinctness<a class="headerlink" href="#distinctness" title="Permanent link">#</a></h3>
 <p>Fraction of distinct values of a feature over the number of all its values. Distinct values occur at least once.</p>
 <div class="admonition note">
@@ -1740,7 +1740,7 @@ You're not viewing the latest version of the documentation.
 <p><span class="arithmatex"><span class="MathJax_Preview">[a, a, b]</span><script type="math/tex">[a, a, b]</script></span> contains two distinct values <span class="arithmatex"><span class="MathJax_Preview">a</span><script type="math/tex">a</script></span> and <span class="arithmatex"><span class="MathJax_Preview">b</span><script type="math/tex">b</script></span>, so distinctness is <span class="arithmatex"><span class="MathJax_Preview">2/3</span><script type="math/tex">2/3</script></span>.</p>
 </div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L289">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L289">[source]</a></span></p>
 <h3 id="entropy">entropy<a class="headerlink" href="#entropy" title="Permanent link">#</a></h3>
 <p>Entropy is a measure of the level of information contained in an event (feature value) when considering all possible events (all feature values).
 Entropy is estimated using observed value counts as the negative sum of (value_count/total_count) * log(value_count/total_count).</p>
@@ -1750,58 +1750,58 @@ Entropy is estimated using observed value counts as the negative sum of (value_c
 <p>Entropy is then <span class="arithmatex"><span class="MathJax_Preview">(-1/5*log(1/5)-2/5*log(2/5)-2/5*log(2/5)) = 1.055</span><script type="math/tex">(-1/5*log(1/5)-2/5*log(2/5)-2/5*log(2/5)) = 1.055</script></span>.</p>
 </div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L310">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L310">[source]</a></span></p>
 <h3 id="exact_num_distinct_values">exact_num_distinct_values<a class="headerlink" href="#exact_num_distinct_values" title="Permanent link">#</a></h3>
 <p>Exact number of distinct values.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L315">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L315">[source]</a></span></p>
 <h3 id="extended_statistics">extended_statistics<a class="headerlink" href="#extended_statistics" title="Permanent link">#</a></h3>
 <p>Additional statistics computed on the feature values such as histograms and correlations.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L220">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L220">[source]</a></span></p>
 <h3 id="feature_name">feature_name<a class="headerlink" href="#feature_name" title="Permanent link">#</a></h3>
 <p>Name of the feature.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L215">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L215">[source]</a></span></p>
 <h3 id="feature_type">feature_type<a class="headerlink" href="#feature_type" title="Permanent link">#</a></h3>
 <p>Data type of the feature. It can be one of Boolean, Fractional, Integral, or String.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L211">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L211">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L255">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L255">[source]</a></span></p>
 <h3 id="max">max<a class="headerlink" href="#max" title="Permanent link">#</a></h3>
 <p>Maximum value.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L265">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L265">[source]</a></span></p>
 <h3 id="mean">mean<a class="headerlink" href="#mean" title="Permanent link">#</a></h3>
 <p>Mean value.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L250">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L250">[source]</a></span></p>
 <h3 id="min">min<a class="headerlink" href="#min" title="Permanent link">#</a></h3>
 <p>Minimum value.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L235">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L235">[source]</a></span></p>
 <h3 id="num_non_null_values">num_non_null_values<a class="headerlink" href="#num_non_null_values" title="Permanent link">#</a></h3>
 <p>Number of non-null values.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L240">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L240">[source]</a></span></p>
 <h3 id="num_null_values">num_null_values<a class="headerlink" href="#num_null_values" title="Permanent link">#</a></h3>
 <p>Number of null values.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L275">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L275">[source]</a></span></p>
 <h3 id="percentiles">percentiles<a class="headerlink" href="#percentiles" title="Permanent link">#</a></h3>
 <p>Percentiles.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L270">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L270">[source]</a></span></p>
 <h3 id="stddev">stddev<a class="headerlink" href="#stddev" title="Permanent link">#</a></h3>
 <p>Standard deviation of the feature values.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L260">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L260">[source]</a></span></p>
 <h3 id="sum">sum<a class="headerlink" href="#sum" title="Permanent link">#</a></h3>
 <p>Sum of all feature values.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/35cf4e1443516c775ade966cefff585697177c91/python/hsfs/core/feature_descriptive_statistics.py#L301">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/2649e8ed2af5fd3a47b2470a54d4d918677c619a/python/hsfs/core/feature_descriptive_statistics.py#L301">[source]</a></span></p>
 <h3 id="uniqueness">uniqueness<a class="headerlink" href="#uniqueness" title="Permanent link">#</a></h3>
 <p>Fraction of unique values over the number of all values of a column. Unique values occur exactly once.</p>
 <div class="admonition note">
