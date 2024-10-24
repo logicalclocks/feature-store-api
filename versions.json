@@ -8,8 +8,7 @@
     "version": "3.9.0-RC1",
     "title": "3.9.0-RC1",
     "aliases": [
-      "3.9",
-      "latest"
+      "3.9"
     ]
   },
   {
@@ -48,7 +47,8 @@
     "version": "3.7.9",
     "title": "3.7.9",
     "aliases": [
-      "3.7"
+      "3.7",
+      "latest"
     ]
   },
   {
