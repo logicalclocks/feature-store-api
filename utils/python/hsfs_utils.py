@@ -11,7 +11,6 @@ from hsfs.constructor import query
 from hsfs.core import (
     feature_monitoring_config_engine,
     feature_view_engine,
-    kafka_engine,
 )
 from hsfs.statistics_config import StatisticsConfig
 from pydoop import hdfs
@@ -267,9 +266,7 @@ def offline_fg_materialization(
 
     entity = fs.get_feature_group(name=job_conf["name"], version=job_conf["version"])
 
-    read_options = kafka_engine.get_kafka_config(
-        entity.feature_store_id, {}, engine="spark"
-    )
+    read_options = engine.get_instance()._get_kafka_config(entity.feature_store_id, {})
 
     # get offsets
     offset_location = entity.prepare_spark_location() + "/kafka_offsets"
@@ -283,13 +280,7 @@ def offline_fg_materialization(
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         # if all else fails read from the beggining
-        initial_check_point_string = kafka_engine.kafka_get_offsets(
-            topic_name=entity._online_topic_name,
-            feature_store_id=entity.feature_store_id,
-            offline_write_options={},
-            high=False,
-        )
-        offset_string = json.dumps(_build_starting_offsets(initial_check_point_string))
+        offset_string = "earliest"
     print(f"startingOffsets: {offset_string}")
 
     # read kafka topic

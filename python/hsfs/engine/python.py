@@ -1536,7 +1536,7 @@ class Engine:
                 offsets += f",{partition_metadata.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
             consumer.close()
 
-            return f" -initialCheckPointString {topic_name + offsets}"
+            return f"{topic_name + offsets}"
         return ""
 
     def _kafka_produce(
