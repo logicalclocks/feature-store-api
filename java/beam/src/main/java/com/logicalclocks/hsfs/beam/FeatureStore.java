@@ -158,7 +158,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey, boolean onlineEnabled,
-      StatisticsConfig statisticsConfig, String eventTime) throws IOException, FeatureStoreException {
+      StatisticsConfig statisticsConfig, String eventTime, TimeTravelFormat timeTravelFormat)
+      throws IOException, FeatureStoreException {
     throw new UnsupportedOperationException("Not supported for Beam");
   }
 

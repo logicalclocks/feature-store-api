@@ -164,7 +164,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                                           List<String> primaryKeys, List<String> partitionKeys,
                                                           String hudiPrecombineKey, boolean onlineEnabled,
                                                           StatisticsConfig statisticsConfig,
-                                                          String eventTime)
+                                                          String eventTime, TimeTravelFormat timeTravelFormat)
       throws IOException, FeatureStoreException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }

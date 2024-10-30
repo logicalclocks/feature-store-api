@@ -20,7 +20,7 @@ from typing import List, Optional, Union
 
 from hsfs import client, feature_group_commit, util
 from hsfs import feature_group as fg_mod
-from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf
+from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf, job
 
 
 class FeatureGroupApi:
@@ -368,6 +368,34 @@ class FeatureGroupApi:
             _client._send_request(
                 "POST", path_params, headers=headers, data=ingestion_conf.json()
             ),
+        )
+
+    def update_table_schema(
+        self,
+        feature_group_instance: fg_mod.FeatureGroup,
+    ) -> job.Job:
+        """
+        Setup a Hopsworks job to update table schema
+        Args:
+        feature_group_instance: FeatureGroup, required
+            metadata object of feature group.
+        job_conf: the configuration for the job application
+        """
+
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_group_instance.feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "updatetableschema",
+        ]
+
+        headers = {"content-type": "application/json"}
+        return job.Job.from_response_json(
+            _client._send_request("POST", path_params, headers=headers),
         )
 
     def get_parent_feature_groups(
