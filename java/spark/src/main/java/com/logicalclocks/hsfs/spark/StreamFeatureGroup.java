@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.spark;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
@@ -62,7 +63,8 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Builder
   public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
                             List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
-                            boolean onlineEnabled, List<Feature> features, StatisticsConfig statisticsConfig,
+                            boolean onlineEnabled, List<Feature> features,
+                            TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
                             String onlineTopicName, String topicName, String notificationTopicName, String eventTime,
                             StorageConnector storageConnector, String path) {
     this();
@@ -76,6 +78,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
         ? partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.hudiPrecombineKey = hudiPrecombineKey != null ? hudiPrecombineKey.toLowerCase() : null;
     this.onlineEnabled = onlineEnabled;
+    this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.onlineTopicName = onlineTopicName;

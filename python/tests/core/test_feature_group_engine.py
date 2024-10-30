@@ -707,9 +707,7 @@ class TestFeatureGroupEngine:
         fg_engine.append_features(feature_group=fg, new_features=[f1, f2])
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.save_empty_dataframe.call_count == 1
-        )
+        assert mock_engine_get_instance.return_value.update_table_schema.call_count == 1
         assert len(mock_fg_engine_update_features_metadata.call_args[0][1]) == 4
 
     def test_update_description(self, mocker):

@@ -363,9 +363,8 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
                                                           List<String> partitionKeys, String hudiPrecombineKey,
                                                           boolean onlineEnabled,
                                                           StatisticsConfig statisticsConfig,
-                                                          String eventTime) throws IOException, FeatureStoreException {
-
-
+                                                          String eventTime, TimeTravelFormat timeTravelFormat)
+      throws IOException, FeatureStoreException {
     StreamFeatureGroup featureGroup;
     try {
       featureGroup = getStreamFeatureGroup(featureStore, name, version);
@@ -382,6 +381,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
             .onlineEnabled(onlineEnabled)
             .statisticsConfig(statisticsConfig)
             .eventTime(eventTime)
+            .timeTravelFormat(timeTravelFormat)
             .build();
 
         featureGroup.setFeatureStore(featureStore);

@@ -6,12 +6,18 @@ from datetime import datetime
 from typing import Any, Dict
 
 import hsfs
+from hsfs import engine
 from hsfs.constructor import query
-from hsfs.core import feature_monitoring_config_engine, feature_view_engine
+from hsfs.core import (
+    feature_monitoring_config_engine,
+    feature_view_engine,
+    kafka_engine,
+)
 from hsfs.statistics_config import StatisticsConfig
 from pydoop import hdfs
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructField, StructType, _parse_datatype_string
+from pyspark.sql.functions import max, expr
 
 
 def read_job_conf(path: str) -> Dict[Any, Any]:
@@ -250,6 +256,119 @@ def delta_vacuum_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
     entity.delta_vacuum()
 
 
+def offline_fg_materialization(
+    spark: SparkSession, job_conf: Dict[Any, Any], initial_check_point_string: str
+) -> None:
+    """
+    Run materialization job on a feature group.
+    """
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+
+    entity = fs.get_feature_group(name=job_conf["name"], version=job_conf["version"])
+
+    read_options = kafka_engine.get_kafka_config(
+        entity.feature_store_id, {}, engine="spark"
+    )
+
+    # get offsets
+    offset_location = entity.prepare_spark_location() + "/kafka_offsets"
+    try:
+        if initial_check_point_string:
+            offset_string = json.dumps(
+                _build_starting_offsets(initial_check_point_string)
+            )
+        else:
+            offset_string = spark.read.json(offset_location).toJSON().first()
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        # if all else fails read from the beggining
+        initial_check_point_string = kafka_engine.kafka_get_offsets(
+            topic_name=entity._online_topic_name,
+            feature_store_id=entity.feature_store_id,
+            offline_write_options={},
+            high=False,
+        )
+        offset_string = json.dumps(_build_starting_offsets(initial_check_point_string))
+    print(f"startingOffsets: {offset_string}")
+
+    # read kafka topic
+    df = (
+        spark.read.format("kafka")
+        .options(**read_options)
+        .option("subscribe", entity._online_topic_name)
+        .option("startingOffsets", offset_string)
+        .option("includeHeaders", "true")
+        .load()
+        .limit(5000000)
+    )
+
+    # filter only the necassary entries
+    df = df.filter(
+        expr(
+            "CAST(filter(headers, header -> header.key = 'featureGroupId')[0].value AS STRING)"
+        )
+        == str(entity._id)
+    )
+    df = df.filter(
+        expr(
+            "CAST(filter(headers, header -> header.key = 'subjectId')[0].value AS STRING)"
+        )
+        == str(entity.subject["id"])
+    )
+
+    # deserialize dataframe so that it can be properly saved
+    deserialized_df = engine.get_instance()._deserialize_from_avro(entity, df)
+
+    # insert data
+    entity.stream = False  # to make sure we dont write to kafka
+    entity.insert(deserialized_df)
+
+    # update offsets
+    df_offsets = df.groupBy("partition").agg(max("offset").alias("offset")).collect()
+    offset_dict = json.loads(offset_string)
+    for offset_row in df_offsets:
+        offset_dict[f"{entity._online_topic_name}"][f"{offset_row.partition}"] = (
+            offset_row.offset + 1
+        )
+
+    # save offsets
+    offset_df = spark.createDataFrame([offset_dict])
+    offset_df.coalesce(1).write.mode("overwrite").json(offset_location)
+
+
+def update_table_schema_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> None:
+    """
+    Run table schema update job on a feature group.
+    """
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+
+    entity = fs.get_feature_group(name=job_conf["name"], version=job_conf["version"])
+
+    entity.stream = False
+    engine.get_instance().update_table_schema(entity)
+
+
+def _build_starting_offsets(initial_check_point_string: str):
+    if not initial_check_point_string:
+        return ""
+
+    # Split the input string into the topic and partition-offset pairs
+    topic, offsets = initial_check_point_string.split(",", 1)
+
+    # Split the offsets and build a dictionary from them
+    offsets_dict = {
+        partition: int(offset)
+        for partition, offset in (pair.split(":") for pair in offsets.split(","))
+    }
+
+    # Create the final dictionary structure
+    result = {topic: offsets_dict}
+
+    return result
+
+
 if __name__ == "__main__":
     # Setup spark first so it fails faster in case of args errors
     # Otherwise the resource manager will wait until the spark application master
@@ -269,6 +388,8 @@ if __name__ == "__main__":
             "import_fg",
             "run_feature_monitoring",
             "delta_vacuum_fg",
+            "offline_fg_materialization",
+            "update_table_schema_fg",
         ],
         help="Operation type",
     )
@@ -286,6 +407,12 @@ if __name__ == "__main__":
         "-start_time",
         type=parse_isoformat_date,
         help="Job start time",
+    )
+
+    parser.add_argument(
+        "-initialCheckPointString",
+        type=str,
+        help="Kafka offset to start consuming from",
     )
 
     args = parser.parse_args()
@@ -307,3 +434,7 @@ if __name__ == "__main__":
         run_feature_monitoring(job_conf)
     elif args.op == "delta_vacuum_fg":
         delta_vacuum_fg(spark, job_conf)
+    elif args.op == "offline_fg_materialization":
+        offline_fg_materialization(spark, job_conf, args.initialCheckPointString)
+    elif args.op == "update_table_schema_fg":
+        update_table_schema_fg(spark, job_conf)
