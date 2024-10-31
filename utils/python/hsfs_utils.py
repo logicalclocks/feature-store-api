@@ -281,9 +281,8 @@ def offline_fg_materialization(
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         # if all else fails read from the beggining
-        initial_check_point_string = python.Engine().kafka_get_offsets(
-            topic_name=entity._online_topic_name,
-            feature_store_id=entity.feature_store_id,
+        initial_check_point_string = python.Engine()._kafka_get_offsets(
+            feature_group=entity,
             offline_write_options={},
             high=False,
         )
