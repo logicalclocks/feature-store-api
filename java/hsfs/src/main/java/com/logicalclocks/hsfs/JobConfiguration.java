@@ -66,4 +66,8 @@ public class JobConfiguration {
   @Getter
   @Setter
   private int dynamicAllocationInitialExecutors;
+
+  @Getter
+  @Setter
+  private int yarnMaxAppAttempts;
 }

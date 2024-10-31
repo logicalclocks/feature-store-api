@@ -36,6 +36,7 @@ class TestJobConfiguration:
             "spark.dynamicAllocation.enabled": True,
             "spark.dynamicAllocation.minExecutors": 1,
             "spark.dynamicAllocation.maxExecutors": 2,
+            "spark.yarn.maxAppAttempts": 1,
             "type": job_configuration.JobConfiguration.DTO_TYPE,
         }
         assert expected_dict == result_dict
@@ -51,6 +52,7 @@ class TestJobConfiguration:
             dynamic_allocation=False,
             dynamic_min_executors=2,
             dynamic_max_executors=4,
+            yarn_max_app_attempts=2,
         )
 
         # Act
@@ -66,6 +68,7 @@ class TestJobConfiguration:
             "spark.dynamicAllocation.enabled": False,
             "spark.dynamicAllocation.minExecutors": 2,
             "spark.dynamicAllocation.maxExecutors": 4,
+            "spark.yarn.maxAppAttempts": 2,
             "type": job_configuration.JobConfiguration.DTO_TYPE,
         }
         assert expected_dict == result_dict
