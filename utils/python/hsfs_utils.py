@@ -317,7 +317,11 @@ def offline_fg_materialization(
 
     # update offsets
     df_offsets = df.groupBy("partition").agg(max("offset").alias("offset")).collect()
-    offset_dict = json.loads(offset_string)
+    if offset_string == "earliest":
+        offset_dict = {}
+    else:
+        offset_dict = json.loads(offset_string)
+
     for offset_row in df_offsets:
         offset_dict[f"{entity._online_topic_name}"][f"{offset_row.partition}"] = (
             offset_row.offset + 1
