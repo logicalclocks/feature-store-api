@@ -364,6 +364,7 @@ class S3Connector(StorageConnector):
         # Arguments
             path: Path to prepare for reading from cloud storage. Defaults to `None`.
         """
+        self.refetch()
         return engine.get_instance().setup_storage_connector(self, path)
 
     def connector_options(self) -> Dict[str, Any]:
