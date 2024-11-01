@@ -7,6 +7,7 @@ from typing import Any, Dict
 
 import hsfs
 from hsfs import engine
+from hsfs.engine import python
 from hsfs.constructor import query
 from hsfs.core import (
     feature_monitoring_config_engine,
@@ -280,7 +281,12 @@ def offline_fg_materialization(
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         # if all else fails read from the beggining
-        offset_string = "earliest"
+        initial_check_point_string = python.Engine()._kafka_get_offsets(
+            feature_group=entity,
+            offline_write_options={},
+            high=False,
+        )
+        offset_string = json.dumps(_build_starting_offsets(initial_check_point_string))
     print(f"startingOffsets: {offset_string}")
 
     # read kafka topic
