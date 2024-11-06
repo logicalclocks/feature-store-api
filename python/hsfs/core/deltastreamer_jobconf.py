@@ -20,6 +20,7 @@ import json
 from hsfs import util
 from hsfs.core.job_configuration import JobConfiguration
 
+
 class DeltaStreamerJobConf:
     def __init__(self, options, spark_options, **kwargs):
         self._options = options
