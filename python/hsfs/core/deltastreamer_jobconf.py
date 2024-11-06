@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 
 from hsfs import util
-
+from hsfs.core.job_configuration import JobConfiguration
 
 class DeltaStreamerJobConf:
     def __init__(self, options, spark_options, **kwargs):
@@ -26,6 +26,7 @@ class DeltaStreamerJobConf:
         self._spark_options = spark_options
 
     def to_dict(self):
+        self._spark_options["type"] = JobConfiguration.DTO_TYPE
         return {
             "writeOptions": self._options,
             "sparkJobConfiguration": self._spark_options,
