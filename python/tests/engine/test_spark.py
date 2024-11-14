@@ -4241,6 +4241,32 @@ class TestSpark:
             not in mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.mock_calls
         )
 
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.access.key", s3_connector.access_key
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.secret.key", s3_connector.secret_key
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.server-side-encryption-algorithm",
+            s3_connector.server_encryption_algorithm,
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.server-side-encryption-key",
+            s3_connector.server_encryption_key,
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.aws.credentials.provider",
+            "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.session.token", s3_connector.session_token
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.bucket.bucket-name.endpoint",
+            s3_connector.arguments.get("fs.s3a.endpoint"),
+        )
+
     def test_setup_s3_hadoop_conf_bucket_scope(self, mocker):
         # Arrange
         mock_pyspark_getOrCreate = mocker.patch(
