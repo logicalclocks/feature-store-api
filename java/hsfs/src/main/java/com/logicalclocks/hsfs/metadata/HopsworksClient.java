@@ -42,9 +42,11 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.regions.Region;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -118,19 +120,37 @@ public class HopsworksClient {
     KeyStore ks = KeyStore.getInstance("JKS");
     ks.load(new ByteArrayInputStream(Base64.getDecoder().decode(credentials.getkStore())),
         credentials.getPassword().toCharArray());
-    String keyStorePath = System.getProperty("java.io.tmpdir") + "/keyStore.jks";
-    ks.store(new FileOutputStream(keyStorePath), credentials.getPassword().toCharArray());
+    File keyStore = createTempFile("keyStore.jks");
+    ks.store(new FileOutputStream(keyStore), credentials.getPassword().toCharArray());
 
     KeyStore ts =  KeyStore.getInstance("JKS");
     ts.load(new ByteArrayInputStream(Base64.getDecoder().decode(credentials.gettStore())),
         credentials.getPassword().toCharArray());
-    String trustStorePath = System.getProperty("java.io.tmpdir") + "/trustStore.jks";
-    ts.store(new FileOutputStream(trustStorePath), credentials.getPassword().toCharArray());
+    File trustStore = createTempFile("trustStore.jks");
+    ts.store(new FileOutputStream(trustStore), credentials.getPassword().toCharArray());
 
-    credentials.setkStore(keyStorePath);
-    credentials.settStore(trustStorePath);
+    credentials.setkStore(keyStore.getAbsolutePath());
+    credentials.settStore(trustStore.getAbsolutePath());
 
     return credentials;
+  }
+
+  private File createTempFile(String fileName) throws FeatureStoreException {
+    HopsworksClient hopsworksClient = getInstance();
+
+    // Create a File object
+    File file = Paths.get(
+        System.getProperty("java.io.tmpdir"),
+        hopsworksClient.getProject().getProjectName(),
+        fileName).toFile();
+
+    // Ensure parent directories exist
+    File parentDir = file.getParentFile();
+    if (parentDir != null && !parentDir.exists()) {
+      parentDir.mkdirs();
+    }
+
+    return file;
   }
 
   @Getter

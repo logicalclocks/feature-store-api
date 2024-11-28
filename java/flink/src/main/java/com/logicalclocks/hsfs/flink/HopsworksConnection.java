@@ -20,7 +20,7 @@ package com.logicalclocks.hsfs.flink;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HopsworksConnectionBase;
 import com.logicalclocks.hsfs.SecretStore;
-import com.logicalclocks.hsfs.flink.engine.FlinkEngine;
+import com.logicalclocks.hsfs.metadata.Credentials;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
@@ -30,6 +30,9 @@ import lombok.Builder;
 import software.amazon.awssdk.regions.Region;
 
 import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 
 public class HopsworksConnection extends HopsworksConnectionBase {
 
@@ -37,7 +40,7 @@ public class HopsworksConnection extends HopsworksConnectionBase {
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
                              boolean hostnameVerification, String trustStorePath,
                              String certPath, String apiKeyFilePath, String apiKeyValue)
-      throws IOException, FeatureStoreException {
+      throws IOException, FeatureStoreException, KeyStoreException, CertificateException, NoSuchAlgorithmException {
     this.host = host;
     this.port = port;
     this.project = getProjectName(project);
@@ -54,10 +57,11 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
     if (!System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
-      HopsworksHttpClient hopsworksHttpClient = HopsworksClient.getInstance().getHopsworksHttpClient();
-      hopsworksHttpClient.setTrustStorePath(FlinkEngine.getInstance().getTrustStorePath());
-      hopsworksHttpClient.setKeyStorePath(FlinkEngine.getInstance().getKeyStorePath());
-      hopsworksHttpClient.setCertKey(HopsworksHttpClient.readCertKey(FlinkEngine.getInstance().getCertKey()));
+      Credentials credentials = HopsworksClient.getInstance().getCredentials();
+      HopsworksHttpClient hopsworksHttpClient =  HopsworksClient.getInstance().getHopsworksHttpClient();
+      hopsworksHttpClient.setTrustStorePath(credentials.gettStore());
+      hopsworksHttpClient.setKeyStorePath(credentials.getkStore());
+      hopsworksHttpClient.setCertKey(credentials.getPassword());
       HopsworksClient.getInstance().setHopsworksHttpClient(hopsworksHttpClient);
     }
   }
