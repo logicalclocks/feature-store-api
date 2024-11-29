@@ -5,10 +5,16 @@
     "aliases": []
   },
   {
+    "version": "3.9.0-RC5",
+    "title": "3.9.0-RC5",
+    "aliases": [
+      "3.9"
+    ]
+  },
+  {
     "version": "3.9.0-RC4",
     "title": "3.9.0-RC4",
     "aliases": [
-      "3.9",
       "latest"
     ]
   },
