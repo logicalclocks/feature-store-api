@@ -296,6 +296,7 @@ def offline_fg_materialization(
         .option("subscribe", entity._online_topic_name)
         .option("startingOffsets", offset_string)
         .option("includeHeaders", "true")
+        .option("failOnDataLoss", "false")
         .load()
         .limit(5000000)
     )
