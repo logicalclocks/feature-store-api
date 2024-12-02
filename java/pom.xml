@@ -282,6 +282,13 @@
                 <artifact.spark.version>spark3.3</artifact.spark.version>
             </properties>
         </profile>
+        <profile>
+            <id>spark-3.5</id>
+            <properties>
+                <deequ.version>2.0.7-spark-3.5</deequ.version>
+                <artifact.spark.version>spark3.5</artifact.spark.version>
+            </properties>
+        </profile>
     </profiles>
 
     <repositories>
