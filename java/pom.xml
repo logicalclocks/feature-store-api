@@ -27,6 +27,7 @@
         <lombok.version>1.18.10</lombok.version>
         <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
         <deequ.version>1.1.0.6-SNAPSHOT</deequ.version>
+        <spark.version>3.1.1.3</spark.version>
         <hudi.version>0.12.3.2</hudi.version>
         <awssdk.version>2.10.40</awssdk.version>
         <scala.version>2.12.10</scala.version>
@@ -280,6 +281,16 @@
             <properties>
                 <deequ.version>2.0.4.0-spark-3.3</deequ.version>
                 <artifact.spark.version>spark3.3</artifact.spark.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>spark-3.5</id>
+            <properties>
+                <spark.version>3.5.3</spark.version>
+                <deequ.version>2.0.7-spark-3.5</deequ.version>
+                <artifact.spark.version>spark3.5</artifact.spark.version>
+                <fasterxml.jackson.databind.version>2.15.2</fasterxml.jackson.databind.version>
+                <avro.version>1.11.2</avro.version>
             </properties>
         </profile>
     </profiles>
