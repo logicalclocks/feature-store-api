@@ -298,7 +298,6 @@ def offline_fg_materialization(
         .option("includeHeaders", "true")
         .option("failOnDataLoss", "false")
         .load()
-        .limit(5000000)
     )
 
     # filter only the necassary entries
@@ -314,6 +313,9 @@ def offline_fg_materialization(
         )
         == str(entity.subject["id"])
     )
+
+    # limit the number of records ingested
+    df = df.limit(5000000)
 
     # deserialize dataframe so that it can be properly saved
     deserialized_df = engine.get_instance()._deserialize_from_avro(entity, df)
