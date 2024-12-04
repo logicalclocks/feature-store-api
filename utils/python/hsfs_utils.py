@@ -298,11 +298,36 @@ def offline_fg_materialization(
         .option("includeHeaders", "true")
         .option("failOnDataLoss", "false")
         .load()
-        .limit(5000000)
     )
 
+    # filter only the necassary entries
+    filtered_df = df.filter(
+        expr(
+            "CAST(filter(headers, header -> header.key = 'featureGroupId')[0].value AS STRING)"
+        )
+        == str(entity._id)
+    )
+    filtered_df = filtered_df.filter(
+        expr(
+            "CAST(filter(headers, header -> header.key = 'subjectId')[0].value AS STRING)"
+        )
+        == str(entity.subject["id"])
+    )
+
+    limit = 5000000
+
+    # limit the number of records ingested
+    filtered_df = filtered_df.limit(limit)
+
+    # deserialize dataframe so that it can be properly saved
+    deserialized_df = engine.get_instance()._deserialize_from_avro(entity, filtered_df)
+
+    # insert data
+    entity.stream = False  # to make sure we dont write to kafka
+    entity.insert(deserialized_df, storage="offline")
+
     # update offsets
-    df_offsets = df.groupBy("partition").agg(max("offset").alias("offset")).collect()
+    df_offsets = (df if limit > filtered_df.count() else filtered_df).groupBy("partition").agg(max("offset").alias("offset")).collect()
     if offset_string == "earliest":
         offset_dict = {entity._online_topic_name: {}}
     else:
@@ -312,27 +337,6 @@ def offline_fg_materialization(
         offset_dict[entity._online_topic_name][f"{offset_row.partition}"] = (
             offset_row.offset + 1
         )
-
-    # filter only the necassary entries
-    df = df.filter(
-        expr(
-            "CAST(filter(headers, header -> header.key = 'featureGroupId')[0].value AS STRING)"
-        )
-        == str(entity._id)
-    )
-    df = df.filter(
-        expr(
-            "CAST(filter(headers, header -> header.key = 'subjectId')[0].value AS STRING)"
-        )
-        == str(entity.subject["id"])
-    )
-
-    # deserialize dataframe so that it can be properly saved
-    deserialized_df = engine.get_instance()._deserialize_from_avro(entity, df)
-
-    # insert data
-    entity.stream = False  # to make sure we dont write to kafka
-    entity.insert(deserialized_df, storage="offline")
 
     # save offsets
     offset_df = spark.createDataFrame([offset_dict])
