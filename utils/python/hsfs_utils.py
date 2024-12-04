@@ -300,6 +300,18 @@ def offline_fg_materialization(
         .load()
     )
 
+    # update offsets
+    df_offsets = df.groupBy("partition").agg(max("offset").alias("offset")).collect()
+    if offset_string == "earliest":
+        offset_dict = {entity._online_topic_name: {}}
+    else:
+        offset_dict = json.loads(offset_string)
+
+    for offset_row in df_offsets:
+        offset_dict[entity._online_topic_name][f"{offset_row.partition}"] = (
+            offset_row.offset + 1
+        )
+
     # filter only the necassary entries
     df = df.filter(
         expr(
@@ -323,18 +335,6 @@ def offline_fg_materialization(
     # insert data
     entity.stream = False  # to make sure we dont write to kafka
     entity.insert(deserialized_df, storage="offline")
-
-    # update offsets
-    df_offsets = df.groupBy("partition").agg(max("offset").alias("offset")).collect()
-    if offset_string == "earliest":
-        offset_dict = {entity._online_topic_name: {}}
-    else:
-        offset_dict = json.loads(offset_string)
-
-    for offset_row in df_offsets:
-        offset_dict[entity._online_topic_name][f"{offset_row.partition}"] = (
-            offset_row.offset + 1
-        )
 
     # save offsets
     offset_df = spark.createDataFrame([offset_dict])
