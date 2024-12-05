@@ -29,6 +29,8 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
@@ -113,6 +115,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     httpClient = HttpClients.custom()
         .setConnectionManager(connectionPool)
         .setKeepAliveStrategy((httpResponse, httpContext) -> 30 * 1000)
+        .setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build())
         .build();
 
     if (!Strings.isNullOrEmpty(apiKeyValue)) {
