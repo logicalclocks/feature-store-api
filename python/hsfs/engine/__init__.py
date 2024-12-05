@@ -33,8 +33,8 @@ def init(engine_type: str) -> None:
         if engine_type == "spark":
             _engine_type = "spark"
             _engine = spark.Engine()
-        elif engine_type == "spark-no-metastore":
-            _engine_type = "spark-no-metastore"
+        elif engine_type == "spark-no-metastore" or engine_type == "spark-delta":
+            _engine_type = engine_type
             _engine = spark_no_metastore.Engine()
         elif engine_type in ["hive", "python", "training"]:
             try:

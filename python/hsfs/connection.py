@@ -99,13 +99,12 @@ class Connection:
         project: The name of the project to connect to. When running on Hopsworks, this
             defaults to the project from where the client is run from.
             Defaults to `None`.
-        engine: Which engine to use, `"spark"`, `"python"` or `"training"`. Defaults to `None`,
-            which initializes the engine to Spark if the environment provides Spark, for
-            example on Hopsworks and Databricks, or falls back on Hive in Python if Spark is not
-            available, e.g. on local Python environments or AWS SageMaker. This option
-            allows you to override this behaviour. `"training"` engine is useful when only
-            feature store metadata is needed, for example training dataset location and label
-            information when Hopsworks training experiment is conducted.
+        engine: Specifies the engine to use. Possible options are "spark", "python", "training", "spark-no-metastore", or "spark-delta". The default value is None, which automatically selects the engine based on the environment:
+            "spark": Used if Spark is available, such as in Hopsworks or Databricks environments.
+            "python": Used in local Python environments or AWS SageMaker when Spark is not available.
+            "training": Used when only feature store metadata is needed, such as for obtaining training dataset locations and label information during Hopsworks training experiments.
+            "spark-no-metastore": Functions like "spark" but does not rely on the Hive metastore.
+            "spark-delta": Minimizes dependencies further by avoiding both Hive metastore and HopsFS.
         region_name: The name of the AWS region in which the required secrets are
             stored, defaults to `"default"`.
         secrets_store: The secrets storage to be used, either `"secretsmanager"`,
@@ -228,10 +227,15 @@ class Connection:
                 and self._engine.lower() == "spark-no-metastore"
             ):
                 self._engine = "spark-no-metastore"
+            elif (
+                self._engine is not None
+                and self._engine.lower() == "spark-delta"
+            ):
+                self._engine = "spark-delta"
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
-                    "Supported engines are `'spark'`, `'python'` and `'training'`."
+                    "Supported engines are `'spark'`, `'python'`, `'training'`, `'spark-no-metastore'`, and `'spark-delta'`."
                 )
 
             # init client
