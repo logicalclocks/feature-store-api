@@ -314,9 +314,8 @@ def offline_fg_materialization(
         == str(entity.subject["id"])
     )
 
-    limit = 5000000
-
     # limit the number of records ingested
+    limit = job_conf.get("write_options", {}).get("job_limit", 5000000)
     filtered_df = filtered_df.limit(limit)
 
     # deserialize dataframe so that it can be properly saved
