@@ -153,10 +153,17 @@ class Client(base.Client):
             _logger.debug(
                 "Running in Spark environment with no metastore and hopsfs, initializing Spark session"
             )
-            _spark_session = SparkSession.builder \
-                .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-                .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+            self._materialize_certs(cert_folder, host, project)
+            _spark_session = (
+                SparkSession.builder.config(
+                    "spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension"
+                )
+                .config(
+                    "spark.sql.catalog.spark_catalog",
+                    "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+                )
                 .getOrCreate()
+            )
 
     def _materialize_certs(self, cert_folder, host, project):
         self._cert_folder_base = cert_folder
