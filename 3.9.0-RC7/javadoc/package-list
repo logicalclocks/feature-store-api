@@ -1,0 +1,14 @@
+com.logicalclocks.hsfs
+com.logicalclocks.hsfs.beam
+com.logicalclocks.hsfs.beam.engine
+com.logicalclocks.hsfs.constructor
+com.logicalclocks.hsfs.engine
+com.logicalclocks.hsfs.flink
+com.logicalclocks.hsfs.flink.engine
+com.logicalclocks.hsfs.metadata
+com.logicalclocks.hsfs.spark
+com.logicalclocks.hsfs.spark.constructor
+com.logicalclocks.hsfs.spark.engine
+com.logicalclocks.hsfs.spark.engine.hudi
+com.logicalclocks.hsfs.spark.util
+com.logicalclocks.hsfs.util
