@@ -14,4 +14,4 @@
 #   limitations under the License.
 #
 
-__version__ = "3.9.0rc7"
+__version__ = "3.9.0rc8"
