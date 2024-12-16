@@ -14,6 +14,9 @@
   <properties>
     <flink.version>1.17.1.0</flink.version>
     <fasterxml.version>2.13.4.2</fasterxml.version>
+    <bouncycastle.version>1.79</bouncycastle.version>
+    <guava.version>14.0.1</guava.version>
+    <httpclient.version>4.5.6</httpclient.version>
   </properties>
 
   <dependencies>
@@ -86,6 +89,25 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${fasterxml.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${httpclient.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk18on</artifactId>
+      <scope>test</scope>
+      <version>${bouncycastle.version}</version>
     </dependency>
 
   </dependencies>

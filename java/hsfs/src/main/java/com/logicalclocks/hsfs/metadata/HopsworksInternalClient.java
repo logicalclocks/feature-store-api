@@ -18,7 +18,6 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
-import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.HttpHeaders;
