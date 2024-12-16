@@ -142,8 +142,6 @@ public class SparkEngine extends EngineBase {
   @Getter
   private SparkSession sparkSession;
 
-  private HudiEngine hudiEngine = new HudiEngine();
-
   private SparkEngine() {
     sparkSession = SparkSession.builder()
         .enableHiveSupport()
@@ -247,7 +245,7 @@ public class SparkEngine extends EngineBase {
 
   public void registerHudiTemporaryTable(FeatureGroupAlias featureGroupAlias, Map<String, String> readOptions)
           throws FeatureStoreException {
-    Map<String, String> hudiArgs = hudiEngine.setupHudiReadOpts(
+    Map<String, String> hudiArgs = HudiEngine.getInstance().setupHudiReadOpts(
         featureGroupAlias.getLeftFeatureGroupStartTimestamp(),
         featureGroupAlias.getLeftFeatureGroupEndTimestamp(),
         readOptions);
@@ -258,7 +256,7 @@ public class SparkEngine extends EngineBase {
         .load(featureGroupAlias.getFeatureGroup().getLocation())
         .createOrReplaceTempView(featureGroupAlias.getAlias());
 
-    hudiEngine.reconcileHudiSchema(sparkSession, featureGroupAlias, hudiArgs);
+    HudiEngine.getInstance().reconcileHudiSchema(sparkSession, featureGroupAlias, hudiArgs);
   }
 
   /**
@@ -661,7 +659,8 @@ public class SparkEngine extends EngineBase {
       throws IOException, FeatureStoreException, ParseException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, operation, writeOptions, validationId);
+      HudiEngine.getInstance()
+          .saveHudiFeatureGroup(sparkSession, featureGroup, dataset, operation, writeOptions, validationId);
     } else {
       writeSparkDataset(featureGroup, dataset, writeOptions);
     }
@@ -790,7 +789,7 @@ public class SparkEngine extends EngineBase {
   public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
       throws Exception {
     writeOptions = getKafkaConfig(streamFeatureGroup, writeOptions);
-    hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
+    HudiEngine.getInstance().streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
 
   public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset,
