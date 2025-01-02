@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 
 from hsfs import util
+from hsfs.core.job_configuration import JobConfiguration
 
 
 class IngestionJobConf:
@@ -73,5 +74,5 @@ class IngestionJobConf:
             ]
             if self._write_options
             else None,
-            "sparkJobConfiguration": self._spark_job_configuration,
+            JobConfiguration.DTO_TYPE: JobConfiguration(**self._spark_job_configuration).to_dict(),
         }
