@@ -27,10 +27,9 @@ class DeltaStreamerJobConf:
         self._spark_options = spark_options
 
     def to_dict(self):
-        self._spark_options["type"] = JobConfiguration.DTO_TYPE
         return {
             "writeOptions": self._options,
-            "sparkJobConfiguration": self._spark_options,
+            "sparkJobConfiguration": JobConfiguration(**self._spark_options).to_dict(),
         }
 
     def json(self):

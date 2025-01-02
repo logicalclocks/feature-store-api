@@ -17,6 +17,8 @@
 
 package com.logicalclocks.hsfs;
 
+import com.google.common.base.Strings;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -67,7 +69,17 @@ public class JobConfiguration {
   @Setter
   private int dynamicAllocationInitialExecutors;
 
-  @Getter
   @Setter
-  private int yarnMaxAppAttempts;
+  private String properties;
+
+  public String getProperties() {
+    String defaultProperty = "spark.yarn.maxAppAttempts=2";
+    if (Strings.isNullOrEmpty(properties)) {
+      properties = defaultProperty;
+    } else {
+      properties = properties + (properties.contains(defaultProperty.split("=")[0]) ? "" : "\\n" + defaultProperty);
+    }
+
+    return properties;
+  }
 }
