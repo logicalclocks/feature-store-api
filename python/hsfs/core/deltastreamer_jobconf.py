@@ -29,7 +29,7 @@ class DeltaStreamerJobConf:
     def to_dict(self):
         return {
             "writeOptions": self._options,
-            JobConfiguration.DTO_TYPE: JobConfiguration(**self._spark_options).to_dict(),
+            JobConfiguration.DTO_TYPE: JobConfiguration(**self._spark_options if self._spark_options else {}).to_dict(),
         }
 
     def json(self):

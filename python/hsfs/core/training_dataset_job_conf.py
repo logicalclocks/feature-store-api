@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 
 from hsfs import util
+from hsfs.core.job_configuration import JobConfiguration
 
 
 class TrainingDatasetJobConf:
@@ -71,5 +72,5 @@ class TrainingDatasetJobConf:
             ]
             if self._write_options
             else None,
-            "sparkJobConfiguration": self._spark_job_configuration,
+            JobConfiguration.DTO_TYPE: self._spark_job_configuration,
         }
