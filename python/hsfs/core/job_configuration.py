@@ -51,7 +51,7 @@ class JobConfiguration:
         if not self._properties:
             self._properties = default_property
         else:
-            self._properties = self._properties + (f"\\n{default_property}" if default_property.split("=")[0] not in self._properties else "")
+            self._properties = self._properties + (f"\n{default_property}" if default_property.split("=")[0] not in self._properties else "")
 
         return {
             "amMemory": self._am_memory,
