@@ -87,7 +87,8 @@ class TestFeatureView {
     // Assert
     Mockito.verify(appender, Mockito.times(1)).doAppend(argument.capture());
     Assert.assertEquals(Level.WARN, argument.getValue().getLevel());
-    Assert.assertEquals("Feature Group `test_fg`, version `1` is deprecated", argument.getValue().getMessage());
+    Assert.assertEquals("Feature Group `test_fg`, version `1` is deprecated",
+        argument.getValue().getMessage().toString());
     Assert.assertEquals("com.logicalclocks.hsfs.FeatureGroupBase", argument.getValue().getLoggerName());
   }
 }

@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.flink.engine;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -25,12 +26,11 @@ import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import com.twitter.chill.Base64;
 import lombok.Getter;
 
 import org.apache.avro.generic.GenericRecord;
-import org.apache.flink.configuration.ConfigOption;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.core.fs.Path;
@@ -39,18 +39,24 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.FileUtils;
+import org.apache.kafka.common.config.SslConfigs;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.apache.flink.configuration.ConfigOptions.key;
-
 public class FlinkEngine extends EngineBase {
   private static FlinkEngine INSTANCE = null;
 
-  public static synchronized FlinkEngine getInstance() throws FeatureStoreException {
+  public static synchronized FlinkEngine getInstance() {
     if (INSTANCE == null) {
       INSTANCE = new FlinkEngine();
     }
@@ -60,55 +66,38 @@ public class FlinkEngine extends EngineBase {
   @Getter
   private StreamExecutionEnvironment streamExecutionEnvironment;
 
-  private final Configuration flinkConfig = GlobalConfiguration.loadConfiguration();
-  private final ConfigOption<String> keyStorePath =
-      key("flink.hadoop.hops.ssl.keystore.name")
-        .stringType()
-        .defaultValue("trustStore.jks")
-        .withDescription("path to keyStore.jks");
-  private final ConfigOption<String> trustStorePath =
-      key("flink.hadoop.hops.ssl.truststore.name")
-        .stringType()
-        .defaultValue("trustStore.jks")
-        .withDescription("path to trustStore.jks");
-  private final ConfigOption<String> materialPasswdPath =
-      key("flink.hadoop.hops.ssl.keystores.passwd.name")
-        .stringType()
-        .defaultValue("material_passwd")
-        .withDescription("path to material_passwd");
-
-  private FlinkEngine() throws FeatureStoreException {
+  private FlinkEngine() {
     streamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
     // Configure the streamExecutionEnvironment
     streamExecutionEnvironment.getConfig().enableObjectReuse();
   }
 
   public DataStreamSink<?> writeDataStream(StreamFeatureGroup streamFeatureGroup, DataStream<?> dataStream,
-      Map<String, String> writeOptions) throws FeatureStoreException, IOException {
+                                           Map<String, String> writeOptions) throws FeatureStoreException, IOException {
 
     DataStream<Object> genericDataStream = (DataStream<Object>) dataStream;
     Properties properties = new Properties();
     properties.putAll(getKafkaConfig(streamFeatureGroup, writeOptions));
 
     KafkaSink<GenericRecord> sink = KafkaSink.<GenericRecord>builder()
-        .setBootstrapServers(properties.getProperty("bootstrap.servers"))
-        .setKafkaProducerConfig(properties)
-        .setRecordSerializer(new KafkaRecordSerializer(streamFeatureGroup))
-        .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
-        .build();
+            .setBootstrapServers(properties.getProperty("bootstrap.servers"))
+            .setKafkaProducerConfig(properties)
+            .setRecordSerializer(new KafkaRecordSerializer(streamFeatureGroup))
+            .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+            .build();
     Map<String, String> complexFeatureSchemas = new HashMap<>();
-    for (String featureName: streamFeatureGroup.getComplexFeatures()) {
+    for (String featureName : streamFeatureGroup.getComplexFeatures()) {
       complexFeatureSchemas.put(featureName, streamFeatureGroup.getFeatureAvroSchema(featureName));
     }
 
     DataStream<GenericRecord> avroRecordDataStream =
-        genericDataStream.map(new PojoToAvroRecord(
-          streamFeatureGroup.getDeserializedAvroSchema(),
-          streamFeatureGroup.getDeserializedEncodedAvroSchema(),
-        complexFeatureSchemas))
-          .returns(
-            new GenericRecordAvroTypeInfo(streamFeatureGroup.getDeserializedEncodedAvroSchema())
-          );
+            genericDataStream.map(new PojoToAvroRecord(
+                            streamFeatureGroup.getDeserializedAvroSchema(),
+                            streamFeatureGroup.getDeserializedEncodedAvroSchema(),
+                            complexFeatureSchemas))
+                    .returns(
+                            new GenericRecordAvroTypeInfo(streamFeatureGroup.getDeserializedEncodedAvroSchema())
+                    );
 
     return avroRecordDataStream.sinkTo(sink);
   }
@@ -118,29 +107,59 @@ public class FlinkEngine extends EngineBase {
     if (Strings.isNullOrEmpty(filePath)) {
       return filePath;
     }
-    // this is used for unit testing
-    if (!filePath.startsWith("file://")) {
-      filePath = "hdfs://" + filePath;
+
+    if (filePath.startsWith("hdfs://")) {
+      String targetPath = FileUtils.getCurrentWorkingDirectory().toString()
+              + filePath.substring(filePath.lastIndexOf("/"));
+      FileUtils.copy(new Path(filePath), new Path(targetPath), false);
+
+      return targetPath;
     }
-    String targetPath = FileUtils.getCurrentWorkingDirectory().toString()
-        + filePath.substring(filePath.lastIndexOf("/"));
-    FileUtils.copy(new Path(filePath), new Path(targetPath), false);
-    return targetPath;
+
+    return filePath;
   }
 
   @Override
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+          throws FeatureStoreException, IOException {
     boolean external = !(System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
-        || (writeOptions != null
-        && Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"))));
+            || (writeOptions != null
+            && Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"))));
 
     StorageConnector.KafkaConnector storageConnector =
-        storageConnectorApi.getKafkaStorageConnector(featureGroup.getFeatureStore(), external);
+            storageConnectorApi.getKafkaStorageConnector(featureGroup.getFeatureStore(), external);
     storageConnector.setSslTruststoreLocation(addFile(storageConnector.getSslTruststoreLocation()));
     storageConnector.setSslKeystoreLocation(addFile(storageConnector.getSslKeystoreLocation()));
 
     Map<String, String> config = storageConnector.kafkaOptions();
+
+    // To avoid distribution issues of the certificates across multiple pods/nodes
+    // here we are extracting the key/certificates from the JKS keyStore/trustStore and
+    // pass them in the configuration as PEM content
+    try {
+      KeyStore keyStore = KeyStore.getInstance("JKS");
+      keyStore.load(new FileInputStream(storageConnector.getSslKeystoreLocation()),
+              storageConnector.getSslKeystorePassword().toCharArray());
+      config.put(SslConfigs.SSL_KEYSTORE_KEY_CONFIG, getKey(keyStore, storageConnector.getSslKeystorePassword()));
+      config.put(SslConfigs.SSL_KEYSTORE_CERTIFICATE_CHAIN_CONFIG, getCertificateChain(keyStore));
+      config.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PEM");
+
+      KeyStore trustStore = KeyStore.getInstance("JKS");
+      trustStore.load(new FileInputStream(storageConnector.getSslTruststoreLocation()),
+              storageConnector.getSslTruststorePassword().toCharArray());
+      config.put(SslConfigs.SSL_TRUSTSTORE_CERTIFICATES_CONFIG, getRootCA(trustStore));
+      config.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "PEM");
+    } catch (Exception ex) {
+      throw new IOException(ex);
+    }
+
+    // Remove the keystore and truststore location from the properties otherwise
+    // the SSL engine will try to use them first.
+    config.remove(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG);
+    config.remove(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG);
+    config.remove(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG);
+    config.remove(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG);
+    config.remove(SslConfigs.SSL_KEY_PASSWORD_CONFIG);
 
     if (writeOptions != null) {
       config.putAll(writeOptions);
@@ -149,15 +168,37 @@ public class FlinkEngine extends EngineBase {
     return config;
   }
 
-  public String getTrustStorePath() {
-    return flinkConfig.getString(trustStorePath);
+  private String getKey(KeyStore keyStore, String password)
+          throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
+    String keyAlias = keyStore.aliases().nextElement();
+    return "-----BEGIN PRIVATE KEY-----\n"
+            + Base64.encodeBytes(keyStore.getKey(keyAlias, password.toCharArray()).getEncoded())
+            + "\n-----END PRIVATE KEY-----";
   }
 
-  public String getKeyStorePath() {
-    return flinkConfig.getString(keyStorePath);
+  private String getCertificateChain(KeyStore keyStore) throws KeyStoreException, CertificateEncodingException {
+    String certificateAlias = keyStore.aliases().nextElement();
+    Certificate[] certificateChain = keyStore.getCertificateChain(certificateAlias);
+
+    StringBuilder certificateChainBuilder = new StringBuilder();
+    for (Certificate certificate : certificateChain) {
+      certificateChainBuilder.append("-----BEGIN CERTIFICATE-----\n")
+              .append(Base64.encodeBytes(certificate.getEncoded()))
+              .append("\n-----END CERTIFICATE-----\n");
+    }
+
+    return certificateChainBuilder.toString();
   }
 
-  public String getCertKey() {
-    return flinkConfig.getString(materialPasswdPath);
+  private String getRootCA(KeyStore trustStore) throws KeyStoreException, CertificateEncodingException {
+    String rootCaAlias = trustStore.aliases().nextElement();
+    return "-----BEGIN CERTIFICATE-----\n"
+            + Base64.encodeBytes(trustStore.getCertificate(rootCaAlias).getEncoded())
+            + "\n-----END CERTIFICATE-----";
+  }
+
+  @VisibleForTesting
+  public void setStorageConnectorApi(StorageConnectorApi storageConnectorApi) {
+    this.storageConnectorApi = storageConnectorApi;
   }
 }

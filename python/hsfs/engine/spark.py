@@ -1152,8 +1152,12 @@ class Engine:
             return path
 
     def _setup_s3_hadoop_conf(self, storage_connector, path):
-        # For legacy behaviour set the S3 values at global level
-        self._set_s3_hadoop_conf(storage_connector, "fs.s3a")
+        FS_S3_GLOBAL_CONF = "fs.s3a.global-conf"
+
+        # The argument arrive here as strings
+        if storage_connector.arguments.get(FS_S3_GLOBAL_CONF, "True").lower() == "true":
+            # For legacy behaviour set the S3 values at global level
+            self._set_s3_hadoop_conf(storage_connector, "fs.s3a")
 
         # Set credentials at bucket level as well to allow users to use multiple
         # storage connector in the same application.
