@@ -72,5 +72,5 @@ class TrainingDatasetJobConf:
             ]
             if self._write_options
             else None,
-            JobConfiguration.DTO_TYPE: self._spark_job_configuration,
+            JobConfiguration.DTO_TYPE: JobConfiguration(**self._spark_job_configuration if self._spark_job_configuration else {}).to_dict(),
         }

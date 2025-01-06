@@ -77,7 +77,7 @@ public class JobConfiguration {
     if (Strings.isNullOrEmpty(properties)) {
       properties = defaultProperty;
     } else {
-      properties = properties + (properties.contains(defaultProperty.split("=")[0]) ? "" : "\\n" + defaultProperty);
+      properties = properties + (properties.contains(defaultProperty.split("=")[0]) ? "" : "\n" + defaultProperty);
     }
 
     return properties;

@@ -69,7 +69,40 @@ class TestJobConfiguration:
             "spark.dynamicAllocation.enabled": False,
             "spark.dynamicAllocation.minExecutors": 2,
             "spark.dynamicAllocation.maxExecutors": 4,
-            "properties": "spark.test=xxx\\nspark.yarn.maxAppAttempts=2",
+            "properties": "spark.test=xxx\nspark.yarn.maxAppAttempts=2",
+            "type": job_configuration.JobConfiguration.DTO_TYPE,
+        }
+        assert expected_dict == result_dict
+
+    def test_to_dict_non_defaults_max_app_attempts(self):
+        # Arrange
+        job_config = job_configuration.JobConfiguration(
+            am_memory=4096,
+            am_cores=2,
+            executor_memory=8192,
+            executor_cores=2,
+            executor_instances=2,
+            dynamic_allocation=False,
+            dynamic_min_executors=2,
+            dynamic_max_executors=4,
+            yarn_max_app_attempts=2,
+            properties="spark.yarn.maxAppAttempts=9",
+        )
+
+        # Act
+        result_dict = job_config.to_dict()
+
+        # Assert
+        expected_dict = {
+            "amMemory": 4096,
+            "amCores": 2,
+            "spark.executor.memory": 8192,
+            "spark.executor.cores": 2,
+            "spark.executor.instances": 2,
+            "spark.dynamicAllocation.enabled": False,
+            "spark.dynamicAllocation.minExecutors": 2,
+            "spark.dynamicAllocation.maxExecutors": 4,
+            "properties": "spark.yarn.maxAppAttempts=9",
             "type": job_configuration.JobConfiguration.DTO_TYPE,
         }
         assert expected_dict == result_dict

@@ -74,5 +74,5 @@ class IngestionJobConf:
             ]
             if self._write_options
             else None,
-            JobConfiguration.DTO_TYPE: JobConfiguration(**self._spark_job_configuration).to_dict(),
+            JobConfiguration.DTO_TYPE: JobConfiguration(**self._spark_job_configuration if self._spark_job_configuration else {}).to_dict(),
         }
