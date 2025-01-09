@@ -131,7 +131,7 @@ jobs:
           distribution: "adopt"
 
       - name: Set Timezone
-        run: sudo timedatectl set-timezone Europe/Amsterdam
+        run: sudo timedatectl set-timezone Europe/Amsterdam && echo Europe/Amsterdam | sudo tee /etc/timezone
 
       - uses: actions/checkout@v4
       - name: Copy README
