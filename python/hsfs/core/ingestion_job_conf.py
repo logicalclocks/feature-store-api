@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import json
+from typing import Dict, Optional, Union
 
 from hsfs import util
 from hsfs.core.job_configuration import JobConfiguration
@@ -23,13 +24,20 @@ from hsfs.core.job_configuration import JobConfiguration
 
 class IngestionJobConf:
     def __init__(
-        self, data_format, data_options, write_options, spark_job_configuration
+        self,
+        data_format,
+        data_options,
+        write_options,
+        spark_job_configuration: Optional[Union[JobConfiguration, Dict]]
     ):
         self._data_format = data_format
         self._data_options = data_options
         self._write_options = write_options
 
-        self._spark_job_configuration = JobConfiguration(**spark_job_configuration if spark_job_configuration else {}).to_dict(),
+        if isinstance(spark_job_configuration, JobConfiguration):
+            self._spark_job_configuration = spark_job_configuration
+        elif isinstance(spark_job_configuration, dict):
+            self._spark_job_configuration = JobConfiguration(**spark_job_configuration if spark_job_configuration else {}).to_dict()
 
     @property
     def data_format(self):

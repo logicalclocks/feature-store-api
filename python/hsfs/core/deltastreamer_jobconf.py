@@ -16,15 +16,25 @@
 from __future__ import annotations
 
 import json
+from typing import Dict, Optional, Union
 
 from hsfs import util
 from hsfs.core.job_configuration import JobConfiguration
 
 
 class DeltaStreamerJobConf:
-    def __init__(self, options, spark_options, **kwargs):
+    def __init__(
+            self,
+            options,
+            spark_options: Optional[Union[JobConfiguration, Dict]],
+            **kwargs
+    ):
         self._options = options
-        self._spark_options = JobConfiguration(**spark_options if spark_options else {}).to_dict()
+
+        if isinstance(spark_options, JobConfiguration):
+            self._spark_options = spark_options
+        elif isinstance(spark_options, dict):
+            self._spark_options = JobConfiguration(**spark_options if spark_options else {}).to_dict()
 
     def to_dict(self):
         return {
