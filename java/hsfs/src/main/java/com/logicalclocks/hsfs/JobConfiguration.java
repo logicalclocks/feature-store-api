@@ -17,6 +17,9 @@
 
 package com.logicalclocks.hsfs;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.common.base.Strings;
 
 import lombok.AllArgsConstructor;
@@ -28,8 +31,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class JobConfiguration {
 
+  private static Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {{
+      put("spark.yarn.maxAppAttempts", "2");
+  }};
+
+
   @Getter
-  @Setter
   private String type = "sparkJobConfiguration";
 
 
@@ -73,11 +80,14 @@ public class JobConfiguration {
   private String properties;
 
   public String getProperties() {
-    String defaultProperty = "spark.yarn.maxAppAttempts=2";
-    if (Strings.isNullOrEmpty(properties)) {
-      properties = defaultProperty;
-    } else {
-      properties = properties + (properties.contains(defaultProperty.split("=")[0]) ? "" : "\n" + defaultProperty);
+    // Add default properties to the properties
+    for (Map.Entry<String, String> entry : JobConfiguration.DEFAULT_PROPERTIES.entrySet()) {
+      String defaultProperty = entry.getKey() + "=" + entry.getValue();
+      if (Strings.isNullOrEmpty(properties)) {
+        properties = defaultProperty;
+      } else if (!properties.contains(entry.getKey())) {
+        properties = properties + "\n" + defaultProperty;
+      }
     }
 
     return properties;

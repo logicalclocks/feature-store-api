@@ -28,7 +28,8 @@ class IngestionJobConf:
         self._data_format = data_format
         self._data_options = data_options
         self._write_options = write_options
-        self._spark_job_configuration = spark_job_configuration
+
+        self._spark_job_configuration = JobConfiguration(**spark_job_configuration if spark_job_configuration else {}).to_dict(),
 
     @property
     def data_format(self):
@@ -74,5 +75,5 @@ class IngestionJobConf:
             ]
             if self._write_options
             else None,
-            JobConfiguration.DTO_TYPE: JobConfiguration(**self._spark_job_configuration if self._spark_job_configuration else {}).to_dict(),
+            JobConfiguration.DTO_TYPE: self._spark_job_configuration,
         }

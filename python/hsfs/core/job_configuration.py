@@ -22,6 +22,7 @@ from hsfs import util
 
 class JobConfiguration:
     DTO_TYPE = "sparkJobConfiguration"
+    DEFAULT_PROPERTIES = {"spark.yarn.maxAppAttempts": 2}
 
     def __init__(
         self,
@@ -33,7 +34,7 @@ class JobConfiguration:
         dynamic_allocation=True,
         dynamic_min_executors=1,
         dynamic_max_executors=2,
-        properties=None,
+        properties="",
         **kwargs,
     ):
         self._am_memory = am_memory
@@ -44,15 +45,17 @@ class JobConfiguration:
         self._dynamic_allocation = dynamic_allocation
         self._dynamic_min_executors = dynamic_min_executors
         self._dynamic_max_executors = dynamic_max_executors
-        self._properties = properties
+
+        # Add default properties to the properties
+        default_properties = "\n".join([
+            f"{key}={value}" if not properties or key not in properties else ""
+            for key, value in JobConfiguration.DEFAULT_PROPERTIES.items()])
+        if properties:
+            self._properties = properties + ("\n" + default_properties if default_properties else "")
+        else:
+            self._properties = default_properties
 
     def to_dict(self):
-        default_property = "spark.yarn.maxAppAttempts=2"
-        if not self._properties:
-            self._properties = default_property
-        else:
-            self._properties = self._properties + (f"\n{default_property}" if default_property.split("=")[0] not in self._properties else "")
-
         return {
             "amMemory": self._am_memory,
             "amCores": self._am_cores,
