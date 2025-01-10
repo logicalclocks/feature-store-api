@@ -1357,7 +1357,7 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
         feature_group_url = "test_url"
-        write_options = {"spark": "test"}
+        write_options = {"spark": {}}
 
         mocker.patch("hsfs.engine.get_type")
         mocker.patch(

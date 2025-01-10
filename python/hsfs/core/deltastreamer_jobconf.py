@@ -24,7 +24,7 @@ from hsfs.core.job_configuration import JobConfiguration
 class DeltaStreamerJobConf:
     def __init__(self, options, spark_options, **kwargs):
         self._options = options
-        self._spark_options = JobConfiguration(**spark_options if spark_options else {}).to_dict(),
+        self._spark_options = JobConfiguration(**spark_options if spark_options else {}).to_dict()
 
     def to_dict(self):
         return {
