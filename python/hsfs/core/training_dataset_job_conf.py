@@ -37,7 +37,7 @@ class TrainingDatasetJobConf:
         if isinstance(spark_job_configuration, JobConfiguration):
             self._spark_job_configuration = spark_job_configuration
         elif isinstance(spark_job_configuration, dict):
-            self._spark_job_configuration = JobConfiguration(**spark_job_configuration if spark_job_configuration else {}).to_dict()
+            self._spark_job_configuration = JobConfiguration(**spark_job_configuration if spark_job_configuration else {})
 
     @property
     def query(self):

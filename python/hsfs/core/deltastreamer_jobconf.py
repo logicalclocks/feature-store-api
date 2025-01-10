@@ -34,7 +34,7 @@ class DeltaStreamerJobConf:
         if isinstance(spark_options, JobConfiguration):
             self._spark_options = spark_options
         elif isinstance(spark_options, dict):
-            self._spark_options = JobConfiguration(**spark_options if spark_options else {}).to_dict()
+            self._spark_options = JobConfiguration(**spark_options if spark_options else {})
 
     def to_dict(self):
         return {
