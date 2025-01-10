@@ -33,7 +33,7 @@ public class JobConfiguration {
 
   private static Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {{
       put("spark.yarn.maxAppAttempts", "2");
-  }};
+    }};
 
 
   @Getter

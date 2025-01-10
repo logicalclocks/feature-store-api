@@ -24,12 +24,12 @@ from hsfs.core.job_configuration import JobConfiguration
 class DeltaStreamerJobConf:
     def __init__(self, options, spark_options, **kwargs):
         self._options = options
-        self._spark_options = spark_options
+        self._spark_options = JobConfiguration(**spark_options if spark_options else {}).to_dict(),
 
     def to_dict(self):
         return {
             "writeOptions": self._options,
-            JobConfiguration.DTO_TYPE: JobConfiguration(**self._spark_options if self._spark_options else {}).to_dict(),
+            JobConfiguration.DTO_TYPE: self._spark_options,
         }
 
     def json(self):
