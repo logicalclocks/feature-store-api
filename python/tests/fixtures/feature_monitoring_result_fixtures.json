@@ -1,0 +1,359 @@
+{
+    "get_via_feature_group": {
+      "detection_and_reference_statistics": {
+        "response": {
+          "id": 42,
+          "featureStoreId": 67,
+          "configId": 32,
+          "featureName": "amount",
+          "detectionStatistics": {
+            "id": 52,
+            "featureType": "Fractional",
+            "featureName": "amount",
+            "count": 4,
+            "completeness": 1,
+            "numNonNullValues": 7,
+            "numNullValues": 8,
+            "approxNumDistinctValues": 9,
+            "min": 1,
+            "max": 2,
+            "sum": 3,
+            "mean": 5.1,
+            "stddev": 6.1,
+            "percentiles": {
+              "25%": 0.4,
+              "50%": 0.6,
+              "75%": 0.86
+            },
+            "distinctness": 0.9,
+            "entropy": 0.8,
+            "uniqueness": 0.7,
+            "exactNumDistinctValues": 10
+          },
+          "referenceStatistics": {
+            "id": 53,
+            "featureName": "amount",
+            "featureType": "Fractional",
+            "count": 4,
+            "completeness": 1,
+            "numNonNullValues": 7,
+            "numNullValues": 8,
+            "approxNumDistinctValues": 9,
+            "min": 1,
+            "max": 2,
+            "sum": 3,
+            "mean": 5.1,
+            "stddev": 6.1,
+            "percentiles": {
+              "25%": 0.4,
+              "50%": 0.6,
+              "75%": 0.86
+            },
+            "distinctness": 0.9,
+            "entropy": 0.8,
+            "uniqueness": 0.7,
+            "exactNumDistinctValues": 10
+          },
+          "executionId": 123,
+          "shiftDetected": true,
+          "difference": 0.3,
+          "monitoringTime": 1676457000,
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/result/byconfig/32"
+        }
+      },
+      "detection_statistics_only": {
+        "response": {
+          "id": 42,
+          "featureStoreId": 67,
+          "configId": 32,
+          "featureName": "amount",
+          "detectionStatistics": {
+            "id": 52,
+            "featureType": "Fractional",
+            "featureName": "amount",
+            "count": 4,
+            "completeness": 1,
+            "numNonNullValues": 7,
+            "numNullValues": 8,
+            "approxNumDistinctValues": 9,
+            "min": 1,
+            "max": 2,
+            "sum": 3,
+            "mean": 5.1,
+            "stddev": 6.1,
+            "percentiles": {
+              "25%": 0.4,
+              "50%": 0.6,
+              "75%": 0.86
+            },
+            "distinctness": 0.9,
+            "entropy": 0.8,
+            "uniqueness": 0.7,
+            "exactNumDistinctValues": 10
+          },
+          "executionId": 123,
+          "shiftDetected": true,
+          "difference": 0.3,
+          "monitoringTime": 1676457000,
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/result/byconfig/32"
+        }
+      }
+    },
+    "get_via_feature_view": {
+      "detection_and_reference_statistics": {
+        "response": {
+          "id": 42,
+          "featureStoreId": 67,
+          "configId": 32,
+          "featureName": "amount",
+          "detectionStatistics": {
+            "id": 52,
+            "featureType": "Fractional",
+            "featureName": "amount",
+            "count": 4,
+            "completeness": 1,
+            "numNonNullValues": 7,
+            "numNullValues": 8,
+            "approxNumDistinctValues": 9,
+            "min": 1,
+            "max": 2,
+            "sum": 3,
+            "mean": 5.1,
+            "stddev": 6.1,
+            "percentiles": {
+              "25%": 0.4,
+              "50%": 0.6,
+              "75%": 0.86
+            },
+            "distinctness": 0.9,
+            "entropy": 0.8,
+            "uniqueness": 0.7,
+            "exactNumDistinctValues": 10
+          },
+          "referenceStatistics": {
+            "id": 53,
+            "featureType": "Fractional",
+            "featureName": "amount",
+            "count": 4,
+            "completeness": 1,
+            "numNonNullValues": 7,
+            "numNullValues": 8,
+            "approxNumDistinctValues": 9,
+            "min": 1,
+            "max": 2,
+            "sum": 3,
+            "mean": 5.1,
+            "stddev": 6.1,
+            "percentiles": {
+              "25%": 0.4,
+              "50%": 0.6,
+              "75%": 0.86
+            },
+            "distinctness": 0.9,
+            "entropy": 0.8,
+            "uniqueness": 0.7,
+            "exactNumDistinctValues": 10
+          },
+          "executionId": 123,
+          "shiftDetected": true,
+          "difference": 0.3,
+          "monitoringTime": 1676457000,
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/result/byconfig/32"
+        }
+      },
+      "detection_statistics_only": {
+        "response": {
+          "id": 42,
+          "featureStoreId": 67,
+          "configId": 32,
+          "featureName": "amount",
+          "detectionStatistics": {
+            "id": 52,
+            "featureType": "Fractional",
+            "featureName": "amount",
+            "count": 4,
+            "completeness": 1,
+            "numNonNullValues": 7,
+            "numNullValues": 8,
+            "approxNumDistinctValues": 9,
+            "min": 1,
+            "max": 2,
+            "sum": 3,
+            "mean": 5.1,
+            "stddev": 6.1,
+            "percentiles": {
+              "25%": 0.4,
+              "50%": 0.6,
+              "75%": 0.86
+            },
+            "distinctness": 0.9,
+            "entropy": 0.8,
+            "uniqueness": 0.7,
+            "exactNumDistinctValues": 10
+          },
+          "executionId": 123,
+          "shiftDetected": true,
+          "difference": 0.3,
+          "monitoringTime": 1676457000,
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/result/byconfig/32"
+        }
+      }
+    },
+    "get_list": {
+      "detection_and_reference_statistics": {
+        "response": {
+          "count": 1,
+          "items": [
+            {
+              "id": 42,
+              "featureStoreId": 67,
+              "configId": 32,
+              "featureName": "amount",
+              "detectionStatisticsId": 52,
+              "referenceStatisticsId": 53,
+              "executionId": 123,
+              "shiftDetected": true,
+              "difference": 0.3,
+              "monitoringTime": 1676457000,
+              "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/result/byconfig/32"
+            }
+          ]
+        }
+      },
+      "detection_statistics_only": {
+        "response": {
+          "count": 1,
+          "items": [
+            {
+              "id": 42,
+              "featureStoreId": 67,
+              "configId": 32,
+              "featureName": "amount",
+              "detectionStatisticsId": 52,
+              "executionId": 123,
+              "shiftDetected": true,
+              "difference": 0.3,
+              "monitoringTime": 1676457000,
+              "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/result/byconfig/32"
+            }
+          ]
+        }
+      }
+    },
+    "get_list_with_statistics": {
+      "detection_and_reference_statistics": {
+        "response": {
+          "count": 1,
+          "items": [
+            {
+              "id": 42,
+              "featureStoreId": 67,
+              "configId": 32,
+              "featureName": "amount",
+              "detectionStatistics": {
+                "id": 52,
+                "featureType": "Fractional",
+                "featureName": "amount",
+                "count": 4,
+                "completeness": 1,
+                "numNonNullValues": 7,
+                "numNullValues": 8,
+                "approxNumDistinctValues": 9,
+                "min": 1,
+                "max": 2,
+                "sum": 3,
+                "mean": 5.1,
+                "stddev": 6.1,
+                "percentiles": {
+                  "25%": 0.4,
+                  "50%": 0.6,
+                  "75%": 0.86
+                },
+                "distinctness": 0.9,
+                "entropy": 0.8,
+                "uniqueness": 0.7,
+                "exactNumDistinctValues": 10
+              },
+              "referenceStatistics": {
+                "id": 53,
+                "featureType": "Fractional",
+                "featureName": "amount",
+                "count": 4,
+                "completeness": 1,
+                "numNonNullValues": 7,
+                "numNullValues": 8,
+                "approxNumDistinctValues": 9,
+                "min": 1,
+                "max": 2,
+                "sum": 3,
+                "mean": 5.1,
+                "stddev": 6.1,
+                "percentiles": {
+                  "25%": 0.4,
+                  "50%": 0.6,
+                  "75%": 0.86
+                },
+                "distinctness": 0.9,
+                "entropy": 0.8,
+                "uniqueness": 0.7,
+                "exactNumDistinctValues": 10
+              },
+              "executionId": 123,
+              "shiftDetected": true,
+              "difference": 0.3,
+              "monitoringTime": 1676457000,
+              "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/result/byconfig/32"
+            }
+          ]
+        }
+      },
+      "detection_statistics_only": {
+        "response": {
+          "count": 1,
+          "items": [
+            {
+              "id": 42,
+              "featureStoreId": 67,
+              "configId": 32,
+              "featureName": "amount",
+              "detectionStatistics": {
+                "id": 52,
+                "featureType": "Fractional",
+                "featureName": "amount",
+                "count": 4,
+                "completeness": 1,
+                "numNonNullValues": 7,
+                "numNullValues": 8,
+                "approxNumDistinctValues": 9,
+                "min": 1,
+                "max": 2,
+                "sum": 3,
+                "mean": 5.1,
+                "stddev": 6.1,
+                "percentiles": {
+                  "25%": 0.4,
+                  "50%": 0.6,
+                  "75%": 0.86
+                },
+                "distinctness": 0.9,
+                "entropy": 0.8,
+                "uniqueness": 0.7,
+                "exactNumDistinctValues": 10
+              },
+              "executionId": 123,
+              "shiftDetected": true,
+              "difference": 0.3,
+              "monitoringTime": 1676457000,
+              "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/result/byconfig/32"
+            }
+          ]
+        }
+      }
+    },
+    "get_list_empty": {
+      "response": {
+        "count": 0,
+        "items": []
+      }
+    }
+  }

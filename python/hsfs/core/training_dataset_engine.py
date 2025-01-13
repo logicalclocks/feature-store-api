@@ -13,14 +13,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import warnings
 
 from hsfs import engine, training_dataset_feature
 from hsfs.constructor import query
 from hsfs.core import (
-    training_dataset_api,
     tags_api,
+    training_dataset_api,
     transformation_function_engine,
 )
 
@@ -77,7 +78,8 @@ class TrainingDatasetEngine:
             warnings.warn(
                 "Training dataset splits were defined but no `train_split` (the name of the split that is going to be "
                 "used for training) was provided. Setting this property to `train`. The statistics of this "
-                "split will be used for transformation functions."
+                "split will be used for transformation functions.",
+                stacklevel=1,
             )
 
         updated_instance = self._training_dataset_api.post(training_dataset)

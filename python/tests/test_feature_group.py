@@ -14,23 +14,25 @@
 #   limitations under the License.
 #
 
-import hsfs
-from hsfs import (
-    feature_store,
-    feature_group,
-    user,
-    statistics_config,
-    feature,
-    storage_connector,
-    expectation_suite,
-    util,
-    engine,
-    feature_group_writer,
-)
-from hsfs.engine import python
-from hsfs.client.exceptions import FeatureStoreException, RestAPIError
-import pytest
 import warnings
+
+import hsfs
+import pytest
+from hsfs import (
+    engine,
+    expectation_suite,
+    feature,
+    feature_group,
+    feature_group_writer,
+    feature_store,
+    statistics_config,
+    storage_connector,
+    user,
+    util,
+)
+from hsfs.client.exceptions import FeatureStoreException, RestAPIError
+from hsfs.engine import python, spark
+
 
 engine.init("python")
 test_feature_group = feature_group.FeatureGroup(
@@ -143,13 +145,13 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == ""
         assert fg.partition_key == []
-        assert fg.primary_key == []
+        assert fg.primary_key == ["intt"]
         assert fg.hudi_precombine_key is None
         assert fg._feature_store_name is None
         assert fg.created is None
         assert fg.creator is None
         assert fg.id == 15
-        assert len(fg.features) == 0
+        assert len(fg.features) == 2
         assert fg.location is None
         assert fg.online_enabled is False
         assert fg.time_travel_format is None
@@ -176,13 +178,13 @@ class TestFeatureGroup:
         assert fg._feature_store_id == 67
         assert fg.description == ""
         assert fg.partition_key == []
-        assert fg.primary_key == []
+        assert fg.primary_key == ["intt"]
         assert fg.hudi_precombine_key is None
         assert fg._feature_store_name is None
         assert fg.created is None
         assert fg.creator is None
         assert fg.id == 15
-        assert len(fg.features) == 0
+        assert len(fg.features) == 2
         assert fg.location is None
         assert fg.online_enabled is False
         assert fg.time_travel_format is None
@@ -306,6 +308,12 @@ class TestFeatureGroup:
         mocker.patch("hsfs.engine.get_type")
         json = backend_fixtures["feature_store"]["get"]["response"]
 
+        features = [
+            feature.Feature(name="pk", type="int"),
+            feature.Feature(name="et", type="timestamp"),
+            feature.Feature(name="feat", type="int"),
+        ]
+
         # Act
         fs = feature_store.FeatureStore.from_response_json(json)
         with warnings.catch_warnings(record=True) as warning_record:
@@ -314,6 +322,7 @@ class TestFeatureGroup:
                 version=1,
                 description="fg_description",
                 event_time=["event_date"],
+                features=features,
             )
         with pytest.raises(FeatureStoreException):
             util.verify_attribute_key_names(new_fg, False)
@@ -369,16 +378,16 @@ class TestFeatureGroup:
         )
 
         # call first time should populate cache
-        fg.materialization_job
+        fg.materialization_job  # noqa: B018
 
         mock_job_api.assert_called_once_with("test_fg_2_offline_fg_materialization")
         assert fg._materialization_job == mock_job
 
         # call second time
-        fg.materialization_job
+        fg.materialization_job  # noqa: B018
 
         # make sure it still was called only once
-        mock_job_api.assert_called_once
+        mock_job_api.assert_called_once  # noqa: B018
         assert fg.materialization_job == mock_job
 
     def test_materialization_job_retry_success(self, mocker):
@@ -449,7 +458,7 @@ class TestFeatureGroup:
 
         # Act
         with pytest.raises(FeatureStoreException) as e_info:
-            fg.materialization_job
+            fg.materialization_job  # noqa: B018
 
         # Assert
         assert mock_job_api.call_count == 6
@@ -488,7 +497,7 @@ class TestFeatureGroup:
         mock_writer.insert.assert_called_once()
         assert fg._multi_part_insert is True
 
-    def test_save_feature_list(self, mocker, dataframe_fixture_basic):
+    def test_save_feature_list(self, mocker):
         mock_save_metadata = mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata",
             return_value=None,
@@ -511,7 +520,7 @@ class TestFeatureGroup:
         fg.save(features)
         mock_save_metadata.assert_called_once_with(fg, None, {})
 
-    def test_save_feature_in_create(self, mocker, dataframe_fixture_basic):
+    def test_save_feature_in_create(self, mocker):
         mock_save_metadata = mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata",
             return_value=None,
@@ -535,7 +544,7 @@ class TestFeatureGroup:
         fg.save()
         mock_save_metadata.assert_called_once_with(fg, None, {})
 
-    def test_save_exception_empty_input(self, mocker, dataframe_fixture_basic):
+    def test_save_exception_empty_input(self):
         fg = feature_group.FeatureGroup(
             name="test_fg",
             version=2,
@@ -549,7 +558,7 @@ class TestFeatureGroup:
 
         assert "Feature list not provided" in str(e.value)
 
-    def test_save_with_non_feature_list(self, mocker, dataframe_fixture_basic):
+    def test_save_with_non_feature_list(self, mocker):
         engine = python.Engine()
         mocker.patch("hsfs.engine.get_instance", return_value=engine)
         mocker.patch("hsfs.engine.get_type", return_value="python")
@@ -876,3 +885,59 @@ class TestExternalFeatureGroup:
             mock_print.call_args[0][0][:63]
             == "Updated expectation suite attached to Feature Group, edit it at"
         )
+
+    def test_prepare_spark_location(self, mocker, backend_fixtures):
+        # Arrange
+        engine = spark.Engine()
+        engine_instance = mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        json = backend_fixtures["feature_group"]["get_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+        fg._location = f"{fg.name}_{fg.version}"
+
+        # Act
+        path = fg.prepare_spark_location()
+
+        # Assert
+        assert fg.location == path
+        engine_instance.assert_not_called()
+
+    def test_prepare_spark_location_with_s3_connector(self, mocker, backend_fixtures):
+        # Arrange
+        engine = spark.Engine()
+        refetch_api = mocker.patch("hsfs.storage_connector.S3Connector.refetch")
+        engine_instance = mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        json = backend_fixtures["feature_group"]["get_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+        fg._location = f"{fg.name}_{fg.version}"
+        fg._storage_connector = storage_connector.S3Connector(
+            id=1, name="s3_conn", featurestore_id=fg.feature_store_id
+        )
+
+        # Act
+        path = fg.prepare_spark_location()
+
+        # Assert
+        assert fg.location == path
+        engine_instance.assert_called_once()
+        refetch_api.assert_called_once()
+
+    def test_prepare_spark_location_with_s3_connector_python(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        engine = python.Engine()
+        engine_instance = mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.storage_connector.S3Connector.refetch")
+        json = backend_fixtures["feature_group"]["get_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+        fg._location = f"{fg.name}_{fg.version}"
+        fg._storage_connector = storage_connector.S3Connector(
+            id=1, name="s3_conn", featurestore_id=fg.feature_store_id
+        )
+
+        # Act
+        with pytest.raises(AttributeError):
+            fg.prepare_spark_location()
+
+        # Assert
+        engine_instance.assert_called_once()

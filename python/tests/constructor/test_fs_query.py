@@ -16,9 +16,9 @@
 
 
 from hsfs.constructor import (
-    hudi_feature_group_alias,
     external_feature_group_alias,
     fs_query,
+    hudi_feature_group_alias,
 )
 
 

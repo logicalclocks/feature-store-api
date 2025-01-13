@@ -12,12 +12,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
 import warnings
 
-from hsfs import engine, client, util
+from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
-from hsfs.core import feature_group_base_engine, hudi_engine
+from hsfs.core import delta_engine, feature_group_base_engine, hudi_engine
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 
 
@@ -33,10 +35,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         feature_group,
         feature_dataframe,
         write_options,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
+        )
+        util.validate_embedding_feature_type(
+            feature_group.embedding_index, dataframe_features
         )
 
         self.save_feature_group_metadata(
@@ -47,7 +52,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result="INGESTED",
         )
 
@@ -80,10 +85,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         operation,
         storage,
         write_options,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
+        )
+        util.validate_embedding_feature_type(
+            feature_group.embedding_index, dataframe_features
         )
 
         if not feature_group._id:
@@ -101,13 +109,21 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result="INGESTED",
             ge_type=False,
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":
-            return None, ge_report
+            feature_group_url = util.get_feature_group_url(
+                feature_store_id=feature_group.feature_store_id,
+                feature_group_id=feature_group.id,
+            )
+            raise exceptions.DataValidationException(
+                "Data validation failed while validation ingestion policy set to strict, "
+                + f"insertion to {feature_group.name} was aborted.\n"
+                + f"You can check a summary or download your report at {feature_group_url}."
+            )
 
         offline_write_options = write_options
         online_write_options = write_options
@@ -139,7 +155,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def commit_details(self, feature_group, wallclock_time, limit):
         if (
             feature_group._time_travel_format is None
-            or feature_group._time_travel_format.upper() != "HUDI"
+            or feature_group._time_travel_format.upper() not in ["HUDI", "DELTA"]
         ):
             raise exceptions.FeatureStoreException(
                 "commit_details can only be used on time travel enabled feature groups"
@@ -164,14 +180,40 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     @staticmethod
     def commit_delete(feature_group, delete_df, write_options):
-        hudi_engine_instance = hudi_engine.HudiEngine(
-            feature_group.feature_store_id,
-            feature_group.feature_store_name,
-            feature_group,
-            engine.get_instance()._spark_context,
-            engine.get_instance()._spark_session,
-        )
-        return hudi_engine_instance.delete_record(delete_df, write_options)
+        if feature_group.time_travel_format == "DELTA":
+            delta_engine_instance = delta_engine.DeltaEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                engine.get_instance()._spark_session,
+                engine.get_instance()._spark_context,
+            )
+            return delta_engine_instance.delete_record(delete_df)
+        else:
+            hudi_engine_instance = hudi_engine.HudiEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                engine.get_instance()._spark_context,
+                engine.get_instance()._spark_session,
+            )
+            return hudi_engine_instance.delete_record(delete_df, write_options)
+
+    @staticmethod
+    def delta_vacuum(feature_group, retention_hours):
+        if feature_group.time_travel_format == "DELTA":
+            # TODO: This should change, DeltaEngine and HudiEngine always assumes spark client!
+            # Cannot properly manage what should happen when using python.
+            delta_engine_instance = delta_engine.DeltaEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                engine.get_instance()._spark_session,
+                engine.get_instance()._spark_context,
+            )
+            return delta_engine_instance.vacuum(retention_hours)
+        else:
+            return None
 
     def sql(self, query, feature_store_name, dataframe_type, online, read_options):
         if online and self._online_conn is None:
@@ -209,10 +251,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         # write empty dataframe to update parquet schema
-        if feature_group.time_travel_format == "DELTA":
-            engine.get_instance().add_cols_to_delta_table(feature_group, new_features)
-        else:
-            engine.get_instance().save_empty_dataframe(feature_group)
+        engine.get_instance().update_table_schema(feature_group)
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
@@ -257,6 +296,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             dataframe, feature_group.time_travel_format
         )
+        util.validate_embedding_feature_type(
+            feature_group.embedding_index, dataframe_features
+        )
 
         if not feature_group._id:
             self.save_feature_group_metadata(
@@ -288,7 +330,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if not feature_group.stream:
             warnings.warn(
                 "`insert_stream` method in the next release will be available only for feature groups created with "
-                "`stream=True`."
+                "`stream=True`.",
+                stacklevel=1,
             )
 
         streaming_query = engine.get_instance().save_stream_dataframe(
@@ -353,16 +396,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.save(feature_group)
         print(
             "Feature Group created successfully, explore it at \n"
-            + self._get_feature_group_url(feature_group)
+            + util.get_feature_group_url(
+                feature_store_id=feature_group.feature_store_id,
+                feature_group_id=feature_group.id,
+            )
         )
-
-    def _get_feature_group_url(self, feature_group):
-        sub_path = (
-            "/p/"
-            + str(client.get_instance()._project_id)
-            + "/fs/"
-            + str(feature_group.feature_store_id)
-            + "/fg/"
-            + str(feature_group.id)
-        )
-        return util.get_hostname_replaced_url(sub_path)

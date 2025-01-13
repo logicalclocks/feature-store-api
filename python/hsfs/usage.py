@@ -1,19 +1,20 @@
+from __future__ import annotations
+
+import concurrent.futures
 import functools
-import logging
-import traceback
-import platform
-import json
-import os
-import time
-import uuid
 import hashlib
+import http.client
+import json
+import logging
+import os
+import platform
 import random
 import sys
-import http.client
-import concurrent.futures
-
+import time
+import traceback
+import uuid
+from datetime import datetime, timezone
 from os.path import expanduser, join
-from datetime import datetime
 
 
 class EnvironmentAttribute:
@@ -83,6 +84,18 @@ class EnvironmentAttribute:
             self._timezone = datetime.now().astimezone().tzinfo
         return self._timezone
 
+    def json(self):
+        return json.dumps({
+            "platform": self.get_platform(),
+            "hsml_version": self.get_hsml_version(),
+            "hsfs_version": self.get_hsfs_version(),
+            "hopsworks_version": self.get_hopsworks_version(),
+            "user_id": self.get_user_id(),
+            "backend_version": self.get_backend_version(),
+            "timezone": str(self.get_timezone()),
+            "python_version": self.get_python_version(),
+        })
+
 
 class MethodCounter:
     def __init__(self):
@@ -112,8 +125,12 @@ class MethodCounter:
         return m.__module__ + m.__name__
 
 
-logging.basicConfig(stream=sys.__stdout__)
 _logger = logging.getLogger(__name__)
+_handler = logging.StreamHandler(stream=sys.stdout)
+_handler.setFormatter(
+    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+)
+_logger.addHandler(_handler)
 _logger.setLevel(logging.INFO)
 _conn = http.client.HTTPSConnection("usage.hops.works")
 _num_executor = os.environ.get("NUM_HOPSWORKS_USAGE_EXECUTORS", default="2")
@@ -137,6 +154,10 @@ def disable():
     _is_enabled = False
 
 
+def get_env():
+    return _env_attr.json()
+
+
 def init_usage(hostname, backend_version):
     global _backend_hostname, _backend_version, _is_enabled
     _backend_hostname = hostname
@@ -145,8 +166,7 @@ def init_usage(hostname, backend_version):
 
 
 def _is_target_hostname(hostname):
-    # Add "localhost" in the first release for testing.
-    target_hostname = {"c.app.hopsworks.ai", "localhost"}
+    target_hostname = {"c.app.hopsworks.ai"}
     return hostname in target_hostname
 
 
@@ -221,10 +241,13 @@ def method_logger(func):
 
 
 def _send_log(execution_time, func, exception):
+    tz = _env_attr.get_timezone()
+    zoned_datetime = datetime.now(tz=tz)
     log_data = {
         # env
         "user_id": _env_attr.get_user_id(),
-        "datetime": datetime.now(_env_attr.get_timezone()).strftime(
+        "tz": tz.tzname(zoned_datetime),
+        "datetime": zoned_datetime.astimezone(timezone.utc).strftime(
             "%Y-%m-%d %H:%M:%S %Z"
         ),
         "backend_hostname": _hash_string(_env_attr.get_backend_host_name()),

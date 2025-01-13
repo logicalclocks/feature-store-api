@@ -13,17 +13,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-from hsfs import client
 import re
 
+from hsfs import client
 from hsfs.client.exceptions import RestAPIError
 
 
 class VariableApi:
-    def __init__(self):
-        pass
-
     def get_version(self, software: str):
         _client = client.get_instance()
         path_params = [

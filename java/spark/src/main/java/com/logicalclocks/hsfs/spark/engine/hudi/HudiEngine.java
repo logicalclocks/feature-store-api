@@ -25,9 +25,7 @@ import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.FeatureGroupBase;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
 
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
 import com.logicalclocks.hsfs.spark.FeatureStore;
 import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
@@ -127,6 +125,7 @@ public class HudiEngine {
   protected static final String PROJECT_ID = "projectId";
   protected static final String FEATURE_STORE_NAME = "featureStoreName";
   protected static final String SUBJECT_ID = "subjectId";
+  protected static final String FEATURE_GROUP_ID = "featureGroupId";
   protected static final String FEATURE_GROUP_NAME = "featureGroupName";
   protected static final String FEATURE_GROUP_VERSION = "featureGroupVersion";
   protected static final String FUNCTION_TYPE = "functionType";
@@ -140,13 +139,23 @@ public class HudiEngine {
     }
   };
 
+  private static HudiEngine INSTANCE = null;
+
+  public static synchronized HudiEngine getInstance() {
+    if (INSTANCE == null) {
+      INSTANCE = new HudiEngine();
+    }
+
+    return INSTANCE;
+  }
+
+  private HudiEngine() {
+  }
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
   private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
-  private KafkaApi kafkaApi = new KafkaApi();
-  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
   public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroupBase featureGroup,
                                    Dataset<Row> dataset, HudiOperationType operation,
@@ -189,11 +198,6 @@ public class HudiEngine {
     } else {
       throw new FeatureStoreException("No commit information was found for this feature group");
     }
-  }
-
-  public void registerTemporaryTable(SparkSession sparkSession, FeatureGroupAlias featureGroupAlias,
-                                     Map<String, String> readOptions) {
-
   }
 
   private FeatureGroupCommit getLastCommitMetadata(SparkSession sparkSession, String basePath)
@@ -369,6 +373,7 @@ public class HudiEngine {
     hudiWriteOpts.put(PROJECT_ID, String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()));
     hudiWriteOpts.put(FEATURE_STORE_NAME, streamFeatureGroup.getFeatureStore().getName());
     hudiWriteOpts.put(SUBJECT_ID, String.valueOf(streamFeatureGroup.getSubject().getId()));
+    hudiWriteOpts.put(FEATURE_GROUP_ID, String.valueOf(streamFeatureGroup.getId()));
     hudiWriteOpts.put(FEATURE_GROUP_NAME, streamFeatureGroup.getName());
     hudiWriteOpts.put(FEATURE_GROUP_VERSION, String.valueOf(streamFeatureGroup.getVersion()));
     hudiWriteOpts.put(HUDI_TABLE_NAME, utils.getFgName(streamFeatureGroup));
@@ -380,6 +385,9 @@ public class HudiEngine {
         new JSONArray(streamFeatureGroup.getComplexFeatures()).toString());
     hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY,
         hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
+
+    // set consumer group id
+    hudiWriteOpts.put(ConsumerConfig.GROUP_ID_CONFIG, String.valueOf(streamFeatureGroup.getId()));
 
     // check if table was initiated and if not initiate
     Path basePath = new Path(streamFeatureGroup.getLocation());

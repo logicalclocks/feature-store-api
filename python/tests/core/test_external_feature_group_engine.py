@@ -14,8 +14,7 @@
 #   limitations under the License.
 #
 import pytest
-
-from hsfs import feature_group, feature, storage_connector
+from hsfs import feature, feature_group, storage_connector
 from hsfs.client import exceptions
 from hsfs.core import external_feature_group_engine
 from hsfs.engine import python
@@ -210,7 +209,9 @@ class TestExternalFeatureGroupEngine:
         f2 = feature.Feature(name="f2", type="str")
 
         external_fg = feature_group.ExternalFeatureGroup(
-            storage_connector=None, primary_key=[], features=[f, f1]
+            storage_connector=mocker.patch("hsfs.storage_connector.JdbcConnector"),
+            primary_key=[],
+            features=[f, f1],
         )
 
         # Act

@@ -125,6 +125,14 @@ public abstract class FeatureGroupBase<T> {
   @Getter
   protected Boolean deprecated;
 
+  @Getter
+  @Setter
+  protected StorageConnector storageConnector;
+
+  @Getter
+  @Setter
+  protected String path;
+
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
   protected List<String> partitionKeys;
@@ -259,8 +267,14 @@ public abstract class FeatureGroupBase<T> {
    */
   public void updateFeatureDescription(String featureName, String description)
       throws FeatureStoreException, IOException {
+
+    Feature feature = this.getFeature(featureName);
+
+    Feature newFeature = new Feature(feature.getName(), feature.getType(), feature.getOnlineType(),
+            feature.getPrimary(), feature.getPartition(), feature.getDefaultValue(), description);
+
     featureGroupEngineBase.updateFeatures(this,
-        Collections.singletonList(Feature.builder().name(featureName).description(description).type("tmp").build()),
+        Collections.singletonList(newFeature),
         this.getClass());
   }
 

@@ -13,10 +13,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 
-from hsfs import client, tag, feature_view
+from hsfs import client, feature_view, tag
 
 
 class TagsApi:

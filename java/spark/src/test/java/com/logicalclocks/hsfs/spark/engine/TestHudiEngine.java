@@ -35,7 +35,7 @@ public class TestHudiEngine {
                 .add("name", "string")
                 .add("age", "int");
 
-        HudiEngine engine = new HudiEngine();
+        HudiEngine engine = HudiEngine.getInstance();
         Assertions.assertTrue(engine.sparkSchemasMatch(schema1.fieldNames(), schema2.fieldNames()));
     }
 
@@ -49,7 +49,7 @@ public class TestHudiEngine {
                 .add("id", "int")
                 .add("name", "string");
 
-        HudiEngine engine = new HudiEngine();
+        HudiEngine engine = HudiEngine.getInstance();
         Assertions.assertFalse(engine.sparkSchemasMatch(schema1.fieldNames(), schema2.fieldNames()));
     }
 
@@ -64,7 +64,7 @@ public class TestHudiEngine {
                 .add("age", "int")
                 .add("name", "string");
 
-        HudiEngine engine = new HudiEngine();
+        HudiEngine engine = HudiEngine.getInstance();
         Assertions.assertTrue(engine.sparkSchemasMatch(schema1.fieldNames(), schema2.fieldNames()));
     }
 

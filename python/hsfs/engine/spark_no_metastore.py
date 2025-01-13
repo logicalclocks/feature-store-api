@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 
 try:
@@ -24,7 +25,7 @@ from hsfs.engine import spark
 
 
 class Engine(spark.Engine):
-    def __init__(self):
+    def __init__(self) -> None:
         self._spark_session = SparkSession.builder.getOrCreate()
         self._spark_context = self._spark_session.sparkContext
         self._jvm = self._spark_context._jvm

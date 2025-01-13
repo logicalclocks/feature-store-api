@@ -16,9 +16,9 @@
 
 import os
 import sys
-import pytest
 
-from hsfs import training_dataset, feature_group
+import pytest
+from hsfs import feature_group, training_dataset
 from hsfs.core import code_engine
 
 

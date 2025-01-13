@@ -113,9 +113,11 @@ Options:
 You can also run only single feature vector or batch lookups by running only the respective user class:
 
 ```bash
-locust -f locustfile.py FeatureVectorLookup --headless -u 4 -r 1 -t 30 -s 1 --html=result.html
+locust -f locustfile.py MySQLFeatureVectorLookup --headless -u 4 -r 1 -t 30 -s 1 --html=result.html
 
-locust -f locustfile.py FeatureVectorBatchLookup --headless -u 4 -r 1 -t 30 -s 1 --html=result.html
+locust -f locustfile.py RESTFeatureVectorLookup --headless -u 4 -r 1 -t 30 -s 1 --html=result.html --host http://feature.vector.server:4406
+
+locust -f locustfile.py MySQLFeatureVectorBatchLookup --headless -u 4 -r 1 -t 30 -s 1 --html=result.html
 ```
 
 ### Distributed Locust Benchmark using Docker Compose
@@ -134,11 +136,10 @@ curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 ```
 
-#### Load the docker image
+#### Build the docker image
 
 ```bash
-wget https://repo.hops.works/dev/moritz/locust_benchmark/locust-2.15.1-hsfs-3.3.0.dev1-amd64.tgz
-sudo docker load < locust-2.15.0-hsfs-3.2.0.dev1-amd64.tgz
+docker build . -t locust-hsfs:master
 ```
 
 #### Create feature group and configure test

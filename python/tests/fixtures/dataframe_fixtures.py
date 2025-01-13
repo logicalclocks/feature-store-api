@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 
-import pytest
+from datetime import datetime, timedelta, timezone
+
 import pandas as pd
-from datetime import datetime, timezone, timedelta
+import pytest
 
 
 @pytest.fixture
@@ -52,6 +53,23 @@ def dataframe_fixture_times():
         "event_timestamp_pacific": [pd.Timestamp("2022-07-03T00", tz="US/Pacific")],
         "state": ["nevada"],
         "measurement": [12.4],
+    }
+
+    return pd.DataFrame(data)
+
+
+@pytest.fixture
+def dataframe_fixtures_column_spaced():
+    data = {
+        "Primary Key": [1, 2, 3, 4],
+        "Event date": [
+            datetime(2022, 7, 3).date(),
+            datetime(2022, 1, 5).date(),
+            datetime(2022, 1, 6).date(),
+            datetime(2022, 1, 7).date(),
+        ],
+        "staTe 1": ["nevada", None, "nevada", None],
+        "Measure ment taken": [12.4, 32.5, 342.6, 43.7],
     }
 
     return pd.DataFrame(data)

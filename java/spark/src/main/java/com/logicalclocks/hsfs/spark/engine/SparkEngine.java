@@ -123,7 +123,6 @@ import static org.apache.spark.sql.functions.struct;
 public class SparkEngine extends EngineBase {
 
   private final StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
-
   private FeatureGroupUtils featureGroupUtils = new FeatureGroupUtils();
 
   private static SparkEngine INSTANCE = null;
@@ -142,9 +141,6 @@ public class SparkEngine extends EngineBase {
 
   @Getter
   private SparkSession sparkSession;
-
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
-  private HudiEngine hudiEngine = new HudiEngine();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -221,10 +217,6 @@ public class SparkEngine extends EngineBase {
             ? onDemandFeatureGroup.getDataFormat().toString() : null, getOnDemandOptions(onDemandFeatureGroup),
         onDemandFeatureGroup.getStorageConnector().getPath(onDemandFeatureGroup.getPath()));
 
-    if (!Strings.isNullOrEmpty(onDemandFeatureGroup.getLocation())) {
-      sparkSession.sparkContext().textFile(onDemandFeatureGroup.getLocation(), 0).collect();
-    }
-
     dataset.createOrReplaceTempView(alias);
     return dataset;
   }
@@ -253,7 +245,7 @@ public class SparkEngine extends EngineBase {
 
   public void registerHudiTemporaryTable(FeatureGroupAlias featureGroupAlias, Map<String, String> readOptions)
           throws FeatureStoreException {
-    Map<String, String> hudiArgs = hudiEngine.setupHudiReadOpts(
+    Map<String, String> hudiArgs = HudiEngine.getInstance().setupHudiReadOpts(
         featureGroupAlias.getLeftFeatureGroupStartTimestamp(),
         featureGroupAlias.getLeftFeatureGroupEndTimestamp(),
         readOptions);
@@ -264,7 +256,7 @@ public class SparkEngine extends EngineBase {
         .load(featureGroupAlias.getFeatureGroup().getLocation())
         .createOrReplaceTempView(featureGroupAlias.getAlias());
 
-    hudiEngine.reconcileHudiSchema(sparkSession, featureGroupAlias, hudiArgs);
+    HudiEngine.getInstance().reconcileHudiSchema(sparkSession, featureGroupAlias, hudiArgs);
   }
 
   /**
@@ -657,7 +649,7 @@ public class SparkEngine extends EngineBase {
 
   public void writeEmptyDataframe(FeatureGroupBase featureGroup)
           throws IOException, FeatureStoreException, ParseException {
-    String fgTableName = utils.getTableName(featureGroup);
+    String fgTableName = featureGroupUtils.getTableName(featureGroup);
     Dataset emptyDf = sparkSession.table(fgTableName).limit(0);
     writeOfflineDataframe(featureGroup, emptyDf, HudiOperationType.UPSERT, new HashMap<>(), null);
   }
@@ -667,7 +659,8 @@ public class SparkEngine extends EngineBase {
       throws IOException, FeatureStoreException, ParseException {
 
     if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI) {
-      hudiEngine.saveHudiFeatureGroup(sparkSession, featureGroup, dataset, operation, writeOptions, validationId);
+      HudiEngine.getInstance()
+          .saveHudiFeatureGroup(sparkSession, featureGroup, dataset, operation, writeOptions, validationId);
     } else {
       writeSparkDataset(featureGroup, dataset, writeOptions);
     }
@@ -681,8 +674,8 @@ public class SparkEngine extends EngineBase {
         .mode(SaveMode.Append)
         // write options cannot be null
         .options(writeOptions == null ? new HashMap<>() : writeOptions)
-        .partitionBy(utils.getPartitionColumns(featureGroup))
-        .saveAsTable(utils.getTableName(featureGroup));
+        .partitionBy(featureGroupUtils.getPartitionColumns(featureGroup))
+        .saveAsTable(featureGroupUtils.getTableName(featureGroup));
   }
 
   public String profile(Dataset<Row> df, List<String> restrictToColumns, Boolean correlation,
@@ -796,7 +789,7 @@ public class SparkEngine extends EngineBase {
   public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
       throws Exception {
     writeOptions = getKafkaConfig(streamFeatureGroup, writeOptions);
-    hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
+    HudiEngine.getInstance().streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
 
   public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset,
@@ -935,7 +928,7 @@ public class SparkEngine extends EngineBase {
       java.nio.file.Path targetPath = Paths.get(SparkFiles.getRootDirectory(), fileName);
 
       try (FileOutputStream outputStream = new FileOutputStream(targetPath.toString())) {
-        outputStream.write(DatasetApi.readContent(filePath, "HIVEDB"));
+        outputStream.write(DatasetApi.readContent(filePath, featureGroupUtils.getDatasetType(filePath)));
       } catch (IOException e) {
         throw new FeatureStoreException("Error setting up file: " + filePath, e);
       }

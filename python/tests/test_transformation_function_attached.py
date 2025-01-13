@@ -15,7 +15,7 @@
 #
 
 
-from hsfs import transformation_function_attached, transformation_function
+from hsfs import transformation_function, transformation_function_attached
 
 
 class TestTransformationFunctionAttached:

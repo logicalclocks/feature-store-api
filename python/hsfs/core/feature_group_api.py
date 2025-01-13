@@ -13,20 +13,28 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-from hsfs import client
-from hsfs import feature_group, feature_group_commit
-from hsfs.core import ingestion_job
+import warnings
+from typing import List, Optional, Union
 
-from hsfs.core import explicit_provenance
+from hsfs import client, feature_group_commit, util
+from hsfs import feature_group as fg_mod
+from hsfs.core import explicit_provenance, ingestion_job, ingestion_job_conf, job
 
 
 class FeatureGroupApi:
-    CACHED = "cached"
-    ONDEMAND = "ondemand"
-    SPINE = "spine"
+    BACKEND_FG_STREAM = "streamFeatureGroupDTO"
+    BACKEND_FG_BATCH = "cachedFeaturegroupDTO"
+    BACKEND_FG_EXTERNAL = "onDemandFeaturegroupDTO"
+    BACKEND_FG_SPINE = "onDemandFeaturegroupDTO"
 
-    def save(self, feature_group_instance):
+    def save(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup
+        ],
+    ) -> Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup]:
         """Save feature group metadata to the feature store.
 
         :param feature_group_instance: metadata object of feature group to be
@@ -52,10 +60,18 @@ class FeatureGroupApi:
                 data=feature_group_instance.json(),
             ),
         )
-        feature_group_object.feature_store = feature_group_instance.feature_store
         return feature_group_object
 
-    def get(self, feature_store_id, name, version, fg_type):
+    def get(
+        self, feature_store_id: int, name: str, version: Optional[int]
+    ) -> Union[
+        fg_mod.FeatureGroup,
+        fg_mod.SpineGroup,
+        fg_mod.ExternalFeatureGroup,
+        List[fg_mod.FeatureGroup],
+        List[fg_mod.SpineGroup],
+        List[fg_mod.ExternalFeatureGroup],
+    ]:
         """Get the metadata of a feature group with a certain name and version.
 
         :param feature_store_id: feature store id
@@ -64,10 +80,9 @@ class FeatureGroupApi:
         :type name: str
         :param version: version of the feature group
         :type version: int
-        :param fg_type: type of the feature group to return
-        :type version: string
+
         :return: feature group metadata object
-        :rtype: FeatureGroup
+        :rtype: FeatureGroup, SpineGroup, ExternalFeatureGroup, List[FeatureGroup], List[SpineGroup], List[ExternalFeatureGroup]
         """
         _client = client.get_instance()
         path_params = [
@@ -79,21 +94,86 @@ class FeatureGroupApi:
             name,
         ]
         query_params = None if version is None else {"version": version}
-        json_list = _client._send_request("GET", path_params, query_params)
 
-        if fg_type == self.CACHED:
-            fg_list = feature_group.FeatureGroup.from_response_json(json_list)
-        elif fg_type == self.SPINE:
-            fg_list = feature_group.SpineGroup.from_response_json(json_list)
-        else:
-            fg_list = feature_group.ExternalFeatureGroup.from_response_json(json_list)
+        fg_objs = []
+        # In principle unique names are enforced across fg type and this should therefore
+        # return only list of the same type. But it cost nothing to check in case this gets forgotten.
+        for fg_json in _client._send_request("GET", path_params, query_params):
+            if (
+                fg_json["type"] == FeatureGroupApi.BACKEND_FG_STREAM
+                or fg_json["type"] == FeatureGroupApi.BACKEND_FG_BATCH
+            ):
+                fg_objs.append(fg_mod.FeatureGroup.from_response_json(fg_json))
+            elif fg_json["type"] == FeatureGroupApi.BACKEND_FG_EXTERNAL:
+                if fg_json.get("spine", False):
+                    fg_objs.append(fg_mod.SpineGroup.from_response_json(fg_json))
+                else:
+                    fg_objs.append(
+                        fg_mod.ExternalFeatureGroup.from_response_json(fg_json)
+                    )
+            else:
+                list_of_types = [
+                    FeatureGroupApi.BACKEND_FG_STREAM,
+                    FeatureGroupApi.BACKEND_FG_BATCH,
+                    FeatureGroupApi.BACKEND_FG_EXTERNAL,
+                    FeatureGroupApi.BACKEND_FG_SPINE,
+                ]
+                raise ValueError(
+                    f"Unknown feature group type: {fg_json['type']}, expected one of: "
+                    + str(list_of_types)
+                )
 
         if version is not None:
-            return fg_list[0]
+            self._check_features(fg_objs[0])
+            return fg_objs[0]
         else:
-            return fg_list
+            for fg_obj in fg_objs:
+                self._check_features(fg_obj)
+            return fg_objs
 
-    def delete_content(self, feature_group_instance):
+    def get_by_id(
+        self, feature_store_id: int, feature_group_id: int
+    ) -> Union[
+        fg_mod.FeatureGroup,
+        fg_mod.SpineGroup,
+        fg_mod.ExternalFeatureGroup,
+    ]:
+        """Get the metadata of a feature group with a certain id.
+
+        :param feature_store_id: feature store id
+        :type feature_store_id: int
+        :param feature_group_id: id of the feature group
+        :type feature_group_id: int
+
+        :return: feature group metadata object
+        :rtype: FeatureGroup, SpineGroup, ExternalFeatureGroup
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_store_id,
+            "featuregroups",
+            feature_group_id,
+        ]
+
+        fg_json = _client._send_request("GET", path_params)
+        if (
+            fg_json["type"] == FeatureGroupApi.BACKEND_FG_STREAM
+            or fg_json["type"] == FeatureGroupApi.BACKEND_FG_BATCH
+        ):
+            return fg_mod.FeatureGroup.from_response_json(fg_json)
+        elif fg_json["type"] == FeatureGroupApi.BACKEND_FG_EXTERNAL:
+            if fg_json.get("spine", False):
+                return fg_mod.SpineGroup.from_response_json(fg_json)
+            else:
+                return fg_mod.ExternalFeatureGroup.from_response_json(fg_json)
+
+    def delete_content(
+        self,
+        feature_group_instance: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
+    ) -> None:
         """Delete the content of a feature group.
 
         This endpoint serves to simulate the overwrite/insert mode.
@@ -114,7 +194,12 @@ class FeatureGroupApi:
         ]
         _client._send_request("POST", path_params)
 
-    def delete(self, feature_group_instance):
+    def delete(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup
+        ],
+    ) -> None:
         """Drop a feature group from the feature store.
 
         Drops the metadata and data of a version of a feature group.
@@ -135,11 +220,15 @@ class FeatureGroupApi:
 
     def update_metadata(
         self,
-        feature_group_instance,
-        feature_group_copy,
-        query_parameter,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup
+        ],
+        feature_group_copy: Union[
+            fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup
+        ],
+        query_parameter: str,
         query_parameter_value=True,
-    ):
+    ) -> Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup, fg_mod.SpineGroup]:
         """Update the metadata of a feature group.
 
         This only updates description and schema/features. The
@@ -178,10 +267,13 @@ class FeatureGroupApi:
                 data=feature_group_copy.json(),
             ),
         )
-        feature_group_object.feature_store = feature_group_instance.feature_store
         return feature_group_object
 
-    def commit(self, feature_group_instance, feature_group_commit_instance):
+    def commit(
+        self,
+        feature_group_instance: fg_mod.FeatureGroup,
+        feature_group_commit_instance: feature_group_commit.FeatureGroupCommit,
+    ) -> feature_group_commit.FeatureGroupCommit:
         """
         Save feature group commit metadata.
         # Arguments
@@ -212,7 +304,12 @@ class FeatureGroupApi:
             ),
         )
 
-    def get_commit_details(self, feature_group_instance, wallclock_timestamp, limit):
+    def get_commit_details(
+        self,
+        feature_group_instance: fg_mod.FeatureGroup,
+        wallclock_timestamp: int,
+        limit: int,
+    ) -> feature_group_commit.FeatureGroupCommit:
         """
         Get feature group commit metadata.
         # Arguments
@@ -242,7 +339,11 @@ class FeatureGroupApi:
             _client._send_request("GET", path_params, query_params, headers=headers),
         )
 
-    def ingestion(self, feature_group_instance, ingestion_conf):
+    def ingestion(
+        self,
+        feature_group_instance: fg_mod.FeatureGroup,
+        ingestion_conf: ingestion_job_conf.IngestionJobConf,
+    ) -> ingestion_job.IngestionJob:
         """
         Setup a Hopsworks job for dataframe ingestion
         Args:
@@ -269,7 +370,40 @@ class FeatureGroupApi:
             ),
         )
 
-    def get_parent_feature_groups(self, feature_group_instance):
+    def update_table_schema(
+        self,
+        feature_group_instance: fg_mod.FeatureGroup,
+    ) -> job.Job:
+        """
+        Setup a Hopsworks job to update table schema
+        Args:
+        feature_group_instance: FeatureGroup, required
+            metadata object of feature group.
+        job_conf: the configuration for the job application
+        """
+
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_group_instance.feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "updatetableschema",
+        ]
+
+        headers = {"content-type": "application/json"}
+        return job.Job.from_response_json(
+            _client._send_request("POST", path_params, headers=headers),
+        )
+
+    def get_parent_feature_groups(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.SpineGroup, fg_mod.ExternalFeatureGroup
+        ],
+    ) -> explicit_provenance.Links:
         """Get the parents of this feature group, based on explicit provenance.
         Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
@@ -280,7 +414,7 @@ class FeatureGroupApi:
             feature_group_instance: Metadata object of feature group.
 
         # Returns
-            `ExplicitProvenance.Links`:  the feature groups used to generated this
+            `ExplicitProvenance.Links`:  the feature groups used to generate this
             feature group
         """
         _client = client.get_instance()
@@ -306,7 +440,49 @@ class FeatureGroupApi:
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
 
-    def get_generated_feature_views(self, feature_group_instance):
+    def get_storage_connector_provenance(self, feature_group_instance):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are storage connectors. These storage connector can be accessible,
+        deleted or inaccessible.
+        For deleted and inaccessible storage connector, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ExplicitProvenance.Links`: the storage connector used to generated this
+            feature group
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_group_instance.feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "provenance",
+            "links",
+        ]
+        query_params = {
+            "expand": "provenance_artifacts",
+            "upstreamLvls": 1,
+            "downstreamLvls": 0,
+        }
+        links_json = _client._send_request("GET", path_params, query_params)
+        return explicit_provenance.Links.from_response_json(
+            links_json,
+            explicit_provenance.Links.Direction.UPSTREAM,
+            explicit_provenance.Links.Type.STORAGE_CONNECTOR,
+        )
+
+    def get_generated_feature_views(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.SpineGroup, fg_mod.ExternalFeatureGroup
+        ],
+    ) -> explicit_provenance.Links:
         """Get the generated feature view using this feature group, based on explicit
         provenance. These feature views can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature view links, so deleted
@@ -343,7 +519,12 @@ class FeatureGroupApi:
             explicit_provenance.Links.Type.FEATURE_VIEW,
         )
 
-    def get_generated_feature_groups(self, feature_group_instance):
+    def get_generated_feature_groups(
+        self,
+        feature_group_instance: Union[
+            fg_mod.FeatureGroup, fg_mod.SpineGroup, fg_mod.ExternalFeatureGroup
+        ],
+    ) -> explicit_provenance.Links:
         """Get the generated feature groups using this feature group, based on explicit
         provenance. These feature groups can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature group links, so deleted
@@ -379,3 +560,11 @@ class FeatureGroupApi:
             explicit_provenance.Links.Direction.DOWNSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
+
+    def _check_features(self, feature_group_instance) -> None:
+        if not feature_group_instance._features:
+            warnings.warn(
+                f"Feature Group `{feature_group_instance._name}`, version `{feature_group_instance._version}` has no features (to resolve this issue contact the admin or delete and recreate the feature group)",
+                util.FeatureGroupWarning,
+                stacklevel=1,
+            )

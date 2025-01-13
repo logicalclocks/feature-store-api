@@ -13,26 +13,25 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import pytest
+from unittest.mock import MagicMock
 
+import pytest
 from hsfs import (
-    feature_view,
-    transformation_function_attached,
-    training_dataset,
-    split_statistics,
-    feature_group,
-    feature,
     engine,
+    feature,
+    feature_group,
+    feature_view,
+    split_statistics,
+    training_dataset,
+    transformation_function_attached,
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
-from hsfs.core import feature_view_engine
 from hsfs.constructor.query import Query
-from hsfs.core import arrow_flight_client
-from hsfs.storage_connector import BigQueryConnector, StorageConnector
+from hsfs.core import arrow_flight_client, feature_view_engine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.storage_connector import BigQueryConnector, StorageConnector
 
-from unittest.mock import MagicMock
 
 engine.init("python")
 fg1 = feature_group.FeatureGroup(
@@ -354,7 +353,7 @@ class TestFeatureViewEngine:
 
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.get_fv_attached_transformation_fn"
         )
         mock_attach_transformation = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
@@ -396,7 +395,7 @@ class TestFeatureViewEngine:
 
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.get_fv_attached_transformation_fn"
         )
         mock_attach_transformation = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
@@ -567,62 +566,6 @@ class TestFeatureViewEngine:
         assert mock_fv_api.return_value.get_batch_query.call_count == 1
         assert mock_qc_api.return_value.construct_query.call_count == 1
 
-    def test_get_attached_transformation_fn(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-
-        fv_engine = feature_view_engine.FeatureViewEngine(
-            feature_store_id=feature_store_id
-        )
-
-        def testFunction():
-            print("Test")
-
-        tf = transformation_function_attached.TransformationFunctionAttached(
-            name="tf_name", transformation_function=testFunction
-        )
-
-        mock_fv_api.return_value.get_attached_transformation_fn.return_value = tf
-
-        # Act
-        result = fv_engine.get_attached_transformation_fn(name="fv_name", version=1)
-
-        # Assert
-        assert "tf_name" in result
-        assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
-
-    def test_get_attached_transformation_fn_multiple(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-
-        fv_engine = feature_view_engine.FeatureViewEngine(
-            feature_store_id=feature_store_id
-        )
-
-        def testFunction():
-            print("Test")
-
-        tf = transformation_function_attached.TransformationFunctionAttached(
-            name="tf_name", transformation_function=testFunction
-        )
-        tf1 = transformation_function_attached.TransformationFunctionAttached(
-            name="tf1_name", transformation_function=testFunction
-        )
-
-        mock_fv_api.return_value.get_attached_transformation_fn.return_value = [tf, tf1]
-
-        # Act
-        result = fv_engine.get_attached_transformation_fn(name="fv_name", version=1)
-
-        # Assert
-        assert "tf_name" in result
-        assert "tf1_name" in result
-        assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
-
     def test_attach_transformation_function(self, mocker):
         def testFunction():
             print("Test")
@@ -632,7 +575,7 @@ class TestFeatureViewEngine:
         )
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn",
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.get_fv_attached_transformation_fn",
             return_value={"label": tf},
         )
         feature_store_id = 99
@@ -814,9 +757,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_fv_engine_create_training_data_metadata.return_value.training_dataset_type = (
-            training_dataset.TrainingDataset.IN_MEMORY
-        )
+        mock_fv_engine_create_training_data_metadata.return_value.training_dataset_type = training_dataset.TrainingDataset.IN_MEMORY
         mock_fv_engine_create_training_data_metadata.return_value.IN_MEMORY = (
             training_dataset.TrainingDataset.IN_MEMORY
         )
@@ -1134,6 +1075,7 @@ class TestFeatureViewEngine:
             with_training_helper_columns=None,
             training_helper_columns=None,
             feature_view_features=[],
+            dataframe_type="default",
         )
 
         # Assert
@@ -1186,6 +1128,7 @@ class TestFeatureViewEngine:
             with_training_helper_columns=None,
             training_helper_columns=None,
             feature_view_features=[],
+            dataframe_type="default",
         )
 
         # Assert
@@ -1231,6 +1174,7 @@ class TestFeatureViewEngine:
             with_training_helper_columns=False,
             training_helper_columns=[],
             feature_view_features=[],
+            dataframe_type="default",
         )
 
         # Assert
@@ -1272,6 +1216,7 @@ class TestFeatureViewEngine:
                 with_training_helper_columns=None,
                 training_helper_columns=None,
                 feature_view_features=[],
+                dataframe_type="default",
             )
 
         # Assert
@@ -1860,9 +1805,7 @@ class TestFeatureViewEngine:
         assert (
             mock_engine_get_instance.return_value._apply_transformation_function.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == tf_value
         )
         assert (
@@ -2004,6 +1947,7 @@ class TestFeatureViewEngine:
         # Arrange
         feature_store_id = 99
 
+        mocker.patch("hsfs.client.get_instance")  # for arrow_flight_client
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
         mock_constructor_query = mocker.patch("hsfs.constructor.query.Query")
@@ -2038,6 +1982,7 @@ class TestFeatureViewEngine:
         # Arrange
         feature_store_id = 99
 
+        mocker.patch("hsfs.client.get_instance")  # for arrow_flight_client
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_engine_get_type = mocker.patch(
             "hsfs.engine.get_type", return_value="python"
@@ -2074,11 +2019,13 @@ class TestFeatureViewEngine:
         # Arrange
         feature_store_id = 99
 
+        mocker.patch("hsfs.client.get_instance")  # for arrow_flight_client
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch("hsfs.engine.get_type", return_value="python")
 
         afc = arrow_flight_client.get_instance()
-        afc._is_enabled = True
+        afc._disabled_for_session = False
+        afc._enabled_on_cluster = True
 
         mock_constructor_query = mocker.patch("hsfs.constructor.query.Query")
         connector = BigQueryConnector(0, "BigQueryConnector", 99)
@@ -2104,9 +2051,7 @@ class TestFeatureViewEngine:
         )
 
         assert arrow_flight_client.get_instance().is_enabled()
-        assert arrow_flight_client.get_instance().supports(
-            mock_constructor_query.featuregroups
-        )
+        assert arrow_flight_client.supports(mock_constructor_query.featuregroups)
 
         # Act
         # All good if we don't get an exception
@@ -2116,6 +2061,7 @@ class TestFeatureViewEngine:
         # Arrange
         feature_store_id = 99
 
+        mocker.patch("hsfs.client.get_instance")  # for arrow_flight_client
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch("hsfs.engine.get_type", return_value="python")
 
@@ -2247,7 +2193,7 @@ class TestFeatureViewEngine:
         mock_client_get_instance.return_value._project_id = 50
 
         # Act
-        fv_engine._get_feature_view_url(feature_view=fv)
+        fv_engine._get_feature_view_url(fv=fv)
 
         # Assert
         assert mock_util_get_hostname_replaced_url.call_count == 1

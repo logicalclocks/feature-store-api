@@ -19,7 +19,19 @@ package com.logicalclocks.hsfs.spark.engine.hudi;
 
 
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.hadoop.fs.Path;
+import org.apache.hudi.client.common.HoodieSparkEngineContext;
+import org.apache.hudi.common.model.HoodieFailedWritesCleaningPolicy;
 import org.apache.hudi.common.model.WriteOperationType;
+import org.apache.hudi.common.table.HoodieTableConfig;
+import org.apache.hudi.common.table.HoodieTableMetaClient;
+import org.apache.hudi.common.table.HoodieTableVersion;
+import org.apache.hudi.config.HoodieCleanConfig;
+import org.apache.hudi.config.HoodieIndexConfig;
+import org.apache.hudi.config.HoodieWriteConfig;
+import org.apache.hudi.index.HoodieIndex;
+import org.apache.hudi.table.upgrade.SparkUpgradeDowngradeHelper;
+import org.apache.hudi.table.upgrade.UpgradeDowngrade;
 import org.apache.hudi.utilities.deltastreamer.HoodieDeltaStreamer;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
@@ -97,8 +109,41 @@ public class DeltaStreamerConfig implements Serializable {
   }
 
   public void streamToHoodieTable(Map<String, String> writeOptions, SparkSession spark) throws Exception {
-    HoodieDeltaStreamer deltaSync = new HoodieDeltaStreamer(
-        deltaStreamerConfig(writeOptions), JavaSparkContext.fromSparkContext(spark.sparkContext()));
+    JavaSparkContext javaSparkContext = JavaSparkContext.fromSparkContext(spark.sparkContext());
+
+    migrateTable(writeOptions, javaSparkContext);
+
+    HoodieDeltaStreamer deltaSync = new HoodieDeltaStreamer(deltaStreamerConfig(writeOptions), javaSparkContext);
     deltaSync.sync();
+  }
+
+  private void migrateTable(Map<String, String> writeOptions, JavaSparkContext javaSparkContext) {
+    HoodieTableMetaClient metaClient =
+        HoodieTableMetaClient.builder().setConf(javaSparkContext.hadoopConfiguration())
+            .setBasePath(writeOptions.get(HudiEngine.HUDI_BASE_PATH))
+            .setLoadActiveTimelineOnLoad(false)
+            .build();
+
+    // During Hudi upgrades we might need to bump this version. This version matches Hudi 0.12.x
+    if (metaClient.getTableConfig().contains(HoodieTableConfig.VERSION)
+        && metaClient.getTableConfig().getTableVersion() != HoodieTableVersion.FIVE) {
+      // We need to update the hoodie.datasource.write.operation option in the metadata table as newer
+      // HoodieDeltaStreamer versions fail if the value doesn't match with the operation (upsert).
+      metaClient.getTableConfig().setValue(HudiEngine.HUDI_TABLE_OPERATION, WriteOperationType.UPSERT.value());
+      HoodieTableConfig.update(metaClient.getFs(), new Path(metaClient.getMetaPath()),
+          metaClient.getTableConfig().getProps());
+
+      HoodieWriteConfig updatedConfig = HoodieWriteConfig.newBuilder()
+          .forTable(metaClient.getTableConfig().getTableName())
+          .withPath(writeOptions.get(HudiEngine.HUDI_BASE_PATH))
+          .withRollbackUsingMarkers(true)
+          .withCleanConfig(HoodieCleanConfig.newBuilder()
+              .withFailedWritesCleaningPolicy(HoodieFailedWritesCleaningPolicy.EAGER).build())
+          .withIndexConfig(HoodieIndexConfig.newBuilder().withIndexType(HoodieIndex.IndexType.BLOOM).build()).build();
+
+      new UpgradeDowngrade(metaClient, updatedConfig, new HoodieSparkEngineContext(javaSparkContext),
+          SparkUpgradeDowngradeHelper.getInstance())
+          .run(HoodieTableVersion.FIVE, null);
+    }
   }
 }

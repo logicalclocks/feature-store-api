@@ -13,56 +13,58 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-import os
-import shutil
-import json
 import copy
 import importlib.util
+import json
+import os
 import re
+import shutil
 import warnings
-from typing import Optional, TypeVar
+from datetime import date, datetime, timezone
+from typing import Any, List, Optional, TypeVar, Union
 
+import avro
 import numpy as np
 import pandas as pd
-import avro
-from datetime import datetime, timezone
-
 import tzlocal
 
 # in case importing in %%local
+from hsfs.core.vector_db_client import VectorDbClient
+
 
 try:
     import pyspark
     from pyspark import SparkFiles
-    from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
+    from pyspark.sql import DataFrame, SparkSession, SQLContext
+    from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.functions import (
-        struct,
-        concat,
-        col,
-        lit,
         array,
+        col,
+        concat,
         from_json,
+        lit,
+        struct,
         udf,
     )
-    from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
-        ByteType,
-        ShortType,
-        IntegerType,
-        LongType,
-        FloatType,
-        DoubleType,
-        DecimalType,
-        DateType,
-        StringType,
-        TimestampType,
         ArrayType,
-        StructType,
         BinaryType,
         BooleanType,
+        ByteType,
+        DateType,
+        DecimalType,
+        DoubleType,
+        FloatType,
+        IntegerType,
+        LongType,
+        ShortType,
+        StringType,
         StructField,
+        StructType,
+        TimestampType,
     )
 
     if pd.__version__ >= "2.0.0" and pyspark.__version__ < "3.2.3":
@@ -70,24 +72,9 @@ try:
         def iteritems(self):
             return self.items()
 
-        setattr(pd.DataFrame, "iteritems", iteritems)
+        pd.DataFrame.iteritems = iteritems
 except ImportError:
     pass
-
-from hsfs import feature, training_dataset_feature, client, util
-from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
-from hsfs.storage_connector import StorageConnector
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.client import hopsworks
-from hsfs.core import (
-    hudi_engine,
-    delta_engine,
-    transformation_function_engine,
-    storage_connector_api,
-    dataset_api,
-)
-from hsfs.constructor import query
-from hsfs.training_dataset_split import TrainingDatasetSplit
 
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import BaseDataContext
@@ -95,6 +82,21 @@ from great_expectations.data_context.types.base import (
     DataContextConfig,
     InMemoryStoreBackendDefaults,
 )
+from hsfs import client, feature, training_dataset_feature, util
+from hsfs import feature_group as fg_mod
+from hsfs.client import hopsworks
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor import query
+from hsfs.core import (
+    dataset_api,
+    delta_engine,
+    feature_group_api,
+    hudi_engine,
+    storage_connector_api,
+    transformation_function_engine,
+)
+from hsfs.storage_connector import StorageConnector
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
 class Engine:
@@ -107,6 +109,7 @@ class Engine:
     def __init__(self):
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
+        # self._spark_context.setLogLevel("DEBUG")
         self._jvm = self._spark_context._jvm
 
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
@@ -137,7 +140,7 @@ class Engine:
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def is_flyingduck_query_supported(self, query, read_options={}):
+    def is_flyingduck_query_supported(self, query, read_options=None):
         return False  # we do not support flyingduck on pyspark clients
 
     def _sql_offline(self, sql_query, feature_store):
@@ -145,26 +148,48 @@ class Engine:
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def show(self, sql_query, feature_store, n, online_conn, read_options={}):
+    def show(self, sql_query, feature_store, n, online_conn, read_options=None):
         return self.sql(
             sql_query, feature_store, online_conn, "default", read_options
         ).show(n)
+
+    def read_vector_db(
+        self,
+        feature_group: fg_mod.FeatureGroup,
+        n: int = None,
+        dataframe_type: str = "default",
+    ) -> Union[
+        pd.DataFrame, np.ndarray, List[List[Any]], TypeVar("pyspark.sql.DataFrame")
+    ]:
+        results = VectorDbClient.read_feature_group(feature_group, n)
+        feature_names = [f.name for f in feature_group.features]
+        dataframe_type = dataframe_type.lower()
+        if dataframe_type in ["default", "spark"]:
+            if len(results) == 0:
+                return self._spark_session.createDataFrame(
+                    self._spark_session.sparkContext.emptyRDD(), StructType()
+                )
+            else:
+                return self._spark_session.createDataFrame(results, feature_names)
+        else:
+            df = pd.DataFrame(results, columns=feature_names, index=None)
+            return self._return_dataframe_type(df, dataframe_type)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
     def register_external_temporary_table(self, external_fg, alias):
-        if not isinstance(external_fg, SpineGroup):
+        if not isinstance(external_fg, fg_mod.SpineGroup):
             external_dataset = external_fg.storage_connector.read(
                 external_fg.query,
                 external_fg.data_format,
                 external_fg.options,
-                external_fg.storage_connector._get_path(external_fg.path),
+                external_fg.storage_connector._get_path(
+                    external_fg.path
+                ),  # cant rely on location since this method can be used before FG is saved
             )
         else:
             external_dataset = external_fg.dataframe
-        if external_fg.location:
-            self._spark_session.sparkContext.textFile(external_fg.location).collect()
 
         external_dataset.createOrReplaceTempView(alias)
         return external_dataset
@@ -179,13 +204,13 @@ class Engine:
             self._spark_context,
             self._spark_session,
         )
+
         hudi_engine_instance.register_temporary_table(
             hudi_fg_alias,
             read_options,
         )
-        hudi_engine_instance.reconcile_hudi_schema(
-            self.save_empty_dataframe, hudi_fg_alias, read_options
-        )
+
+        self.reconcile_schema(hudi_fg_alias, read_options, hudi_engine_instance)
 
     def register_delta_temporary_table(
         self, delta_fg_alias, feature_store_id, feature_store_name, read_options
@@ -203,15 +228,42 @@ class Engine:
             read_options,
         )
 
+        self.reconcile_schema(delta_fg_alias, read_options, delta_engine_instance)
+
+    def reconcile_schema(self, fg_alias, read_options, engine_instance):
+        if sorted(self._spark_session.table(fg_alias.alias).columns) != sorted(
+            [feature.name for feature in fg_alias.feature_group._features]
+            + hudi_engine.HudiEngine.HUDI_SPEC_FEATURE_NAMES
+            if fg_alias.feature_group.time_travel_format == "HUDI"
+            else []
+        ):
+            full_fg = feature_group_api.FeatureGroupApi().get(
+                feature_store_id=fg_alias.feature_group._feature_store_id,
+                name=fg_alias.feature_group.name,
+                version=fg_alias.feature_group.version,
+            )
+
+            self.update_table_schema(full_fg)
+
+            engine_instance.register_temporary_table(
+                fg_alias,
+                read_options,
+            )
+
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
             return dataframe
+
+        # Converting to pandas dataframe if return type is not spark
+        if isinstance(dataframe, DataFrame):
+            dataframe = dataframe.toPandas()
+
         if dataframe_type.lower() == "pandas":
-            return dataframe.toPandas()
+            return dataframe
         if dataframe_type.lower() == "numpy":
-            return dataframe.toPandas().values
+            return dataframe.values
         if dataframe_type.lower() == "python":
-            return dataframe.toPandas().values.tolist()
+            return dataframe.values.tolist()
 
         raise TypeError(
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
@@ -259,6 +311,7 @@ class Engine:
             upper_case_features = [
                 c for c in dataframe.columns if any(re.finditer("[A-Z]", c))
             ]
+            space_features = [c for c in dataframe.columns if " " in c]
             if len(upper_case_features) > 0:
                 warnings.warn(
                     "The ingested dataframe contains upper case letters in feature names: `{}`. "
@@ -266,10 +319,20 @@ class Engine:
                         upper_case_features
                     ),
                     util.FeatureGroupWarning,
+                    stacklevel=1,
+                )
+            if len(space_features) > 0:
+                warnings.warn(
+                    "The ingested dataframe contains feature names with spaces: `{}`. "
+                    "Feature names are sanitized to use underscore '_' in the feature store.".format(
+                        space_features
+                    ),
+                    util.FeatureGroupWarning,
+                    stacklevel=1,
                 )
 
             lowercase_dataframe = dataframe.select(
-                [col(x).alias(x.lower()) for x in dataframe.columns]
+                [col(x).alias(util.autofix_feature_name(x)) for x in dataframe.columns]
             )
             # for streaming dataframes this will be handled in DeltaStreamerTransformer.java class
             if not lowercase_dataframe.isStreaming:
@@ -304,7 +367,7 @@ class Engine:
     ):
         try:
             if (
-                isinstance(feature_group, ExternalFeatureGroup)
+                isinstance(feature_group, fg_mod.ExternalFeatureGroup)
                 and feature_group.online_enabled
             ) or feature_group.stream:
                 self._save_online_dataframe(
@@ -334,7 +397,7 @@ class Engine:
                         feature_group, dataframe, online_write_options
                     )
         except Exception as e:
-            raise FeatureStoreException(e).with_traceback(e.__traceback__)
+            raise FeatureStoreException(e).with_traceback(e.__traceback__) from e
 
     def save_stream_dataframe(
         self,
@@ -350,9 +413,7 @@ class Engine:
         write_options = self._get_kafka_config(
             feature_group.feature_store_id, write_options
         )
-        serialized_df = self._online_fg_to_avro(
-            feature_group, self._encode_complex_features(feature_group, dataframe)
-        )
+        serialized_df = self._serialize_to_avro(feature_group, dataframe)
 
         project_id = str(feature_group.feature_store.project_id)
         feature_group_id = str(feature_group._id)
@@ -438,18 +499,14 @@ class Engine:
                 **write_options
             ).partitionBy(
                 feature_group.partition_key if feature_group.partition_key else []
-            ).saveAsTable(
-                feature_group._get_table_name()
-            )
+            ).saveAsTable(feature_group._get_table_name())
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
         write_options = self._get_kafka_config(
             feature_group.feature_store_id, write_options
         )
 
-        serialized_df = self._online_fg_to_avro(
-            feature_group, self._encode_complex_features(feature_group, dataframe)
-        )
+        serialized_df = self._serialize_to_avro(feature_group, dataframe)
 
         project_id = str(feature_group.feature_store.project_id).encode("utf8")
         feature_group_id = str(feature_group._id).encode("utf8")
@@ -482,11 +539,27 @@ class Engine:
             ]
         )
 
-    def _online_fg_to_avro(self, feature_group, dataframe):
+    def _serialize_to_avro(
+        self,
+        feature_group: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
+        dataframe: Union[RDD, DataFrame],
+    ):
+        """Encodes all complex type features to binary using their avro type as schema."""
+        encoded_dataframe = dataframe.select(
+            [
+                field["name"]
+                if field["name"] not in feature_group.get_complex_features()
+                else to_avro(
+                    field["name"], feature_group._get_feature_avro_schema(field["name"])
+                ).alias(field["name"])
+                for field in json.loads(feature_group.avro_schema)["fields"]
+            ]
+        )
+
         """Packs all features into named struct to be serialized to single avro/binary
         column. And packs primary key into arry to be serialized for partitioning.
         """
-        return dataframe.select(
+        return encoded_dataframe.select(
             [
                 # be aware: primary_key array should always be sorted
                 to_avro(
@@ -509,8 +582,37 @@ class Engine:
             ]
         )
 
+    def _deserialize_from_avro(
+        self,
+        feature_group: Union[fg_mod.FeatureGroup, fg_mod.ExternalFeatureGroup],
+        dataframe: Union[RDD, DataFrame],
+    ):
+        """
+        Deserializes 'value' column from binary using avro schema and unpacks it into columns.
+        """
+        decoded_dataframe = dataframe.select(
+            from_avro("value", feature_group._get_encoded_avro_schema()).alias("value")
+        ).select(col("value.*"))
+
+        """Decodes all complex type features from binary using their avro type as schema."""
+        return decoded_dataframe.select(
+            [
+                field["name"]
+                if field["name"] not in feature_group.get_complex_features()
+                else from_avro(
+                    field["name"], feature_group._get_feature_avro_schema(field["name"])
+                ).alias(field["name"])
+                for field in json.loads(feature_group.avro_schema)["fields"]
+            ]
+        )
+
     def get_training_data(
-        self, training_dataset, feature_view_obj, query_obj, read_options
+        self,
+        training_dataset,
+        feature_view_obj,
+        query_obj,
+        read_options,
+        dataframe_type,
     ):
         return self.write_training_dataset(
             training_dataset,
@@ -522,13 +624,20 @@ class Engine:
             feature_view_obj=feature_view_obj,
         )
 
-    def split_labels(self, df, labels):
+    def split_labels(self, df, labels, dataframe_type):
         if labels:
-            labels_df = df.select(*labels)
-            df_new = df.drop(*labels)
-            return df_new, labels_df
+            if isinstance(df, pd.DataFrame):
+                labels_df = df[labels]
+                df_new = df.drop(columns=labels)
+            else:
+                labels_df = df.select(*labels)
+                df_new = df.drop(*labels)
+            return (
+                self._return_dataframe_type(df_new, dataframe_type),
+                self._return_dataframe_type(labels_df, dataframe_type),
+            )
         else:
-            return df, None
+            return self._return_dataframe_type(df, dataframe_type), None
 
     def drop_columns(self, df, drop_cols):
         return df.drop(*drop_cols)
@@ -539,13 +648,15 @@ class Engine:
         query_obj,
         user_write_options,
         save_mode,
-        read_options={},
+        read_options=None,
         feature_view_obj=None,
         to_df=False,
     ):
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
         )
+        if read_options is None:
+            read_options = {}
 
         if len(training_dataset.splits) == 0:
             if isinstance(query_obj, query.Query):
@@ -588,7 +699,9 @@ class Engine:
                 training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
 
-    def _split_df(self, query_obj, training_dataset, read_options={}):
+    def _split_df(self, query_obj, training_dataset, read_options=None):
+        if read_options is None:
+            read_options = {}
         if (
             training_dataset.splits[0].split_type
             == TrainingDatasetSplit.TIME_SERIES_SPLIT
@@ -624,9 +737,97 @@ class Engine:
     def _time_series_split(
         self, training_dataset, dataset, event_time, drop_event_time=False
     ):
+        # duplicate the code from util module to avoid udf errors on windows
+        def check_timestamp_format_from_date_string(input_date):
+            date_format_patterns = {
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})$": "%Y%m%d",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M%S",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$": "%Y%m%d%H%M%S%f",
+                r"^([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{6})Z$": "ISO",
+            }
+            normalized_date = (
+                input_date.replace("/", "")
+                .replace("-", "")
+                .replace(" ", "")
+                .replace(":", "")
+                .replace(".", "")
+            )
+
+            date_format = None
+            for pattern in date_format_patterns:
+                date_format_pattern = re.match(pattern, normalized_date)
+                if date_format_pattern:
+                    date_format = date_format_patterns[pattern]
+                    break
+
+            if date_format is None:
+                raise ValueError(
+                    "Unable to identify format of the provided date value : "
+                    + input_date
+                )
+
+            return normalized_date, date_format
+
+        def get_timestamp_from_date_string(input_date):
+            norm_input_date, date_format = check_timestamp_format_from_date_string(
+                input_date
+            )
+            try:
+                if date_format != "ISO":
+                    date_time = datetime.strptime(norm_input_date, date_format)
+                else:
+                    date_time = datetime.fromisoformat(input_date[:-1])
+            except ValueError as err:
+                raise ValueError(
+                    "Unable to parse the normalized input date value : "
+                    + norm_input_date
+                    + " with format "
+                    + date_format
+                ) from err
+            if date_time.tzinfo is None:
+                date_time = date_time.replace(tzinfo=timezone.utc)
+            return int(float(date_time.timestamp()) * 1000)
+
+        def convert_event_time_to_timestamp(event_time):
+            if not event_time:
+                return None
+            if isinstance(event_time, str):
+                return get_timestamp_from_date_string(event_time)
+            elif isinstance(event_time, pd._libs.tslibs.timestamps.Timestamp):
+                # convert to unix epoch time in milliseconds.
+                event_time = event_time.to_pydatetime()
+                # convert to unix epoch time in milliseconds.
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, datetime):
+                # convert to unix epoch time in milliseconds.
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, date):
+                # convert to unix epoch time in milliseconds.
+                event_time = datetime(*event_time.timetuple()[:7])
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, int):
+                if event_time == 0:
+                    raise ValueError("Event time should be greater than 0.")
+                # jdbc supports timestamp precision up to second only.
+                if len(str(event_time)) <= 10:
+                    event_time = event_time * 1000
+                return event_time
+            else:
+                raise ValueError(
+                    "Given event time should be in `datetime`, `date`, `str` or `int` type"
+                )
+
         # registering the UDF
         _convert_event_time_to_timestamp = udf(
-            util.convert_event_time_to_timestamp, LongType()
+            convert_event_time_to_timestamp, LongType()
         )
 
         result_dfs = {}
@@ -652,7 +853,7 @@ class Engine:
             split_path = training_dataset.location + "/" + str(split_name)
             feature_dataframes[split_name] = self._write_training_dataset_single(
                 training_dataset.transformation_functions,
-                feature_dataframes[split_name],
+                feature_dataframe,
                 training_dataset.storage_connector,
                 training_dataset.data_format,
                 write_options,
@@ -693,7 +894,9 @@ class Engine:
 
         feature_dataframe.unpersist()
 
-    def read(self, storage_connector, data_format, read_options, location):
+    def read(
+        self, storage_connector, data_format, read_options, location, dataframe_type
+    ):
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
 
@@ -714,10 +917,11 @@ class Engine:
 
         path = self.setup_storage_connector(storage_connector, path)
 
-        return (
+        return self._return_dataframe_type(
             self._spark_session.read.format(data_format)
             .options(**(read_options if read_options else {}))
-            .load(path)
+            .load(path),
+            dataframe_type=dataframe_type,
         )
 
     def read_stream(
@@ -792,7 +996,7 @@ class Engine:
         if isinstance(client.get_instance(), client.external.Client):
             tmp_file = os.path.join(SparkFiles.getRootDirectory(), file_name)
             print("Reading key file from storage connector.")
-            response = self._dataset_api.read_content(tmp_file, "HIVEDB")
+            response = self._dataset_api.read_content(file, util.get_dataset_type(file))
 
             with open(tmp_file, "wb") as f:
                 f.write(response.content)
@@ -915,13 +1119,13 @@ class Engine:
         features = []
         using_hudi = time_travel_format == "HUDI"
         for feat in dataframe.schema:
-            name = feat.name.lower()
+            name = util.autofix_feature_name(feat.name)
             try:
                 converted_type = Engine.convert_spark_type_to_offline_type(
                     feat.dataType, using_hudi
                 )
             except ValueError as e:
-                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+                raise FeatureStoreException(f"Feature '{feat.name}': {str(e)}") from e
             features.append(
                 feature.Feature(
                     name, converted_type, feat.metadata.get("description", None)
@@ -932,7 +1136,7 @@ class Engine:
     def parse_schema_training_dataset(self, dataframe):
         return [
             training_dataset_feature.TrainingDatasetFeature(
-                feat.name.lower(), feat.dataType.simpleString()
+                util.autofix_feature_name(feat.name), feat.dataType.simpleString()
             )
             for feat in dataframe.schema
         ]
@@ -948,40 +1152,57 @@ class Engine:
             return path
 
     def _setup_s3_hadoop_conf(self, storage_connector, path):
-        FS_S3_ENDPOINT = "fs.s3a.endpoint"
+        FS_S3_GLOBAL_CONF = "fs.s3a.global-conf"
+
+        # The argument arrive here as strings
+        if storage_connector.arguments.get(FS_S3_GLOBAL_CONF, "True").lower() == "true":
+            # For legacy behaviour set the S3 values at global level
+            self._set_s3_hadoop_conf(storage_connector, "fs.s3a")
+
+        # Set credentials at bucket level as well to allow users to use multiple
+        # storage connector in the same application.
+        self._set_s3_hadoop_conf(
+            storage_connector, f"fs.s3a.bucket.{storage_connector.bucket}"
+        )
+        return path.replace("s3://", "s3a://", 1) if path is not None else None
+
+    def _set_s3_hadoop_conf(self, storage_connector, prefix):
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.access.key", storage_connector.access_key
+                f"{prefix}.access.key", storage_connector.access_key
             )
         if storage_connector.secret_key:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.secret.key", storage_connector.secret_key
+                f"{prefix}.secret.key", storage_connector.secret_key
             )
         if storage_connector.server_encryption_algorithm:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.server-side-encryption-algorithm",
+                f"{prefix}.server-side-encryption-algorithm",
                 storage_connector.server_encryption_algorithm,
             )
         if storage_connector.server_encryption_key:
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.server-side-encryption-key",
+                f"{prefix}.server-side-encryption-key",
                 storage_connector.server_encryption_key,
             )
         if storage_connector.session_token:
+            print(f"session token set for {prefix}")
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.aws.credentials.provider",
+                f"{prefix}.aws.credentials.provider",
                 "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider",
             )
             self._spark_context._jsc.hadoopConfiguration().set(
-                "fs.s3a.session.token",
+                f"{prefix}.session.token",
                 storage_connector.session_token,
             )
+
+        # This is the name of the property as expected from the user, without the bucket name.
+        FS_S3_ENDPOINT = "fs.s3a.endpoint"
         if FS_S3_ENDPOINT in storage_connector.arguments:
             self._spark_context._jsc.hadoopConfiguration().set(
-                FS_S3_ENDPOINT, storage_connector.spark_options().get(FS_S3_ENDPOINT)
+                f"{prefix}.endpoint",
+                storage_connector.spark_options().get(FS_S3_ENDPOINT),
             )
-
-        return path.replace("s3", "s3a", 1) if path is not None else None
 
     def _setup_adls_hadoop_conf(self, storage_connector, path):
         for k, v in storage_connector.spark_options().items():
@@ -994,13 +1215,26 @@ class Engine:
             return True
         return False
 
-    def save_empty_dataframe(self, feature_group):
-        fg_table_name = feature_group._get_table_name()
-        dataframe = self._spark_session.table(fg_table_name).limit(0)
+    def update_table_schema(self, feature_group):
+        if feature_group.time_travel_format == "DELTA":
+            self._add_cols_to_delta_table(feature_group)
+        else:
+            self._save_empty_dataframe(feature_group)
+
+    def _save_empty_dataframe(self, feature_group):
+        location = feature_group.prepare_spark_location()
+
+        dataframe = self._spark_session.read.format("hudi").load(location)
+
+        for _feature in feature_group.features:
+            if _feature.name not in dataframe.columns:
+                dataframe = dataframe.withColumn(
+                    _feature.name, lit(None).cast(_feature.type)
+                )
 
         self.save_dataframe(
             feature_group,
-            dataframe,
+            dataframe.limit(0),
             "upsert",
             feature_group.online_enabled,
             "offline",
@@ -1008,24 +1242,21 @@ class Engine:
             {},
         )
 
-    def add_cols_to_delta_table(self, feature_group, new_features):
-        new_features_map = {}
-        if isinstance(new_features, list):
-            for new_feature in new_features:
-                new_features_map[new_feature.name] = lit("").cast(new_feature.type)
-        else:
-            new_features_map[new_features.name] = lit("").cast(new_features.type)
+    def _add_cols_to_delta_table(self, feature_group):
+        location = feature_group.prepare_spark_location()
 
-        self._spark_session.read.format("delta").load(
-            feature_group.location
-        ).withColumns(new_features_map).limit(0).write.format("delta").mode(
-            "append"
-        ).option(
+        dataframe = self._spark_session.read.format("delta").load(location)
+
+        for _feature in feature_group.features:
+            if _feature.name not in dataframe.columns:
+                dataframe = dataframe.withColumn(
+                    _feature.name, lit(None).cast(_feature.type)
+                )
+
+        dataframe.limit(0).write.format("delta").mode("append").option(
             "mergeSchema", "true"
-        ).option(
-            "spark.databricks.delta.schema.autoMerge.enabled", "true"
-        ).save(
-            feature_group.location
+        ).option("spark.databricks.delta.schema.autoMerge.enabled", "true").save(
+            location
         )
 
     def _apply_transformation_function(self, transformation_functions, dataset):
@@ -1044,8 +1275,8 @@ class Engine:
                 + feature_name
             )
 
-            def timezone_decorator(func):
-                if transformation_fn.output_type != "TIMESTAMP":
+            def timezone_decorator(func, trans_fn=transformation_fn):
+                if trans_fn.output_type != "TIMESTAMP":
                     return func
 
                 current_timezone = tzlocal.get_localzone()
@@ -1237,8 +1468,10 @@ class Engine:
         return df
 
     def _get_kafka_config(
-        self, feature_store_id: int, write_options: dict = {}
+        self, feature_store_id: int, write_options: dict = None
     ) -> dict:
+        if write_options is None:
+            write_options = {}
         external = not (
             isinstance(client.get_instance(), hopsworks.Client)
             or write_options.get("internal_kafka", False)

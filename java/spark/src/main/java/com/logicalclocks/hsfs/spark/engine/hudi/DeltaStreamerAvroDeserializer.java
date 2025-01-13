@@ -52,6 +52,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
 
   private final ObjectMapper objectMapper = new ObjectMapper();
   private String subjectId;
+  private String featureGroupId;
   private Schema schema;
   private Schema encodedSchema;
   private final BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(new byte[0], null);
@@ -69,6 +70,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
   @Override
   public void configure(Map<String, ?> configs, boolean isKey) {
     this.subjectId = (String) configs.get(HudiEngine.SUBJECT_ID);
+    this.featureGroupId = (String) configs.get(HudiEngine.FEATURE_GROUP_ID);
     GenericData.get().addLogicalTypeConversion(new Conversions.DecimalConversion());
     String featureGroupSchema = (String) configs.get(HudiEngine.FEATURE_GROUP_SCHEMA);
     String encodedFeatureGroupSchema = configs.get(HudiEngine.FEATURE_GROUP_ENCODED_SCHEMA).toString()
@@ -102,10 +104,11 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
 
   @Override
   public GenericRecord deserialize(String topic, Headers headers, byte[] data) {
-    if (!subjectId.equals(getHeader(headers, "subjectId"))) {
-      return null; // this job doesn't care about this entry, no point in deserializing
+    if (subjectId.equals(getHeader(headers, "subjectId"))
+        && featureGroupId.equals(getHeader(headers, "featureGroupId"))) {
+      return deserialize(topic, data);
     }
-    return deserialize(topic, data);
+    return null; // this job doesn't care about this entry, no point in deserializing
   }
 
   @Override

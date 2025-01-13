@@ -14,7 +14,7 @@ pipeline {
                 dir("python") {
                     sh "rm -f LICENSE README.md"
                     sh "cp -f ../LICENSE ../README.md ./"
-                    sh "python3 ./setup.py sdist"
+                    sh "python3 -m build"
                     sh "twine upload -u $PYPI_USR -p $PYPI_PSW --skip-existing dist/*"
                 }
             }

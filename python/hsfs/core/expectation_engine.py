@@ -13,10 +13,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from typing import Optional
-from hsfs.core import expectation_api
 
+from hsfs.core import expectation_api
 from hsfs.ge_expectation import GeExpectation
 
 

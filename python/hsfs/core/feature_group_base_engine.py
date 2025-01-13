@@ -13,9 +13,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-from hsfs.core import feature_group_api, storage_connector_api, tags_api, kafka_api
+from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import feature_group_api, kafka_api, storage_connector_api, tags_api
 
 
 class FeatureGroupBaseEngine:
@@ -58,9 +60,25 @@ class FeatureGroupBaseEngine:
             feature_group_instance: Metadata object of feature group.
 
         # Returns
-            `ProvenanceLinks`:  the feature groups used to generated this feature group
+            `ProvenanceLinks`:  the feature groups used to generate this feature group
         """
         return self._feature_group_api.get_parent_feature_groups(feature_group)
+
+    def get_storage_connector_provenance(self, feature_group):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are storage connectors. These storage connector can be accessible,
+        deleted or inaccessible.
+        For deleted and inaccessible storage connector, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ExplicitProvenance.Links`: the storage connector used to generated this
+            feature group
+        """
+        return self._feature_group_api.get_storage_connector_provenance(feature_group)
 
     def get_generated_feature_views(self, feature_group):
         """Get the generated feature view using this feature group, based on explicit
@@ -103,21 +121,26 @@ class FeatureGroupBaseEngine:
         new_features = []
         for feature in feature_group.features:
             if not any(
-                updated.name.lower() == feature.name for updated in updated_features
+                util.autofix_feature_name(updated.name) == feature.name
+                for updated in updated_features
             ):
                 new_features.append(feature)
         return new_features + updated_features
 
     def _verify_schema_compatibility(self, feature_group_features, dataframe_features):
         err = []
-        feature_df_dict = {feat.name: feat.type for feat in dataframe_features}
+        feature_df_dict = {
+            util.autofix_feature_name(feat.name): feat.type
+            for feat in dataframe_features
+        }
         for feature_fg in feature_group_features:
+            name = util.autofix_feature_name(feature_fg.name)
             fg_type = feature_fg.type.lower().replace(" ", "")
             # check if feature exists dataframe
-            if feature_fg.name in feature_df_dict:
-                df_type = feature_df_dict[feature_fg.name].lower().replace(" ", "")
+            if name in feature_df_dict:
+                df_type = feature_df_dict[name].lower().replace(" ", "")
                 # remove match from lookup table
-                del feature_df_dict[feature_fg.name]
+                del feature_df_dict[name]
 
                 # check if types match
                 if fg_type != df_type:
@@ -126,21 +149,20 @@ class FeatureGroupBaseEngine:
                         continue
 
                     err += [
-                        f"{feature_fg.name} ("
-                        f"expected type: '{fg_type}', "
+                        f"{name} (expected type: '{fg_type}', "
                         f"derived from input: '{df_type}') has the wrong type."
                     ]
 
             else:
                 err += [
-                    f"{feature_fg.name} (type: '{feature_fg.type}') is missing from "
+                    f"{name} (type: '{feature_fg.type}') is missing from "
                     f"input dataframe."
                 ]
 
         # any features that are left in lookup table are superfluous
         for feature_df_name, feature_df_type in feature_df_dict.items():
             err += [
-                f"{feature_df_name} (type: '{feature_df_type}') does not exist "
+                f"{util.autofix_feature_name(feature_df_name)} (type: '{feature_df_type}') does not exist "
                 f"in feature group."
             ]
 
@@ -149,6 +171,8 @@ class FeatureGroupBaseEngine:
             raise FeatureStoreException(
                 "Features are not compatible with Feature Group schema: "
                 + "".join(["\n - " + e for e in err])
+                + "\nNote that feature (or column) names are case insensitive and "
+                "spaces are automatically replaced with underscores."
             )
 
     def get_subject(self, feature_group):

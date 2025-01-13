@@ -14,14 +14,12 @@
 #   limitations under the License.
 #
 
-import pandas as pd
-from hsfs.core import inode, arrow_flight_client
-
-from hsfs.engine import python
-
 import boto3
-from moto import mock_aws
+import pandas as pd
+from hsfs.core import arrow_flight_client, inode
+from hsfs.engine import python
 from hsfs.storage_connector import S3Connector
+from moto import mock_aws
 
 
 class TestPythonReader:
@@ -127,6 +125,7 @@ class TestPythonReader:
 
     def test_read_hopsfs_remote_parquet(self, mocker, dataframe_fixture_basic):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         i = inode.Inode(attributes={"path": "test_path"})
         mock_dataset_api.return_value.list_files.return_value = (0, [i])
@@ -136,7 +135,8 @@ class TestPythonReader:
             mock_dataset_api.return_value.read_content.return_value.content = (
                 file.read()
             )
-        arrow_flight_client.get_instance()._is_enabled = False
+        arrow_flight_client.get_instance()._disabled_for_session = True
+        arrow_flight_client.get_instance()._enabled_on_cluster = False
 
         # Act
         df_list = python.Engine()._read_hopsfs_remote(

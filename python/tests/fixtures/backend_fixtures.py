@@ -14,9 +14,11 @@
 #   limitations under the License.
 #
 
-import pytest
 import json
 import os
+
+import pytest
+
 
 FIXTURES_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,6 +31,8 @@ FIXTURES = [
     "feature_descriptive_statistics",
     "feature_group_commit",
     "feature_group",
+    "feature_monitoring_config",
+    "feature_monitoring_result",
     "feature_store",
     "feature_view",
     "filter",
@@ -56,6 +60,9 @@ FIXTURES = [
     "transformation_function",
     "user",
     "validation_report",
+    "serving_keys",
+    "rondb_server",
+    "spine_group",
 ]
 
 backend_fixtures_json = {}

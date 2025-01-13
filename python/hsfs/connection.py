@@ -13,22 +13,25 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-import os
 import importlib.util
+import os
+import weakref
+from typing import Any, Optional
 
-from requests.exceptions import ConnectionError
-
-from hsfs.decorators import connected, not_connected
-from hsfs.core.opensearch import OpenSearchClientSingleton
-from hsfs import engine, client, util, usage
+from hsfs import client, engine, feature_store, usage, util
 from hsfs.core import (
     feature_store_api,
-    project_api,
     hosts_api,
+    project_api,
     services_api,
     variable_api,
 )
+from hsfs.core.opensearch import OpenSearchClientSingleton
+from hsfs.decorators import connected, not_connected
+from requests.exceptions import ConnectionError
+
 
 AWS_DEFAULT_REGION = "default"
 HOPSWORKS_PORT_DEFAULT = 443
@@ -96,13 +99,12 @@ class Connection:
         project: The name of the project to connect to. When running on Hopsworks, this
             defaults to the project from where the client is run from.
             Defaults to `None`.
-        engine: Which engine to use, `"spark"`, `"python"` or `"training"`. Defaults to `None`,
-            which initializes the engine to Spark if the environment provides Spark, for
-            example on Hopsworks and Databricks, or falls back on Hive in Python if Spark is not
-            available, e.g. on local Python environments or AWS SageMaker. This option
-            allows you to override this behaviour. `"training"` engine is useful when only
-            feature store metadata is needed, for example training dataset location and label
-            information when Hopsworks training experiment is conducted.
+        engine: Specifies the engine to use. Possible options are "spark", "python", "training", "spark-no-metastore", or "spark-delta". The default value is None, which automatically selects the engine based on the environment:
+            "spark": Used if Spark is available, such as in Hopsworks or Databricks environments.
+            "python": Used in local Python environments or AWS SageMaker when Spark is not available.
+            "training": Used when only feature store metadata is needed, such as for obtaining training dataset locations and label information during Hopsworks training experiments.
+            "spark-no-metastore": Functions like "spark" but does not rely on the Hive metastore.
+            "spark-delta": Minimizes dependencies further by avoiding both Hive metastore and HopsFS.
         region_name: The name of the AWS region in which the required secrets are
             stored, defaults to `"default"`.
         secrets_store: The secrets storage to be used, either `"secretsmanager"`,
@@ -126,18 +128,18 @@ class Connection:
 
     def __init__(
         self,
-        host: str = None,
+        host: Optional[str] = None,
         port: int = HOPSWORKS_PORT_DEFAULT,
-        project: str = None,
-        engine: str = None,
+        project: Optional[str] = None,
+        engine: Optional[str] = None,
         region_name: str = AWS_DEFAULT_REGION,
         secrets_store: str = SECRETS_STORE_DEFAULT,
         hostname_verification: bool = HOSTNAME_VERIFICATION_DEFAULT,
-        trust_store_path: str = None,
+        trust_store_path: Optional[str] = None,
         cert_folder: str = CERT_FOLDER_DEFAULT,
-        api_key_file: str = None,
-        api_key_value: str = None,
-    ):
+        api_key_file: Optional[str] = None,
+        api_key_value: Optional[str] = None,
+    ) -> None:
         self._host = host
         self._port = port
         self._project = project
@@ -155,7 +157,9 @@ class Connection:
 
     @usage.method_logger
     @connected
-    def get_feature_store(self, name: str = None):
+    def get_feature_store(
+        self, name: Optional[str] = None
+    ) -> feature_store.FeatureStore:
         """Get a reference to a feature store to perform operations on.
 
         Defaulting to the project name of default feature store. To get a
@@ -186,7 +190,7 @@ class Connection:
         return self._feature_store_api.get(util.append_feature_store_suffix(name))
 
     @not_connected
-    def connect(self):
+    def connect(self) -> None:
         """Instantiate the connection.
 
         Creating a `Connection` object implicitly calls this method for you to
@@ -205,6 +209,7 @@ class Connection:
             ```
         """
         self._connected = True
+        finalizer = weakref.finalize(self, self.close)
         try:
             # determine engine, needed to init client
             if (self._engine is not None and self._engine.lower() == "spark") or (
@@ -222,10 +227,15 @@ class Connection:
                 and self._engine.lower() == "spark-no-metastore"
             ):
                 self._engine = "spark-no-metastore"
+            elif (
+                self._engine is not None
+                and self._engine.lower() == "spark-delta"
+            ):
+                self._engine = "spark-delta"
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
-                    "Supported engines are `'spark'`, `'python'` and `'training'`."
+                    "Supported engines are `'spark'`, `'python'`, `'training'`, `'spark-no-metastore'`, and `'spark-delta'`."
                 )
 
             # init client
@@ -259,16 +269,17 @@ class Connection:
             )
         except (TypeError, ConnectionError):
             self._connected = False
+            finalizer.detach()
             raise
         print("Connected. Call `.close()` to terminate connection gracefully.")
 
-    def close(self):
+    def close(self) -> None:
         """Close a connection gracefully.
 
         This will clean up any materialized certificates on the local file system of
         external environments such as AWS SageMaker.
 
-        Usage is recommended but optional.
+        Usage is optional.
 
         !!! example
             ```python
@@ -277,6 +288,8 @@ class Connection:
             conn.close()
             ```
         """
+        if not self._connected:
+            return  # the connection is already closed
         OpenSearchClientSingleton().close()
         client.stop()
         self._feature_store_api = None
@@ -285,69 +298,20 @@ class Connection:
         print("Connection closed.")
 
     @classmethod
-    def setup_databricks(
-        cls,
-        host: str = None,
-        port: int = HOPSWORKS_PORT_DEFAULT,
-        project: str = None,
-        engine: str = None,
-        region_name: str = AWS_DEFAULT_REGION,
-        secrets_store: str = SECRETS_STORE_DEFAULT,
-        hostname_verification: bool = HOSTNAME_VERIFICATION_DEFAULT,
-        trust_store_path: str = None,
-        cert_folder: str = CERT_FOLDER_DEFAULT,
-        api_key_file: str = None,
-        api_key_value: str = None,
-    ):
-        """Set up the HopsFS and Hive connector on a Databricks cluster.
-
-        This method will setup the HopsFS and Hive connectors to connect from a
-        Databricks cluster to a Hopsworks Feature Store instance. It returns a
-        `Connection` object and will print instructions on how to finalize the setup
-        of the Databricks cluster.
-        See also the Databricks integration guide.
-        """
-        connection = cls(
-            host,
-            port,
-            project,
-            engine,
-            region_name,
-            secrets_store,
-            hostname_verification,
-            trust_store_path,
-            cert_folder,
-            api_key_file,
-            api_key_value,
-        )
-
-        dbfs_folder = client.get_instance()._cert_folder_base
-
-        os.makedirs(os.path.join(dbfs_folder, "scripts"), exist_ok=True)
-        connection._get_clients(dbfs_folder)
-        hive_host = connection._get_hivemetastore_hostname()
-        connection._write_init_script(dbfs_folder)
-        connection._print_instructions(
-            cert_folder, client.get_instance()._cert_folder, hive_host
-        )
-
-        return connection
-
-    @classmethod
     def connection(
         cls,
-        host: str = None,
+        host: Optional[str] = None,
         port: int = HOPSWORKS_PORT_DEFAULT,
-        project: str = None,
-        engine: str = None,
+        project: Optional[str] = None,
+        engine: Optional[str] = None,
         region_name: str = AWS_DEFAULT_REGION,
         secrets_store: str = SECRETS_STORE_DEFAULT,
         hostname_verification: bool = HOSTNAME_VERIFICATION_DEFAULT,
-        trust_store_path: str = None,
+        trust_store_path: Optional[str] = None,
         cert_folder: str = CERT_FOLDER_DEFAULT,
-        api_key_file: str = None,
-        api_key_value: str = None,
-    ):
+        api_key_file: Optional[str] = None,
+        api_key_value: Optional[str] = None,
+    ) -> Connection:
         """Connection factory method, accessible through `hsfs.connection()`."""
         return cls(
             host,
@@ -363,122 +327,44 @@ class Connection:
             api_key_value,
         )
 
-    def _get_clients(self, dbfs_folder: str):
-        """Get the client libraries and save them in the dbfs folder.
-
-        # Arguments
-            dbfs_folder: The directory in which to save the client libraries.
-        """
-        client_path = os.path.join(dbfs_folder, "client.tar.gz")
-        if not os.path.exists(client_path):
-            client_libs = self._project_api.get_client()
-            with open(client_path, "wb") as f:
-                for chunk in client_libs:
-                    f.write(chunk)
-
-    def _get_hivemetastore_hostname(self):
-        """Get the internal hostname of the Hopsworks instance."""
-        hosts = self._hosts_api.get()
-        hivemetastore = self._services_api.get_service("hivemetastore")
-        hosts = [host for host in hosts if host["id"] == hivemetastore["hostId"]]
-        return hosts[0]["hostname"]
-
-    def _write_init_script(self, dbfs_folder: str):
-        """Write the init script for databricks clusters to dbfs.
-
-        # Arguments
-            dbfs_folder: The directory in which to save the client libraries.
-        """
-        initScript = """
-            #!/bin/sh
-
-            tar -xvf PATH/client.tar.gz -C /tmp
-            tar -xvf /tmp/client/apache-hive-*-bin.tar.gz -C /tmp
-            mv /tmp/apache-hive-*-bin /tmp/apache-hive-bin
-            chmod -R +xr /tmp/apache-hive-bin
-            cp /tmp/client/hopsfs-client*.jar /databricks/jars/
-        """
-        script_path = os.path.join(dbfs_folder, "scripts/initScript.sh")
-        if not os.path.exists(script_path):
-            initScript = initScript.replace("PATH", dbfs_folder)
-            with open(script_path, "w") as f:
-                f.write(initScript)
-
-    def _print_instructions(
-        self, user_cert_folder: str, cert_folder: str, internal_host: str
-    ):
-        """Print the instructions to set up the HopsFS Hive connection on Databricks.
-
-        # Arguments
-            user_cert_folder: The original user specified cert_folder without `/dbfs/`
-                prefix.
-            cert_folder: The directory in which the credential were saved, prefixed with
-                `/dbfs/` and `[hostname]`.
-            internal_host: The internal ip of the hopsworks instance.
-        """
-
-        instructions = """
-        In the advanced options of your databricks cluster configuration
-        add the following path to Init Scripts: dbfs:/{0}/scripts/initScript.sh
-
-        add the following to the Spark Config:
-
-        spark.hadoop.fs.hopsfs.impl io.hops.hopsfs.client.HopsFileSystem
-        spark.hadoop.hops.ipc.server.ssl.enabled true
-        spark.hadoop.hops.ssl.hostname.verifier ALLOW_ALL
-        spark.hadoop.hops.rpc.socket.factory.class.default io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory
-        spark.hadoop.client.rpc.ssl.enabled.protocol TLSv1.2
-        spark.hadoop.hops.ssl.keystores.passwd.name {1}/material_passwd
-        spark.hadoop.hops.ssl.keystore.name {1}/keyStore.jks
-        spark.hadoop.hops.ssl.trustore.name {1}/trustStore.jks
-        spark.sql.hive.metastore.jars /tmp/apache-hive-bin/lib/*
-        spark.hadoop.hive.metastore.uris thrift://{2}:9083
-
-        Then save and restart the cluster.
-        """.format(
-            user_cert_folder, cert_folder, internal_host
-        )
-
-        print(instructions)
-
     @property
-    def host(self):
+    def host(self) -> Optional[str]:
         return self._host
 
     @host.setter
     @not_connected
-    def host(self, host):
+    def host(self, host: Optional[str]) -> None:
         self._host = host
 
     @property
-    def port(self):
+    def port(self) -> int:
         return self._port
 
     @port.setter
     @not_connected
-    def port(self, port):
+    def port(self, port) -> int:
         self._port = port
 
     @property
-    def project(self):
+    def project(self) -> Optional[str]:
         return self._project
 
     @project.setter
     @not_connected
-    def project(self, project):
+    def project(self, project: Optional[str]) -> str:
         self._project = project
 
     @property
-    def region_name(self):
+    def region_name(self) -> str:
         return self._region_name
 
     @region_name.setter
     @not_connected
-    def region_name(self, region_name):
+    def region_name(self, region_name: str) -> None:
         self._region_name = region_name
 
     @property
-    def secrets_store(self):
+    def secrets_store(self) -> str:
         return self._secrets_store
 
     @secrets_store.setter
@@ -496,44 +382,44 @@ class Connection:
         self._hostname_verification = hostname_verification
 
     @property
-    def trust_store_path(self):
+    def trust_store_path(self) -> Optional[str]:
         return self._trust_store_path
 
     @trust_store_path.setter
     @not_connected
-    def trust_store_path(self, trust_store_path):
+    def trust_store_path(self, trust_store_path: Optional[str]) -> None:
         self._trust_store_path = trust_store_path
 
     @property
-    def cert_folder(self):
+    def cert_folder(self) -> str:
         return self._cert_folder
 
     @cert_folder.setter
     @not_connected
-    def cert_folder(self, cert_folder):
+    def cert_folder(self, cert_folder: str) -> None:
         self._cert_folder = cert_folder
 
     @property
-    def api_key_file(self):
+    def api_key_file(self) -> Optional[str]:
         return self._api_key_file
 
     @property
-    def api_key_value(self):
+    def api_key_value(self) -> Optional[str]:
         return self._api_key_value
 
     @api_key_file.setter
     @not_connected
-    def api_key_file(self, api_key_file):
+    def api_key_file(self, api_key_file: Optional[str]) -> None:
         self._api_key_file = api_key_file
 
     @api_key_value.setter
     @not_connected
-    def api_key_value(self, api_key_value):
+    def api_key_value(self, api_key_value: Optional[str]) -> Optional[str]:
         self._api_key_value = api_key_value
 
-    def __enter__(self):
+    def __enter__(self) -> Connection:
         self.connect()
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type: Any, value: Any, traceback: Any):
         self.close()

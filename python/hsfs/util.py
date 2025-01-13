@@ -13,38 +13,45 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-import re
-import json
-import pandas as pd
-import time
-import threading
+import asyncio
 import itertools
-
-from datetime import datetime, date, timezone
+import json
+import re
+import sys
+import threading
+import time
+from datetime import date, datetime, timezone
+from typing import Any, Callable, Dict, List, Literal, Optional, Set, Tuple, Union
 from urllib.parse import urljoin, urlparse
 
-from sqlalchemy import create_engine
-
-from hsfs import client, feature
-from hsfs.client import exceptions
-from hsfs.core import variable_api
+import numpy as np
+import pandas as pd
 from aiomysql.sa import create_engine as async_create_engine
-import asyncio
+from hsfs import client, feature, feature_group, serving_key
+from hsfs.client import exceptions
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor import serving_prepared_statement
+from hsfs.core import feature_group_api, variable_api
+from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
+
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
-    def default(self, o):
+    def default(self, o: Any) -> Dict[str, Any]:
         try:
             return o.to_dict()
         except AttributeError:
             return super().default(o)
 
 
-def validate_feature(ft):
+def validate_feature(
+    ft: Union[str, feature.Feature, Dict[str, Any]],
+) -> feature.Feature:
     if isinstance(ft, feature.Feature):
         return ft
     elif isinstance(ft, str):
@@ -53,7 +60,32 @@ def validate_feature(ft):
         return feature.Feature(**ft)
 
 
-def parse_features(feature_names):
+VALID_EMBEDDING_TYPE = {
+    "array<int>",
+    "array<bigint>",
+    "array<float>",
+    "array<double>",
+}
+
+
+def validate_embedding_feature_type(embedding_index, schema):
+    if not embedding_index or not schema:
+        return
+    feature_type_map = dict([(feat.name, feat.type) for feat in schema])
+    for embedding in embedding_index.get_embeddings():
+        feature_type = feature_type_map.get(embedding.name)
+        if feature_type not in VALID_EMBEDDING_TYPE:
+            raise FeatureStoreException(
+                f"Provide feature `{embedding.name}` has type `{feature_type}`, "
+                f"but requires one of the following: {', '.join(VALID_EMBEDDING_TYPE)}"
+            )
+
+
+def parse_features(
+    feature_names: Union[
+        str, feature.Feature, List[Union[Dict[str, Any], str, feature.Feature]]
+    ],
+) -> List[feature.Feature]:
     if isinstance(feature_names, (str, feature.Feature)):
         return [validate_feature(feature_names)]
     elif isinstance(feature_names, list) and len(feature_names) > 0:
@@ -62,11 +94,22 @@ def parse_features(feature_names):
         return []
 
 
-def feature_group_name(feature_group):
+def autofix_feature_name(name: str) -> str:
+    # replace spaces with underscores and enforce lower case
+    return name.lower().replace(" ", "_")
+
+
+def feature_group_name(
+    feature_group: Union[
+        feature_group.FeatureGroup,
+        feature_group.ExternalFeatureGroup,
+        feature_group.SpineGroup,
+    ],
+) -> str:
     return feature_group.name + "_" + str(feature_group.version)
 
 
-def append_feature_store_suffix(name):
+def append_feature_store_suffix(name: str) -> str:
     name = name.lower()
     if name.endswith(FEATURE_STORE_NAME_SUFFIX):
         return name
@@ -74,7 +117,7 @@ def append_feature_store_suffix(name):
         return name + FEATURE_STORE_NAME_SUFFIX
 
 
-def strip_feature_store_suffix(name):
+def strip_feature_store_suffix(name: str) -> str:
     name = name.lower()
     if name.endswith(FEATURE_STORE_NAME_SUFFIX):
         return name[: -1 * len(FEATURE_STORE_NAME_SUFFIX)]
@@ -82,7 +125,9 @@ def strip_feature_store_suffix(name):
         return name
 
 
-def create_mysql_engine(online_conn, external, options=None):
+def create_mysql_engine(
+    online_conn: Any, external: bool, options: Optional[Dict[str, Any]] = None
+) -> Any:
     online_options = online_conn.spark_options()
     # Here we are replacing the first part of the string returned by Hopsworks,
     # jdbc:mysql:// with the sqlalchemy one + username and password
@@ -124,7 +169,7 @@ def create_mysql_engine(online_conn, external, options=None):
     return sql_alchemy_engine
 
 
-def get_host_name():
+def get_host_name() -> str:
     host = variable_api.VariableApi().get_loadbalancer_external_domain()
     if host == "":
         # If the load balancer is not configured, then fall back to
@@ -133,25 +178,44 @@ def get_host_name():
     return host
 
 
+def get_dataset_type(path: str) -> Literal["HIVEDB", "DATASET"]:
+    if re.match(r"^(?:hdfs://|)/apps/hive/warehouse/*", path):
+        return "HIVEDB"
+    else:
+        return "DATASET"
+
+
 async def create_async_engine(
-    online_conn, external: bool, default_min_size: int, options: dict = None
-):
+    online_conn: Any,
+    external: bool,
+    default_min_size: int,
+    options: Optional[Dict[str, Any]] = None,
+    hostname: Optional[str] = None,
+) -> Any:
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError as er:
+        raise RuntimeError(
+            "Event loop is not running. Please invoke this co-routine from a running loop or provide an event loop."
+        ) from er
+
     online_options = online_conn.spark_options()
-    # create a aiomysql connection pool
     # read the keys user, password from online_conn as use them while creating the connection pool
     url = make_url(online_options["url"].replace("jdbc:", ""))
-    if external:
-        hostname = get_host_name()
-    else:
-        hostname = url.host
+    if hostname is None:
+        if external:
+            hostname = get_host_name()
+        else:
+            hostname = url.host
 
+    # create a aiomysql connection pool
     pool = await async_create_engine(
         host=hostname,
         port=3306,
         user=online_options["user"],
         password=online_options["password"],
         db=url.database,
-        loop=asyncio.get_running_loop(),
+        loop=loop,
         minsize=(
             options.get("minsize", default_min_size) if options else default_min_size
         ),
@@ -163,7 +227,7 @@ async def create_async_engine(
     return pool
 
 
-def check_timestamp_format_from_date_string(input_date):
+def check_timestamp_format_from_date_string(input_date: str) -> Tuple[str, str]:
     date_format_patterns = {
         r"^([0-9]{4})([0-9]{2})([0-9]{2})$": "%Y%m%d",
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H",
@@ -195,36 +259,40 @@ def check_timestamp_format_from_date_string(input_date):
     return normalized_date, date_format
 
 
-def get_timestamp_from_date_string(input_date):
+def get_timestamp_from_date_string(input_date: str) -> int:
     norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
     try:
         if date_format != "ISO":
             date_time = datetime.strptime(norm_input_date, date_format)
         else:
             date_time = datetime.fromisoformat(input_date[:-1])
-    except ValueError:
+    except ValueError as err:
         raise ValueError(
             "Unable to parse the normalized input date value : "
             + norm_input_date
             + " with format "
             + date_format
-        )
+        ) from err
     if date_time.tzinfo is None:
         date_time = date_time.replace(tzinfo=timezone.utc)
     return int(float(date_time.timestamp()) * 1000)
 
 
-def get_hudi_datestr_from_timestamp(timestamp):
+def get_hudi_datestr_from_timestamp(timestamp: int) -> str:
     return datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
 
 
-def get_delta_datestr_from_timestamp(timestamp):
+def get_delta_datestr_from_timestamp(timestamp: int) -> str:
     return datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y-%m-%d %H:%M:%S.%f")[
         :-3
     ]
 
 
-def convert_event_time_to_timestamp(event_time):
+def convert_event_time_to_timestamp(
+    event_time: Optional[
+        Union[str, pd._libs.tslibs.timestamps.Timestamp, datetime, date, int]
+    ],
+) -> Optional[int]:
     if not event_time:
         return None
     if isinstance(event_time, str):
@@ -260,7 +328,7 @@ def convert_event_time_to_timestamp(event_time):
         )
 
 
-def setup_pydoop():
+def setup_pydoop() -> None:
     # Import Pydoop only here, so it doesn't trigger if the execution environment
     # does not support Pydoop. E.g. Sagemaker
     from pydoop import hdfs
@@ -268,7 +336,9 @@ def setup_pydoop():
     # Create a subclass that replaces the check on the hdfs scheme to allow hopsfs as well.
     class _HopsFSPathSplitter(hdfs.path._HdfsPathSplitter):
         @classmethod
-        def split(cls, hdfs_path, user):
+        def split(
+            cls, hdfs_path: Optional[str], user: Optional[str]
+        ) -> Tuple[str, int, str]:
             if not hdfs_path:
                 cls.raise_bad_path(hdfs_path, "empty")
             scheme, netloc, path = cls.parse(hdfs_path)
@@ -292,7 +362,7 @@ def setup_pydoop():
     hdfs.path._HdfsPathSplitter = _HopsFSPathSplitter
 
 
-def get_hostname_replaced_url(sub_path: str):
+def get_hostname_replaced_url(sub_path: str) -> str:
     """
     construct and return an url with public hopsworks hostname and sub path
     :param self:
@@ -304,7 +374,14 @@ def get_hostname_replaced_url(sub_path: str):
     return url_parsed.geturl()
 
 
-def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
+def verify_attribute_key_names(
+    feature_group_obj: Union[
+        feature_group.FeatureGroup,
+        feature_group.ExternalFeatureGroup,
+        feature_group.SpineGroup,
+    ],
+    external_feature_group: bool = False,
+) -> None:
     feature_names = set(feat.name for feat in feature_group_obj.features)
     if feature_group_obj.primary_key:
         diff = set(feature_group_obj.primary_key) - feature_names
@@ -335,7 +412,38 @@ def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
                 )
 
 
-def translate_legacy_spark_type(output_type):
+def get_job_url(href: str) -> str:
+    """Use the endpoint returned by the API to construct the UI url for jobs
+
+    Args:
+        href (str): the endpoint returned by the API
+    """
+    url = urlparse(href)
+    url_splits = url.path.split("/")
+    project_id = url_splits[4]
+    job_name = url_splits[6]
+    ui_url = url._replace(
+        path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
+    )
+    ui_url = client.get_instance().replace_public_host(ui_url)
+    return ui_url.geturl()
+
+
+def translate_legacy_spark_type(
+    output_type: str,
+) -> Literal[
+    "STRING",
+    "BINARY",
+    "BYTE",
+    "SHORT",
+    "INT",
+    "LONG",
+    "FLOAT",
+    "DOUBLE",
+    "TIMESTAMP",
+    "DATE",
+    "BOOLEAN",
+]:
     if output_type == "StringType()":
         return "STRING"
     elif output_type == "BinaryType()":
@@ -362,7 +470,7 @@ def translate_legacy_spark_type(output_type):
         return "STRING"  # handle gracefully, and return STRING type, the default for spark udfs
 
 
-def _loading_animation(message, stop_event):
+def _loading_animation(message: str, stop_event: threading.Event) -> None:
     for char in itertools.cycle([".", "..", "...", ""]):
         if stop_event.is_set():
             break
@@ -370,7 +478,7 @@ def _loading_animation(message, stop_event):
         time.sleep(0.5)
 
 
-def run_with_loading_animation(message, func, *args, **kwargs):
+def run_with_loading_animation(message: str, func: Callable, *args, **kwargs) -> Any:
     stop_event = threading.Event()
     t = threading.Thread(
         target=_loading_animation,
@@ -396,6 +504,65 @@ def run_with_loading_animation(message, func, *args, **kwargs):
             print(f"\rError: {message}           ", end="\n")
         else:
             print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
+
+
+def get_feature_group_url(feature_store_id: int, feature_group_id: int) -> str:
+    sub_path = (
+        "/p/"
+        + str(client.get_instance()._project_id)
+        + "/fs/"
+        + str(feature_store_id)
+        + "/fg/"
+        + str(feature_group_id)
+    )
+    return get_hostname_replaced_url(sub_path)
+
+
+def build_serving_keys_from_prepared_statements(
+    prepared_statements: List[serving_prepared_statement.ServingPreparedStatement],
+    feature_store_id: int,
+    ignore_prefix: bool = False,
+) -> Set[serving_key.ServingKey]:
+    serving_keys = set()
+    fg_api = feature_group_api.FeatureGroupApi()
+    for statement in prepared_statements:
+        fg = fg_api.get_by_id(feature_store_id, statement.feature_group_id)
+        for param in statement.prepared_statement_parameters:
+            serving_keys.add(
+                serving_key.ServingKey(
+                    feature_name=param.name,
+                    join_index=statement.prepared_statement_index,
+                    prefix=statement.prefix,
+                    ignore_prefix=ignore_prefix,
+                    feature_group=fg,
+                )
+            )
+    return serving_keys
+
+
+def is_runtime_notebook():
+    if "ipykernel" in sys.modules:
+        return True
+    else:
+        return False
+
+
+class NpDatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        dtypes = (np.datetime64, np.complexfloating)
+        if isinstance(obj, (datetime, date)):
+            return convert_event_time_to_timestamp(obj)
+        elif isinstance(obj, dtypes):
+            return str(obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            if any([np.issubdtype(obj.dtype, i) for i in dtypes]):
+                return obj.astype(str).tolist()
+            return obj.tolist()
+        return super(NpDatetimeEncoder, self).default(obj)
 
 
 class VersionWarning(Warning):

@@ -13,12 +13,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
+from typing import Any, List
 
 from hsfs import client
 
 
 class HostsApi:
-    def get(self):
+    def get(self) -> List[Any]:
         _client = client.get_instance()
         path_params = [
             "hosts",

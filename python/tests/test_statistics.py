@@ -15,7 +15,7 @@
 #
 
 
-from hsfs import statistics, split_statistics
+from hsfs import split_statistics, statistics
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 

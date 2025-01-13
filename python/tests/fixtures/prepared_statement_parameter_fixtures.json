@@ -1,13 +1,25 @@
 {
   "get": {
-    "response":{
+    "response": {
       "name": "test_name",
       "index": "test_index",
       "type": "test_type",
       "href": "test_href"
     }
   },
+  "prices_single_and_batch": {
+    "response": {
+      "name": "ticker",
+      "index": 1
+    }
+  },
+  "fake_transactions_single_and_batch": {
+    "response": {
+      "name": "tid",
+      "index": 1
+    }
+  },
   "get_basic_info": {
-    "response":{}
+    "response": {}
   }
 }

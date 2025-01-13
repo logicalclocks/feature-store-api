@@ -13,9 +13,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from hsfs import feature_group_commit, util
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_api
+
 
 try:
     from delta.tables import DeltaTable
@@ -49,12 +52,12 @@ class DeltaEngine:
         return self._feature_group_api.commit(self._feature_group, fg_commit)
 
     def register_temporary_table(self, delta_fg_alias, read_options):
+        location = self._feature_group.prepare_spark_location()
+
         delta_options = self._setup_delta_read_opts(delta_fg_alias, read_options)
         self._spark_session.read.format(self.DELTA_SPARK_FORMAT).options(
             **delta_options
-        ).load(self._feature_group.location).createOrReplaceTempView(
-            delta_fg_alias.alias
-        )
+        ).load(location).createOrReplaceTempView(delta_fg_alias.alias)
 
     def _setup_delta_read_opts(self, delta_fg_alias, read_options):
         delta_options = {}
@@ -81,16 +84,38 @@ class DeltaEngine:
 
         return delta_options
 
-    def delete_record(self, delete_df, write_options):
-        pass
+    def delete_record(self, delete_df):
+        location = self._feature_group.prepare_spark_location()
+
+        if not DeltaTable.isDeltaTable(self._spark_session, location):
+            raise FeatureStoreException(
+                f"This is no data available in Feature group {self._feature_group.name}, or it not DELTA enabled "
+            )
+        else:
+            fg_source_table = DeltaTable.forPath(self._spark_session, location)
+
+            source_alias = (
+                f"{self._feature_group.name}_{self._feature_group.version}_source"
+            )
+            updates_alias = (
+                f"{self._feature_group.name}_{self._feature_group.version}_updates"
+            )
+            merge_query_str = self._generate_merge_query(source_alias, updates_alias)
+
+            fg_source_table.alias(source_alias).merge(
+                delete_df.alias(updates_alias), merge_query_str
+            ).whenMatchedDelete().execute()
+
+        fg_commit = self._get_last_commit_metadata(self._spark_session, location)
+        return self._feature_group_api.commit(self._feature_group, fg_commit)
 
     def _write_delta_dataset(self, dataset, write_options):
+        location = self._feature_group.prepare_spark_location()
+
         if write_options is None:
             write_options = {}
 
-        if not DeltaTable.isDeltaTable(
-            self._spark_session, self._feature_group.location
-        ):
+        if not DeltaTable.isDeltaTable(self._spark_session, location):
             (
                 dataset.write.format(DeltaEngine.DELTA_SPARK_FORMAT)
                 .options(**write_options)
@@ -100,12 +125,10 @@ class DeltaEngine:
                     else []
                 )
                 .mode("append")
-                .save(self._feature_group.location)
+                .save(location)
             )
         else:
-            fg_source_table = DeltaTable.forPath(
-                self._spark_session, self._feature_group.location
-            )
+            fg_source_table = DeltaTable.forPath(self._spark_session, location)
 
             source_alias = (
                 f"{self._feature_group.name}_{self._feature_group.version}_source"
@@ -119,9 +142,14 @@ class DeltaEngine:
                 dataset.alias(updates_alias), merge_query_str
             ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
 
-        return self._get_last_commit_metadata(
-            self._spark_session, self._feature_group.location
+        return self._get_last_commit_metadata(self._spark_session, location)
+
+    def vacuum(self, retention_hours: int):
+        location = self._feature_group.prepare_spark_location()
+        retention = (
+            f"RETAIN {retention_hours} HOURS" if retention_hours is not None else ""
         )
+        self._spark_session.sql(f"VACUUM '{location}' {retention}")
 
     def _generate_merge_query(self, source_alias, updates_alias):
         merge_query_list = []
@@ -143,6 +171,8 @@ class DeltaEngine:
     @staticmethod
     def _get_last_commit_metadata(spark_context, base_path):
         fg_source_table = DeltaTable.forPath(spark_context, base_path)
+
+        # Get info about the latest commit
         last_commit = fg_source_table.history(1).first().asDict()
         version = last_commit["version"]
         commit_timestamp = util.convert_event_time_to_timestamp(
@@ -150,6 +180,12 @@ class DeltaEngine:
         )
         commit_date_string = util.get_hudi_datestr_from_timestamp(commit_timestamp)
         operation_metrics = last_commit["operationMetrics"]
+
+        # Get info about the oldest remaining commit
+        oldest_commit = fg_source_table.history().orderBy("version").first().asDict()
+        oldest_commit_timestamp = util.convert_event_time_to_timestamp(
+            oldest_commit["timestamp"]
+        )
 
         if version == 0:
             fg_commit = feature_group_commit.FeatureGroupCommit(
@@ -159,7 +195,7 @@ class DeltaEngine:
                 rows_inserted=operation_metrics["numOutputRows"],
                 rows_updated=0,
                 rows_deleted=0,
-                last_active_commit_time=commit_timestamp,
+                last_active_commit_time=oldest_commit_timestamp,
             )
         else:
             fg_commit = feature_group_commit.FeatureGroupCommit(
@@ -169,7 +205,7 @@ class DeltaEngine:
                 rows_inserted=operation_metrics["numTargetRowsInserted"],
                 rows_updated=operation_metrics["numTargetRowsUpdated"],
                 rows_deleted=operation_metrics["numTargetRowsDeleted"],
-                last_active_commit_time=commit_timestamp,
+                last_active_commit_time=oldest_commit_timestamp,
             )
 
         return fg_commit

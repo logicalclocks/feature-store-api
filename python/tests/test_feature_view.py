@@ -16,7 +16,7 @@
 import warnings
 
 from hsfs import feature_view, training_dataset_feature, transformation_function
-from hsfs.constructor import query, fs_query
+from hsfs.constructor import fs_query, query
 from hsfs.feature_store import FeatureStore
 
 

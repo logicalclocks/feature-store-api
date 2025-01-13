@@ -12,12 +12,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+from __future__ import annotations
+
+import ast
+import inspect
+import json
 
 import humps
-import json
-import inspect
-import ast
-
 from hsfs import util
 from hsfs.core import transformation_function_engine
 

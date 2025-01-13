@@ -17,21 +17,24 @@
 
 package com.logicalclocks.hsfs.flink;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.flink.engine.FeatureGroupEngine;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.StatisticsConfig;
+import com.logicalclocks.hsfs.StorageConnector;
 
-import com.logicalclocks.hsfs.flink.engine.FeatureGroupEngine;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
-import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.DataStreamSink;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -41,9 +44,11 @@ public class StreamFeatureGroup extends FeatureGroupBase<DataStream<?>> {
 
   @Builder
   public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
-      List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
-      boolean onlineEnabled, List<Feature> features, StatisticsConfig statisticsConfig,
-      String onlineTopicName, String topicName, String notificationTopicName, String eventTime) {
+                            List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
+                            boolean onlineEnabled, List<Feature> features,
+                            TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
+                            String onlineTopicName, String topicName, String notificationTopicName, String eventTime,
+                            StorageConnector storageConnector, String path) {
     this();
     this.featureStore = featureStore;
     this.name = name;
@@ -55,12 +60,15 @@ public class StreamFeatureGroup extends FeatureGroupBase<DataStream<?>> {
       ? partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.hudiPrecombineKey = hudiPrecombineKey != null ? hudiPrecombineKey.toLowerCase() : null;
     this.onlineEnabled = onlineEnabled;
+    this.timeTravelFormat = timeTravelFormat != null ? timeTravelFormat : TimeTravelFormat.HUDI;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.onlineTopicName = onlineTopicName;
     this.topicName = topicName;
     this.notificationTopicName = notificationTopicName;
     this.eventTime = eventTime;
+    this.storageConnector = storageConnector;
+    this.path = path;
   }
 
   public StreamFeatureGroup() {

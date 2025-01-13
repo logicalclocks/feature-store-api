@@ -50,6 +50,10 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+.ruff_cache/
+bigquery.json
+gcs.json
+metastore_db/
 
 # Translations
 *.mo
@@ -136,3 +140,7 @@ keyFile.json
 
 # delombok dir
 delombok
+
+# dev scripts dir
+dev_scripts/
+dev_tools/

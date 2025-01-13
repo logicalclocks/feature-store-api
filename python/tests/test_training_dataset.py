@@ -16,11 +16,11 @@
 
 
 from hsfs import (
-    training_dataset,
+    statistics_config,
     storage_connector,
+    training_dataset,
     training_dataset_feature,
     training_dataset_split,
-    statistics_config,
 )
 
 

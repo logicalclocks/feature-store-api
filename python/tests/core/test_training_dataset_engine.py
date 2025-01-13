@@ -15,10 +15,14 @@
 #
 
 import pytest
-
-from hsfs import training_dataset, training_dataset_feature, transformation_function
-from hsfs.core import training_dataset_engine
+from hsfs import (
+    feature_group,
+    training_dataset,
+    training_dataset_feature,
+    transformation_function,
+)
 from hsfs.constructor import query
+from hsfs.core import training_dataset_engine
 
 
 class TestTrainingDatasetEngine:
@@ -53,9 +57,7 @@ class TestTrainingDatasetEngine:
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
-            features
-        )
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
 
         # Act
         td_engine.save(training_dataset=td, features=None, user_write_options=None)
@@ -66,7 +68,7 @@ class TestTrainingDatasetEngine:
         assert td._features[0].label is True
         assert td._features[1].label is False
 
-    def test_save_query(self, mocker):
+    def test_save_query(self, mocker, backend_fixtures):
         # Arrange
         feature_store_id = 99
 
@@ -90,7 +92,10 @@ class TestTrainingDatasetEngine:
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
-        q = query.Query(left_feature_group=None, left_features=None)
+        fg = feature_group.FeatureGroup.from_response_json(
+            backend_fixtures["feature_group"]["get"]["response"]
+        )
+        q = query.Query(left_feature_group=fg, left_features=fg.features)
 
         # Act
         td_engine.save(training_dataset=td, features=q, user_write_options=None)
@@ -143,9 +148,7 @@ class TestTrainingDatasetEngine:
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
-            features
-        )
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
 
         # Act
         with pytest.raises(ValueError) as e_info:
@@ -193,9 +196,7 @@ class TestTrainingDatasetEngine:
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
-            features
-        )
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
 
         # Act
         td_engine.save(training_dataset=td, features=None, user_write_options=None)

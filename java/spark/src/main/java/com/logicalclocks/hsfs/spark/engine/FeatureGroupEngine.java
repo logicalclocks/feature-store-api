@@ -51,8 +51,6 @@ import java.util.concurrent.TimeoutException;
 
 public class FeatureGroupEngine  extends FeatureGroupEngineBase {
 
-  private HudiEngine hudiEngine = new HudiEngine();
-
   /**
    * Create the metadata and write the data to the online/offline feature store.
    *
@@ -363,9 +361,8 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
                                                           List<String> partitionKeys, String hudiPrecombineKey,
                                                           boolean onlineEnabled,
                                                           StatisticsConfig statisticsConfig,
-                                                          String eventTime) throws IOException, FeatureStoreException {
-
-
+                                                          String eventTime, TimeTravelFormat timeTravelFormat)
+      throws IOException, FeatureStoreException {
     StreamFeatureGroup featureGroup;
     try {
       featureGroup = getStreamFeatureGroup(featureStore, name, version);
@@ -382,6 +379,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
             .onlineEnabled(onlineEnabled)
             .statisticsConfig(statisticsConfig)
             .eventTime(eventTime)
+            .timeTravelFormat(timeTravelFormat)
             .build();
 
         featureGroup.setFeatureStore(featureStore);
@@ -453,8 +451,8 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
       throw new FeatureStoreException("delete function is only valid for "
           + "time travel enabled feature group");
     }
-    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
-        writeOptions);
+    return HudiEngine.getInstance().deleteRecord(SparkEngine.getInstance().getSparkSession(),
+        featureGroupBase, genericDataset, writeOptions);
   }
 
   public ExternalFeatureGroup saveExternalFeatureGroup(ExternalFeatureGroup externalFeatureGroup)

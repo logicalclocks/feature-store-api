@@ -495,7 +495,7 @@
         },
         "headers": null
     },
-    "get_big_query": {
+    "get_big_query_table": {
         "response": {
             "type": "featurestoreBigQueryConnectorDTO",
             "description": "BigQuery connector description",
@@ -508,6 +508,32 @@
             "dataset": "test_dataset",
             "query_table": "test_query_table",
             "query_project": "test_query_project",
+            "arguments": [{"name":  "test_name", "value":  "test_value"}]
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_big_query"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_big_query_query": {
+        "response": {
+            "type": "featurestoreBigQueryConnectorDTO",
+            "description": "BigQuery connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_big_query",
+            "storageConnectorType": "BIGQUERY",
+            "key_path": "test_key_path",
+            "parent_project": "test_parent_project",
             "materialization_dataset": "test_materialization_dataset",
             "arguments": [{"name":  "test_name", "value":  "test_value"}]
         },

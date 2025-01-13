@@ -15,7 +15,7 @@
 #
 
 
-from hsfs import validation_report, ge_validation_result
+from hsfs import ge_validation_result, validation_report
 
 
 class TestValidationReport:

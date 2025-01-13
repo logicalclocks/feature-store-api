@@ -15,8 +15,7 @@
 #
 
 import pytest
-
-from hsfs import feature_group, feature_group_commit, validation_report, feature
+from hsfs import feature, feature_group, feature_group_commit, validation_report
 from hsfs.client import exceptions
 from hsfs.core import feature_group_engine
 
@@ -201,6 +200,10 @@ class TestFeatureGroupEngine:
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
+        mocker.patch(
+            "hsfs.util.get_feature_group_url",
+            return_value="url",
+        )
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -225,14 +228,15 @@ class TestFeatureGroupEngine:
         mock_ge_engine.return_value.validate.return_value = vr
 
         # Act
-        fg_engine.insert(
-            feature_group=fg,
-            feature_dataframe=None,
-            overwrite=None,
-            operation=None,
-            storage=None,
-            write_options=None,
-        )
+        with pytest.raises(exceptions.DataValidationException):
+            fg_engine.insert(
+                feature_group=fg,
+                feature_dataframe=None,
+                overwrite=None,
+                operation=None,
+                storage=None,
+                write_options=None,
+            )
 
         # Assert
         assert mock_fg_api.return_value.delete_content.call_count == 0
@@ -520,6 +524,54 @@ class TestFeatureGroupEngine:
         # Assert
         assert mock_hudi_engine.return_value.delete_record.call_count == 1
 
+    def test_clean_delta(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.engine.get_instance")
+        mock_hudi_engine = mocker.patch("hsfs.core.delta_engine.DeltaEngine")
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            time_travel_format="DELTA",
+        )
+
+        # Act
+        fg_engine.delta_vacuum(feature_group=fg, retention_hours=200)
+
+        # Assert
+        assert mock_hudi_engine.return_value.vacuum.call_count == 1
+
+    def test_clean_hudi(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            time_travel_format="HUDI",
+        )
+
+        # Act
+        fg_engine.delta_vacuum(feature_group=fg, retention_hours=200)
+
     def test_sql(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -655,9 +707,7 @@ class TestFeatureGroupEngine:
         fg_engine.append_features(feature_group=fg, new_features=[f1, f2])
 
         # Assert
-        assert (
-            mock_engine_get_instance.return_value.save_empty_dataframe.call_count == 1
-        )
+        assert mock_engine_get_instance.return_value.update_table_schema.call_count == 1
         assert len(mock_fg_engine_update_features_metadata.call_args[0][1]) == 4
 
     def test_update_description(self, mocker):
@@ -955,6 +1005,8 @@ class TestFeatureGroupEngine:
             == "Features are not compatible with Feature Group schema: \n"
             " - f (type: 'str') is missing from input dataframe.\n"
             " - f1 (type: 'int') is missing from input dataframe."
+            "\nNote that feature (or column) names are case insensitive and "
+            "spaces are automatically replaced with underscores."
         )
 
     def test_verify_schema_compatibility_dataframe_features(self):
@@ -985,6 +1037,8 @@ class TestFeatureGroupEngine:
             == "Features are not compatible with Feature Group schema: \n"
             " - f (type: 'str') does not exist in feature group.\n"
             " - f1 (type: 'int') does not exist in feature group."
+            "\nNote that feature (or column) names are case insensitive and "
+            "spaces are automatically replaced with underscores."
         )
 
     def test_verify_schema_compatibility_feature_group_features_dataframe_features(
@@ -1043,6 +1097,8 @@ class TestFeatureGroupEngine:
             str(e_info.value)
             == "Features are not compatible with Feature Group schema: \n"
             " - f1 (expected type: 'int', derived from input: 'bool') has the wrong type."
+            "\nNote that feature (or column) names are case insensitive and "
+            "spaces are automatically replaced with underscores."
         )
 
     def test_save_feature_group_metadata(self, mocker):
@@ -1056,7 +1112,7 @@ class TestFeatureGroupEngine:
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
         mock_print = mocker.patch("builtins.print")
@@ -1104,7 +1160,7 @@ class TestFeatureGroupEngine:
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
         mock_print = mocker.patch("builtins.print")
@@ -1153,7 +1209,7 @@ class TestFeatureGroupEngine:
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
         mock_print = mocker.patch("builtins.print")
@@ -1204,7 +1260,7 @@ class TestFeatureGroupEngine:
         )
 
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
 
@@ -1309,7 +1365,7 @@ class TestFeatureGroupEngine:
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
         mock_print = mocker.patch("builtins.print")
@@ -1345,38 +1401,4 @@ class TestFeatureGroupEngine:
             0
         ] == "Feature Group created successfully, explore it at \n{}".format(
             feature_group_url
-        )
-
-    def test_get_feature_group_url(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mocker.patch("hsfs.engine.get_type")
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_util_get_hostname_replaced_url = mocker.patch(
-            "hsfs.util.get_hostname_replaced_url"
-        )
-
-        fg_engine = feature_group_engine.FeatureGroupEngine(
-            feature_store_id=feature_store_id
-        )
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
-        )
-
-        mock_client_get_instance.return_value._project_id = 50
-
-        # Act
-        fg_engine._get_feature_group_url(feature_group=fg)
-
-        # Assert
-        assert mock_util_get_hostname_replaced_url.call_count == 1
-        assert (
-            mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"
         )

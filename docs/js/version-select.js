@@ -29,6 +29,15 @@ window.addEventListener("DOMContentLoaded", function() {
       return i.version === CURRENT_VERSION ||
              i.aliases.includes(CURRENT_VERSION);
     }).version;
+    var latestVersion = versions.find(function(i) {
+      return i.aliases.includes("latest");
+    }).version;
+    let outdated_banner = document.querySelector('div[data-md-color-scheme="default"][data-md-component="outdated"]');
+    if (realVersion !== latestVersion) {
+      outdated_banner.removeAttribute("hidden");
+    } else {
+      outdated_banner.setAttribute("hidden", "");
+    }
 
     var select = makeSelect(versions.map(function(i) {
       var allowedAliases = ["dev", "latest"]

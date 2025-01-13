@@ -12,29 +12,29 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
 import warnings
-from typing import Optional, Union, Any, Dict, List, TypeVar
+from typing import Any, Dict, List, Optional, Set, TypeVar, Union
 
 import humps
-import pandas as pd
 import numpy as np
-
-from hsfs import util, engine, training_dataset_feature, client
-from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.storage_connector import StorageConnector, HopsFSConnector
+import pandas as pd
+from hsfs import client, engine, training_dataset_feature, util
+from hsfs.client.exceptions import RestAPIError
+from hsfs.constructor import filter, query
 from hsfs.core import (
+    code_engine,
+    statistics_engine,
     training_dataset_api,
     training_dataset_engine,
-    statistics_engine,
-    code_engine,
     transformation_function_engine,
     vector_server,
 )
-from hsfs.constructor import query, filter
-from hsfs.client.exceptions import RestAPIError
+from hsfs.statistics_config import StatisticsConfig
+from hsfs.storage_connector import HopsFSConnector, StorageConnector
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
 class TrainingDatasetBase:
@@ -153,7 +153,11 @@ class TrainingDatasetBase:
             self._statistics_config = StatisticsConfig.from_response_json(
                 statistics_config
             )
-            self._label = [feat.name.lower() for feat in self._features if feat.label]
+            self._label = [
+                util.autofix_feature_name(feat.name)
+                for feat in self._features
+                if feat.label
+            ]
             self._extra_filter = filter.Logic.from_response_json(extra_filter)
 
     def _set_time_splits(
@@ -251,29 +255,29 @@ class TrainingDatasetBase:
         }
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the training dataset."""
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
-    def version(self):
+    def version(self) -> int:
         """Version number of the training dataset."""
         return self._version
 
     @version.setter
-    def version(self, version):
+    def version(self, version: int) -> None:
         self._version = version
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         return self._description
 
     @description.setter
-    def description(self, description):
+    def description(self, description: Optional[str]) -> None:
         """Description of the training dataset contents."""
         self._description = description
 
@@ -287,14 +291,14 @@ class TrainingDatasetBase:
         self._data_format = data_format
 
     @property
-    def coalesce(self):
+    def coalesce(self) -> bool:
         """If true the training dataset data will be coalesced into
         a single partition before writing. The resulting training dataset
         will be a single file per split"""
         return self._coalesce
 
     @coalesce.setter
-    def coalesce(self, coalesce):
+    def coalesce(self, coalesce: bool):
         self._coalesce = coalesce
 
     @property
@@ -323,37 +327,46 @@ class TrainingDatasetBase:
             )
 
     @property
-    def splits(self):
+    def splits(self) -> List[TrainingDatasetSplit]:
         """Training dataset splits. `train`, `test` or `eval` and corresponding percentages."""
         return self._splits
 
     @splits.setter
-    def splits(self, splits):
+    def splits(self, splits: Optional[Dict[str, float]]):
         # user api differs from how the backend expects the splits to be represented
-        self._splits = [
-            TrainingDatasetSplit(
-                name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+        if splits is None:
+            self._splits = []
+        elif isinstance(splits, dict):
+            self._splits = [
+                TrainingDatasetSplit(
+                    name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+                )
+                for k, v in splits.items()
+                if v is not None
+            ]
+        else:
+            raise TypeError(
+                "The argument `splits` has to be `None` or a dictionary of key, relative size e.g "
+                + "{'train': 0.7, 'test': 0.1, 'validation': 0.2}.\n"
+                + "Got {} with type {}".format(splits, type(splits))
             )
-            for k, v in splits.items()
-            if v is not None
-        ]
 
     @property
-    def location(self):
-        """Path to the training dataset location."""
+    def location(self) -> str:
+        """Path to the training dataset location. Can be an empty string if e.g. the training dataset is in-memory."""
         return self._location
 
     @location.setter
-    def location(self, location):
+    def location(self, location: str):
         self._location = location
 
     @property
-    def seed(self):
-        """Seed."""
+    def seed(self) -> Optional[int]:
+        """Seed used to perform random split, ensure reproducibility of the random split at a later date."""
         return self._seed
 
     @seed.setter
-    def seed(self, seed):
+    def seed(self, seed: Optional[int]):
         self._seed = seed
 
     @property
@@ -596,7 +609,7 @@ class TrainingDataset(TrainingDatasetBase):
             np.ndarray,
             List[list],
         ],
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Materialize the training dataset to storage.
 
@@ -631,7 +644,7 @@ class TrainingDataset(TrainingDatasetBase):
         user_stats_config = self._statistics_config
         # td_job is used only if the python engine is used
         training_dataset, td_job = self._training_dataset_engine.save(
-            self, features, write_options
+            self, features, write_options or {}
         )
         self.storage_connector = training_dataset.storage_connector
         # currently we do not save the training dataset statistics config for training datasets
@@ -645,6 +658,7 @@ class TrainingDataset(TrainingDatasetBase):
                     self._name, self._version
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
 
         return td_job
@@ -660,7 +674,7 @@ class TrainingDataset(TrainingDatasetBase):
             List[list],
         ],
         overwrite: bool,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Insert additional feature data into the training dataset.
 
@@ -695,7 +709,7 @@ class TrainingDataset(TrainingDatasetBase):
         """
         # td_job is used only if the python engine is used
         td_job = self._training_dataset_engine.insert(
-            self, features, write_options, overwrite
+            self, features, write_options or {}, overwrite
         )
 
         self._code_engine.save_code(self)
@@ -703,7 +717,7 @@ class TrainingDataset(TrainingDatasetBase):
 
         return td_job
 
-    def read(self, split=None, read_options={}):
+    def read(self, split=None, read_options=None):
         """Read the training dataset into a dataframe.
 
         It is also possible to read only a specific split.
@@ -722,7 +736,7 @@ class TrainingDataset(TrainingDatasetBase):
                 "The training dataset has splits, please specify the split you want to read"
             )
 
-        return self._training_dataset_engine.read(self, split, read_options)
+        return self._training_dataset_engine.read(self, split, read_options or {})
 
     def compute_statistics(self):
         """Compute the statistics for the training dataset and save them to the
@@ -730,10 +744,14 @@ class TrainingDataset(TrainingDatasetBase):
         """
         if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             try:
-                registered_stats = self._statistics_engine.get(self)
+                registered_stats = self._statistics_engine.get(
+                    self,
+                    before_transformation=False,
+                )
             except RestAPIError as e:
                 if (
-                    e.response.json().get("errorCode", "") == 270226
+                    e.response.json().get("errorCode", "")
+                    == RestAPIError.FeatureStoreErrorCode.STATISTICS_NOT_FOUND
                     and e.response.status_code == 404
                 ):
                     registered_stats = None
@@ -846,6 +864,7 @@ class TrainingDataset(TrainingDatasetBase):
                 self._name, self._version
             ),
             util.JobWarning,
+            stacklevel=1,
         )
         self._training_dataset_api.delete(self)
 
@@ -893,9 +912,9 @@ class TrainingDataset(TrainingDatasetBase):
             if td_json["location"].endswith(
                 f"/Projects/{_client._project_name}/{_client._project_name}_Training_Datasets"
             ):
-                td_json[
-                    "location"
-                ] = f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
+                td_json["location"] = (
+                    f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
+                )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
@@ -957,7 +976,7 @@ class TrainingDataset(TrainingDatasetBase):
         # Returns
             `Statistics`. Object with statistics information.
         """
-        return self._statistics_engine.get(self)
+        return self._statistics_engine.get(self, before_transformation=False)
 
     @property
     def query(self):
@@ -1045,7 +1064,7 @@ class TrainingDataset(TrainingDatasetBase):
         return self._vector_server.get_feature_vectors(entry)
 
     @property
-    def label(self):
+    def label(self) -> Union[str, List[str]]:
         """The label/prediction feature of the training dataset.
 
         Can be a composite of multiple features.
@@ -1053,15 +1072,15 @@ class TrainingDataset(TrainingDatasetBase):
         return self._label
 
     @label.setter
-    def label(self, label):
-        self._label = [lb.lower() for lb in label]
+    def label(self, label: str) -> None:
+        self._label = [util.autofix_feature_name(lb) for lb in label]
 
     @property
-    def feature_store_id(self):
+    def feature_store_id(self) -> int:
         return self._feature_store_id
 
     @property
-    def feature_store_name(self):
+    def feature_store_name(self) -> str:
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 
@@ -1078,13 +1097,15 @@ class TrainingDataset(TrainingDatasetBase):
     def transformation_functions(self, transformation_functions):
         self._transformation_functions = transformation_functions
 
-    def serving_keys(self):
+    @property
+    def serving_keys(self) -> Set[str]:
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
-        if self._vector_server.required_serving_keys:
-            return self._vector_server.required_serving_keys
-        else:
-            _vector_server = vector_server.VectorServer(
-                self._feature_store_id, self._features
+        if self._serving_keys is None or len(self._serving_keys) == 0:
+            self._serving_keys = util.build_serving_keys_from_prepared_statements(
+                self._training_dataset_api.get_serving_prepared_statement(
+                    entity=self, batch=False
+                ),
+                feature_store_id=self._feature_store_id,
+                ignore_prefix=True,  # if serving_keys have to be built it is because fv created prior to 3.3, this ensure compatibility
             )
-            _vector_server.init_prepared_statement(self, False, False)
-            return _vector_server.required_serving_keys
+        return self._serving_keys

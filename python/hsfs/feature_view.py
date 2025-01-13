@@ -13,62 +13,111 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
+import copy
 import json
+import logging
 import warnings
-from datetime import datetime, date
-from typing import Optional, Union, List, Dict, Any, TypeVar
+from datetime import date, datetime
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import humps
-import copy
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from hsfs import (
-    util,
-    training_dataset_feature,
+    feature_group,
     storage_connector,
+    tag,
     training_dataset,
+    training_dataset_feature,
     usage,
+    util,
 )
+from hsfs import serving_key as skm
+from hsfs import transformation_function as tfm
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.constructor import query, filter
+from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
 from hsfs.core import (
+    explicit_provenance,
+    feature_monitoring_config_engine,
+    feature_monitoring_result_engine,
     feature_view_engine,
+    job,
+    statistics_engine,
     transformation_function_engine,
     vector_server,
-    statistics_engine,
 )
-from hsfs.transformation_function import TransformationFunction
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.statistics import Statistics
+from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_result as fmr
+from hsfs.core.constants import HAS_POLARS
 from hsfs.core.feature_view_api import FeatureViewApi
-from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.serving_key import ServingKey
 from hsfs.core.vector_db_client import VectorDbClient
+from hsfs.decorators import typechecked
 from hsfs.feature import Feature
+from hsfs.statistics import Statistics
+from hsfs.statistics_config import StatisticsConfig
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
+if HAS_POLARS:
+    import polars as pl
+
+    TrainingDatasetDataFrameTypes = Union[
+        pd.DataFrame,
+        TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        TypeVar("pyspark.RDD"),  # noqa: F821
+        np.ndarray,
+        List[List[Any]],
+        pl.DataFrame,
+    ]
+
+    SplineDataFrameTypes = Union[
+        pd.DataFrame,
+        TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+        TypeVar("pyspark.RDD"),  # noqa: F821
+        np.ndarray,
+        List[List[Any]],
+        TypeVar("SplineGroup"),  # noqa: F821
+    ]
+
+
+_logger = logging.getLogger(__name__)
+
+
+@typechecked
 class FeatureView:
     ENTITY_TYPE = "featureview"
 
     def __init__(
         self,
         name: str,
-        query,
-        featurestore_id,
-        id=None,
+        query: query.Query,
+        featurestore_id: int,
+        id: Optional[int] = None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        labels: Optional[List[str]] = [],
-        inference_helper_columns: Optional[List[str]] = [],
-        training_helper_columns: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
-        featurestore_name=None,
-        serving_keys: Optional[List[ServingKey]] = None,
+        labels: Optional[List[str]] = None,
+        inference_helper_columns: Optional[List[str]] = None,
+        training_helper_columns: Optional[List[str]] = None,
+        transformation_functions: Optional[
+            Dict[str, tfm.TransformationFunction]
+        ] = None,
+        featurestore_name: Optional[str] = None,
+        serving_keys: Optional[List[skm.ServingKey]] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._name = name
         self._id = id
         self._query = query
@@ -77,36 +126,51 @@ class FeatureView:
         self._feature_store_name = featurestore_name
         self._version = version
         self._description = description
-        self._labels = labels
-        self._inference_helper_columns = inference_helper_columns
-        self._training_helper_columns = training_helper_columns
+        self._labels = labels if labels else []
+        self._inference_helper_columns = (
+            inference_helper_columns if inference_helper_columns else []
+        )
+        self._training_helper_columns = (
+            training_helper_columns if training_helper_columns else []
+        )
         self._transformation_functions = (
             {
                 ft_name: copy.deepcopy(transformation_functions[ft_name])
                 for ft_name in transformation_functions
             }
             if transformation_functions
-            else transformation_functions
+            else {}
         )
         self._features = []
-        self._feature_view_engine = feature_view_engine.FeatureViewEngine(
+        self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
+            feature_view_engine.FeatureViewEngine(featurestore_id)
+        )
+        self._transformation_function_engine: transformation_function_engine.TransformationFunctionEngine = transformation_function_engine.TransformationFunctionEngine(
             featurestore_id
         )
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
-        )
-        self._single_vector_server = None
-        self._batch_vectors_server = None
-        self._batch_scoring_server = None
-        self._serving_keys = serving_keys
+        self._vector_server: Optional[vector_server.VectorServer] = None
+        self._batch_scoring_server: Optional[vector_server.VectorServer] = None
+        self._serving_keys = serving_keys if serving_keys else []
         self._prefix_serving_key_map = {}
-        self._vector_db_client = None
+        self._primary_keys: Set[str] = set()  # Lazy initialized via serving keys
 
+        self._vector_db_client = None
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
 
-    def delete(self):
+        if self._id:
+            self._init_feature_monitoring_engine()
+
+        # last_accessed_training_dataset is only from the perspective of the client itself, and not the backend.
+        # if multiple clients do training datasets operations, each will have their own view of the last accessed.
+        # last accessed (read/write) training dataset is not necessarily the newest (highest version).
+        self._last_accessed_training_dataset = None
+
+    def get_last_accessed_training_dataset(self):
+        return self._last_accessed_training_dataset
+
+    def delete(self) -> None:
         """Delete current feature view, all associated metadata and training data.
 
         !!! example
@@ -133,11 +197,14 @@ class FeatureView:
                 self._name, self._version
             ),
             util.JobWarning,
+            stacklevel=2,
         )
         self._feature_view_engine.delete(self.name, self.version)
 
     @staticmethod
-    def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
+    def clean(
+        feature_store_id: int, feature_view_name: str, feature_view_version: str
+    ) -> None:
         """
         Delete the feature view and all associated metadata and training data.
         This can delete corrupted feature view which cannot be retrieved due to a corrupted query for example.
@@ -172,7 +239,7 @@ class FeatureView:
             feature_view_name, feature_view_version
         )
 
-    def update(self):
+    def update(self) -> FeatureView:
         """Update the description of the feature view.
 
         !!! example "Update the feature view with a new description."
@@ -203,8 +270,14 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
-        options: Optional[dict] = None,
-    ):
+        options: Optional[Dict[str, Any]] = None,
+        init_sql_client: Optional[bool] = None,
+        init_rest_client: bool = False,
+        reset_rest_client: bool = False,
+        config_rest_client: Optional[Dict[str, Any]] = None,
+        default_client: Optional[Literal["sql", "rest"]] = None,
+        **kwargs,
+    ) -> None:
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
         !!! example
@@ -228,11 +301,29 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used which relies on the private IP.
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
+            init_sql_client: boolean, optional. By default the sql client is initialised if no
+                client is specified to match legacy behaviour. If set to True, this ensure the online store
+                sql client is initialised, otherwise if init_rest_client is set to true it will
+                skip initialising the sql client.
+            init_rest_client: boolean, defaults to False. By default the rest client is not initialised.
+                If set to True, this ensure the online store rest client is initialised. Pass additional configuration
+                options via the rest_config parameter. Set reset_rest_client to True to reset the rest client.
+            default_client: string, optional. Which client to default to if both are initialised. Defaults to None.
             options: Additional options as key/value pairs for configuring online serving engine.
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
-        """
+            reset_rest_client: boolean, defaults to False. If set to True, the rest client will be reset and reinitialised with provided configuration.
+            config_rest_client: dictionary, optional. Additional configuration options for the rest client. If the client is already initialised,
+                this will be ignored. Options include:
+                * `host`: string, optional. The host of the online store. Dynamically set if not provided.
+                * `port`: int, optional. The port of the online store. Defaults to 4406.
+                * `verify_certs`: boolean, optional. Verify the certificates of the online store server. Defaults to True.
+                * `api_key`: string, optional. The API key to authenticate with the online store. The api key must be
+                    provided if initialising the rest client in an internal environment.
+                * `timeout`: int, optional. The timeout for the rest client in seconds. Defaults to 2.
+                * `use_ssl`: boolean, optional. Use SSL to connect to the online store. Defaults to True.
 
+        """
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
         try:
@@ -245,50 +336,58 @@ class FeatureView:
             else:
                 raise e
 
+        # Compatibility with 3.7
+        if init_sql_client is None:
+            init_sql_client = kwargs.get("init_online_store_sql_client", None)
+        if init_rest_client is False:
+            init_rest_client = kwargs.get("init_online_store_rest_client", False)
+
         if training_dataset_version is None:
             training_dataset_version = 1
             warnings.warn(
                 "No training dataset version was provided to initialise serving. Defaulting to version 1.",
                 util.VersionWarning,
+                stacklevel=1,
             )
 
         # initiate single vector server
-        self._single_vector_server = vector_server.VectorServer(
+        self._vector_server = vector_server.VectorServer(
             self._featurestore_id,
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+            feature_store_name=self._feature_store_name,
         )
-        self._single_vector_server.init_serving(
-            self, False, external, True, options=options
+        self._vector_server.init_serving(
+            entity=self,
+            external=external,
+            inference_helper_columns=True,
+            options=options,
+            init_sql_client=init_sql_client,
+            init_rest_client=init_rest_client,
+            reset_rest_client=reset_rest_client,
+            config_rest_client=config_rest_client,
+            default_client=default_client,
         )
 
         self._prefix_serving_key_map = dict(
             [
                 (f"{sk.prefix}{sk.feature_name}", sk)
-                for sk in self._single_vector_server.serving_keys
+                for sk in self._vector_server.serving_keys
             ]
         )
-
-        # initiate batch vector server
-        self._batch_vectors_server = vector_server.VectorServer(
-            self._featurestore_id,
-            self._features,
-            training_dataset_version,
-            serving_keys=self._serving_keys,
-            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
-        )
-        self._batch_vectors_server.init_serving(
-            self, True, external, True, options=options
-        )
         if len(self._get_embedding_fgs()) > 0:
-            self._vector_db_client = VectorDbClient(self.query)
+            self._vector_db_client = VectorDbClient(
+                self.query, serving_keys=self._serving_keys
+            )
 
     def init_batch_scoring(
         self,
         training_dataset_version: Optional[int] = None,
-    ):
+    ) -> None:
         """Initialise feature view to retrieve feature vector from offline feature store.
 
         !!! example
@@ -310,13 +409,15 @@ class FeatureView:
             training_dataset_version: int, optional. Default to be None. Transformation statistics
                 are fetched from training dataset and applied to the feature vector.
         """
-
         self._batch_scoring_server = vector_server.VectorServer(
             self._featurestore_id,
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+            feature_store_name=self._feature_store_name,
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -324,7 +425,7 @@ class FeatureView:
         self,
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
-    ):
+    ) -> str:
         """Get a query string of the batch query.
 
         !!! example "Batch query for the last 24 hours"
@@ -362,21 +463,21 @@ class FeatureView:
             self,
             start_time,
             end_time,
-            training_dataset_version=(
-                self._batch_scoring_server.training_dataset_version
-                if self._batch_scoring_server
-                else None
-            ),
+            training_dataset_version=self._batch_scoring_server.training_dataset_version
+            if self._batch_scoring_server
+            else None,
         )
 
     def get_feature_vector(
         self,
         entry: Dict[str, Any],
-        passed_features: Optional[Dict[str, Any]] = {},
+        passed_features: Optional[Dict[str, Any]] = None,
         external: Optional[bool] = None,
-        return_type: Optional[str] = "list",
-        allow_missing: Optional[bool] = False,
-    ):
+        return_type: Literal["list", "polars", "numpy", "pandas"] = "list",
+        allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
+    ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
@@ -443,36 +544,49 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
+            force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the REST client if initialised.
+            force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the SQL client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
-            `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"` or `"numpy"`
+            `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
             respectively. Defaults to `list`.
-            Returned `list`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
+            Returned `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
             ordered according to positions of this features in the feature view query.
 
         # Raises
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._single_vector_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
-        passed_features = self._update_with_vector_db_result(
-            self._single_vector_server, entry, passed_features
-        )
-        return self._single_vector_server.get_feature_vector(
-            entry, return_type, passed_features, allow_missing
+
+        vector_db_features = None
+        if self._vector_db_client:
+            vector_db_features = self._get_vector_db_result(entry)
+        return self._vector_server.get_feature_vector(
+            entry=entry,
+            return_type=return_type,
+            passed_features=passed_features,
+            allow_missing=allow_missing,
+            vector_db_features=vector_db_features,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],
-        passed_features: Optional[List[Dict[str, Any]]] = [],
+        passed_features: Optional[List[Dict[str, Any]]] = None,
         external: Optional[bool] = None,
-        return_type: Optional[str] = "list",
-        allow_missing: Optional[bool] = False,
-    ):
+        return_type: Literal["list", "polars", "numpy", "pandas"] = "list",
+        allow_missing: bool = False,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
+    ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
@@ -537,41 +651,49 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
+            force_sql_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the SQL client if initialised.
+            force_rest_client: boolean, defaults to False. If set to True, reads from online feature store
+                using the REST client if initialised.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
-            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
+            `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
             respectively. Defaults to `List[list]`.
 
-            Returned `List[list]`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary
+            Returned `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
 
         # Raises
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._batch_vectors_server is None:
-            self.init_serving(external=external)
-        updated_passed_feature = []
-        for i in range(len(entry)):
-            updated_passed_feature.append(
-                self._update_with_vector_db_result(
-                    self._batch_vectors_server,
-                    entry[i],
-                    passed_features[i] if passed_features else {},
-                )
-            )
-        return self._batch_vectors_server.get_feature_vectors(
-            entry, return_type, updated_passed_feature, allow_missing
+        if self._vector_server is None:
+            self.init_serving(external=external, init_rest_client=force_rest_client)
+        vector_db_features = []
+        if self._vector_db_client:
+            for _entry in entry:
+                vector_db_features.append(self._get_vector_db_result(_entry))
+
+        return self._vector_server.get_feature_vectors(
+            entries=entry,
+            return_type=return_type,
+            passed_features=passed_features,
+            allow_missing=allow_missing,
+            vector_db_features=vector_db_features,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_inference_helper(
         self,
         entry: Dict[str, Any],
         external: Optional[bool] = None,
-        return_type: Optional[str] = "pandas",
-    ):
+        return_type: Literal["pandas", "dict", "polars"] = "pandas",
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
+    ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Returns assembled inference helper column vectors from online feature store.
         !!! example
             ```python
@@ -596,25 +718,29 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"pandas"` or `"dict"`. Defaults to `"pandas"`.
+            return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
-            `pd.DataFrame` or `dict`. Defaults to `pd.DataFrame`.
+            `pd.DataFrame`, `polars.DataFrame` or `dict`. Defaults to `pd.DataFrame`.
 
         # Raises
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._single_vector_server is None:
-            self.init_serving(external=external)
-        return self._single_vector_server.get_inference_helper(entry, return_type)
+        if self._vector_server is None:
+            self.init_serving(external=external, init_rest_client=force_rest_client)
+        return self._vector_server.get_inference_helper(
+            entry, return_type, force_rest_client, force_sql_client
+        )
 
     def get_inference_helpers(
         self,
         entry: List[Dict[str, Any]],
         external: Optional[bool] = None,
-        return_type: Optional[str] = "pandas",
-    ):
+        return_type: Literal["pandas", "dict", "polars"] = "pandas",
+        force_sql_client: bool = False,
+        force_rest_client: bool = False,
+    ) -> Union[List[Dict[str, Any]], pd.DataFrame, pl.DataFrame]:
         """Returns assembled inference helper column vectors in batches from online feature store.
         !!! warning "Missing primary key entries"
             If any of the provided primary key elements in `entry` can't be found in any
@@ -650,10 +776,10 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"pandas"` or `"dict"`. Defaults to `"dict"`.
+            return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
-            `pd.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
+            `pd.DataFrame`, `polars.DataFrame` or `List[Dict[str, Any]]`.  Defaults to `pd.DataFrame`.
 
             Returned `pd.DataFrame` or `List[dict]`  contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
@@ -662,33 +788,38 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._batch_vectors_server is None:
-            self.init_serving(external=external)
-        return self._batch_vectors_server.get_inference_helpers(
-            self, entry, return_type
+        if self._vector_server is None:
+            self.init_serving(external=external, init_rest_client=force_rest_client)
+        return self._vector_server.get_inference_helpers(
+            self, entry, return_type, force_rest_client, force_sql_client
         )
 
-    def _update_with_vector_db_result(self, vec_server, entry, passed_features):
+    def _get_vector_db_result(
+        self,
+        entry: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
         if not self._vector_db_client:
-            return passed_features
+            return {}
+        result_vectors = {}
         for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
-            complete, fg_entry = vec_server.filter_entry_by_join_index(
+            complete, fg_entry = self._vector_db_client.filter_entry_by_join_index(
                 entry, join_index
             )
             if not complete:
                 # Not retrieving from vector db if entry is not completed
                 continue
             vector_db_features = self._vector_db_client.read(
-                fg.id, keys=fg_entry, index_name=fg.embedding_index.index_name
+                fg.id,
+                fg.features,
+                keys=fg_entry,
+                index_name=fg.embedding_index.index_name,
             )
 
             # if result is not empty
             if vector_db_features:
                 vector_db_features = vector_db_features[0]  # get the first result
-                if passed_features and vector_db_features:
-                    vector_db_features.update(passed_features)
-                passed_features = vector_db_features
-        return passed_features
+                result_vectors.update(vector_db_features)
+        return result_vectors
 
     def find_neighbors(
         self,
@@ -696,11 +827,19 @@ class FeatureView:
         feature: Optional[Feature] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0,
         external: Optional[bool] = None,
+        return_type: Literal["list", "polars", "pandas"] = "list",
     ) -> List[List[Any]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
+
+        If `filter` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
+
+        !!! warning "Duplicate column error in Polars"
+            If the feature view has duplicate column names, attempting to create a polars DataFrame
+            will raise an error. To avoid this, set `return_type` to `"list"` or `"pandas"`.
 
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
@@ -708,10 +847,17 @@ class FeatureView:
             are multiple embeddings (optional).
             k: The number of nearest neighbors to retrieve (default is 10).
             filter: A filter expression to restrict the search space (optional).
-            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"list"`, `"pandas"` or `"polars"`. Defaults to `"list"`.
 
         # Returns
-            A list of feature values
+            `list`, `pd.DataFrame` or `polars.DataFrame` if `return type` is set to `"list"`, `"pandas"` or
+            `"polars"` respectively. Defaults to `list`.
 
         !!! Example
             ```
@@ -747,27 +893,25 @@ class FeatureView:
             feature=(feature if feature else None),
             k=k,
             filter=filter,
-            min_score=min_score,
         )
         if len(results) == 0:
             return []
 
-        passed_features = [result[1] for result in results]
-        return self.get_feature_vectors(
+        return self._vector_server.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
-            passed_features=passed_features,
-            external=external,
+            return_type=return_type,
+            vector_db_features=[res[1] for res in results],
             allow_missing=True,
         )
 
-    def _extract_primary_key(self, result_key):
+    def _extract_primary_key(self, result_key: Dict[str, str]) -> Dict[str, str]:
         primary_key_map = {}
         for prefix_sk, sk in self._prefix_serving_key_map.items():
             if prefix_sk in result_key:
                 primary_key_map[sk.required_serving_key] = result_key[prefix_sk]
             elif sk.feature_name in result_key:  # fall back to use raw feature name
                 primary_key_map[sk.required_serving_key] = result_key[sk.feature_name]
-        if len(self._single_vector_server.required_serving_keys) > len(primary_key_map):
+        if len(set(self._vector_server.required_serving_keys)) > len(primary_key_map):
             raise FeatureStoreException(
                 f"Failed to get feature vector because required primary key [{', '.join([k for k in set([sk.required_serving_key for sk in self._prefix_serving_key_map.values()]) - primary_key_map.keys()])}] are not present in vector db."
                 "If the join of the embedding feature group in the query does not have a prefix,"
@@ -775,7 +919,9 @@ class FeatureView:
             )
         return primary_key_map
 
-    def _get_embedding_fgs(self):
+    def _get_embedding_fgs(
+        self,
+    ) -> Set["feature_group.FeatureGroup"]:
         return set([fg for fg in self.query.featuregroups if fg.embedding_index])
 
     @usage.method_logger
@@ -783,21 +929,13 @@ class FeatureView:
         self,
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
-        read_options=None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        inference_helper_columns=False,
-    ):
+        read_options: Optional[Dict[str, Any]] = None,
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        inference_helper_columns: bool = False,
+        dataframe_type: Optional[str] = "default",
+    ) -> TrainingDatasetDataFrameTypes:
         """Get a batch of data from an event time interval from the offline feature store.
 
         !!! example "Batch data for the last 24 hours"
@@ -834,7 +972,7 @@ class FeatureView:
             read_options: User provided read options.
                 Dictionary of read options for python engine:
                 * key `"use_hive"` and value `True` to read batch data with Hive instead of
-                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 Defaults to `{}`.
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
@@ -852,10 +990,17 @@ class FeatureView:
                 that may not be used in training the model itself but can be used during batch or online inference
                 for extra information. If inference helper columns were not defined in the feature view
                 `inference_helper_columns=True` will not any effect. Defaults to `False`, no helper columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
-            `DataFrame`: A dataframe
+            `DataFrame`: The spark dataframe containing the feature data.
+            `pyspark.DataFrame`. A Spark DataFrame.
+            `pandas.DataFrame`. A Pandas DataFrame.
+            `polars.DataFrame`. A Polars DataFrame.
+            `numpy.ndarray`. A two-dimensional Numpy array.
+            `list`. A two-dimensional Python list.
         """
-
         if self._batch_scoring_server is None:
             self.init_batch_scoring()
 
@@ -870,9 +1015,10 @@ class FeatureView:
             primary_keys,
             event_time,
             inference_helper_columns,
+            dataframe_type,
         )
 
-    def add_tag(self, name: str, value):
+    def add_tag(self, name: str, value: Any) -> None:
         """Attach a tag to a feature view.
 
         A tag consists of a name and value pair.
@@ -900,7 +1046,7 @@ class FeatureView:
         """
         return self._feature_view_engine.add_tag(self, name, value)
 
-    def get_tag(self, name: str):
+    def get_tag(self, name: str) -> "tag.Tag":
         """Get the tags of a feature view.
 
         !!! example
@@ -926,7 +1072,7 @@ class FeatureView:
         """
         return self._feature_view_engine.get_tag(self, name)
 
-    def get_tags(self):
+    def get_tags(self) -> List[tag.Tag]:
         """Returns all tags attached to a training dataset.
 
         !!! example
@@ -949,7 +1095,7 @@ class FeatureView:
         """
         return self._feature_view_engine.get_tags(self)
 
-    def get_parent_feature_groups(self):
+    def get_parent_feature_groups(self) -> "explicit_provenance.Links":
         """Get the parents of this feature view, based on explicit provenance.
         Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
@@ -961,7 +1107,60 @@ class FeatureView:
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
-    def delete_tag(self, name: str):
+    def get_newest_model(
+        self, training_dataset_version: Optional[int] = None
+    ) -> Optional[Any]:
+        """Get the latest generated model using this feature view, based on explicit
+        provenance. Search only through the accessible models.
+        For more items use the base method - get_models_provenance
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
+        # Returns
+            `Model`: Newest Generated Model.
+        """
+        models = self.get_models(training_dataset_version=training_dataset_version)
+        models.sort(key=lambda model: model.created, reverse=True)
+        if models:
+            return models[0]
+        else:
+            return None
+
+    def get_models(self, training_dataset_version: Optional[int] = None) -> List[Any]:
+        """Get the generated models using this feature view, based on explicit
+        provenance. Only the accessible models are returned.
+        For more items use the base method - get_models_provenance
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+        # Returns
+            `List[Model]: List of models.
+        """
+        return self.get_models_provenance(
+            training_dataset_version=training_dataset_version
+        ).accessible
+
+    def get_models_provenance(
+        self, training_dataset_version: Optional[int] = None
+    ) -> "explicit_provenance.Links":
+        """Get the generated models using this feature view, based on explicit
+        provenance. These models can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated model links, so deleted
+        will always be empty.
+        For inaccessible models, only a minimal information is returned.
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
+        # Returns
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+        """
+        return self._feature_view_engine.get_models_provenance(
+            self, training_dataset_version=training_dataset_version
+        )
+
+    def delete_tag(self, name: str) -> None:
         """Delete a tag attached to a feature view.
 
         !!! example
@@ -984,6 +1183,13 @@ class FeatureView:
         """
         return self._feature_view_engine.delete_tag(self, name)
 
+    def update_last_accessed_training_dataset(self, version):
+        if self._last_accessed_training_dataset is not None:
+            _logger.info(
+                f"Provenance cached data - overwriting last accessed/created training dataset from {self._last_accessed_training_dataset} to {version}."
+            )
+        self._last_accessed_training_dataset = version
+
     @usage.method_logger
     def create_training_data(
         self,
@@ -997,21 +1203,12 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        write_options: Optional[Dict[Any, Any]] = None,
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+    ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
 
@@ -1160,7 +1357,7 @@ class FeatureView:
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `use_spark` and value `True` to materialize training dataset
-                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  with Spark instead of [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1207,7 +1404,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1216,7 +1413,9 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
 
         return td.version, td_job
 
@@ -1236,21 +1435,12 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        write_options: Optional[Dict[Any, Any]] = None,
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+    ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
         The training data can be retrieved by calling `feature_view.get_train_test_split`.
@@ -1445,7 +1635,7 @@ class FeatureView:
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `use_spark` and value `True` to materialize training dataset
-                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  with Spark instead of [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1501,7 +1691,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1510,8 +1700,9 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
-
+        self.update_last_accessed_training_dataset(td.version)
         return td.version, td_job
 
     @usage.method_logger
@@ -1533,21 +1724,12 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        write_options: Optional[Dict[Any, Any]] = None,
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+    ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
         The training data can be retrieved by calling `feature_view.get_train_validation_test_split`.
@@ -1728,7 +1910,7 @@ class FeatureView:
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `use_spark` and value `True` to materialize training dataset
-                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  with Spark instead of [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1792,7 +1974,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1801,7 +1983,9 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
 
         return td.version, td_job
 
@@ -1811,17 +1995,8 @@ class FeatureView:
         training_dataset_version: int,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-    ):
+        spine: Optional[SplineDataFrameTypes] = None,
+    ) -> "job.Job":
         """
         Recreate a training dataset.
 
@@ -1859,7 +2034,7 @@ class FeatureView:
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `use_spark` and value `True` to materialize training dataset
-                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  with Spark instead of [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1885,6 +2060,8 @@ class FeatureView:
             user_write_options=write_options or {},
             spine=spine,
         )
+        self.update_last_accessed_training_dataset(td.version)
+
         return td_job
 
     @usage.method_logger
@@ -1896,20 +2073,15 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+        dataframe_type: Optional[str] = "default",
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],  # optional label DataFrame
+    ]:
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
@@ -1981,7 +2153,7 @@ class FeatureView:
                 following entries:
                 * key `"use_hive"` and value `True` to create in-memory training dataset
                   with Hive instead of
-                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
@@ -2005,6 +2177,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -2031,11 +2206,14 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
@@ -2050,20 +2228,17 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+        dataframe_type: Optional[str] = "default",
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
@@ -2145,7 +2320,7 @@ class FeatureView:
                 following entries:
                 * key `"use_hive"` and value `True` to create in-memory training dataset
                   with Hive instead of
-                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
@@ -2169,6 +2344,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2204,15 +2382,22 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @staticmethod
-    def _validate_train_test_split(test_size, train_end, test_start):
+    def _validate_train_test_split(
+        test_size: Optional[float],
+        train_end: Optional[Union[str, int, datetime, date]],
+        test_start: Optional[Union[str, int, datetime, date]],
+    ) -> None:
         if not ((test_size and 0 < test_size < 1) or (train_end or test_start)):
             raise ValueError(
                 "Invalid split input."
@@ -2235,20 +2420,19 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+        dataframe_type: Optional[str] = "default",
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
@@ -2343,7 +2527,7 @@ class FeatureView:
                 following entries:
                 * key `"use_hive"` and value `True` to create in-memory training dataset
                   with Hive instead of
-                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
@@ -2367,6 +2551,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2415,22 +2602,25 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @staticmethod
     def _validate_train_validation_test_split(
-        validation_size,
-        test_size,
-        train_end,
-        validation_start,
-        validation_end,
-        test_start,
-    ):
+        validation_size: Optional[float],
+        test_size: Optional[float],
+        train_end: Optional[Union[str, int, datetime, date]],
+        validation_start: Optional[Union[str, int, datetime, date]],
+        validation_end: Optional[Union[str, int, datetime, date]],
+        test_start: Optional[Union[str, int, datetime, date]],
+    ) -> None:
         if not (
             (validation_size and 0 < validation_size < 1)
             and (test_size and 0 < test_size < 1)
@@ -2446,12 +2636,16 @@ class FeatureView:
     @usage.method_logger
     def get_training_data(
         self,
-        training_dataset_version,
-        read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        training_dataset_version: int,
+        read_options: Optional[Dict[str, Any]] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+        dataframe_type: Optional[str] = "default",
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Get training data created by `feature_view.create_training_data`
         or `feature_view.training_data`.
@@ -2480,7 +2674,7 @@ class FeatureView:
                 For python engine:
                 * key `"use_hive"` and value `True` to read training dataset
                   with the Hopsworks API instead of
-                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
@@ -2495,28 +2689,39 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
-        _, df = self._feature_view_engine.get_training_data(
+        td, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
     def get_train_test_split(
         self,
-        training_dataset_version,
+        training_dataset_version: int,
         read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+        dataframe_type: Optional[str] = "default",
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Get training data created by `feature_view.create_train_test_split`
         or `feature_view.train_test_split`.
@@ -2540,7 +2745,7 @@ class FeatureView:
                 For python engine:
                 * key `"use_hive"` and value `True` to read training dataset
                   with the Hopsworks API instead of
-                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
@@ -2555,6 +2760,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2567,18 +2775,28 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
     def get_train_validation_test_split(
         self,
-        training_dataset_version,
-        read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        training_dataset_version: int,
+        read_options: Optional[Dict[str, Any]] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+        dataframe_type: str = "default",
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Get training data created by `feature_view.create_train_validation_test_split`
         or `feature_view.train_validation_test_split`.
@@ -2602,7 +2820,7 @@ class FeatureView:
                 For python engine:
                 * key `"use_hive"` and value `True` to read training dataset
                   with the Hopsworks API instead of
-                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                  [Hopsworks Feature Query Service](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
                   For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
@@ -2617,6 +2835,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2633,11 +2854,13 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
+        self.update_last_accessed_training_dataset(td.version)
         return df
 
     @usage.method_logger
-    def get_training_datasets(self):
+    def get_training_datasets(self) -> List["training_dataset.TrainingDatasetBase"]:
         """Returns the metadata of all training datasets created with this feature view.
 
         !!! example
@@ -2662,7 +2885,10 @@ class FeatureView:
 
     @usage.method_logger
     def get_training_dataset_statistics(
-        self, training_dataset_version, before_transformation=False
+        self,
+        training_dataset_version: int,
+        before_transformation: bool = False,
+        feature_names: Optional[List[str]] = None,
     ) -> Statistics:
         """
         Get statistics of a training dataset.
@@ -2680,7 +2906,9 @@ class FeatureView:
             ```
 
         # Arguments
-            training_dataset_version: training dataset version
+            training_dataset_version: Training dataset version
+            before_transformation: Whether the statistics were computed before transformation functions or not.
+            feature_names: List of feature names of which statistics are retrieved.
         # Returns
             `Statistics`
         """
@@ -2688,10 +2916,16 @@ class FeatureView:
             self,
             training_dataset_version=training_dataset_version,
             before_transformation=before_transformation,
+            feature_names=feature_names,
         )
 
     @usage.method_logger
-    def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
+    def add_training_dataset_tag(
+        self,
+        training_dataset_version: int,
+        name: str,
+        value: Union[Dict[str, Any], "tag.Tag"],
+    ) -> None:
         """Attach a tag to a training dataset.
 
         !!! example
@@ -2723,7 +2957,9 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def get_training_dataset_tag(self, training_dataset_version: int, name: str):
+    def get_training_dataset_tag(
+        self, training_dataset_version: int, name: str
+    ) -> "tag.Tag":
         """Get the tags of a training dataset.
 
         !!! example
@@ -2756,7 +2992,9 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def get_training_dataset_tags(self, training_dataset_version: int):
+    def get_training_dataset_tags(
+        self, training_dataset_version: int
+    ) -> Dict[str, "tag.Tag"]:
         """Returns all tags attached to a training dataset.
 
         !!! example
@@ -2784,7 +3022,9 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
+    def delete_training_dataset_tag(
+        self, training_dataset_version: int, name: str
+    ) -> None:
         """Delete a tag attached to a training dataset.
 
         !!! example
@@ -2814,7 +3054,7 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def purge_training_data(self, training_dataset_version: int):
+    def purge_training_data(self, training_dataset_version: int) -> None:
         """Delete a training dataset (data only).
 
         !!! example
@@ -2835,12 +3075,14 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
+        if self._last_accessed_training_dataset == training_dataset_version:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_dataset_only(
             self, training_data_version=training_dataset_version
         )
 
     @usage.method_logger
-    def purge_all_training_data(self):
+    def purge_all_training_data(self) -> None:
         """Delete all training datasets (data only).
 
         !!! example
@@ -2858,10 +3100,12 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
+        if self._last_accessed_training_dataset is not None:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_dataset_only(self)
 
     @usage.method_logger
-    def delete_training_dataset(self, training_dataset_version: int):
+    def delete_training_dataset(self, training_dataset_version: int) -> None:
         """Delete a training dataset. This will delete both metadata and training data.
 
         !!! example
@@ -2884,12 +3128,14 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
+        if self._last_accessed_training_dataset == training_dataset_version:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_data(
             self, training_data_version=training_dataset_version
         )
 
     @usage.method_logger
-    def delete_all_training_datasets(self):
+    def delete_all_training_datasets(self) -> None:
         """Delete all training datasets. This will delete both metadata and training data.
 
         !!! example
@@ -2907,14 +3153,261 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
+        if self._last_accessed_training_dataset is not None:
+            self.update_last_accessed_training_dataset(None)
         self._feature_view_engine.delete_training_data(self)
 
+    def get_feature_monitoring_configs(
+        self,
+        name: Optional[str] = None,
+        feature_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+    ) -> Union[
+        "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
+    ]:
+        """Fetch feature monitoring configs attached to the feature view.
+        If no arguments is provided the method will return all feature monitoring configs
+        attached to the feature view, meaning all feature monitoring configs that are attach
+        to a feature in the feature view. If you wish to fetch a single config, provide the
+        its name. If you wish to fetch all configs attached to a particular feature, provide
+        the feature name.
+        !!! example
+            ```python3
+            # fetch your feature view
+            fv = fs.get_feature_view(name="my_feature_view", version=1)
+            # fetch all feature monitoring configs attached to the feature view
+            fm_configs = fv.get_feature_monitoring_configs()
+            # fetch a single feature monitoring config by name
+            fm_config = fv.get_feature_monitoring_configs(name="my_config")
+            # fetch all feature monitoring configs attached to a particular feature
+            fm_configs = fv.get_feature_monitoring_configs(feature_name="my_feature")
+            # fetch a single feature monitoring config with a particular id
+            fm_config = fv.get_feature_monitoring_configs(config_id=1)
+            ```
+        # Arguments
+            name: If provided fetch only the feature monitoring config with the given name.
+                Defaults to None.
+            feature_name: If provided, fetch only configs attached to a particular feature.
+                Defaults to None.
+            config_id: If provided, fetch only the feature monitoring config with the given id.
+                Defaults to None.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both name and feature_name are provided.
+            TypeError: if name or feature_name are not string or None.
+        # Return
+            Union[`FeatureMonitoringConfig`, List[`FeatureMonitoringConfig`], None]
+                A list of feature monitoring configs. If name provided,
+                returns either a single config or None if not found.
+        """
+        # TODO: Should this filter out scheduled statistics only configs?
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
+            )
+
+        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
+            name=name,
+            feature_name=feature_name,
+            config_id=config_id,
+        )
+
+    def get_feature_monitoring_history(
+        self,
+        config_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+        start_time: Optional[Union[int, str, datetime, date]] = None,
+        end_time: Optional[Union[int, str, datetime, date]] = None,
+        with_statistics: Optional[bool] = True,
+    ) -> List["fmr.FeatureMonitoringResult"]:
+        """Fetch feature monitoring history for a given feature monitoring config.
+        !!! example
+            ```python3
+            # fetch your feature view
+            fv = fs.get_feature_view(name="my_feature_group", version=1)
+            # fetch feature monitoring history for a given feature monitoring config
+            fm_history = fv.get_feature_monitoring_history(
+                config_name="my_config",
+                start_time="2020-01-01",
+            )
+            # or use the config id
+            fm_history = fv.get_feature_monitoring_history(
+                config_id=1,
+                start_time=datetime.now() - timedelta(weeks=2),
+                end_time=datetime.now() - timedelta(weeks=1),
+                with_statistics=False,
+            )
+            ```
+        # Arguments
+            config_name: The name of the feature monitoring config to fetch history for.
+                Defaults to None.
+            config_id: The id of the feature monitoring config to fetch history for.
+                Defaults to None.
+            start_date: The start date of the feature monitoring history to fetch.
+                Defaults to None.
+            end_date: The end date of the feature monitoring history to fetch.
+                Defaults to None.
+            with_statistics: Whether to include statistics in the feature monitoring history.
+                Defaults to True. If False, only metadata about the monitoring will be fetched.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both config_name and config_id are provided.
+            TypeError: if config_name or config_id are not respectively string, int or None.
+        # Return
+            List[`FeatureMonitoringResult`]
+                A list of feature monitoring results containing the monitoring metadata
+                as well as the computed statistics for the detection and reference window
+                if requested.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature View registered with Hopsworks can fetch feature monitoring history."
+            )
+
+        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
+            config_name=config_name,
+            config_id=config_id,
+            start_time=start_time,
+            end_time=end_time,
+            with_statistics=with_statistics,
+        )
+
+    def create_statistics_monitoring(
+        self,
+        name: str,
+        feature_name: Optional[str] = None,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = "0 0 12 ? * * *",
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Run a job to compute statistics on snapshot of feature data on a schedule.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+        !!! example
+            ```python3
+            # fetch feature view
+            fv = fs.get_feature_view(name="my_feature_view", version=1)
+            # enable statistics monitoring
+            my_config = fv._create_statistics_monitoring(
+                name="my_config",
+                start_date_time="2021-01-01 00:00:00",
+                description="my description",
+                cron_expression="0 0 12 ? * * *",
+            ).with_detection_window(
+                # Statistics computed on 10% of the last week of data
+                time_offset="1w",
+                row_percentage=0.1,
+            ).save()
+            ```
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature view.
+            feature_name: Name of the feature to monitor. If not specified, statistics
+                will be computed for all features.
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. The cron expression
+                must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
+                every day at 12pm UTC.
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature View registered with Hopsworks can enable scheduled statistics monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_statistics_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+            cron_expression=cron_expression,
+            end_date_time=end_date_time,
+        )
+
+    def create_feature_monitoring(
+        self,
+        name: str,
+        feature_name: str,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = "0 0 12 ? * * *",
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+        !!! example
+            ```python3
+            # fetch feature view
+            fg = fs.get_feature_view(name="my_feature_view", version=1)
+            # enable feature monitoring
+            my_config = fg.create_feature_monitoring(
+                name="my_monitoring_config",
+                feature_name="my_feature",
+                description="my monitoring config description",
+                cron_expression="0 0 12 ? * * *",
+            ).with_detection_window(
+                # Data inserted in the last day
+                time_offset="1d",
+                window_length="1d",
+            ).with_reference_window(
+                # compare to a given value
+                specific_value=0.5,
+            ).compare_on(
+                metric="mean",
+                threshold=0.5,
+            ).save()
+            ```
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor.
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. The cron expression
+                must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
+                every day at 12pm UTC.
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature View registered with Hopsworks can enable feature monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
+        )
+
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> "FeatureView":
         json_decamelized = humps.decamelize(json_dict)
+
         serving_keys = json_decamelized.get("serving_keys", None)
         if serving_keys is not None:
-            serving_keys = [ServingKey.from_response_json(sk) for sk in serving_keys]
+            serving_keys = [
+                skm.ServingKey.from_response_json(sk) for sk in serving_keys
+            ]
         fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
@@ -2944,7 +3437,7 @@ class FeatureView:
         ]
         return fv
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(self, json_dict: Dict[str, Any]) -> "FeatureView":
         other = self.from_response_json(json_dict)
         for key in [
             "name",
@@ -2960,18 +3453,36 @@ class FeatureView:
             "serving_keys",
         ]:
             self._update_attribute_if_present(self, other, key)
+        self._init_feature_monitoring_engine()
         return self
 
     @staticmethod
-    def _update_attribute_if_present(this, new, key):
+    def _update_attribute_if_present(this: "FeatureView", new: Any, key: str) -> None:
         if getattr(new, key):
             setattr(this, key, getattr(new, key))
 
-    def json(self):
+    def _init_feature_monitoring_engine(self) -> None:
+        self._feature_monitoring_config_engine = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
+        self._feature_monitoring_result_engine = (
+            feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
+
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
+            "featurestoreId": self._featurestore_id,
             "name": self._name,
             "version": self._version,
             "description": self._description,
@@ -2981,48 +3492,48 @@ class FeatureView:
         }
 
     @property
-    def id(self):
+    def id(self) -> int:
         """Feature view id."""
         return self._id
 
     @id.setter
-    def id(self, id):
+    def id(self, id: Optional[int]) -> None:
         self._id = id
 
     @property
-    def featurestore_id(self):
+    def featurestore_id(self) -> int:
         """Feature store id."""
         return self._featurestore_id
 
     @featurestore_id.setter
-    def featurestore_id(self, id):
+    def featurestore_id(self, id: Optional[int]) -> None:
         self._featurestore_id = id
 
     @property
-    def feature_store_name(self):
+    def feature_store_name(self) -> Optional[str]:
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the feature view."""
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
-    def version(self):
+    def version(self) -> int:
         """Version number of the feature view."""
         return self._version
 
     @version.setter
-    def version(self, version):
+    def version(self, version: int) -> None:
         self._version = version
 
     @property
-    def labels(self):
+    def labels(self) -> List[str]:
         """The labels/prediction feature of the feature view.
 
         Can be a composite of multiple features.
@@ -3030,11 +3541,11 @@ class FeatureView:
         return self._labels
 
     @labels.setter
-    def labels(self, labels):
-        self._labels = [lb.lower() for lb in labels]
+    def labels(self, labels: List[str]) -> None:
+        self._labels = [util.autofix_feature_name(lb) for lb in labels]
 
     @property
-    def inference_helper_columns(self):
+    def inference_helper_columns(self) -> List[str]:
         """The helper column sof the feature view.
 
         Can be a composite of multiple features.
@@ -3042,13 +3553,13 @@ class FeatureView:
         return self._inference_helper_columns
 
     @inference_helper_columns.setter
-    def inference_helper_columns(self, inference_helper_columns):
+    def inference_helper_columns(self, inference_helper_columns: List[str]) -> None:
         self._inference_helper_columns = [
-            exf.lower() for exf in inference_helper_columns
+            util.autofix_feature_name(exf) for exf in inference_helper_columns
         ]
 
     @property
-    def training_helper_columns(self):
+    def training_helper_columns(self) -> List[str]:
         """The helper column sof the feature view.
 
         Can be a composite of multiple features.
@@ -3056,76 +3567,93 @@ class FeatureView:
         return self._training_helper_columns
 
     @training_helper_columns.setter
-    def training_helper_columns(self, training_helper_columns):
-        self._training_helper_columns = [exf.lower() for exf in training_helper_columns]
+    def training_helper_columns(self, training_helper_columns: List[str]) -> None:
+        self._training_helper_columns = [
+            util.autofix_feature_name(exf) for exf in training_helper_columns
+        ]
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         """Description of the feature view."""
         return self._description
 
     @description.setter
-    def description(self, description):
+    def description(self, description: Optional[str]) -> None:
         self._description = description
 
     @property
-    def query(self):
+    def query(self) -> "query.Query":
         """Query of the feature view."""
         return self._query
 
     @query.setter
-    def query(self, query_obj):
+    def query(self, query_obj: "query.Query") -> None:
         self._query = query_obj
 
     @property
-    def transformation_functions(self):
+    def transformation_functions(
+        self,
+    ) -> Dict[str, tfm.TransformationFunction]:
         """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
-    def transformation_functions(self, transformation_functions):
+    def transformation_functions(
+        self,
+        transformation_functions: Dict[str, tfm.TransformationFunction],
+    ) -> None:
         self._transformation_functions = transformation_functions
 
     @property
-    def schema(self):
+    def schema(self) -> List[training_dataset_feature.TrainingDatasetFeature]:
         """Feature view schema."""
         return self._features
 
     @property
-    def features(self):
+    def features(self) -> List[training_dataset_feature.TrainingDatasetFeature]:
         """Feature view schema. (alias)"""
         return self._features
 
     @schema.setter
-    def schema(self, features):
+    def schema(
+        self, features: List[training_dataset_feature.TrainingDatasetFeature]
+    ) -> None:
         self._features = features
 
     @property
-    def primary_keys(self):
+    def primary_keys(self) -> Set[str]:
         """Set of primary key names that is required as keys in input dict object
         for [`get_feature_vector(s)`](#get_feature_vector) method.
         When there are duplicated primary key names and prefix is not defined in the query,
         prefix is generated and prepended to the primary key name in this format
         "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
         """
-        _vector_server = self._single_vector_server or self._batch_vectors_server
-        if _vector_server:
-            return _vector_server.required_serving_keys
-        else:
-            _vector_server = vector_server.VectorServer(
-                self._featurestore_id,
-                self._features,
-                serving_keys=self._serving_keys,
-                skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+        if not (hasattr(self, "_primary_keys") and len(self._primary_keys) > 0):
+            self._primary_keys = set(
+                [key.required_serving_key for key in self.serving_keys]
             )
-            _vector_server.init_prepared_statement(self, False, False, False)
-            return _vector_server.required_serving_keys
+        return self._primary_keys
 
     @property
-    def serving_keys(self):
+    def serving_keys(self) -> List[skm.ServingKey]:
         """All primary keys of the feature groups included in the query."""
+        if (
+            (not hasattr(self, "_serving_keys"))
+            or self._serving_keys is None
+            or len(self._serving_keys) == 0
+        ):
+            self._serving_keys = util.build_serving_keys_from_prepared_statements(
+                self._feature_view_engine._feature_view_api.get_serving_prepared_statement(
+                    name=self.name,
+                    version=self.version,
+                    batch=False,
+                    inference_helper_columns=False,
+                ),
+                feature_store_id=self.featurestore_id,
+                ignore_prefix=True,  # if serving_keys have to be built it is because feature_view older than 3.3, this ensure compatibility
+            )
         return self._serving_keys
 
     @serving_keys.setter
-    def serving_keys(self, serving_keys):
+    def serving_keys(self, serving_keys: List[skm.ServingKey]) -> None:
         self._serving_keys = serving_keys

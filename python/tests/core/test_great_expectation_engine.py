@@ -14,10 +14,10 @@
 #   limitations under the License.
 #
 
-from hsfs import feature_group, validation_report
-from hsfs.core import great_expectation_engine
 import great_expectations as ge
 import hsfs.expectation_suite as es
+from hsfs import feature_group, validation_report
+from hsfs.core import great_expectation_engine
 
 
 class TestCodeEngine:

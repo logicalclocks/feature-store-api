@@ -14,65 +14,70 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-import warnings
 import datetime
-from typing import Optional, Union, List, Dict, TypeVar
+import warnings
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
+import great_expectations as ge
 import humps
 import numpy
-import great_expectations as ge
-import pandas as pd
 import numpy as np
-
-from hsfs.transformation_function import TransformationFunction
-from hsfs.client import exceptions
-from hsfs.core import transformation_function_engine
-from hsfs.embedding import EmbeddingIndex
-
+import pandas as pd
 from hsfs import (
-    training_dataset,
-    feature_group,
-    feature,
-    util,
-    storage_connector,
     expectation_suite,
+    feature,
+    feature_group,
     feature_view,
+    storage_connector,
+    training_dataset,
     usage,
+    util,
 )
+from hsfs.client import exceptions
+from hsfs.constructor.query import Query
 from hsfs.core import (
+    arrow_flight_client,
     feature_group_api,
-    storage_connector_api,
-    training_dataset_api,
     feature_group_engine,
     feature_view_engine,
+    storage_connector_api,
+    training_dataset_api,
+    transformation_function_engine,
 )
-from hsfs.constructor.query import Query
+from hsfs.core.constants import HAS_POLARS
+from hsfs.decorators import typechecked
+from hsfs.embedding import EmbeddingIndex
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.transformation_function import TransformationFunction
 
 
+if HAS_POLARS:
+    import polars as pl
+
+
+@typechecked
 class FeatureStore:
     DEFAULT_VERSION = 1
 
     def __init__(
         self,
-        featurestore_id,
-        featurestore_name,
-        created,
-        project_name,
-        project_id,
-        offline_featurestore_name,
-        hive_endpoint,
-        online_enabled,
-        num_feature_groups=None,
-        num_training_datasets=None,
-        num_storage_connectors=None,
-        num_feature_views=None,
-        online_featurestore_name=None,
-        mysql_server_endpoint=None,
-        online_featurestore_size=None,
+        featurestore_id: int,
+        featurestore_name: str,
+        created: Union[str, datetime.datetime],
+        project_name: str,
+        project_id: int,
+        offline_featurestore_name: str,
+        online_enabled: bool,
+        num_feature_groups: Optional[int] = None,
+        num_training_datasets: Optional[int] = None,
+        num_storage_connectors: Optional[int] = None,
+        num_feature_views: Optional[int] = None,
+        online_featurestore_name: Optional[str] = None,
+        online_featurestore_size: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._id = featurestore_id
         self._name = featurestore_name
         self._created = created
@@ -81,27 +86,35 @@ class FeatureStore:
         self._online_feature_store_name = online_featurestore_name
         self._online_feature_store_size = online_featurestore_size
         self._offline_feature_store_name = offline_featurestore_name
-        self._hive_endpoint = hive_endpoint
-        self._mysql_server_endpoint = mysql_server_endpoint
         self._online_enabled = online_enabled
         self._num_feature_groups = num_feature_groups
         self._num_training_datasets = num_training_datasets
         self._num_storage_connectors = num_storage_connectors
         self._num_feature_views = num_feature_views
 
-        self._feature_group_api = feature_group_api.FeatureGroupApi()
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
-        self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
-
-        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
-
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(self._id)
+        self._feature_group_api: feature_group_api.FeatureGroupApi = (
+            feature_group_api.FeatureGroupApi()
         )
-        self._feature_view_engine = feature_view_engine.FeatureViewEngine(self._id)
+        self._storage_connector_api: storage_connector_api.StorageConnectorApi = (
+            storage_connector_api.StorageConnectorApi()
+        )
+        self._training_dataset_api: training_dataset_api.TrainingDatasetApi = (
+            training_dataset_api.TrainingDatasetApi(self._id)
+        )
+
+        self._feature_group_engine: feature_group_engine.FeatureGroupEngine = (
+            feature_group_engine.FeatureGroupEngine(self._id)
+        )
+
+        self._transformation_function_engine: transformation_function_engine.TransformationFunctionEngine = transformation_function_engine.TransformationFunctionEngine(
+            self._id
+        )
+        self._feature_view_engine: feature_view_engine.FeatureViewEngine = (
+            feature_view_engine.FeatureViewEngine(self._id)
+        )
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> FeatureStore:
         json_decamelized = humps.decamelize(json_dict)
         # fields below are removed from 3.4. remove them for backward compatibility.
         json_decamelized.pop("hdfs_store_path", None)
@@ -109,7 +122,13 @@ class FeatureStore:
         json_decamelized.pop("inode_id", None)
         return cls(**json_decamelized)
 
-    def get_feature_group(self, name: str, version: int = None):
+    def get_feature_group(
+        self, name: str, version: int = None
+    ) -> Union[
+        feature_group.FeatureGroup,
+        feature_group.ExternalFeatureGroup,
+        feature_group.SpineGroup,
+    ]:
         """Get a feature group entity from the feature store.
 
         Getting a feature group from the Feature Store means getting its metadata handle
@@ -144,15 +163,22 @@ class FeatureStore:
                     name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
             version = self.DEFAULT_VERSION
-        feature_group_object = self._feature_group_api.get(
-            self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
-        )
+        feature_group_object = self._feature_group_api.get(self.id, name, version)
         feature_group_object.feature_store = self
         return feature_group_object
 
-    def get_feature_groups(self, name: str):
+    def get_feature_groups(
+        self, name: str
+    ) -> List[
+        Union[
+            feature_group.FeatureGroup,
+            feature_group.ExternalFeatureGroup,
+            feature_group.SpineGroup,
+        ]
+    ]:
         """Get a list of all versions of a feature group entity from the feature store.
 
         Getting a feature group from the Feature Store means getting its metadata handle
@@ -178,15 +204,15 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        feature_group_object = self._feature_group_api.get(
-            self.id, name, None, feature_group_api.FeatureGroupApi.CACHED
-        )
+        feature_group_object = self._feature_group_api.get(self.id, name, None)
         for fg_object in feature_group_object:
             fg_object.feature_store = self
         return feature_group_object
 
     @usage.method_logger
-    def get_on_demand_feature_group(self, name: str, version: int = None):
+    def get_on_demand_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.ExternalFeatureGroup":
         """Get a external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -210,7 +236,9 @@ class FeatureStore:
         return self.get_external_feature_group(name, version)
 
     @usage.method_logger
-    def get_external_feature_group(self, name: str, version: int = None):
+    def get_external_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.ExternalFeatureGroup":
         """Get a external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -242,16 +270,21 @@ class FeatureStore:
                     name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
             version = self.DEFAULT_VERSION
         feature_group_object = self._feature_group_api.get(
-            self.id, name, version, feature_group_api.FeatureGroupApi.ONDEMAND
+            self.id,
+            name,
+            version,
         )
         feature_group_object.feature_store = self
         return feature_group_object
 
     @usage.method_logger
-    def get_on_demand_feature_groups(self, name: str):
+    def get_on_demand_feature_groups(
+        self, name: str
+    ) -> List["feature_group.ExternalFeatureGroup"]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -273,7 +306,9 @@ class FeatureStore:
         return self.get_external_feature_groups(name)
 
     @usage.method_logger
-    def get_external_feature_groups(self, name: str):
+    def get_external_feature_groups(
+        self, name: str
+    ) -> List["feature_group.ExternalFeatureGroup"]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -298,13 +333,15 @@ class FeatureStore:
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         feature_group_object = self._feature_group_api.get(
-            self.id, name, None, feature_group_api.FeatureGroupApi.ONDEMAND
+            feature_store_id=self.id, name=name, version=None
         )
         for fg_object in feature_group_object:
             fg_object.feature_store = self
         return feature_group_object
 
-    def get_training_dataset(self, name: str, version: int = None):
+    def get_training_dataset(
+        self, name: str, version: int = None
+    ) -> "training_dataset.TrainingDataset":
         """Get a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -327,7 +364,7 @@ class FeatureStore:
             `TrainingDataset`: The training dataset metadata object.
 
         # Raises
-            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve training dataset from the feature store.
         """
 
         if version is None:
@@ -336,11 +373,14 @@ class FeatureStore:
                     name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
-    def get_training_datasets(self, name: str):
+    def get_training_datasets(
+        self, name: str
+    ) -> List["training_dataset.TrainingDataset"]:
         """Get a list of all versions of a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -361,7 +401,7 @@ class FeatureStore:
         return self._training_dataset_api.get(name, None)
 
     @usage.method_logger
-    def get_storage_connector(self, name: str):
+    def get_storage_connector(self, name: str) -> "storage_connector.StorageConnector":
         """Get a previously created storage connector from the feature store.
 
         Storage connectors encapsulate all information needed for the execution engine
@@ -393,8 +433,8 @@ class FeatureStore:
         query: str,
         dataframe_type: Optional[str] = "default",
         online: Optional[bool] = False,
-        read_options: Optional[dict] = {},
-    ):
+        read_options: Optional[dict] = None,
+    ) -> Union[pd.DataFrame, pd.Series, np.ndarray, pl.DataFrame]:
         """Execute SQL command on the offline or online feature store database
 
         !!! example
@@ -408,8 +448,9 @@ class FeatureStore:
 
         # Arguments
             query: The SQL query to execute.
-            dataframe_type: The type of the returned dataframe. Defaults to "default".
-                which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Hive engine.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
             online: Set to true to execute the query against the online feature store.
                 Defaults to False.
             read_options: Additional options as key/value pairs to pass to the execution engine.
@@ -426,12 +467,13 @@ class FeatureStore:
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
+
         return self._feature_group_engine.sql(
-            query, self._name, dataframe_type, online, read_options
+            query, self._name, dataframe_type, online, read_options or {}
         )
 
     @usage.method_logger
-    def get_online_storage_connector(self):
+    def get_online_storage_connector(self) -> "storage_connector.StorageConnector":
         """Get the storage connector for the Online Feature Store of the respective
         project's feature store.
 
@@ -458,21 +500,25 @@ class FeatureStore:
         description: Optional[str] = "",
         online_enabled: Optional[bool] = False,
         time_travel_format: Optional[str] = "HUDI",
-        partition_key: Optional[List[str]] = [],
-        primary_key: Optional[List[str]] = [],
+        partition_key: Optional[List[str]] = None,
+        primary_key: Optional[List[str]] = None,
         embedding_index: Optional[EmbeddingIndex] = None,
         hudi_precombine_key: Optional[str] = None,
-        features: Optional[List[feature.Feature]] = [],
+        features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
-        parents: Optional[List[feature_group.FeatureGroup]] = [],
+        parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+        storage_connector: Union[
+            storage_connector.StorageConnector, Dict[str, Any]
+        ] = None,
+        path: Optional[str] = None,
+    ) -> "feature_group.FeatureGroup":
         """Create a feature group metadata object.
 
         !!! example
@@ -541,6 +587,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
@@ -553,6 +600,10 @@ class FeatureStore:
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
+            storage_connector: the storage connector used to establish connectivity
+                with the data source.
+            path: The location within the scope of the storage connector, from where to read
+                the data for the external feature group
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -563,20 +614,22 @@ class FeatureStore:
             description=description,
             online_enabled=online_enabled,
             time_travel_format=time_travel_format,
-            partition_key=partition_key,
-            primary_key=primary_key,
+            partition_key=partition_key or [],
+            primary_key=primary_key or [],
             hudi_precombine_key=hudi_precombine_key,
             featurestore_id=self._id,
             featurestore_name=self._name,
-            features=features,
+            features=features or [],
             embedding_index=embedding_index,
             statistics_config=statistics_config,
             event_time=event_time,
             stream=stream,
             expectation_suite=expectation_suite,
-            parents=parents,
+            parents=parents or [],
             topic_name=topic_name,
             notification_topic_name=notification_topic_name,
+            storage_connector=storage_connector,
+            path=path,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -589,21 +642,29 @@ class FeatureStore:
         description: Optional[str] = "",
         online_enabled: Optional[bool] = False,
         time_travel_format: Optional[str] = "HUDI",
-        partition_key: Optional[List[str]] = [],
-        primary_key: Optional[List[str]] = [],
+        partition_key: Optional[List[str]] = None,
+        primary_key: Optional[List[str]] = None,
         embedding_index: Optional[EmbeddingIndex] = None,
         hudi_precombine_key: Optional[str] = None,
-        features: Optional[List[feature.Feature]] = [],
+        features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
-        parents: Optional[List[feature_group.FeatureGroup]] = [],
+        parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+        storage_connector: Union[
+            storage_connector.StorageConnector, Dict[str, Any]
+        ] = None,
+        path: Optional[str] = None,
+    ) -> Union[
+        "feature_group.FeatureGroup",
+        "feature_group.ExternalFeatureGroup",
+        "feature_group.SpineGroup",
+    ]:
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
         !!! example
@@ -673,6 +734,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
@@ -682,14 +744,16 @@ class FeatureStore:
                 defaults to using project topic.
             notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
                 are inserted or updated on the online feature store. If left undefined no notifications are sent.
+            storage_connector: the storage connector used to establish connectivity
+                with the data source.
+            path: The location within the scope of the storage connector, from where to read
+                the data for the external feature group
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
         """
         try:
-            feature_group_object = self._feature_group_api.get(
-                self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
-            )
+            feature_group_object = self._feature_group_api.get(self.id, name, version)
             feature_group_object.feature_store = self
             return feature_group_object
         except exceptions.RestAPIError as e:
@@ -703,20 +767,22 @@ class FeatureStore:
                     description=description,
                     online_enabled=online_enabled,
                     time_travel_format=time_travel_format,
-                    partition_key=partition_key,
-                    primary_key=primary_key,
+                    partition_key=partition_key or [],
+                    primary_key=primary_key or [],
                     embedding_index=embedding_index,
                     hudi_precombine_key=hudi_precombine_key,
                     featurestore_id=self._id,
                     featurestore_name=self._name,
-                    features=features,
+                    features=features or [],
                     statistics_config=statistics_config,
                     event_time=event_time,
                     stream=stream,
                     expectation_suite=expectation_suite,
-                    parents=parents,
+                    parents=parents or [],
                     topic_name=topic_name,
                     notification_topic_name=notification_topic_name,
+                    storage_connector=storage_connector,
+                    path=path,
                 )
                 feature_group_object.feature_store = self
                 return feature_group_object
@@ -731,11 +797,11 @@ class FeatureStore:
         query: Optional[str] = None,
         data_format: Optional[str] = None,
         path: Optional[str] = "",
-        options: Optional[Dict[str, str]] = {},
+        options: Optional[Dict[str, str]] = None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        primary_key: Optional[List[str]] = [],
-        features: Optional[List[feature.Feature]] = [],
+        primary_key: Optional[List[str]] = None,
+        features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
@@ -743,7 +809,7 @@ class FeatureStore:
         ] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> "feature_group.ExternalFeatureGroup":
         """Create a external feature group metadata object.
 
         !!! warning "Deprecated"
@@ -756,7 +822,7 @@ class FeatureStore:
 
         # Arguments
             name: Name of the external feature group to create.
-            storage_connector: the storage connector to use to establish connectivity
+            storage_connector: the storage connector used to establish connectivity
                 with the data source.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
@@ -801,6 +867,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
@@ -813,14 +880,14 @@ class FeatureStore:
             query=query,
             data_format=data_format,
             path=path,
-            options=options,
+            options=options or {},
             storage_connector=storage_connector,
             version=version,
             description=description,
-            primary_key=primary_key,
+            primary_key=primary_key or [],
             featurestore_id=self._id,
             featurestore_name=self._name,
-            features=features,
+            features=features or [],
             statistics_config=statistics_config,
             event_time=event_time,
             expectation_suite=expectation_suite,
@@ -838,11 +905,12 @@ class FeatureStore:
         query: Optional[str] = None,
         data_format: Optional[str] = None,
         path: Optional[str] = "",
-        options: Optional[Dict[str, str]] = {},
+        options: Optional[Dict[str, str]] = None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        primary_key: Optional[List[str]] = [],
-        features: Optional[List[feature.Feature]] = [],
+        primary_key: Optional[List[str]] = None,
+        embedding_index: Optional[EmbeddingIndex] = None,
+        features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
@@ -851,7 +919,7 @@ class FeatureStore:
         online_enabled: Optional[bool] = False,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> "feature_group.ExternalFeatureGroup":
         """Create a external feature group metadata object.
 
         !!! example
@@ -900,7 +968,7 @@ class FeatureStore:
 
         # Arguments
             name: Name of the external feature group to create.
-            storage_connector: the storage connector to use to establish connectivity
+            storage_connector: the storage connector used to establish connectivity
                 with the data source.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
@@ -937,8 +1005,11 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
-            !!! note "Event time data type restriction"
-                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+                !!! note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
@@ -957,14 +1028,15 @@ class FeatureStore:
             query=query,
             data_format=data_format,
             path=path,
-            options=options,
+            options=options or {},
             storage_connector=storage_connector,
             version=version,
             description=description,
-            primary_key=primary_key,
+            primary_key=primary_key or [],
+            embedding_index=embedding_index,
             featurestore_id=self._id,
             featurestore_name=self._name,
-            features=features,
+            features=features or [],
             statistics_config=statistics_config,
             event_time=event_time,
             expectation_suite=expectation_suite,
@@ -981,9 +1053,9 @@ class FeatureStore:
         name: str,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        primary_key: Optional[List[str]] = [],
+        primary_key: Optional[List[str]] = None,
         event_time: Optional[str] = None,
-        features: Optional[List[feature.Feature]] = [],
+        features: Optional[List[feature.Feature]] = None,
         dataframe: Union[
             pd.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
@@ -991,7 +1063,7 @@ class FeatureStore:
             np.ndarray,
             List[list],
         ] = None,
-    ):
+    ) -> "feature_group.SpineGroup":
         """Create a spine group metadata object.
 
         Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels.
@@ -1082,8 +1154,11 @@ class FeatureStore:
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
-            !!!note "Event time data type restriction"
-                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+                !!!note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+
             dataframe: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
                 label column to use for point in time join when fetching features.
 
@@ -1091,9 +1166,7 @@ class FeatureStore:
             `SpineGroup`. The spine group metadata object.
         """
         try:
-            spine = self._feature_group_api.get(
-                self.id, name, version, feature_group_api.FeatureGroupApi.SPINE
-            )
+            spine = self._feature_group_api.get(self.id, name, version)
             spine.feature_store = self
             spine.dataframe = dataframe
             return spine
@@ -1106,9 +1179,9 @@ class FeatureStore:
                     name=name,
                     version=version,
                     description=description,
-                    primary_key=primary_key,
+                    primary_key=primary_key or [],
                     event_time=event_time,
-                    features=features,
+                    features=features or [],
                     dataframe=dataframe,
                     featurestore_id=self._id,
                     featurestore_name=self._name,
@@ -1126,14 +1199,14 @@ class FeatureStore:
         data_format: Optional[str] = "tfrecords",
         coalesce: Optional[bool] = False,
         storage_connector: Optional[storage_connector.StorageConnector] = None,
-        splits: Optional[Dict[str, float]] = {},
+        splits: Optional[Dict[str, float]] = None,
         location: Optional[str] = "",
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        label: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+        label: Optional[List[str]] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
         train_split: str = None,
-    ):
+    ) -> "training_dataset.TrainingDataset":
         """Create a training dataset metadata object.
 
         !!! warning "Deprecated"
@@ -1217,12 +1290,12 @@ class FeatureStore:
             storage_connector=storage_connector,
             location=location,
             featurestore_id=self._id,
-            splits=splits,
+            splits=splits or {},
             seed=seed,
             statistics_config=statistics_config,
-            label=label,
+            label=label or [],
             coalesce=coalesce,
-            transformation_functions=transformation_functions,
+            transformation_functions=transformation_functions or {},
             train_split=train_split,
         )
 
@@ -1246,7 +1319,7 @@ class FeatureStore:
             bool,
         ],
         version: Optional[int] = None,
-    ):
+    ) -> "TransformationFunction":
         """Create a transformation function metadata object.
 
         !!! example
@@ -1290,7 +1363,7 @@ class FeatureStore:
         self,
         name: str,
         version: Optional[int] = None,
-    ):
+    ) -> "TransformationFunction":
         """Get  transformation function metadata object.
 
         !!! example "Get transformation function by name. This will default to version 1"
@@ -1388,7 +1461,7 @@ class FeatureStore:
         return self._transformation_function_engine.get_transformation_fn(name, version)
 
     @usage.method_logger
-    def get_transformation_functions(self):
+    def get_transformation_functions(self) -> List["TransformationFunction"]:
         """Get  all transformation functions metadata objects.
 
         !!! example "Get all transformation functions"
@@ -1412,11 +1485,11 @@ class FeatureStore:
         query: Query,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        labels: Optional[List[str]] = [],
-        inference_helper_columns: Optional[List[str]] = [],
-        training_helper_columns: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
-    ):
+        labels: Optional[List[str]] = None,
+        inference_helper_columns: Optional[List[str]] = None,
+        training_helper_columns: Optional[List[str]] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
+    ) -> feature_view.FeatureView:
         """Create a feature view metadata object and saved it to hopsworks.
 
         !!! example
@@ -1513,10 +1586,11 @@ class FeatureStore:
             featurestore_id=self._id,
             version=version,
             description=description,
-            labels=labels,
-            inference_helper_columns=inference_helper_columns,
-            training_helper_columns=training_helper_columns,
-            transformation_functions=transformation_functions,
+            labels=labels or [],
+            inference_helper_columns=inference_helper_columns or [],
+            training_helper_columns=training_helper_columns or [],
+            transformation_functions=transformation_functions or {},
+            featurestore_name=self._name,
         )
         return self._feature_view_engine.save(feat_view)
 
@@ -1527,11 +1601,11 @@ class FeatureStore:
         query: Query,
         version: int,
         description: Optional[str] = "",
-        labels: Optional[List[str]] = [],
-        inference_helper_columns: Optional[List[str]] = [],
-        training_helper_columns: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
-    ):
+        labels: Optional[List[str]] = None,
+        inference_helper_columns: Optional[List[str]] = None,
+        training_helper_columns: Optional[List[str]] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
+    ) -> feature_view.FeatureView:
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
         existing feature view metadata object.
 
@@ -1596,16 +1670,18 @@ class FeatureStore:
                     query=query,
                     version=version,
                     description=description,
-                    labels=labels,
-                    inference_helper_columns=inference_helper_columns,
-                    training_helper_columns=training_helper_columns,
-                    transformation_functions=transformation_functions,
+                    labels=labels or [],
+                    inference_helper_columns=inference_helper_columns or [],
+                    training_helper_columns=training_helper_columns or [],
+                    transformation_functions=transformation_functions or {},
                 )
             else:
                 raise e
 
     @usage.method_logger
-    def get_feature_view(self, name: str, version: int = None):
+    def get_feature_view(
+        self, name: str, version: int = None
+    ) -> "feature_view.FeatureView":
         """Get a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1639,12 +1715,13 @@ class FeatureStore:
                     name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
             version = self.DEFAULT_VERSION
         return self._feature_view_engine.get(name, version)
 
     @usage.method_logger
-    def get_feature_views(self, name):
+    def get_feature_views(self, name: str) -> List["feature_view.FeatureView"]:
         """Get a list of all versions of a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1671,47 +1748,46 @@ class FeatureStore:
         """
         return self._feature_view_engine.get(name)
 
+    def _disable_hopsworks_feature_query_service_client(self):
+        """Disable Hopsworks feature query service for the current session. This behaviour is not persisted on reset."""
+        arrow_flight_client._disable_feature_query_service_client()
+
+    def _reset_hopsworks_feature_query_service_client(self):
+        """Reset Hopsworks feature query service for the current session."""
+        arrow_flight_client.close()
+        arrow_flight_client.get_instance()
+
     @property
-    def id(self):
+    def id(self) -> int:
         """Id of the feature store."""
         return self._id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the feature store."""
         return self._name
 
     @property
-    def project_name(self):
+    def project_name(self) -> str:
         """Name of the project in which the feature store is located."""
         return self._project_name
 
     @property
-    def project_id(self):
+    def project_id(self) -> int:
         """Id of the project in which the feature store is located."""
         return self._project_id
 
     @property
-    def online_featurestore_name(self):
+    def online_featurestore_name(self) -> Optional[str]:
         """Name of the online feature store database."""
         return self._online_feature_store_name
 
     @property
-    def mysql_server_endpoint(self):
-        """MySQL server endpoint for the online feature store."""
-        return self._mysql_server_endpoint
-
-    @property
-    def online_enabled(self):
+    def online_enabled(self) -> bool:
         """Indicator whether online feature store is enabled."""
         return self._online_enabled
 
     @property
-    def hive_endpoint(self):
-        """Hive endpoint for the offline feature store."""
-        return self._hive_endpoint
-
-    @property
-    def offline_featurestore_name(self):
+    def offline_featurestore_name(self) -> str:
         """Name of the offline feature store database."""
         return self._offline_feature_store_name

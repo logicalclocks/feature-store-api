@@ -1,0 +1,120 @@
+{
+  "get": {
+    "response": [
+      {
+        "feature_name": "cc_num",
+        "feature_group": {
+          "type": "featuregroupDTO",
+          "featurestore_id": 73,
+          "created": "2024-02-25T15:07:36.000Z",
+          "creator": {
+            "email": "admin@hopsworks.ai",
+            "first_name": "Admin",
+            "last_name": "Admin",
+            "status": 0,
+            "tos": false,
+            "two_factor": false,
+            "tours_state": 0,
+            "max_num_projects": 0,
+            "test_user": false,
+            "num_active_projects": 0,
+            "num_remaining_projects": 0
+          },
+          "version": 1,
+          "name": "profiles",
+          "id": 48,
+          "statistics_config": {
+            "enabled": true,
+            "histograms": true,
+            "correlations": true,
+            "exact_uniqueness": false,
+            "columns": []
+          },
+          "event_time": "event_time",
+          "online_enabled": false,
+          "deprecated": false
+        },
+        "required": true,
+        "join_on": "cc_num",
+        "join_index": 1
+      },
+      {
+        "feature_name": "tid",
+        "feature_group": {
+          "type": "featuregroupDTO",
+          "featurestore_id": 73,
+          "created": "2024-02-25T15:13:10.000Z",
+          "creator": {
+            "email": "admin@hopsworks.ai",
+            "first_name": "Admin",
+            "last_name": "Admin",
+            "status": 0,
+            "tos": false,
+            "two_factor": false,
+            "tours_state": 0,
+            "max_num_projects": 0,
+            "test_user": false,
+            "num_active_projects": 0,
+            "num_remaining_projects": 0
+          },
+          "version": 1,
+          "name": "transactions",
+          "id": 49,
+          "statistics_config": {
+            "enabled": true,
+            "histograms": true,
+            "correlations": true,
+            "exact_uniqueness": false,
+            "columns": []
+          },
+          "event_time": "datetime",
+          "online_enabled": false,
+          "deprecated": false
+        },
+        "required": true,
+        "join_index": 0
+      }
+    ]
+  },
+  "get_ticker": {
+    "response": [
+      {
+        "feature_name": "ticker",
+        "feature_group": {
+          "type": "featuregroupDTO",
+          "featurestore_id": 73,
+          "created": "2024-02-25T15:07:36.000Z",
+          "creator": {
+            "email": "admin@hopsworks.ai",
+            "first_name": "Admin",
+            "last_name": "Admin",
+            "status": 0,
+            "tos": false,
+            "two_factor": false,
+            "tours_state": 0,
+            "max_num_projects": 0,
+            "test_user": false,
+            "num_active_projects": 0,
+            "num_remaining_projects": 0
+          },
+          "version": 1,
+          "name": "prices",
+          "id": 48,
+          "statistics_config": {
+            "enabled": true,
+            "histograms": true,
+            "correlations": true,
+            "exact_uniqueness": false,
+            "columns": []
+          },
+          "event_time": "when",
+          "online_enabled": true,
+          "deprecated": false
+        },
+        "required": true,
+        "join_on": "cc_num",
+        "join_index": 1
+      }
+    ]
+  }
+}

@@ -14,13 +14,20 @@
 #   limitations under the License.
 #
 
-import pytest
 import json
 
+import pytest
+from hsfs import (
+    engine,
+    feature,
+    feature_group,
+    feature_view,
+    statistics_config,
+    training_dataset,
+)
 from hsfs.client import exceptions
-from hsfs import training_dataset, feature_group, feature_view, statistics_config
 from hsfs.core import statistics_engine
-from hsfs import engine
+
 
 engine._engine_type = "python"
 fg = feature_group.FeatureGroup(
@@ -389,6 +396,12 @@ class TestStatisticsEngine:
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
+        features = [
+            feature.Feature(name="pk", type="int"),
+            feature.Feature(name="et", type="timestamp"),
+            feature.Feature(name="feat", type="int"),
+        ]
+
         fg = feature_group.FeatureGroup(
             name="test",
             version=1,
@@ -396,6 +409,7 @@ class TestStatisticsEngine:
             primary_key=[],
             partition_key=[],
             id=10,
+            features=features,
         )
 
         feature_dataframe = mocker.Mock()
@@ -729,7 +743,9 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         not_found_response = mocker.Mock()
-        not_found_response.json.return_value = {"errorCode": 270226}
+        not_found_response.json.return_value = {
+            "errorCode": exceptions.RestAPIError.FeatureStoreErrorCode.STATISTICS_NOT_FOUND
+        }
         not_found_response.status_code = 404
 
         mocker.patch(
@@ -755,7 +771,9 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         bad_request_response = mocker.Mock()
-        bad_request_response.json.return_value = {"errorCode": 270225}
+        bad_request_response.json.return_value = {
+            "errorCode": exceptions.RestAPIError.FeatureStoreErrorCode.FEATURE_GROUP_COMMIT_NOT_FOUND
+        }
         bad_request_response.status_code = 400
 
         mocker.patch(

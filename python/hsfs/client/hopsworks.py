@@ -13,13 +13,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import os
 from pathlib import Path
 
 import requests
+from hsfs.client import auth, base
 
-from hsfs.client import base, auth
 
 try:
     import jks
@@ -175,6 +176,9 @@ class Client(base.Client):
         """replace hostname to public hostname set in HOPSWORKS_PUBLIC_HOST"""
         ui_url = url._replace(netloc=os.environ[self.HOPSWORKS_PUBLIC_HOST])
         return ui_url
+
+    def _is_external(self):
+        return False
 
     @property
     def host(self):

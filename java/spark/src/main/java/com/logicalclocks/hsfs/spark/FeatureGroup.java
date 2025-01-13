@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.spark;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
@@ -65,7 +66,8 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
                       String description, List<String> primaryKeys, List<String> partitionKeys,
                       String hudiPrecombineKey, boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
                       List<Feature> features, StatisticsConfig statisticsConfig, String onlineTopicName,
-                      String topicName, String notificationTopicName, String eventTime) {
+                      String topicName, String notificationTopicName, String eventTime,
+                      StorageConnector storageConnector, String path) {
     this();
     this.featureStore = featureStore;
     this.name = name;
@@ -85,6 +87,8 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     this.topicName = topicName;
     this.notificationTopicName = notificationTopicName;
     this.eventTime = eventTime;
+    this.storageConnector = storageConnector;
+    this.path = path;
   }
 
   public FeatureGroup() {
