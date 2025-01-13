@@ -423,8 +423,12 @@ public class VectorServer {
 
   private Object deserializeComplexFeature(Map<String, DatumReader<Object>> complexFeatureSchemas, ResultSet results,
                                            int index) throws SQLException, IOException {
-    Decoder decoder = DecoderFactory.get().binaryDecoder(results.getBytes(index), binaryDecoder);
-    return complexFeatureSchemas.get(results.getMetaData().getColumnName(index)).read(null, decoder);
+    if (results.getBytes(index) != null) {
+      Decoder decoder = DecoderFactory.get().binaryDecoder(results.getBytes(index), binaryDecoder);
+      return complexFeatureSchemas.get(results.getMetaData().getColumnName(index)).read(null, decoder);
+    } else {
+      return null;
+    }
   }
 
   private Map<String, DatumReader<Object>> getComplexFeatureSchemas(List<TrainingDatasetFeature> features)
