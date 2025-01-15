@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import logging
 import os
+import posixpath
 import re
 import warnings
 from abc import ABC, abstractmethod
@@ -273,6 +274,7 @@ class S3Connector(StorageConnector):
         server_encryption_algorithm: Optional[str] = None,
         server_encryption_key: Optional[str] = None,
         bucket: Optional[str] = None,
+        path: Optional[str] = None,
         region: Optional[str] = None,
         session_token: Optional[str] = None,
         iam_role: Optional[str] = None,
@@ -287,6 +289,7 @@ class S3Connector(StorageConnector):
         self._server_encryption_algorithm = server_encryption_algorithm
         self._server_encryption_key = server_encryption_key
         self._bucket = bucket
+        self._path = path
         self._region = region
         self._session_token = session_token
         self._iam_role = iam_role
@@ -337,7 +340,7 @@ class S3Connector(StorageConnector):
     @property
     def path(self) -> Optional[str]:
         """If the connector refers to a path (e.g. S3) - return the path of the connector"""
-        return "s3://" + self._bucket
+        return posixpath.join("s3://" + self._bucket, *os.path.split(self._path if self._path else ""))
 
     @property
     def arguments(self) -> Optional[Dict[str, Any]]:
@@ -430,7 +433,7 @@ class S3Connector(StorageConnector):
         )
 
     def _get_path(self, sub_path: str) -> str:
-        return os.path.join(self.path, sub_path)
+        return posixpath.join(self.path, *os.path.split(sub_path))
 
 
 class RedshiftConnector(StorageConnector):

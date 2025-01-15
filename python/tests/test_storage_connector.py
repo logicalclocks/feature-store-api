@@ -115,6 +115,30 @@ class TestS3Connector:
         # assert
         assert "s3://test-bucket" in mock_engine_read.call_args[0][3]
 
+    def test_get_path(self, mocker):
+        mocker.patch("hsfs.engine.get_instance", return_value=spark.Engine())
+        sc = storage_connector.S3Connector(
+            id=1, name="test_connector", featurestore_id=1, bucket="test-bucket"
+        )
+
+        # act
+        result = sc._get_path("some/location")
+
+        # assert
+        assert "s3://test-bucket/some/location" == result
+
+    def test_get_path_storage_connector_with_path(self, mocker):
+        mocker.patch("hsfs.engine.get_instance", return_value=spark.Engine())
+        sc = storage_connector.S3Connector(
+            id=1, name="test_connector", featurestore_id=1, bucket="test-bucket", path="abc/def"
+        )
+
+        # act
+        result = sc._get_path("some/location")
+
+        # assert
+        assert "s3://test-bucket/abc/def/some/location" == result
+
 
 class TestRedshiftConnector:
     def test_from_response_json(self, backend_fixtures):

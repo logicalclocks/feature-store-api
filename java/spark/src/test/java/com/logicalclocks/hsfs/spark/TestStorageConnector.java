@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.spark;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnectorType;
+import com.logicalclocks.hsfs.StorageConnector.S3Connector;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.Option;
@@ -244,6 +245,33 @@ public class TestStorageConnector {
       Assertions.assertEquals("s3://"+s3Connector.getBucket()+"/", pathArg.getValue());
       // reset
       SparkEngine.setInstance(null);
+    }
+
+    @Test
+    void testGetPath() throws FeatureStoreException, IOException {
+      // Arrange
+      S3Connector connector = new S3Connector();
+      connector.setBucket("testBucket");
+
+      // Act
+      String path = connector.getPath("some/location");
+
+      // Assert
+      Assertions.assertEquals("s3://testBucket/some/location", path);
+    }
+
+    @Test
+    void testGetPathStorageConnectorWithPath() throws FeatureStoreException, IOException {
+      // Arrange
+      S3Connector connector = new S3Connector();
+      connector.setBucket("testBucket");
+      connector.setPath("abc/def");
+
+      // Act
+      String path = connector.getPath("some/location");
+
+      // Assert
+      Assertions.assertEquals("s3://testBucket/abc/def/some/location", path);
     }
   }
 

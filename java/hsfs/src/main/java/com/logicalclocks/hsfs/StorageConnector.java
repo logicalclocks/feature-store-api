@@ -125,6 +125,9 @@ public abstract class StorageConnector {
     protected String bucket;
 
     @Getter @Setter
+    protected String path;
+
+    @Getter @Setter
     protected String region;
 
     @Getter @Setter
@@ -138,7 +141,9 @@ public abstract class StorageConnector {
 
     @JsonIgnore
     public String getPath(String subPath) {
-      return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
+      return "s3://" + bucket
+          + (Strings.isNullOrEmpty(path) ? "" : "/" + path) + "/"
+          + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
     }
 
     @Override
