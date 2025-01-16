@@ -19,12 +19,13 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import com.logicalclocks.hsfs.engine.FeatureGroupEngineBase;
+import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StreamFeatureGroup extends FeatureGroupBase<List<Object>> {
 
-  protected FeatureGroupEngineBase featureGroupEngine = new FeatureGroupEngineBase();
+  protected FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
 
   @Builder
   public StreamFeatureGroup(FeatureStoreBase featureStore, @NonNull String name, Integer version, String description,
@@ -77,11 +78,11 @@ public class StreamFeatureGroup extends FeatureGroupBase<List<Object>> {
 
   @Override
   public List<Object> insertStream(List<Object> featureData) throws Exception {
-    throw new UnsupportedOperationException("Not implemented.");
+    return insertStream(featureData, new HashMap<>());
   }
 
   @Override
-  public List<Object>  insertStream(List<Object> featureData, Map<String, String> writeOptions) throws Exception {
-    throw new UnsupportedOperationException("Not implemented.");
+  public List<Object> insertStream(List<Object> featureData, Map<String, String> writeOptions) throws Exception {
+    return featureGroupEngine.insertStream(this, featureData, writeOptions);
   }
 }
