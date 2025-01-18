@@ -1293,16 +1293,56 @@ class KafkaConnector(StorageConnector):
 
         return config
 
+    def _read_pem(self, file_name):
+        with open(file_name, "r") as file:
+            return file.read()
+
     def spark_options(self) -> Dict[str, Any]:
         """Return prepared options to be passed to Spark, based on the additional arguments.
         This is done by just adding 'kafka.' prefix to kafka_options.
         https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#kafka-specific-configurations
         """
-        config = {}
-        for key, value in self.kafka_options().items():
-            config[f"{KafkaConnector.SPARK_FORMAT}.{key}"] = value
+        spark_config = {}
 
-        return config
+        kafka_options = self.kafka_options()
+
+        for key, value in kafka_options.items():
+            if (
+                key
+                in [
+                    "ssl.truststore.location",
+                    "ssl.truststore.password",
+                    "ssl.keystore.location",
+                    "ssl.keystore.password",
+                ]
+                and not self._pem_files_created
+                # TODO(Fabio): Validate the spark version to be 3.2.0 or higher
+            ):
+                (
+                    ca_chain_path,
+                    client_cert_path,
+                    client_key_path,
+                ) = client.get_instance()._write_pem(
+                    kafka_options["ssl.keystore.location"],
+                    kafka_options["ssl.keystore.password"],
+                    kafka_options["ssl.truststore.location"],
+                    kafka_options["ssl.truststore.password"],
+                    f"kafka_sc_{client.get_instance()._project_id}_{self._id}",
+                )
+                self._pem_files_created = True
+                spark_config["kafka.ssl.truststore.certificates"] = self._read_pem(
+                    ca_chain_path
+                )
+                spark_config["kafka.ssl.keystore.certificate.chain"] = self._read_pem(
+                    client_cert_path
+                )
+                spark_config["kafka.ssl.keystore.key"] = self._read_pem(client_key_path)
+                spark_config["kafka.ssl.truststore.type"] = "PEM"
+                spark_config["kafka.ssl.keystore.type"] = "PEM"
+            else:
+                spark_config[f"{KafkaConnector.SPARK_FORMAT}.{key}"] = value
+
+        return spark_config
 
     def read(
         self,
