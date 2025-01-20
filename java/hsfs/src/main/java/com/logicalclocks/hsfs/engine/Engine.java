@@ -23,9 +23,6 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.DatasetApi;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
-
-import lombok.Getter;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaValidationException;
@@ -36,6 +33,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectData;
+
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -44,8 +42,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
-
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,42 +50,46 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-public class Engine extends EngineBase {
+public class Engine<T> extends EngineBase {
 
   private static Engine INSTANCE = null;
 
   private FeatureGroupUtils featureGroupUtils = new FeatureGroupUtils();
 
-  public static synchronized Engine getInstance() {
+  public static synchronized Engine getInstance() throws FeatureStoreException {
     if (INSTANCE == null) {
       INSTANCE = new Engine();
     }
     return INSTANCE;
   }
 
-  @Getter
-  private StorageConnectorApi storageConnectorApi;
+  private Engine() throws FeatureStoreException {
+  }
 
-  public List<Object> writeStream(
+  public List<T> writeStream(
       StreamFeatureGroup streamFeatureGroup,
-      List<Object> featureData,
+      List<T> featureData,
       Map<String, String> writeOptions
   ) throws FeatureStoreException, IOException, SchemaValidationException, NoSuchFieldException, IllegalAccessException {
 
     Map<String, Schema> complexFeatureSchemas = new HashMap<>();
-    for (String featureName: streamFeatureGroup.getComplexFeatures()) {
-      complexFeatureSchemas.put(featureName,
-                  new Schema.Parser().parse(streamFeatureGroup.getFeatureAvroSchema(featureName)));
+    for (Object featureName: streamFeatureGroup.getComplexFeatures()) {
+      complexFeatureSchemas.put(featureName.toString(),
+                  new Schema.Parser().parse(streamFeatureGroup.getFeatureAvroSchema(featureName.toString())));
     }
     Schema deserializedEncodedSchema = new Schema.Parser().parse(streamFeatureGroup.getEncodedAvroSchema());
 
     Properties kafkaProps = new Properties();
+    kafkaProps.put("key.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
+    kafkaProps.put("value.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
     kafkaProps.putAll(getKafkaConfig(streamFeatureGroup, writeOptions));
 
     KafkaRecordSerializer kafkaRecordSerializer = new KafkaRecordSerializer(streamFeatureGroup);
 
     try (KafkaProducer<byte[], byte[]> producer = new KafkaProducer<>(kafkaProps)) {
       for (Object input : featureData) {
+        // validate
+        validatePojoAgainstSchema(input, new Schema.Parser().parse(streamFeatureGroup.getAvroSchema()));
 
         GenericRecord genericRecord = pojoToAvroRecord(input, deserializedEncodedSchema, complexFeatureSchemas);
         ProducerRecord<byte[], byte[]> record = kafkaRecordSerializer.serialize(genericRecord);
@@ -103,9 +103,7 @@ public class Engine extends EngineBase {
 
   public GenericRecord pojoToAvroRecord(Object input, Schema deserializedEncodedSchema,
                                         Map<String, Schema> complexFeatureSchemas)
-          throws SchemaValidationException, NoSuchFieldException, IOException, IllegalAccessException {
-    // validate
-    validatePojoAgainstSchema(input, deserializedEncodedSchema);
+          throws NoSuchFieldException, IOException, IllegalAccessException {
 
     // Create a new Avro record based on the given schema
     GenericRecord record = new GenericData.Record(deserializedEncodedSchema);
@@ -191,6 +189,7 @@ public class Engine extends EngineBase {
     if (writeOptions != null) {
       config.putAll(writeOptions);
     }
+    config.put("enable.idempotence", "false");
     return config;
   }
 }
