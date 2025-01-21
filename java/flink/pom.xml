@@ -35,6 +35,10 @@
           <artifactId>jaxb-api</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.apache.kafka</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>com.databricks</groupId>
           <artifactId>*</artifactId>
         </exclusion>
