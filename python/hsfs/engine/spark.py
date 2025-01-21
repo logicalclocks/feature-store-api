@@ -1489,6 +1489,9 @@ class Engine:
     def is_connector_type_supported(type):
         return True
 
+    def get_spark_version(self):
+        return self._spark_session.version
+
 
 class SchemaError(Exception):
     """Thrown when schemas don't match"""
