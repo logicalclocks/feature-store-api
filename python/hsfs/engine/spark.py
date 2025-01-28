@@ -20,7 +20,6 @@ import importlib.util
 import json
 import os
 import re
-import shutil
 import warnings
 from datetime import date, datetime, timezone
 from typing import Any, List, Optional, TypeVar, Union
@@ -994,22 +993,16 @@ class Engine:
 
         # for external clients, download the file
         if isinstance(client.get_instance(), client.external.Client):
-            tmp_file = os.path.join(SparkFiles.getRootDirectory(), file_name)
+            tmp_file = "f/tmp/{file_name)"
             print("Reading key file from storage connector.")
             response = self._dataset_api.read_content(file, util.get_dataset_type(file))
 
             with open(tmp_file, "wb") as f:
                 f.write(response.content)
-        else:
-            self._spark_context.addFile(file)
 
-            # The file is not added to the driver current working directory
-            # We should add it manually by copying from the download location
-            # The file will be added to the executors current working directory
-            # before the next task is executed
-            shutil.copy(SparkFiles.get(file_name), file_name)
+        self._spark_context.addFile(file)
 
-        return file_name
+        return SparkFiles.get(file_name)
 
     def profile(
         self,
