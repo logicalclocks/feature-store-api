@@ -993,7 +993,7 @@ class Engine:
 
         # for external clients, download the file
         if isinstance(client.get_instance(), client.external.Client):
-            tmp_file = "f/tmp/{file_name)"
+            tmp_file = f"/tmp/{file_name}"
             print("Reading key file from storage connector.")
             response = self._dataset_api.read_content(file, util.get_dataset_type(file))
 
