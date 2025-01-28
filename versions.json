@@ -8,15 +8,14 @@
     "version": "3.9.0-RC11",
     "title": "3.9.0-RC11",
     "aliases": [
+      "latest",
       "3.9"
     ]
   },
   {
     "version": "3.9.0-RC10",
     "title": "3.9.0-RC10",
-    "aliases": [
-      "latest"
-    ]
+    "aliases": []
   },
   {
     "version": "3.9.0-RC9",
