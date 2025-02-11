@@ -47,6 +47,7 @@ dependencies = [
     "retrying",
     "hopsworks_aiomysql[sa]==0.2.1",
     "opensearch-py>=1.1.0,<=2.4.2",
+    "packaging",
 ]
 
 [project.optional-dependencies]
