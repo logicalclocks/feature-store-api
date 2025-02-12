@@ -43,6 +43,8 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -75,10 +77,13 @@ public class VectorServer {
   private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
   private TreeMap<Integer, PreparedStatement> preparedStatements;
   private TreeMap<Integer, String> preparedQueryString;
+  private Map<String, DatumReader<Object>> datumReadersComplexFeatures;
   @Getter
   private HashSet<String> servingKeys;
   private boolean isBatch = false;
   private VariablesApi variablesApi = new VariablesApi();
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(VectorServer.class);
 
   public VectorServer(boolean isBatch) {
     this.isBatch = isBatch;
@@ -135,7 +140,6 @@ public class VectorServer {
 
   private List<Object> getFeatureVector(List<TrainingDatasetFeature> features)
       throws SQLException, FeatureStoreException, IOException {
-    Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(features);
     // construct serving vector
     ArrayList<Object> servingVector = new ArrayList<>();
     for (Integer preparedStatementIndex : preparedStatements.keySet()) {
@@ -150,8 +154,8 @@ public class VectorServer {
       while (results.next()) {
         int index = 1;
         while (index <= columnCount) {
-          if (complexFeatureSchemas.containsKey(results.getMetaData().getColumnName(index))) {
-            servingVector.add(deserializeComplexFeature(complexFeatureSchemas, results, index));
+          if (datumReadersComplexFeatures.containsKey(results.getMetaData().getColumnName(index))) {
+            servingVector.add(deserializeComplexFeature(datumReadersComplexFeatures, results, index));
           } else {
             servingVector.add(results.getObject(index));
           }
@@ -230,8 +234,6 @@ public class VectorServer {
     refreshJdbcConnection(featureStoreBase, external);
     ArrayList<Object> servingVector = new ArrayList<>();
 
-    Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(features);
-
     // construct batch of serving vectors
     // Create map object that will have of order of the vector as key and values as
     // vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
@@ -256,8 +258,8 @@ public class VectorServer {
           while (results.next()) {
             int index = 1;
             while (index <= columnCount) {
-              if (complexFeatureSchemas.containsKey(results.getMetaData().getColumnName(index))) {
-                servingVector.add(deserializeComplexFeature(complexFeatureSchemas, results, index));
+              if (datumReadersComplexFeatures.containsKey(results.getMetaData().getColumnName(index))) {
+                servingVector.add(deserializeComplexFeature(datumReadersComplexFeatures, results, index));
               } else {
                 servingVector.add(results.getObject(index));
               }
@@ -309,7 +311,9 @@ public class VectorServer {
     }
     List<ServingPreparedStatement> servingPreparedStatements =
         trainingDatasetApi.getServingPreparedStatement(trainingDatasetBase, batch);
-    initPreparedStatement(trainingDatasetBase.getFeatureStore(), servingPreparedStatements, batch, external);
+    initPreparedStatement(trainingDatasetBase.getFeatureStore(),
+        trainingDatasetBase.getFeatures(),
+        servingPreparedStatements, batch, external);
   }
 
   public void initPreparedStatement(FeatureViewBase featureViewBase, boolean batch)
@@ -322,23 +326,19 @@ public class VectorServer {
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     // check if this training dataset has transformation functions attached and throw exception if any
     if (featureViewApi.getTransformationFunctions(featureViewBase).size() > 0) {
-      throw new FeatureStoreException("This training dataset has transformation functions attached and "
+      throw new FeatureStoreException("This feature view has transformation functions attached and "
           + "serving must performed from a Python application");
     }
     List<ServingPreparedStatement> servingPreparedStatements =
         featureViewApi.getServingPreparedStatement(featureViewBase, batch);
-    initPreparedStatement(featureViewBase.getFeatureStore(), servingPreparedStatements, batch, external);
+    initPreparedStatement(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(),
+        servingPreparedStatements, batch, external);
   }
 
   private void initPreparedStatement(FeatureStoreBase featureStoreBase,
-                                     List<ServingPreparedStatement> servingPreparedStatements, boolean batch)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    initPreparedStatement(featureStoreBase, servingPreparedStatements, batch,
-        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
-  }
-
-  private void initPreparedStatement(FeatureStoreBase featureStoreBase,
-                                     List<ServingPreparedStatement> servingPreparedStatements, boolean batch,
+                                     List<TrainingDatasetFeature> features,
+                                     List<ServingPreparedStatement> servingPreparedStatements,
+                                     boolean batch,
                                      boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     Class.forName("com.mysql.cj.jdbc.Driver");
@@ -375,6 +375,7 @@ public class VectorServer {
     this.preparedStatementParameters = preparedStatementParameters;
     this.preparedStatements = preparedStatements;
     this.preparedQueryString = preparedQueryString;
+    this.datumReadersComplexFeatures = getComplexFeatureSchemas(features);
   }
 
   private void setupJdbcConnection(FeatureStoreBase featureStoreBase, Boolean external) throws FeatureStoreException,
