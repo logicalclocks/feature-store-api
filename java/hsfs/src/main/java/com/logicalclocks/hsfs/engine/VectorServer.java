@@ -341,7 +341,7 @@ public class VectorServer {
                                      List<ServingPreparedStatement> servingPreparedStatements, boolean batch,
                                      boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    Class.forName("com.mysql.jdbc.Driver");
+    Class.forName("com.mysql.cj.jdbc.Driver");
 
     this.isBatch = batch;
     setupJdbcConnection(featureStoreBase, external);
