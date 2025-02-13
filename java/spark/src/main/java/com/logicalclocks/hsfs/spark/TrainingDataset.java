@@ -48,7 +48,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -306,23 +305,6 @@ public class TrainingDataset extends TrainingDatasetBase {
   @Override
   public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
     return trainingDatasetEngine.getQuery(this, storage, withLabel, false);
-  }
-
-  /**
-   * Retrieve feature vector from online feature store.
-   *
-   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
-   *              corresponding ids to retrieve feature vector from online feature store.
-   * @return list of feature values sorted according to provided primary keys.
-   * @throws SQLException SQLException
-   * @throws IOException IOException
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws ClassNotFoundException ClassNotFoundException
-   */
-  @JsonIgnore
-  public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
-      IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVector(this, entry);
   }
 
   /**

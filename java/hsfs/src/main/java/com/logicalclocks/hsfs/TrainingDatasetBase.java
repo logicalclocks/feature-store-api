@@ -31,10 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -193,101 +191,6 @@ public abstract class TrainingDatasetBase {
   @JsonIgnore
   public void setLabel(List<String> label) {
     this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
-  }
-
-  /**
-   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
-   *
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
-   */
-  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    initPreparedStatement(false);
-  }
-
-  /**
-   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
-   *
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
-   */
-  public void initPreparedStatement(boolean external)
-      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    vectorServer.initPreparedStatement(this, false, external);
-  }
-
-  /**
-   * Initialise and cache parametrised prepared statement to retrieve batch feature vectors from online feature store.
-   *
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
-   */
-  public void initPreparedStatement(boolean external, boolean batch) throws SQLException, IOException,
-          FeatureStoreException, ClassNotFoundException {
-    vectorServer.initPreparedStatement(this, batch, external);
-  }
-
-  /**
-   * Retrieve feature vector from online feature store.
-   *
-   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
-   *              corresponding ids to retrieve feature vector from online feature store.
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
-      IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVector(this, entry);
-  }
-
-  /**
-   * Retrieve feature vector from online feature store.
-   *
-   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
-   *              corresponding ids to retrieve feature vector from online feature store.
-   * @param external If true, the connection to the online feature store will be established using the hostname
-   *                 provided in the hsfs.connection() setup.
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public List<Object> getServingVector(Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVector(this, entry, external);
-  }
-
-  @JsonIgnore
-  public List<List<Object>> getServingVectors(Map<String, List<Object>> entry)
-          throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return  vectorServer.getFeatureVectors(this, entry);
-  }
-
-  @JsonIgnore
-  public List<List<Object>> getServingVectors(Map<String, List<Object>> entry, boolean external)
-          throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVectors(this, entry, external);
-  }
-
-  /**
-   * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
-   *
-   * @return Set of serving keys
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
-   * @throws ClassNotFoundException
-   */
-  @JsonIgnore
-  public HashSet<String> getServingKeys()
-      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    if (vectorServer.getServingKeys().isEmpty()) {
-      initPreparedStatement();
-    }
-    return vectorServer.getServingKeys();
   }
 
   public TrainingDatasetType getTrainingDatasetType(StorageConnector storageConnector) {

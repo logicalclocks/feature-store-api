@@ -24,7 +24,8 @@
         <slf4j.version>1.7.30</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
         <handy.version>2.1.8</handy.version>
-        <lombok.version>1.18.10</lombok.version>
+        <lombok.version>1.18.36</lombok.version>
+        <lombok.plugin.version>1.18.20.0</lombok.plugin.version>
         <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
         <deequ.version>1.1.0.6-SNAPSHOT</deequ.version>
         <spark.version>3.1.1.3</spark.version>
@@ -225,7 +226,7 @@
             <plugin>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok-maven-plugin</artifactId>
-                <version>${lombok.version}.0</version>
+                <version>${lombok.plugin.version}</version>
                 <configuration>
                     <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
                     <outputDirectory>${delombok.output}</outputDirectory>

@@ -285,7 +285,7 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   @JsonIgnore
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVectors(this, entry);
+    return vectorServer.getFeatureVectors(entry);
   }
 
   /**
@@ -337,5 +337,13 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
       initServing();
     }
     return vectorServer.getServingKeys();
+  }
+
+  /**
+   * Closes the ExecutorService and JDBC DataSource used
+   * to retrieve feature vectors from the online feature store.
+   */
+  public void closeVectorServer() {
+    vectorServer.close();
   }
 }

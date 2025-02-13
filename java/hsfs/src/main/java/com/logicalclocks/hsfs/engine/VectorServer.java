@@ -24,22 +24,21 @@ import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksExternalClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
-import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureViewBase;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.TrainingDatasetBase;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.metadata.Variable;
 import com.logicalclocks.hsfs.metadata.VariablesApi;
 import com.logicalclocks.hsfs.util.Constants;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -48,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -62,6 +60,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -69,15 +71,13 @@ public class VectorServer {
 
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private Schema.Parser parser = new Schema.Parser();
-  private BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(new byte[0], null);
-  private TrainingDatasetApi trainingDatasetApi = new TrainingDatasetApi();
   private FeatureViewApi featureViewApi = new FeatureViewApi();
 
-  private Connection preparedStatementConnection;
+  private HikariDataSource hikariDataSource = null;
   private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
-  private TreeMap<Integer, PreparedStatement> preparedStatements;
   private TreeMap<Integer, String> preparedQueryString;
   private Map<String, DatumReader<Object>> datumReadersComplexFeatures;
+  private ExecutorService executorService = Executors.newCachedThreadPool();
   @Getter
   private HashSet<String> servingKeys;
   private boolean isBatch = false;
@@ -89,24 +89,6 @@ public class VectorServer {
     this.isBatch = isBatch;
   }
 
-  public List<Object> getFeatureVector(TrainingDatasetBase trainingDatasetBase, Map<String, Object> entry)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return getFeatureVector(trainingDatasetBase, entry,
-        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
-  }
-
-  public List<Object> getFeatureVector(TrainingDatasetBase trainingDatasetBase,
-                                       Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    // init prepared statement if it has not been already set. Or if a prepare statement for serving
-    // single vector is needed.
-    if (preparedStatements == null || isBatch) {
-      initPreparedStatement(trainingDatasetBase, false, external);
-    }
-    return getFeatureVector(trainingDatasetBase.getFeatureStore(),
-        trainingDatasetBase.getFeatures(), entry, external);
-  }
-
   public List<Object> getFeatureVector(FeatureViewBase featureViewBase, Map<String, Object> entry)
       throws FeatureStoreException, SQLException, IOException, ClassNotFoundException {
     return getFeatureVector(featureViewBase, entry,
@@ -115,35 +97,56 @@ public class VectorServer {
 
   public List<Object> getFeatureVector(FeatureViewBase featureViewBase, Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    if (preparedStatements == null || isBatch) {
+    if (hikariDataSource == null || isBatch) {
       initPreparedStatement(featureViewBase, false, external);
     }
-    return getFeatureVector(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry, external);
+    return getFeatureVector(entry);
   }
 
-  private List<Object> getFeatureVector(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
-                                        Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException {
-    checkPrimaryKeys(entry.keySet());
-    refreshJdbcConnection(featureStoreBase, external);
-    // Iterate over entry map of preparedStatements and set values to them
-    for (Integer fgId : preparedStatements.keySet()) {
-      Map<String, Integer> parameterIndexInStatement = preparedStatementParameters.get(fgId);
-      for (String name : entry.keySet()) {
-        if (parameterIndexInStatement.containsKey(name)) {
-          preparedStatements.get(fgId).setObject(parameterIndexInStatement.get(name), entry.get(name));
-        }
-      }
-    }
-    return getFeatureVector(features);
-  }
-
-  private List<Object> getFeatureVector(List<TrainingDatasetFeature> features)
+  private List<Object> getFeatureVector(Map<String, Object> entry)
       throws SQLException, FeatureStoreException, IOException {
     // construct serving vector
-    ArrayList<Object> servingVector = new ArrayList<>();
-    for (Integer preparedStatementIndex : preparedStatements.keySet()) {
-      ResultSet results = preparedStatements.get(preparedStatementIndex).executeQuery();
+    List<Object> servingVector = new ArrayList<>();
+    List<Future<List<Object>>> queryFutures = new ArrayList<>();
+
+    for (Integer preparedStatementIndex : preparedQueryString.keySet()) {
+      queryFutures.add(executorService.submit(() -> {
+        try {
+          return processQuery(entry, preparedStatementIndex);
+        } catch (SQLException | FeatureStoreException | IOException e) {
+          throw new RuntimeException(e);
+        }
+      }));
+    }
+
+    for (Future<List<Object>> queryFuture : queryFutures) {
+      try {
+        servingVector.add(queryFuture.get());
+      } catch (InterruptedException | ExecutionException e) {
+        throw new FeatureStoreException("Error retrieving query statement result", e);
+      }
+    }
+
+    return servingVector;
+  }
+
+  private List<Object> processQuery(Map<String, Object> entry, int preparedStatementIndex)
+      throws SQLException, FeatureStoreException, IOException {
+    List<Object> servingVector = new ArrayList<>();
+    try (Connection connection = hikariDataSource.getConnection()) {
+      // Create the prepared statement
+      PreparedStatement preparedStatement =
+          connection.prepareStatement(preparedQueryString.get(preparedStatementIndex));
+
+      // Set the parameters base do the entry object
+      Map<String, Integer> parameterIndexInStatement = preparedStatementParameters.get(preparedStatementIndex);
+      for (String name : entry.keySet()) {
+        if (parameterIndexInStatement.containsKey(name)) {
+          preparedStatement.setObject(parameterIndexInStatement.get(name), entry.get(name));
+        }
+      }
+
+      ResultSet results = preparedStatement.executeQuery();
       // check if results contain any data at all and throw exception if not
       if (!results.isBeforeFirst()) {
         throw new FeatureStoreException("No data was retrieved from online feature store.");
@@ -164,53 +167,20 @@ public class VectorServer {
       }
       results.close();
     }
+
     return servingVector;
   }
 
-  public List<List<Object>> getFeatureVectors(TrainingDatasetBase trainingDatasetBase, Map<String, List<Object>> entry)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-
-    return getFeatureVectors(trainingDatasetBase, entry,
-        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
-  }
-
-  public List<List<Object>> getFeatureVectors(TrainingDatasetBase trainingDatasetBase, Map<String, List<Object>> entry,
-                                              boolean external) throws SQLException, FeatureStoreException, IOException,
-      ClassNotFoundException {
-    // init prepared statement if it has not already
-    if (preparedStatements == null || !isBatch) {
-      // size of batch of primary keys are required to be equal. Thus, we take size of batch for the 1st primary key if
-      // it was not initialized from initPreparedStatement(batchSize)
-      initPreparedStatement(trainingDatasetBase, true, external);
-    }
-    return getFeatureVectors(trainingDatasetBase.getFeatureStore(), trainingDatasetBase.getFeatures(),
-        entry, external);
-  }
-
-  public List<List<Object>> getFeatureVectors(FeatureViewBase featureViewBase, Map<String, List<Object>> entry)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return getFeatureVectors(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry,
-        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
-  }
-
   public List<List<Object>> getFeatureVectors(FeatureViewBase featureViewBase, Map<String, List<Object>> entry,
-                                              boolean external) throws SQLException, FeatureStoreException, IOException,
-      ClassNotFoundException {
-    if (preparedStatements == null || !isBatch) {
+                                              boolean external)
+      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+    if (hikariDataSource == null || !isBatch) {
       initPreparedStatement(featureViewBase, true, external);
     }
-    return getFeatureVectors(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry, external);
+    return getFeatureVectors(entry);
   }
 
-  private List<List<Object>> getFeatureVectors(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
-                                               Map<String, List<Object>> entry)
-      throws SQLException, FeatureStoreException, IOException {
-    return getFeatureVectors(featureStoreBase, features, entry,
-        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
-  }
-
-  private List<List<Object>> getFeatureVectors(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
-                                               Map<String, List<Object>> entry, boolean external)
+  public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException {
     checkPrimaryKeys(entry.keySet());
     List<String> queries = Lists.newArrayList();
@@ -225,13 +195,11 @@ public class VectorServer {
             .collect(Collectors.toList()));
       queries.add(query.replaceFirst("\\?", zippedTupleString));
     }
-    return getFeatureVectors(featureStoreBase, features, queries, external);
+    return getFeatureVectors(queries);
   }
 
-  private List<List<Object>> getFeatureVectors(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
-                                               List<String> queries, boolean external)
+  private List<List<Object>> getFeatureVectors(List<String> queries)
       throws SQLException, FeatureStoreException, IOException {
-    refreshJdbcConnection(featureStoreBase, external);
     ArrayList<Object> servingVector = new ArrayList<>();
 
     // construct batch of serving vectors
@@ -240,50 +208,47 @@ public class VectorServer {
     // expect that backend will return correctly ordered vectors.
     Map<Integer, List<Object>> servingVectorsMap = new HashMap<>();
 
-    try (Statement stmt = preparedStatementConnection.createStatement()) {
-      for (String query : queries) {
-        int orderInBatch = 0;
+    try (Connection connection = hikariDataSource.getConnection()) {
+      try (Statement stmt = connection.createStatement()) {
+        for (String query : queries) {
+          int orderInBatch = 0;
 
-        // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
-        // the ? with array joined as comma separated array.
-        try (ResultSet results = stmt.executeQuery(query)) {
+          // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
+          // the ? with array joined as comma separated array.
+          try (ResultSet results = stmt.executeQuery(query)) {
 
-          // check if results contain any data at all and throw exception if not
-          if (!results.isBeforeFirst()) {
-            throw new FeatureStoreException("No data was retrieved from online feature store.");
-          }
-          //Get column count
-          int columnCount = results.getMetaData().getColumnCount();
-          //append results to servingVector
-          while (results.next()) {
-            int index = 1;
-            while (index <= columnCount) {
-              if (datumReadersComplexFeatures.containsKey(results.getMetaData().getColumnName(index))) {
-                servingVector.add(deserializeComplexFeature(datumReadersComplexFeatures, results, index));
-              } else {
-                servingVector.add(results.getObject(index));
+            // check if results contain any data at all and throw exception if not
+            if (!results.isBeforeFirst()) {
+              throw new FeatureStoreException("No data was retrieved from online feature store.");
+            }
+            //Get column count
+            int columnCount = results.getMetaData().getColumnCount();
+            //append results to servingVector
+            while (results.next()) {
+              int index = 1;
+              while (index <= columnCount) {
+                if (datumReadersComplexFeatures.containsKey(results.getMetaData().getColumnName(index))) {
+                  servingVector.add(deserializeComplexFeature(datumReadersComplexFeatures, results, index));
+                } else {
+                  servingVector.add(results.getObject(index));
+                }
+                index++;
               }
-              index++;
+              // get vector by order and update with vector from other feature group(s)
+              if (servingVectorsMap.containsKey(orderInBatch)) {
+                servingVectorsMap.get(orderInBatch).addAll(servingVector);
+              } else {
+                servingVectorsMap.put(orderInBatch, servingVector);
+              }
+              // empty servingVector for new primary key
+              servingVector = new ArrayList<>();
+              orderInBatch++;
             }
-            // get vector by order and update with vector from other feature group(s)
-            if (servingVectorsMap.containsKey(orderInBatch)) {
-              servingVectorsMap.get(orderInBatch).addAll(servingVector);
-            } else {
-              servingVectorsMap.put(orderInBatch, servingVector);
-            }
-            // empty servingVector for new primary key
-            servingVector = new ArrayList<>();
-            orderInBatch++;
           }
         }
       }
     }
     return new ArrayList<List<Object>>(servingVectorsMap.values());
-  }
-
-  public void initServing(TrainingDatasetBase trainingDatasetBase, boolean batch)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    initPreparedStatement(trainingDatasetBase, batch);
   }
 
   public void initServing(FeatureViewBase featureViewBase, boolean batch)
@@ -294,26 +259,6 @@ public class VectorServer {
   public void initServing(FeatureViewBase featureViewBase, boolean batch, boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     initPreparedStatement(featureViewBase, batch, external);
-  }
-
-  public void initPreparedStatement(TrainingDatasetBase trainingDatasetBase, boolean batch)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    initPreparedStatement(trainingDatasetBase, batch,
-        HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
-  }
-
-  public void initPreparedStatement(TrainingDatasetBase trainingDatasetBase, boolean batch, boolean external)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    // check if this training dataset has transformation functions attached and throw exception if any
-    if (trainingDatasetApi.getTransformationFunctions(trainingDatasetBase).size() > 0) {
-      throw new FeatureStoreException("This training dataset has transformation functions attached and "
-          + "serving must performed from a Python application");
-    }
-    List<ServingPreparedStatement> servingPreparedStatements =
-        trainingDatasetApi.getServingPreparedStatement(trainingDatasetBase, batch);
-    initPreparedStatement(trainingDatasetBase.getFeatureStore(),
-        trainingDatasetBase.getFeatures(),
-        servingPreparedStatements, batch, external);
   }
 
   public void initPreparedStatement(FeatureViewBase featureViewBase, boolean batch)
@@ -341,14 +286,11 @@ public class VectorServer {
                                      boolean batch,
                                      boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    Class.forName("com.mysql.cj.jdbc.Driver");
 
     this.isBatch = batch;
-    setupJdbcConnection(featureStoreBase, external);
+    setupHikariPool(featureStoreBase, external);
     // map of prepared statement index and its corresponding parameter indices
     Map<Integer, TreeMap<String, Integer>> preparedStatementParameters = new HashMap<>();
-    // save map of fg index and its prepared statement
-    TreeMap<Integer, PreparedStatement> preparedStatements = new TreeMap<>();
 
     // in case its batch serving then we need to save sql string only
     TreeMap<Integer, String> preparedQueryString = new TreeMap<>();
@@ -356,14 +298,8 @@ public class VectorServer {
     // save unique primary key names that will be used by user to retrieve serving vector
     HashSet<String> servingVectorKeys = new HashSet<>();
     for (ServingPreparedStatement servingPreparedStatement : servingPreparedStatements) {
-      if (batch) {
-        preparedQueryString.put(servingPreparedStatement.getPreparedStatementIndex(),
-            servingPreparedStatement.getQueryOnline());
-      } else {
-        preparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
-            preparedStatementConnection
-                .prepareStatement(servingPreparedStatement.getQueryOnline()));
-      }
+      preparedQueryString.put(servingPreparedStatement.getPreparedStatementIndex(),
+          servingPreparedStatement.getQueryOnline());
       TreeMap<String, Integer> parameterIndices = new TreeMap<>();
       servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
         servingVectorKeys.add(preparedStatementParameter.getName());
@@ -372,14 +308,16 @@ public class VectorServer {
       preparedStatementParameters.put(servingPreparedStatement.getPreparedStatementIndex(), parameterIndices);
     }
     this.servingKeys = servingVectorKeys;
+
     this.preparedStatementParameters = preparedStatementParameters;
-    this.preparedStatements = preparedStatements;
+    System.out.println(preparedQueryString);
     this.preparedQueryString = preparedQueryString;
     this.datumReadersComplexFeatures = getComplexFeatureSchemas(features);
   }
 
-  private void setupJdbcConnection(FeatureStoreBase featureStoreBase, Boolean external) throws FeatureStoreException,
-      IOException, SQLException {
+  private void setupHikariPool(FeatureStoreBase featureStoreBase, Boolean external) throws FeatureStoreException,
+      IOException, SQLException, ClassNotFoundException {
+    Class.forName("com.mysql.cj.jdbc.Driver");
 
     StorageConnector.JdbcConnector storageConnectorBase =
         storageConnectorApi.getOnlineStorageConnector(featureStoreBase, StorageConnector.JdbcConnector.class);
@@ -399,8 +337,12 @@ public class VectorServer {
 
       url = url.replaceAll("/[0-9.]+:", "/" + host + ":");
     }
-    preparedStatementConnection =
-        DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
+
+    HikariConfig config = new HikariConfig();
+    config.setJdbcUrl(url);
+    config.setUsername(jdbcOptions.get(Constants.JDBC_USER));
+    config.setPassword(jdbcOptions.get(Constants.JDBC_PWD));
+    hikariDataSource = new HikariDataSource(config);
   }
 
   private String zipArraysToTupleString(List<List<Object>> lists) {
@@ -415,17 +357,10 @@ public class VectorServer {
     return "(" + String.join(",", zippedTuples) + ")";
   }
 
-  private void refreshJdbcConnection(FeatureStoreBase featureStoreBase, Boolean external) throws FeatureStoreException,
-      IOException, SQLException {
-    if (!preparedStatementConnection.isValid(1)) {
-      setupJdbcConnection(featureStoreBase, external);
-    }
-  }
-
   private Object deserializeComplexFeature(Map<String, DatumReader<Object>> complexFeatureSchemas, ResultSet results,
                                            int index) throws SQLException, IOException {
     if (results.getBytes(index) != null) {
-      Decoder decoder = DecoderFactory.get().binaryDecoder(results.getBytes(index), binaryDecoder);
+      Decoder decoder = DecoderFactory.get().binaryDecoder(results.getBytes(index), null);
       return complexFeatureSchemas.get(results.getMetaData().getColumnName(index)).read(null, decoder);
     } else {
       return null;
@@ -450,5 +385,10 @@ public class VectorServer {
     if (!servingKeys.equals(primaryKeys)) {
       throw new IllegalArgumentException("Provided primary key map doesn't correspond to serving_keys");
     }
+  }
+
+  public void close() {
+    hikariDataSource.close();
+    executorService.shutdown();
   }
 }
