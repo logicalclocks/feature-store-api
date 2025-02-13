@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
@@ -37,13 +38,12 @@ import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import lombok.Setter;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -69,42 +69,43 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class VectorServer {
 
+  @Setter
+  private HikariDataSource hikariDataSource = null;
+  @Getter
+  private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
+  @Getter
+  private TreeMap<Integer, String> preparedQueryString;
+  @Getter
+  @Setter
+  private HashSet<String> servingKeys;
+
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private Schema.Parser parser = new Schema.Parser();
   private FeatureViewApi featureViewApi = new FeatureViewApi();
 
-  private HikariDataSource hikariDataSource = null;
-  private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
-  private TreeMap<Integer, String> preparedQueryString;
   private Map<String, DatumReader<Object>> datumReadersComplexFeatures;
   private ExecutorService executorService = Executors.newCachedThreadPool();
-  @Getter
-  private HashSet<String> servingKeys;
   private boolean isBatch = false;
   private VariablesApi variablesApi = new VariablesApi();
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(VectorServer.class);
-
-  public VectorServer(boolean isBatch) {
-    this.isBatch = isBatch;
-  }
-
   public List<Object> getFeatureVector(FeatureViewBase featureViewBase, Map<String, Object> entry)
-      throws FeatureStoreException, SQLException, IOException, ClassNotFoundException {
+      throws FeatureStoreException, IOException, ClassNotFoundException {
     return getFeatureVector(featureViewBase, entry,
         HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
   }
 
   public List<Object> getFeatureVector(FeatureViewBase featureViewBase, Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+      throws FeatureStoreException, IOException, ClassNotFoundException {
     if (hikariDataSource == null || isBatch) {
       initPreparedStatement(featureViewBase, false, external);
     }
+    checkPrimaryKeys(entry.keySet());
     return getFeatureVector(entry);
   }
 
-  private List<Object> getFeatureVector(Map<String, Object> entry)
-      throws SQLException, FeatureStoreException, IOException {
+  @VisibleForTesting
+  public List<Object> getFeatureVector(Map<String, Object> entry)
+      throws FeatureStoreException {
     // construct serving vector
     List<Object> servingVector = new ArrayList<>();
     List<Future<List<Object>>> queryFutures = new ArrayList<>();
@@ -252,7 +253,7 @@ public class VectorServer {
   }
 
   public void initServing(FeatureViewBase featureViewBase, boolean batch)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+      throws FeatureStoreException, IOException, ClassNotFoundException {
     initPreparedStatement(featureViewBase, batch);
   }
 
@@ -262,13 +263,13 @@ public class VectorServer {
   }
 
   public void initPreparedStatement(FeatureViewBase featureViewBase, boolean batch)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+      throws FeatureStoreException, IOException, ClassNotFoundException {
     initPreparedStatement(featureViewBase, batch, HopsworksClient.getInstance().getHopsworksHttpClient()
         instanceof HopsworksExternalClient);
   }
 
   public void initPreparedStatement(FeatureViewBase featureViewBase, boolean batch, boolean external)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+      throws FeatureStoreException, IOException, ClassNotFoundException {
     // check if this training dataset has transformation functions attached and throw exception if any
     if (featureViewApi.getTransformationFunctions(featureViewBase).size() > 0) {
       throw new FeatureStoreException("This feature view has transformation functions attached and "
@@ -280,12 +281,13 @@ public class VectorServer {
         servingPreparedStatements, batch, external);
   }
 
-  private void initPreparedStatement(FeatureStoreBase featureStoreBase,
+  @VisibleForTesting
+  public void initPreparedStatement(FeatureStoreBase featureStoreBase,
                                      List<TrainingDatasetFeature> features,
                                      List<ServingPreparedStatement> servingPreparedStatements,
                                      boolean batch,
                                      boolean external)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+      throws FeatureStoreException, IOException, ClassNotFoundException {
 
     this.isBatch = batch;
     setupHikariPool(featureStoreBase, external);
@@ -310,13 +312,13 @@ public class VectorServer {
     this.servingKeys = servingVectorKeys;
 
     this.preparedStatementParameters = preparedStatementParameters;
-    System.out.println(preparedQueryString);
     this.preparedQueryString = preparedQueryString;
     this.datumReadersComplexFeatures = getComplexFeatureSchemas(features);
   }
 
-  private void setupHikariPool(FeatureStoreBase featureStoreBase, Boolean external) throws FeatureStoreException,
-      IOException, SQLException, ClassNotFoundException {
+  @VisibleForTesting
+  public void setupHikariPool(FeatureStoreBase featureStoreBase, Boolean external)
+      throws FeatureStoreException, IOException, ClassNotFoundException {
     Class.forName("com.mysql.cj.jdbc.Driver");
 
     StorageConnector.JdbcConnector storageConnectorBase =
@@ -367,7 +369,8 @@ public class VectorServer {
     }
   }
 
-  private Map<String, DatumReader<Object>> getComplexFeatureSchemas(List<TrainingDatasetFeature> features)
+  @VisibleForTesting
+  public Map<String, DatumReader<Object>> getComplexFeatureSchemas(List<TrainingDatasetFeature> features)
       throws FeatureStoreException, IOException {
     Map<String, DatumReader<Object>> featureSchemaMap = new HashMap<>();
     for (TrainingDatasetFeature f : features) {

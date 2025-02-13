@@ -211,12 +211,11 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
    *         in the feature view query.
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
-   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
    * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+      throws FeatureStoreException, IOException, ClassNotFoundException {
     return vectorServer.getFeatureVector(this, entry);
   }
 
@@ -249,12 +248,11 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
    *         in the feature view query.
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
-   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
    * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+      throws FeatureStoreException, IOException, ClassNotFoundException {
     return vectorServer.getFeatureVector(this, entry, external);
   }
 
@@ -280,11 +278,10 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    * @throws SQLException In case there is online storage (RonDB) access error or other errors.
-   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
+      throws SQLException, FeatureStoreException, IOException {
     return vectorServer.getFeatureVectors(entry);
   }
 
