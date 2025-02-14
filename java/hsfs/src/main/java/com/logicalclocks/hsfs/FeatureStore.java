@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023. Hopsworks AB
+ *  Copyright (c) 2025. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,14 +15,11 @@
  *
  */
 
-package com.logicalclocks.hsfs.flink;
+package com.logicalclocks.hsfs;
 
-import com.logicalclocks.hsfs.FeatureStoreBase;
-import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.flink.constructor.Query;
-import com.logicalclocks.hsfs.flink.engine.FeatureViewEngine;
-import com.logicalclocks.hsfs.flink.engine.FeatureGroupEngine;
-
+import com.logicalclocks.hsfs.constructor.Query;
+import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -36,6 +33,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     featureViewEngine = new FeatureViewEngine();
     featureGroupEngine = new FeatureGroupEngine();
   }
+
 
   /**
    * Get a stream feature group object from the feature store.

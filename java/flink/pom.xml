@@ -5,7 +5,7 @@
   <parent>
     <artifactId>hsfs-parent</artifactId>
     <groupId>com.logicalclocks</groupId>
-    <version>3.9.0-RC12</version>
+    <version>3.9.0-RC13</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -35,11 +35,19 @@
           <artifactId>jaxb-api</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.apache.kafka</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>com.databricks</groupId>
           <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.scala-lang</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.kafka</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>

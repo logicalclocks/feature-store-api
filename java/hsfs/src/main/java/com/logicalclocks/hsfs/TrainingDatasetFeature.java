@@ -36,7 +36,7 @@ public class TrainingDatasetFeature {
 
   @Getter
   @Setter
-  private FeatureGroupBase featureGroup;
+  private StreamFeatureGroup featuregroup;
 
   @Getter
   @Setter
@@ -69,9 +69,9 @@ public class TrainingDatasetFeature {
     this.label = label;
   }
 
-  public TrainingDatasetFeature(FeatureGroupBase featuregroup, String name, Boolean label) {
+  public TrainingDatasetFeature(StreamFeatureGroup featuregroup, String name, Boolean label) {
     setName(name);
-    this.featureGroup = featuregroup;
+    this.featuregroup = featuregroup;
     this.label = label;
   }
 

@@ -22,7 +22,7 @@
     <parent>
         <artifactId>hsfs-parent</artifactId>
         <groupId>com.logicalclocks</groupId>
-        <version>3.9.0-RC12</version>
+        <version>3.9.0-RC13</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -45,6 +45,10 @@
                 <exclusion>
                     <groupId>javax.xml.bind</groupId>
                     <artifactId>jaxb-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.kafka</groupId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

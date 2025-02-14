@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023. Hopsworks AB
+ *  Copyright (c) 2025. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  *
  */
 
-package com.logicalclocks.hsfs.flink.constructor;
+package com.logicalclocks.hsfs;
 
-import com.logicalclocks.hsfs.constructor.QueryBase;
-import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
-
+import com.logicalclocks.hsfs.constructor.Query;
 import lombok.NoArgsConstructor;
-import org.apache.flink.streaming.api.datastream.DataStream;
+
+import java.util.List;
 
 @NoArgsConstructor
-public class Query extends QueryBase<Query, StreamFeatureGroup, DataStream<?>> {
+public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Query, List<Object>> {
 }
