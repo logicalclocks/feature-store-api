@@ -73,6 +73,26 @@ public class FeatureStore extends FeatureStoreBase<Query> {
         .build();
   }
 
+  @Override
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(@NonNull String name,
+                                                          Integer version,
+                                                          String description,
+                                                          Boolean onlineEnabled,
+                                                          TimeTravelFormat timeTravelFormat,
+                                                          List<String> primaryKeys,
+                                                          List<String> partitionKeys,
+                                                          String eventTime,
+                                                          String hudiPrecombineKey,
+                                                          List<Feature> features,
+                                                          StatisticsConfig statisticsConfig,
+                                                          StorageConnector storageConnector,
+                                                          String path) throws IOException, FeatureStoreException {
+
+    return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, description, onlineEnabled,
+        timeTravelFormat, primaryKeys, partitionKeys, eventTime, hudiPrecombineKey, features, statisticsConfig,
+        storageConnector, path);
+  }
+
   /**
    * Get a stream feature group object from the feature store.
    *

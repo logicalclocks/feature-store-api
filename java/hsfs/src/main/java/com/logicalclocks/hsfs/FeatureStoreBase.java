@@ -92,6 +92,40 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
                                                             String path);
 
   /**
+   * Get a feature group metadata object or create a new one if it doesn't exists.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @param description descrption of the feature group
+   * @param onlineEnabled whether the feature group should be online enabled
+   * @param timeTravelFormat the data format to use to store the offline data
+   * @param primaryKeys list of primary keys
+   * @param partitionKeys list of partition keys
+   * @param eventTime the feature/column to use as event time
+   * @param hudiPrecombineKey if the timeTravelFormat is set to hudi, the feature/column to use as precombine key
+   * @param features the list of feature objects if defined explicitly
+   * @param statisticsConfig the statistics configuration for the feature group
+   * @param storageConnector the storage connector to use to store the offline
+   *                         feature data (Default stored internally in Hopsworks).
+   * @param path the path on the storage where to store the feature data.
+   *
+   * @return The feature group metadata object.
+   */
+  public abstract FeatureGroupBase getOrCreateStreamFeatureGroup(@NonNull String name,
+                                                            Integer version,
+                                                            String description,
+                                                            Boolean onlineEnabled,
+                                                            TimeTravelFormat timeTravelFormat,
+                                                            List<String> primaryKeys,
+                                                            List<String> partitionKeys,
+                                                            String eventTime,
+                                                            String hudiPrecombineKey,
+                                                            List<Feature> features,
+                                                            StatisticsConfig statisticsConfig,
+                                                            StorageConnector storageConnector,
+                                                            String path) throws IOException, FeatureStoreException;
+
+  /**
    * Get a feature group object from the feature store.
    *
    * @param name the name of the feature group
