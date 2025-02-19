@@ -94,6 +94,31 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
   /**
    * Get a feature group metadata object or create a new one if it doesn't exists.
    *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        StreamFeatureGroup streamFeatureGroup = featureStore.getOrCreateStreamFeatureGroup(
+   *                 "doc_example",
+   *                 1,
+   *                 "Feature group for example in documentation",
+   *                 true,
+   *                 TimeTravelFormat.HUDI,
+   *                 Collections.singletonList("primary_key"),
+   *                 Collections.singletonList("partition_key"),
+   *                 "event_time",
+   *                 null,
+   *                 features,
+   *                 null,
+   *                 new StatisticsConfig(true, true, true, true),
+   *                 null
+   *         );
+   *
+   *         streamFeatureGroup.save()
+   * }
+   * </pre>
+   *
+   *
    * @param name the name of the feature group
    * @param version the version of the feature group
    * @param description descrption of the feature group

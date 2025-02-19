@@ -37,6 +37,31 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     storageConnectorApi = new StorageConnectorApi();
   }
 
+  /**
+   * Create a feature group builder object.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *
+   *        // create feature group metadata object
+   *        StreamFeatureGroup streamFeatureGroup = fs.createStreamFeatureGroup()
+   *               .name("documentation_example")
+   *               .version(1)
+   *               .primaryKeys(Collections.singletonList("pk"))
+   *               .eventTime("event_time")
+   *               .onlineEnabled(true)
+   *               .features(features)
+   *               .build();
+   *
+   *         // save the feature group metadata object on the feature store
+   *         streamFeatureGroup.save()
+   * }
+   * </pre>
+   *
+   * @return StreamFeatureGroup.StreamFeatureGroupBuilder a StreamFeatureGroup builder object.
+   */
   public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
     return StreamFeatureGroup.builder().featureStore(this);
   }
