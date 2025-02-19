@@ -260,18 +260,16 @@ public class FeatureGroupApi {
       });
     }
 
-    // set write options for delta streamer job
-    if (writeOptions != null) {
-      // set write options for delta streamer job
-      DeltaStreamerJobConf deltaStreamerJobConf = new DeltaStreamerJobConf();
-      deltaStreamerJobConf.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
-          .map(e -> new Option(e.getKey(), e.getValue()))
-          .collect(Collectors.toList())
-          : null);
-      deltaStreamerJobConf.setSparkJobConfiguration(jobConfiguration);
+    DeltaStreamerJobConf deltaStreamerJobConf = new DeltaStreamerJobConf();
 
-      featureGroup.setDeltaStreamerJobConf(deltaStreamerJobConf);
-    }
+    // set write options for delta streamer job
+    deltaStreamerJobConf.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
+        .map(e -> new Option(e.getKey(), e.getValue()))
+        .collect(Collectors.toList())
+        : null);
+
+    deltaStreamerJobConf.setSparkJobConfiguration(jobConfiguration);
+    featureGroup.setDeltaStreamerJobConf(deltaStreamerJobConf);
 
     // Send Hopsworks the request to create a new feature group
     FeatureGroupBase apiFG = save(featureGroup, fgType);

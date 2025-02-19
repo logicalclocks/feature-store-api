@@ -120,6 +120,7 @@ public abstract class FeatureGroupBase<T> {
   protected List<String> statisticColumns;
 
   @Setter
+  @Getter
   protected DeltaStreamerJobConf deltaStreamerJobConf;
 
   @Getter

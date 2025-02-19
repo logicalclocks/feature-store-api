@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -33,6 +34,11 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   public FeatureStore() {
     featureViewEngine = new FeatureViewEngine();
     featureGroupEngine = new FeatureGroupEngine();
+    storageConnectorApi = new StorageConnectorApi();
+  }
+
+  public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
+    return StreamFeatureGroup.builder().featureStore(this);
   }
 
   @Override
