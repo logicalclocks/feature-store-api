@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import lombok.NonNull;
 
 import java.io.IOException;
+import java.util.List;
 
 public class FeatureStore extends FeatureStoreBase<Query> {
 
@@ -34,6 +35,38 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     featureGroupEngine = new FeatureGroupEngine();
   }
 
+  @Override
+  public StreamFeatureGroup createStreamFeatureGroup(@NonNull String name,
+                                                   Integer version,
+                                                   String description,
+                                                   Boolean onlineEnabled,
+                                                   TimeTravelFormat timeTravelFormat,
+                                                   List<String> primaryKeys,
+                                                   List<String> partitionKeys,
+                                                   String eventTime,
+                                                   String hudiPrecombineKey,
+                                                   List<Feature> features,
+                                                   StatisticsConfig statisticsConfig,
+                                                   StorageConnector storageConnector,
+                                                   String path) {
+
+    return new StreamFeatureGroup.StreamFeatureGroupBuilder()
+        .featureStore(this)
+        .name(name)
+        .version(version)
+        .description(description)
+        .onlineEnabled(onlineEnabled)
+        .timeTravelFormat(timeTravelFormat)
+        .primaryKeys(primaryKeys)
+        .partitionKeys(partitionKeys)
+        .eventTime(eventTime)
+        .hudiPrecombineKey(hudiPrecombineKey)
+        .features(features)
+        .statisticsConfig(statisticsConfig)
+        .storageConnector(storageConnector)
+        .path(path)
+        .build();
+  }
 
   /**
    * Get a stream feature group object from the feature store.

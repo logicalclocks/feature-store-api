@@ -17,8 +17,12 @@
 
 package com.logicalclocks.hsfs.flink;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StatisticsConfig;
+import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.flink.constructor.Query;
 import com.logicalclocks.hsfs.flink.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.flink.engine.FeatureGroupEngine;
@@ -26,6 +30,7 @@ import com.logicalclocks.hsfs.flink.engine.FeatureGroupEngine;
 import lombok.NonNull;
 
 import java.io.IOException;
+import java.util.List;
 
 public class FeatureStore extends FeatureStoreBase<Query> {
 
@@ -35,6 +40,31 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   public FeatureStore() {
     featureViewEngine = new FeatureViewEngine();
     featureGroupEngine = new FeatureGroupEngine();
+  }
+
+  @Override
+  public StreamFeatureGroup createStreamFeatureGroup(@NonNull String name, Integer version, String description,
+                                                     Boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
+                                                     List<String> primaryKeys, List<String> partitionKeys,
+                                                     String eventTime, String hudiPrecombineKey, List<Feature> features,
+                                                     StatisticsConfig statisticsConfig,
+                                                     StorageConnector storageConnector, String path) {
+    return new StreamFeatureGroup.StreamFeatureGroupBuilder()
+        .featureStore(this)
+        .name(name)
+        .version(version)
+        .description(description)
+        .onlineEnabled(onlineEnabled)
+        .timeTravelFormat(timeTravelFormat)
+        .primaryKeys(primaryKeys)
+        .partitionKeys(partitionKeys)
+        .eventTime(eventTime)
+        .hudiPrecombineKey(hudiPrecombineKey)
+        .features(features)
+        .statisticsConfig(statisticsConfig)
+        .storageConnector(storageConnector)
+        .path(path)
+        .build();
   }
 
   /**

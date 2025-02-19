@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.spark;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.spark.engine.FeatureViewEngine;
@@ -172,7 +173,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
-    return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
+    return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
         null, null, false, null, null, null, null, null);
   }
 
@@ -355,22 +356,29 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     return featureGroupEngine.getStreamFeatureGroup(this, name, version);
   }
 
-  /**
-   * Create stream feature group builder object.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StreamFeatureGroup.StreamFeatureGroupBuilder = fs.createStreamFeatureGroup()
-   * }
-   * </pre>
-   *
-   * @return StreamFeatureGroup.StreamFeatureGroupBuilder a StreamFeatureGroup builder object.
-   */
-  public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
+  @Override
+  public StreamFeatureGroup createStreamFeatureGroup(@NonNull String name, Integer version, String description,
+                                                   Boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
+                                                   List<String> primaryKey, List<String> partitionKey, String eventTime,
+                                                   String hudiPrecombineKey, List<Feature> features,
+                                                   StatisticsConfig statisticsConfig, StorageConnector storageConnector,
+                                                   String path) {
     return StreamFeatureGroup.builder()
-        .featureStore(this);
+        .featureStore(this)
+        .name(name)
+        .version(version)
+        .description(description)
+        .onlineEnabled(onlineEnabled)
+        .timeTravelFormat(timeTravelFormat)
+        .primaryKeys(primaryKey)
+        .partitionKeys(partitionKey)
+        .eventTime(eventTime)
+        .hudiPrecombineKey(hudiPrecombineKey)
+        .features(features)
+        .statisticsConfig(statisticsConfig)
+        .storageConnector(storageConnector)
+        .path(path)
+        .build();
   }
 
   /**

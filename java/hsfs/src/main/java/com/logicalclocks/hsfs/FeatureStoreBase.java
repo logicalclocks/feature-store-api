@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 public abstract class FeatureStoreBase<T2 extends QueryBase> {
 
@@ -55,6 +56,158 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreBase.class);
 
   protected static final Integer DEFAULT_VERSION = 1;
+
+  /**
+   * Create an offline only Apache HUDI backed feature group object.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @param description descrption of the feature group
+   * @param primaryKeys list of primary keys
+   * @param partitionKeys list of partition keys
+   * @param eventTime the feature/column to use as event time
+   * @param features the list of feature objects if defined explicitly
+   * @param statisticsConfig the statistics configuration for the feature group
+   *
+   * @return The feature group metadata object.
+   */
+  public FeatureGroupBase createStreamFeatureGroup(@NonNull String name,
+                                                   Integer version,
+                                                   String description,
+                                                   List<String> primaryKeys,
+                                                   List<String> partitionKeys,
+                                                   String eventTime,
+                                                   List<Feature> features,
+                                                   StatisticsConfig statisticsConfig) {
+    return createStreamFeatureGroup(name,
+        version,
+        description,
+        false,
+        TimeTravelFormat.HUDI,
+        primaryKeys,
+        partitionKeys,
+        eventTime,
+        null,
+        features,
+        statisticsConfig,
+        null,
+        null);
+  }
+
+  /**
+   * Create an offline only feature group object.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @param description descrption of the feature group
+   * @param timeTravelFormat the data format to use to store the offline data
+   * @param primaryKeys list of primary keys
+   * @param partitionKeys list of partition keys
+   * @param eventTime the feature/column to use as event time
+   * @param features the list of feature objects if defined explicitly
+   * @param statisticsConfig the statistics configuration for the feature group
+   *
+   * @return The feature group metadata object.
+   */
+  public FeatureGroupBase createStreamFeatureGroup(@NonNull String name,
+                                                   Integer version,
+                                                   String description,
+                                                   TimeTravelFormat timeTravelFormat,
+                                                   List<String> primaryKeys,
+                                                   List<String> partitionKeys,
+                                                   String eventTime,
+                                                   List<Feature> features,
+                                                   StatisticsConfig statisticsConfig) {
+    return createStreamFeatureGroup(name,
+        version,
+        description,
+        false,
+        timeTravelFormat,
+        primaryKeys,
+        partitionKeys,
+        eventTime,
+        null,
+        features,
+        statisticsConfig,
+        null,
+        null);
+  }
+
+  /**
+   * Create a feature group object stored internally in Hopsworks.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @param description descrption of the feature group
+   * @param onlineEnabled whether the feature group should be online enabled
+   * @param timeTravelFormat the data format to use to store the offline data
+   * @param primaryKeys list of primary keys
+   * @param partitionKeys list of partition keys
+   * @param eventTime the feature/column to use as event time
+   * @param features the list of feature objects if defined explicitly
+   * @param statisticsConfig the statistics configuration for the feature group
+   *
+   * @return The feature group metadata object.
+   */
+  public FeatureGroupBase createStreamFeatureGroup(@NonNull String name,
+                                                            Integer version,
+                                                            String description,
+                                                            Boolean onlineEnabled,
+                                                            TimeTravelFormat timeTravelFormat,
+                                                            List<String> primaryKeys,
+                                                            List<String> partitionKeys,
+                                                            String eventTime,
+                                                            List<Feature> features,
+                                                            StatisticsConfig statisticsConfig) {
+    return createStreamFeatureGroup(name,
+        version,
+        description,
+        onlineEnabled,
+        timeTravelFormat,
+        primaryKeys,
+        partitionKeys,
+        eventTime,
+        null,
+        features,
+        statisticsConfig,
+        null,
+        null);
+  }
+
+
+  /**
+   * Create a feature group object.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @param description descrption of the feature group
+   * @param onlineEnabled whether the feature group should be online enabled
+   * @param timeTravelFormat the data format to use to store the offline data
+   * @param primaryKeys list of primary keys
+   * @param partitionKeys list of partition keys
+   * @param eventTime the feature/column to use as event time
+   * @param hudiPrecombineKey if the timeTravelFormat is set to hudi, the feature/column to use as precombine key
+   * @param features the list of feature objects if defined explicitly
+   * @param statisticsConfig the statistics configuration for the feature group
+   * @param storageConnector the storage connector to use to store the offline
+   *                         feature data (Default stored internally in Hopsworks).
+   * @param path the path on the storage where to store the feature data.
+   *
+   * @return The feature group metadata object.
+   */
+  public abstract FeatureGroupBase createStreamFeatureGroup(@NonNull String name,
+                                                            Integer version,
+                                                            String description,
+                                                            Boolean onlineEnabled,
+                                                            TimeTravelFormat timeTravelFormat,
+                                                            List<String> primaryKeys,
+                                                            List<String> partitionKeys,
+                                                            String eventTime,
+                                                            String hudiPrecombineKey,
+                                                            List<Feature> features,
+                                                            StatisticsConfig statisticsConfig,
+                                                            StorageConnector storageConnector,
+                                                            String path);
 
   /**
    * Get a feature group object from the feature store.

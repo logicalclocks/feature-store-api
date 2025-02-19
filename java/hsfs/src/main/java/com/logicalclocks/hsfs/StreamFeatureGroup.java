@@ -25,6 +25,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +39,10 @@ public class StreamFeatureGroup<T> extends FeatureGroupBase<List<T>> {
 
   @Builder
   public StreamFeatureGroup(FeatureStoreBase featureStore, @NonNull String name, Integer version, String description,
-      List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
-      boolean onlineEnabled, List<Feature> features,
-      StatisticsConfig statisticsConfig, String onlineTopicName, String eventTime) {
+                            TimeTravelFormat timeTravelFormat, List<String> primaryKeys, List<String> partitionKeys,
+                            String hudiPrecombineKey, boolean onlineEnabled, List<Feature> features,
+                            StatisticsConfig statisticsConfig, String onlineTopicName, String eventTime,
+                            StorageConnector storageConnector, String path) {
     this();
     this.featureStore = featureStore;
     this.name = name;
@@ -56,6 +58,9 @@ public class StreamFeatureGroup<T> extends FeatureGroupBase<List<T>> {
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.onlineTopicName = onlineTopicName;
     this.eventTime = eventTime;
+    this.timeTravelFormat = timeTravelFormat;
+    this.storageConnector = storageConnector;
+    this.path = path;
   }
 
   public StreamFeatureGroup() {
@@ -74,6 +79,32 @@ public class StreamFeatureGroup<T> extends FeatureGroupBase<List<T>> {
     this();
     this.featureStore = featureStore;
     this.id = id;
+  }
+
+  /**
+   * Save the feature group metadata on Hopsworks.
+   * This method is idempotent, if the feature group already exists the method does nothing.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void save() throws FeatureStoreException, IOException {
+    save(null, null);
+  }
+
+  /**
+   * Save the feature group metadata on Hopsworks.
+   * This method is idempotent, if the feature group already exists, the method does nothing
+   *
+   * @param writeOptions Options to provide to the materialization job
+   * @param materializationJobConfiguration Resource configuration for the materialization job
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void save(Map<String, String> writeOptions, JobConfiguration materializationJobConfiguration)
+      throws FeatureStoreException, IOException {
+    featureGroupEngine.save(this, partitionKeys, hudiPrecombineKey,
+        writeOptions, materializationJobConfiguration);
   }
 
   @Override

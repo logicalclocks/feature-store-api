@@ -18,6 +18,7 @@
 package com.logicalclocks.hsfs.flink.engine;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngineBase;
 
 import com.logicalclocks.hsfs.flink.FeatureStore;
@@ -57,5 +58,21 @@ public class FeatureGroupEngine extends FeatureGroupEngineBase {
       featureGroupApi.getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
 
     return Arrays.asList(streamFeatureGroups);
+  }
+
+  public void save(StreamFeatureGroup featureGroup, List<String> partitionKeys, String precombineKeyName,
+                   Map<String, String> writeOptions, JobConfiguration materializationJobConfiguration)
+      throws FeatureStoreException, IOException {
+    if (featureGroup.getId() != null) {
+      // Feature group metadata already exists. Just return
+      return;
+    }
+
+    // verify primary, partition, event time and hudi precombine keys
+    utils.verifyAttributeKeyNames(featureGroup, partitionKeys, precombineKeyName);
+
+    StreamFeatureGroup apiFG = (StreamFeatureGroup) featureGroupApi.saveFeatureGroupMetaData(featureGroup,
+        partitionKeys, precombineKeyName, writeOptions, materializationJobConfiguration, StreamFeatureGroup.class);
+    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
   }
 }
