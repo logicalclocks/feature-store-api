@@ -17,10 +17,13 @@
 
 package com.logicalclocks.hsfs.beam;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.StorageConnector;
 import org.apache.beam.sdk.values.PCollection;
 
@@ -80,6 +83,32 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
     this();
     this.featureStore = featureStore;
     this.id = id;
+  }
+
+  /**
+   * Save the feature group metadata on Hopsworks.
+   * This method is idempotent, if the feature group already exists the method does nothing.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void save() throws FeatureStoreException, IOException {
+    save(null, null);
+  }
+
+  /**
+   * Save the feature group metadata on Hopsworks.
+   * This method is idempotent, if the feature group already exists, the method does nothing
+   *
+   * @param writeOptions Options to provide to the materialization job
+   * @param materializationJobConfiguration Resource configuration for the materialization job
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public void save(Map<String, String> writeOptions, JobConfiguration materializationJobConfiguration)
+      throws FeatureStoreException, IOException {
+    featureGroupEngine.save(this, partitionKeys, hudiPrecombineKey,
+        writeOptions, materializationJobConfiguration);
   }
 
   /**

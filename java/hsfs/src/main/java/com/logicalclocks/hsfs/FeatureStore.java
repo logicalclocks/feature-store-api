@@ -20,9 +20,11 @@ package com.logicalclocks.hsfs;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import lombok.NonNull;
 
 import java.io.IOException;
+import java.util.List;
 
 public class FeatureStore extends FeatureStoreBase<Query> {
 
@@ -32,8 +34,90 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   public FeatureStore() {
     featureViewEngine = new FeatureViewEngine();
     featureGroupEngine = new FeatureGroupEngine();
+    storageConnectorApi = new StorageConnectorApi();
   }
 
+  /**
+   * Create a feature group builder object.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *
+   *        // create feature group metadata object
+   *        StreamFeatureGroup streamFeatureGroup = fs.createStreamFeatureGroup()
+   *               .name("documentation_example")
+   *               .version(1)
+   *               .primaryKeys(Collections.singletonList("pk"))
+   *               .eventTime("event_time")
+   *               .onlineEnabled(true)
+   *               .features(features)
+   *               .build();
+   *
+   *         // save the feature group metadata object on the feature store
+   *         streamFeatureGroup.save()
+   * }
+   * </pre>
+   *
+   * @return StreamFeatureGroup.StreamFeatureGroupBuilder a StreamFeatureGroup builder object.
+   */
+  public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
+    return StreamFeatureGroup.builder().featureStore(this);
+  }
+
+  @Override
+  public StreamFeatureGroup createStreamFeatureGroup(@NonNull String name,
+                                                   Integer version,
+                                                   String description,
+                                                   Boolean onlineEnabled,
+                                                   TimeTravelFormat timeTravelFormat,
+                                                   List<String> primaryKeys,
+                                                   List<String> partitionKeys,
+                                                   String eventTime,
+                                                   String hudiPrecombineKey,
+                                                   List<Feature> features,
+                                                   StatisticsConfig statisticsConfig,
+                                                   StorageConnector storageConnector,
+                                                   String path) {
+
+    return new StreamFeatureGroup.StreamFeatureGroupBuilder()
+        .featureStore(this)
+        .name(name)
+        .version(version)
+        .description(description)
+        .onlineEnabled(onlineEnabled)
+        .timeTravelFormat(timeTravelFormat)
+        .primaryKeys(primaryKeys)
+        .partitionKeys(partitionKeys)
+        .eventTime(eventTime)
+        .hudiPrecombineKey(hudiPrecombineKey)
+        .features(features)
+        .statisticsConfig(statisticsConfig)
+        .storageConnector(storageConnector)
+        .path(path)
+        .build();
+  }
+
+  @Override
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(@NonNull String name,
+                                                          Integer version,
+                                                          String description,
+                                                          Boolean onlineEnabled,
+                                                          TimeTravelFormat timeTravelFormat,
+                                                          List<String> primaryKeys,
+                                                          List<String> partitionKeys,
+                                                          String eventTime,
+                                                          String hudiPrecombineKey,
+                                                          List<Feature> features,
+                                                          StatisticsConfig statisticsConfig,
+                                                          StorageConnector storageConnector,
+                                                          String path) throws IOException, FeatureStoreException {
+
+    return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, description, onlineEnabled,
+        timeTravelFormat, primaryKeys, partitionKeys, eventTime, hudiPrecombineKey, features, statisticsConfig,
+        storageConnector, path);
+  }
 
   /**
    * Get a stream feature group object from the feature store.

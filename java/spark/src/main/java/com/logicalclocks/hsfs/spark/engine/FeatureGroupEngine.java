@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.spark.engine;
 
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
@@ -361,7 +362,9 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
                                                           List<String> partitionKeys, String hudiPrecombineKey,
                                                           boolean onlineEnabled,
                                                           StatisticsConfig statisticsConfig,
-                                                          String eventTime, TimeTravelFormat timeTravelFormat)
+                                                          String eventTime, TimeTravelFormat timeTravelFormat,
+                                                          List<Feature> features, StorageConnector storageConnector,
+                                                          String path)
       throws IOException, FeatureStoreException {
     StreamFeatureGroup featureGroup;
     try {
@@ -380,6 +383,9 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
             .statisticsConfig(statisticsConfig)
             .eventTime(eventTime)
             .timeTravelFormat(timeTravelFormat)
+            .features(features)
+            .storageConnector(storageConnector)
+            .path(path)
             .build();
 
         featureGroup.setFeatureStore(featureStore);

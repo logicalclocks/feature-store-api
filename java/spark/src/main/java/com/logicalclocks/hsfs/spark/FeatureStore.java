@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.spark;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.spark.engine.FeatureViewEngine;
@@ -172,7 +173,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
-    return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
+    return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
         null, null, false, null, null, null, null, null);
   }
 
@@ -355,22 +356,48 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     return featureGroupEngine.getStreamFeatureGroup(this, name, version);
   }
 
-  /**
-   * Create stream feature group builder object.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StreamFeatureGroup.StreamFeatureGroupBuilder = fs.createStreamFeatureGroup()
-   * }
-   * </pre>
-   *
-   * @return StreamFeatureGroup.StreamFeatureGroupBuilder a StreamFeatureGroup builder object.
-   */
-  public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
+  @Override
+  public StreamFeatureGroup createStreamFeatureGroup(@NonNull String name, Integer version, String description,
+                                                   Boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
+                                                   List<String> primaryKey, List<String> partitionKey, String eventTime,
+                                                   String hudiPrecombineKey, List<Feature> features,
+                                                   StatisticsConfig statisticsConfig, StorageConnector storageConnector,
+                                                   String path) {
     return StreamFeatureGroup.builder()
-        .featureStore(this);
+        .featureStore(this)
+        .name(name)
+        .version(version)
+        .description(description)
+        .onlineEnabled(onlineEnabled)
+        .timeTravelFormat(timeTravelFormat)
+        .primaryKeys(primaryKey)
+        .partitionKeys(partitionKey)
+        .eventTime(eventTime)
+        .hudiPrecombineKey(hudiPrecombineKey)
+        .features(features)
+        .statisticsConfig(statisticsConfig)
+        .storageConnector(storageConnector)
+        .path(path)
+        .build();
+  }
+
+  @Override
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(@NonNull String name,
+                                                          Integer version,
+                                                          String description,
+                                                          Boolean onlineEnabled,
+                                                          TimeTravelFormat timeTravelFormat,
+                                                          List<String> primaryKeys,
+                                                          List<String> partitionKeys,
+                                                          String eventTime,
+                                                          String hudiPrecombineKey,
+                                                          List<Feature> features,
+                                                          StatisticsConfig statisticsConfig,
+                                                          StorageConnector storageConnector,
+                                                          String path) throws IOException, FeatureStoreException {
+    return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, description,
+        primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, eventTime, timeTravelFormat,
+        features, storageConnector, path);
   }
 
   /**
@@ -394,7 +421,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
       throws IOException, FeatureStoreException {
     return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, null,
-        null, null, null, false, null, null, null);
+        null, null, null, false, null, null, null, null, null, null);
   }
 
   /**
@@ -427,7 +454,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                                           boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
     return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, null,
-        primaryKeys, null, null, onlineEnabled, null, eventTime, null);
+        primaryKeys, null, null, onlineEnabled, null, eventTime, null, null, null, null);
   }
 
   /**
@@ -465,7 +492,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
 
 
     return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, null,
-        primaryKeys, partitionKeys, null, onlineEnabled, null, eventTime, null);
+        primaryKeys, partitionKeys, null, onlineEnabled, null, eventTime, null, null, null, null);
   }
 
   /**
@@ -514,7 +541,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                                           String eventTime, TimeTravelFormat timeTravelFormat)
       throws IOException, FeatureStoreException {
     return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, description,
-        primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, eventTime, timeTravelFormat);
+        primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, eventTime, timeTravelFormat,
+        null, null, null);
   }
 
   /**
@@ -618,238 +646,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + FeatureStoreBase.DEFAULT_VERSION + "`.");
     return getExternalFeatureGroup(name, FeatureStoreBase.DEFAULT_VERSION);
-  }
-
-  /**
-   * Get a previously created storage connector from the feature store.
-   *
-   * <p>Storage connectors encapsulate all information needed for the execution engine to read and write to a specific
-   * storage.
-   *
-   * <p>If you want to connect to the online feature store, see the getOnlineStorageConnector` method to get the
-   * JDBC connector for the Online Feature Store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector sc = fs.getStorageConnector("sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.class);
-  }
-
-  /**
-   * Get a previously created HopsFs compliant storage connector from the feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.HopsFsConnector hfsSc = fs.getHopsFsConnector("hfs_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector.HopsFsConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.HopsFsConnector.class);
-  }
-
-  /**
-   * Get a previously created JDBC compliant storage connector from the feature store.
-   *
-   * <p>If you want to connect to the online feature store, see the getOnlineStorageConnector` method to get the
-   * JDBC connector for the Online Feature Store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.JdbcConnector jdbcSc = fs.getJdbcConnector("jdbc_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the jdbc storage connector to retrieve.
-   * @return StorageConnector.JdbcConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.JdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.JdbcConnector.class);
-  }
-
-  /**
-   * Get a previously created JDBC compliant storage connector from the feature store
-   * to connect to the online feature store.
-   *
-   * <pre>
-   * {@code
-   *        //get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.JdbcConnector onlineSc = fs.getOnlineStorageConnector("online_sc_name");
-   * }
-   * </pre>
-   *
-   * @return StorageConnector.JdbcConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
-    return storageConnectorApi.getOnlineStorageConnector(this, StorageConnector.JdbcConnector.class);
-  }
-
-  /**
-   * Get a previously created S3 compliant storage connector from the feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.S3Connector s3Sc = fs.getS3Connector("s3_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector.S3Connector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.S3Connector.class);
-  }
-
-  /**
-   * Get a previously created Redshift compliant storage connector from the feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.RedshiftConnector rshSc = fs.getRedshiftConnector("rsh_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector.RedshiftConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
-      throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.RedshiftConnector.class);
-  }
-
-  /**
-   * Get a previously created Snowflake compliant storage connector from the feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.SnowflakeConnector snflSc = fs.getSnowflakeConnector("snfl_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector.SnowflakeConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
-      throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.SnowflakeConnector.class);
-  }
-
-  /**
-   * Get a previously created Adls compliant storage connector from the feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.AdlsConnectorr adlslSc = fs.getAdlsConnector("adls_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector.AdlsConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.AdlsConnector.class);
-  }
-
-  /**
-   * Get a previously created Kafka compliant storage connector from the feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.KafkaConnector kafkaSc = fs.getKafkaConnector("kafka_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector.KafkaConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.KafkaConnector.class);
-  }
-
-  /**
-   * Get a previously created BigQuery compliant storage connector from the feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.BigqueryConnector bigqSc = fs.getBigqueryConnector("bigq_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector.BigqueryConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.BigqueryConnector getBigqueryConnector(String name) throws FeatureStoreException,
-      IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.BigqueryConnector.class);
-  }
-
-  /**
-   * Get a previously created Gcs compliant storage connector from the feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.GcsConnector gcsSc = fs.getGcsConnector("gsc_sc_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the storage connector to retrieve.
-   * @return StorageConnector.GcsConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.GcsConnector.class);
   }
 
   @Deprecated

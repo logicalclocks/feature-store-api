@@ -120,6 +120,7 @@ public abstract class FeatureGroupBase<T> {
   protected List<String> statisticColumns;
 
   @Setter
+  @Getter
   protected DeltaStreamerJobConf deltaStreamerJobConf;
 
   @Getter
@@ -325,7 +326,7 @@ public abstract class FeatureGroupBase<T> {
   @JsonIgnore
   public List<String> getPrimaryKeys() {
     if (primaryKeys == null) {
-      primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
+      primaryKeys = features.stream().filter(Feature::getPrimary).map(Feature::getName).collect(Collectors.toList());
     }
     return primaryKeys;
   }
