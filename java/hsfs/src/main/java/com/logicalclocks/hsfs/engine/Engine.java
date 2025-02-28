@@ -27,13 +27,11 @@ import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaValidationException;
-import org.apache.avro.SchemaValidatorBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.reflect.ReflectData;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -43,13 +41,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class Engine<T> extends EngineBase {
 
@@ -78,7 +75,8 @@ public class Engine<T> extends EngineBase {
       complexFeatureSchemas.put(featureName.toString(),
                   new Schema.Parser().parse(streamFeatureGroup.getFeatureAvroSchema(featureName.toString())));
     }
-    Schema deserializedEncodedSchema = new Schema.Parser().parse(streamFeatureGroup.getEncodedAvroSchema());
+    Schema featureGroupSchema = new Schema.Parser().parse(streamFeatureGroup.getAvroSchema());
+    Schema encodedFeatureGroupSchema = new Schema.Parser().parse(streamFeatureGroup.getEncodedAvroSchema());
 
     Properties kafkaProps = new Properties();
     kafkaProps.put("key.serializer", "org.apache.kafka.common.serialization.ByteArraySerializer");
@@ -89,10 +87,8 @@ public class Engine<T> extends EngineBase {
 
     try (KafkaProducer<byte[], byte[]> producer = new KafkaProducer<>(kafkaProps)) {
       for (Object input : featureData) {
-        // validate
-        validatePojoAgainstSchema(input, new Schema.Parser().parse(streamFeatureGroup.getAvroSchema()));
-
-        GenericRecord genericRecord = pojoToAvroRecord(input, deserializedEncodedSchema, complexFeatureSchemas);
+        GenericRecord genericRecord =
+            convertPojoToGenericRecord(input, featureGroupSchema, encodedFeatureGroupSchema, complexFeatureSchemas);
         ProducerRecord<byte[], byte[]> record = kafkaRecordSerializer.serialize(genericRecord);
 
         producer.send(record);
@@ -102,62 +98,136 @@ public class Engine<T> extends EngineBase {
     return featureData;
   }
 
-  public GenericRecord pojoToAvroRecord(Object input, Schema deserializedEncodedSchema,
-                                        Map<String, Schema> complexFeatureSchemas)
-          throws NoSuchFieldException, IOException, IllegalAccessException {
 
-    // Create a new Avro record based on the given schema
-    GenericRecord record = new GenericData.Record(deserializedEncodedSchema);
-    // Get the fields of the POJO class and populate fields of the Avro record
-    List<Field> fields =
-            Arrays.stream(input.getClass().getDeclaredFields())
-                    .filter(f -> f.getName().equals("SCHEMA$"))
-                    .collect(Collectors.toList());
-    if (!fields.isEmpty()) {
-      // it means POJO was generated from avro schema
-      Field schemaField = input.getClass().getDeclaredField("SCHEMA$");
-      schemaField.setAccessible(true);
-      Schema fieldSchema = (Schema) schemaField.get(null);
-      for (Schema.Field field : fieldSchema.getFields()) {
-        String fieldName = field.name();
-        Field pojoField = input.getClass().getDeclaredField(fieldName);
-        pojoField.setAccessible(true);
-        Object fieldValue = pojoField.get(input);
-        populateAvroRecord(record, fieldName, fieldValue, complexFeatureSchemas);
-      }
+  private GenericRecord convertPojoToGenericRecord(Object input,
+                                                   Schema featureGroupSchema,
+                                                   Schema encodedFeatureGroupSchema,
+                                                   Map<String, Schema> complexFeatureSchemas)
+      throws NoSuchFieldException, IllegalAccessException, FeatureStoreException, IOException {
+
+    // Generate the genericRecord without nested serialization.
+    // Users have the option of providing directly a GenericRecord.
+    // If that's the case we also expect nested structures to be generic records.
+    GenericRecord plainRecord;
+    if (input instanceof GenericRecord) {
+      plainRecord = (GenericRecord) input;
     } else {
-      for (Field field : fields) {
-        String fieldName = field.getName();
-        Object fieldValue = field.get(input);
-        populateAvroRecord(record, fieldName, fieldValue, complexFeatureSchemas);
+      plainRecord = convertPojoToGenericRecord(input, featureGroupSchema);
+    }
+
+    // Apply nested serialization for complex features
+    GenericRecord encodedRecord = new GenericData.Record(encodedFeatureGroupSchema);
+    for (Schema.Field field: encodedFeatureGroupSchema.getFields()) {
+      if (complexFeatureSchemas.containsKey(field.name())) {
+        Schema complexFieldSchema = complexFeatureSchemas.get(field.name());
+        GenericDatumWriter<Object> complexFeatureDatumWriter = new GenericDatumWriter<>(complexFieldSchema);
+
+        try (ByteArrayOutputStream complexFeatureByteArrayOutputStream = new ByteArrayOutputStream()) {
+          BinaryEncoder complexFeatureBinaryEncoder =
+              new EncoderFactory().binaryEncoder(complexFeatureByteArrayOutputStream, null);
+          complexFeatureDatumWriter.write(plainRecord.get(field.name()), complexFeatureBinaryEncoder);
+          complexFeatureBinaryEncoder.flush();
+
+          // Replace the field in the generic record with the serialized version
+          encodedRecord.put(field.name(), ByteBuffer.wrap(complexFeatureByteArrayOutputStream.toByteArray()));
+        }
+      } else {
+        encodedRecord.put(field.name(), plainRecord.get(field.name()));
       }
     }
+
+    return encodedRecord;
+  }
+
+  private GenericRecord convertPojoToGenericRecord(Object input, Schema featureGroupSchema)
+          throws NoSuchFieldException, IllegalAccessException, FeatureStoreException {
+
+    // Create a new Avro record based on the given schema
+    GenericRecord record = new GenericData.Record(featureGroupSchema);
+
+    for (Schema.Field schemaField : featureGroupSchema.getFields()) {
+      Field pojoField = input.getClass().getDeclaredField(schemaField.name());
+      pojoField.setAccessible(true);
+      Object pojoValue = pojoField.get(input);
+      // TODO - here we are passing the wrong schema.
+      record.put(schemaField.name(), convertValue(pojoValue, schemaField.schema()));
+    }
+
     return record;
   }
 
-  private void populateAvroRecord(GenericRecord record, String fieldName, Object fieldValue,
-                                  Map<String, Schema> complexFeatureSchemas) throws IOException {
-    if (complexFeatureSchemas.containsKey(fieldName)) {
-      GenericDatumWriter<Object> complexFeatureDatumWriter =
-              new GenericDatumWriter<>(complexFeatureSchemas.get(fieldName));
-      ByteArrayOutputStream complexFeatureByteArrayOutputStream = new ByteArrayOutputStream();
-      complexFeatureByteArrayOutputStream.reset();
-      BinaryEncoder complexFeatureBinaryEncoder =
-              new EncoderFactory().binaryEncoder(complexFeatureByteArrayOutputStream, null);
-      complexFeatureDatumWriter.write(fieldValue, complexFeatureBinaryEncoder);
-      complexFeatureBinaryEncoder.flush();
-      record.put(fieldName, ByteBuffer.wrap(complexFeatureByteArrayOutputStream.toByteArray()));
-      complexFeatureByteArrayOutputStream.flush();
-      complexFeatureByteArrayOutputStream.close();
-    } else {
-      record.put(fieldName, fieldValue);
-    }
-  }
 
-  private void validatePojoAgainstSchema(Object pojo, Schema avroSchema) throws SchemaValidationException {
-    Schema pojoSchema = ReflectData.get().getSchema(pojo.getClass());
-    SchemaValidatorBuilder builder = new SchemaValidatorBuilder();
-    builder.canReadStrategy().validateAll().validate(avroSchema, Collections.singletonList(pojoSchema));
+  private Object convertValue(Object value, Schema schema)
+      throws NoSuchFieldException, IllegalAccessException, FeatureStoreException {
+    if (value == null) {
+      return null;
+    }
+
+    switch (schema.getType()) {
+      case RECORD:
+        return convertPojoToGenericRecord(value, schema); // Recursive conversion
+
+      case ARRAY:
+        Schema elementType = schema.getElementType();
+        if (value instanceof Collection) {
+          Collection<?> collection = (Collection<?>) value;
+          List<Object> avroList = new ArrayList<>();
+          for (Object item : collection) {
+            avroList.add(convertValue(item, elementType));
+          }
+          return avroList;
+        } else if (value.getClass().isArray()) {
+          List<Object> avroList = new ArrayList<>();
+          for (Object item : (Object[]) value) {
+            avroList.add(convertValue(item, elementType));
+          }
+          return avroList;
+        }
+        throw new FeatureStoreException("Unsupported array type: " + value.getClass());
+
+      case UNION:
+        // Unions are tricky: Avro allows [null, "type"]
+        for (Schema subSchema : schema.getTypes()) {
+          if (subSchema.getType() == Schema.Type.NULL) {
+            continue; // Skip null type
+          }
+          try {
+            return convertValue(value, subSchema);
+          } catch (Exception ignored) {
+            // Try next type in union
+          }
+        }
+        throw new FeatureStoreException("Cannot match union type for value: " + value.getClass());
+
+      case ENUM:
+        return new GenericData.EnumSymbol(schema, value.toString());
+
+      case STRING:
+        return value.toString();
+
+      case INT:
+      case LONG:
+      case FLOAT:
+      case DOUBLE:
+      case BOOLEAN:
+        return value; // Primitive types are directly compatible
+
+      case MAP:
+        if (value instanceof Map) {
+          Map<String, Object> avroMap = new HashMap<>();
+          for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+            if (!(entry.getKey() instanceof String)) {
+              throw new FeatureStoreException("Avro only supports string keys in maps.");
+            }
+            avroMap.put(entry.getKey().toString(), convertValue(entry.getValue(), schema.getValueType()));
+          }
+          return avroMap;
+        }
+        throw new FeatureStoreException("Unsupported map type: " + value.getClass());
+
+      default:
+        throw new FeatureStoreException("Unsupported Avro type: " + schema.getType());
+    }
   }
 
   @Override
