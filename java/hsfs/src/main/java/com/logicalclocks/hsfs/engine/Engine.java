@@ -149,7 +149,6 @@ public class Engine<T> extends EngineBase {
       Field pojoField = input.getClass().getDeclaredField(schemaField.name());
       pojoField.setAccessible(true);
       Object pojoValue = pojoField.get(input);
-      // TODO - here we are passing the wrong schema.
       record.put(schemaField.name(), convertValue(pojoValue, schemaField.schema()));
     }
 
