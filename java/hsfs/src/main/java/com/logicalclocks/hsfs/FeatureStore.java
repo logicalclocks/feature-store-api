@@ -216,4 +216,27 @@ public class FeatureStore extends FeatureStoreBase<Query> {
         + DEFAULT_VERSION + "`.");
     return getFeatureView(name, DEFAULT_VERSION);
   }
+
+  /**
+   * Create a new feature view metadata object.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        FeatureView fv = fs.createFeatureView
+   *          .name("fv_name")
+   *          .version(1)
+   *          .query(query)
+   *          .build() // The build method also save the feature view metadata to Hopsworks
+   * }
+   * </pre>
+   *
+   * @return FeatureView.FeatureViewBuilder Feature View Builder object to build the feature view metadata object
+   * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
+   * @throws IOException Generic IO exception.
+   */
+  public FeatureView.FeatureViewBuilder createFeatureView() {
+    return new FeatureView.FeatureViewBuilder(this);
+  }
 }

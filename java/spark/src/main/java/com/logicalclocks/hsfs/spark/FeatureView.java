@@ -40,9 +40,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -116,29 +114,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     this.description = description;
     this.featureStore = featureStore;
     this.labels = labels != null ? labels.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
-  }
-
-  /**
-   * Delete current feature view, all associated metadata and training data.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // delete feature view
-   *        fv.delete();
-   * }
-   * </pre>
-   *
-   * @throws FeatureStoreException In case client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  public void delete() throws FeatureStoreException, IOException {
-    FeatureViewBase.LOGGER.warn("JobWarning: All jobs associated to feature view `" + name + "`, version `"
-        + version + "` will be removed.");
-    featureViewEngine.delete(this.featureStore, this.name, this.version);
   }
 
   /**
@@ -345,105 +320,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
         readOptions,
         extraFilterVersion
     );
-  }
-
-  /**
-   * Add name/value tag to the feature view.
-   * A tag consists of a name and value pair. Tag names are unique identifiers across the whole cluster. The value of a
-   * tag can be any valid json - primitives, arrays or json objects.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // attach a tag to a feature view
-   *        JSONObject value = ...;
-   *        fv.addTag("tag_schema", value);
-   * }
-   * </pre>
-   *
-   * @param name
-   *     Name of the tag
-   * @param value
-   *     Value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException If Client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  public void addTag(String name, Object value) throws FeatureStoreException, IOException {
-    featureViewEngine.addTag(this, name, value);
-  }
-
-  /**
-   * Get all tags of the feature view.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // get tags
-   *        fv.getTags();
-   * }
-   * </pre>
-   *
-   * @return {@code Map<String, Object>} a map of tag name and values. The value of a tag can be any valid
-   *          json - primitives, arrays or json objects
-   * @throws FeatureStoreException If Client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  @JsonIgnore
-  public Map<String, Object> getTags() throws FeatureStoreException, IOException {
-    return featureViewEngine.getTags(this);
-  }
-
-  /**
-   * Get a single tag value of the feature view.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // get tag
-   *        fv.getTag("tag_name");
-   * }
-   * </pre>
-   *
-   * @param name
-   *     name of the tag
-   * @return Object The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException If Client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  @JsonIgnore
-  public Object getTag(String name) throws FeatureStoreException, IOException {
-    return featureViewEngine.getTag(this, name);
-  }
-
-  /**
-   * Delete a tag of the feature view.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // delete tag
-   *        fv.deleteTag("tag_name");
-   * }
-   * </pre>
-   *
-   * @param name Name of the tag to be deleted.
-   * @throws FeatureStoreException If Client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  public void deleteTag(String name) throws FeatureStoreException, IOException {
-    featureViewEngine.deleteTag(this, name);
   }
 
   /**
@@ -1764,133 +1640,5 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    */
   public void deleteAllTrainingDatasets() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this);
-  }
-
-  /**
-   * Add name/value tag to the training dataset.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // add tag to datasets version 1 in this feature view.
-   *        JSONObject json = ...;
-   *        fv.addTrainingDatasetTag(1, "tag_name", json);
-   * }
-   * </pre>
-   *
-   * @param version Training dataset version.
-   * @param name Name of the tag.
-   * @param value Value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects.
-   * @throws FeatureStoreException If Client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  public void addTrainingDatasetTag(Integer version, String name, Object value) throws FeatureStoreException,
-      IOException {
-    featureViewEngine.addTag(this, name, value, version);
-  }
-
-  /**
-   * Get all tags of the training dataset.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // get tags of training dataset version 1 in this feature view.
-   *        fv.getTrainingDatasetTags(1);
-   * }
-   * </pre>
-   *
-   * @param version Training dataset version.
-   * @return {@code Map<String, Object>} A map of tag name and values. The value of a tag can be any valid json -
-   *          primitives, arrays or json objects
-   * @throws FeatureStoreException If Client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  @JsonIgnore
-  public Map<String, Object> getTrainingDatasetTags(Integer version) throws FeatureStoreException, IOException {
-    return featureViewEngine.getTags(this, version);
-  }
-
-  /**
-   * Get a single tag value of the training dataset.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // get tag with name `"demo_name"` of training dataset version 1 in this feature view.
-   *        fv.getTrainingDatasetTags(1, "demo_name");
-   * }
-   * </pre>
-   *
-   * @param version Training dataset version.
-   * @param name Name of the tag.
-   * @return Object The value of a tag can be any valid json - primitives, arrays or json objects.
-   * @throws FeatureStoreException If Client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  @JsonIgnore
-  public Object getTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException {
-    return featureViewEngine.getTag(this, name, version);
-  }
-
-  /**
-   * Delete a tag of the training dataset.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // delete tag with name `"demo_name"` of training dataset version 1 in this feature view.
-   *        fv.deleteTrainingDatasetTag(1, "demo_name");
-   * }
-   * </pre>
-   *
-   * @param version Tag version.
-   * @param name Name of the tag to be deleted.
-   * @throws FeatureStoreException If Client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   */
-  public void deleteTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException {
-    featureViewEngine.deleteTag(this, name, version);
-  }
-
-  /**
-   * Get set of primary key names that is used as keys in input dict object for `getServingVector` method.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature view handle
-   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
-   *        // get set of primary key names
-   *        fv.getPrimaryKeys();
-   * }
-   * </pre>
-   *
-   * @return {@code HashSet<String>}  Set of serving keys
-   * @throws FeatureStoreException In case client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
-   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
-   */
-  @JsonIgnore
-  public HashSet<String> getPrimaryKeys()
-      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    if (vectorServer.getServingKeys().isEmpty()) {
-      initServing();
-    }
-    return vectorServer.getServingKeys();
   }
 }
