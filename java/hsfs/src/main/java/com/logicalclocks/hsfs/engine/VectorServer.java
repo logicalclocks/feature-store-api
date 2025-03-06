@@ -122,7 +122,7 @@ public class VectorServer {
 
     for (Future<List<Object>> queryFuture : queryFutures) {
       try {
-        servingVector.add(queryFuture.get());
+        servingVector.addAll(queryFuture.get());
       } catch (InterruptedException | ExecutionException e) {
         throw new FeatureStoreException("Error retrieving query statement result", e);
       }

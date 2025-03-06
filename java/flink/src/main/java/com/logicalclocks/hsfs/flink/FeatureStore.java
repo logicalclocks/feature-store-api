@@ -238,4 +238,28 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   public FeatureView.FeatureViewBuilder createFeatureView() {
     return new FeatureView.FeatureViewBuilder(this);
   }
+
+  /**
+   * Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
+   * existing feature view metadata.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        FeatureView fv = fs.getOrCreateFeatureView("fv_name", query, 1);
+   * }
+   * </pre>
+   *
+   * @param name Name of the feature view.
+   * @param query Query object.
+   * @param version Version of the feature view.
+   * @return FeatureView The feature view metadata object.
+   * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
+   * @throws IOException Generic IO exception.
+   */
+  public FeatureView getOrCreateFeatureView(String name, Query query, Integer version)
+      throws FeatureStoreException, IOException {
+    return featureViewEngine.getOrCreateFeatureView(this, name, version, query, null, null);
+  }
 }

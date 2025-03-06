@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends FeatureGroupBase, T3> {
+public class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends FeatureGroupBase, T3> {
 
   @Getter
   protected FeatureGroupBase leftFeatureGroup;
@@ -78,7 +78,7 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  protected QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+  public QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     setLeftBaseFeatureGroup(leftFeatureGroup);
     this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
   }

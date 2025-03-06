@@ -17,8 +17,17 @@
 
 package com.logicalclocks.hsfs.constructor;
 
+import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
+@NoArgsConstructor
 public class Query extends QueryBase<Query, StreamFeatureGroup, List<Object>> {
+
+  public Query(StreamFeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
+    super(leftFeatureGroup, leftFeatures);
+  }
+
 }

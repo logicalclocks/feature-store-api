@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.flink.constructor.Query;
 import com.logicalclocks.hsfs.flink.engine.FeatureGroupEngine;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
@@ -153,5 +154,63 @@ public class StreamFeatureGroup extends FeatureGroupBase<DataStream<?>> {
   @Override
   public DataStreamSink<?>  insertStream(DataStream<?> featureData, Map<String, String> writeOptions) throws Exception {
     return featureGroupEngine.insertStream(this, featureData, writeOptions);
+  }
+
+  /**
+   * Select a subset of features of the feature group and return a query object. The query can be used to construct
+   * joins of feature groups or create a feature view with a subset of features of the feature group.
+   * @param features List of Feature meta data objects.
+   * @return Query object.
+   */
+  public Query selectFeatures(List<Feature> features) {
+    return new Query(this, features);
+  }
+
+  /**
+   * Select a subset of features of the feature group and return a query object. The query can be used to construct
+   * joins of feature groups or create a feature view with a subset of features of the feature group.
+   * @param features List of Feature names.
+   * @return Query object.
+   */
+  public Query select(List<String> features) {
+    // Create a feature object for each string feature given by the user.
+    // For the query building each feature need only the name set.
+    List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
+    return selectFeatures(featureObjList);
+  }
+
+  /**
+   * Select all features of the feature group and return a query object. The query can be used to construct
+   * joins of feature groups or create a feature view with a subset of features of the feature group.
+   * @return Query object.
+   */
+  public Query selectAll() {
+    return new Query(this, getFeatures());
+  }
+
+  /**
+   * Select all features including primary key and event time feature of the feature group except provided `features`
+   * and return a query object.
+   * The query can be used to construct joins of feature groups or create a feature view with a subset of features of
+   * the feature group.
+   * @param features List of Feature meta data objects.
+   * @return Query object.
+   */
+  public Query selectExceptFeatures(List<Feature> features) {
+    List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
+    return selectExcept(exceptFeatures);
+  }
+
+  /**
+   * Select all features including primary key and event time feature of the feature group except provided `features`
+   * and return a query object.
+   * The query can be used to construct joins of feature groups or create a feature view with a subset of features of
+   * the feature group.
+   * @param features List of Feature names.
+   * @return Query object.
+   */
+  public Query selectExcept(List<String> features) {
+    return new Query(this,
+        getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
   }
 }

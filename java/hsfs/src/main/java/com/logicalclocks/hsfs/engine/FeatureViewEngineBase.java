@@ -58,6 +58,7 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
   public T2 save(T2 featureViewBase, Class<T2> fvType) throws FeatureStoreException, IOException {
     featureViewBase.setFeatures(makeLabelFeatures(featureViewBase.getQuery(), featureViewBase.getLabels()));
     T2 updatedFeatureViewBase = featureViewApi.save(featureViewBase, fvType);
+    featureViewBase.setId(updatedFeatureViewBase.getId());
     featureViewBase.setVersion(updatedFeatureViewBase.getVersion());
     featureViewBase.setFeatures(updatedFeatureViewBase.getFeatures());
     return featureViewBase;
