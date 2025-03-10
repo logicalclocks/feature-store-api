@@ -34,6 +34,9 @@ import java.util.List;
 public class ServingPreparedStatement extends RestDto<ServingPreparedStatement> {
   @Getter
   @Setter
+  private Integer featureGroupId;
+  @Getter
+  @Setter
   private Integer preparedStatementIndex;
   @Getter
   @Setter
@@ -41,4 +44,14 @@ public class ServingPreparedStatement extends RestDto<ServingPreparedStatement> 
   @Getter
   @Setter
   private String queryOnline;
+  @Getter
+  @Setter
+  private String prefix;
+
+  public ServingPreparedStatement(Integer preparedStatementIndex,
+                                  List<PreparedStatementParameter> preparedStatementParameters, String queryOnline) {
+    this.preparedStatementIndex = preparedStatementIndex;
+    this.preparedStatementParameters = preparedStatementParameters;
+    this.queryOnline = queryOnline;
+  }
 }

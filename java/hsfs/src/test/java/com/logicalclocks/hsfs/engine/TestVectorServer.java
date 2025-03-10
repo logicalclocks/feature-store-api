@@ -43,7 +43,7 @@ public class TestVectorServer {
     VectorServer vectorServer = Mockito.mock(VectorServer.class);
     Mockito.doCallRealMethod().when(vectorServer).initPreparedStatement(Mockito.any(), Mockito.any(),
         Mockito.any(), Mockito.anyBoolean(), Mockito.anyBoolean());
-    Mockito.when(vectorServer.getPreparedQueryString()).thenCallRealMethod();
+    Mockito.when(vectorServer.getOrderedServingPreparedStatements()).thenCallRealMethod();
     Mockito.when(vectorServer.getPreparedStatementParameters()).thenCallRealMethod();
 
     FeatureStoreBase featureStoreBase = Mockito.mock(FeatureStoreBase.class);
@@ -61,9 +61,9 @@ public class TestVectorServer {
 
     vectorServer.initPreparedStatement(featureStoreBase, null, servingPreparedStatements, false, true);
 
-    Map<Integer,String> queries = vectorServer.getPreparedQueryString();
-    Assert.assertEquals("SELECT * FROM table_0 WHERE pk=? AND id=?", queries.get(0));
-    Assert.assertEquals("SELECT * FROM table_1 WHERE id=?", queries.get(1));
+    Map<Integer, ServingPreparedStatement> queries = vectorServer.getOrderedServingPreparedStatements();
+    Assert.assertEquals("SELECT * FROM table_0 WHERE pk=? AND id=?", queries.get(0).getQueryOnline());
+    Assert.assertEquals("SELECT * FROM table_1 WHERE id=?", queries.get(1).getQueryOnline());
 
     TreeMap<String, Integer> preparedStatementParameters = vectorServer.getPreparedStatementParameters().get(0);
     Assert.assertEquals((Integer)0, preparedStatementParameters.get("pk"));
