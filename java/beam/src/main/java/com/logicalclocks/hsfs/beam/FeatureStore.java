@@ -239,8 +239,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * </pre>
    *
    * @return FeatureView.FeatureViewBuilder Feature View Builder object to build the feature view metadata object
-   * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
-   * @throws IOException Generic IO exception.
    */
   public FeatureView.FeatureViewBuilder createFeatureView() {
     return new FeatureView.FeatureViewBuilder(this);
