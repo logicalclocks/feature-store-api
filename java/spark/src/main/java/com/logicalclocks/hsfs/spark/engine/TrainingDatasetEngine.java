@@ -19,11 +19,7 @@ package com.logicalclocks.hsfs.spark.engine;
 
 import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.spark.constructor.Query;
-import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.Storage;
-import com.logicalclocks.hsfs.constructor.FsQueryBase;
-import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.spark.TrainingDataset;
 
@@ -36,14 +32,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class TrainingDatasetEngine {
 
   private TrainingDatasetApi trainingDatasetApi = new TrainingDatasetApi();
-  private TagsApi tagsApi = new TagsApi(EntityEndpointType.TRAINING_DATASET);
   private final StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetEngine.class);
@@ -98,48 +92,5 @@ public class TrainingDatasetEngine {
     }
     return storageConnectorUtils.read(trainingDataset.getStorageConnector(), null,
         trainingDataset.getDataFormat().toString(), readOptions, path);
-  }
-
-  public void addTag(TrainingDataset trainingDataset, String name, Object value)
-      throws FeatureStoreException, IOException {
-    tagsApi.add(trainingDataset, name, value);
-  }
-
-  public Map<String, Object> getTags(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    return tagsApi.get(trainingDataset);
-  }
-
-  public Object getTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
-    return tagsApi.get(trainingDataset, name);
-  }
-
-  public void deleteTag(TrainingDataset trainingDataset, String name) throws FeatureStoreException, IOException {
-    tagsApi.deleteTag(trainingDataset, name);
-  }
-
-  public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel, boolean isHiveQuery)
-      throws FeatureStoreException, IOException {
-    FsQueryBase fsQueryBase = trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery);
-
-    if (storage == Storage.OFFLINE) {
-      // register the temporary tables so that people can make
-      // batch inference requests by doing `fs.sql(td.getQuery())`
-      fsQueryBase.registerOnDemandFeatureGroups();
-      fsQueryBase.registerHudiFeatureGroups(new HashMap<>());
-    }
-
-    return fsQueryBase.getStorageQuery(storage);
-  }
-
-  public void updateStatisticsConfig(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    TrainingDataset
-        apiTD = (TrainingDataset) trainingDatasetApi.updateMetadata(trainingDataset, "updateStatsConfig");
-    trainingDataset.getStatisticsConfig().setCorrelations(apiTD.getStatisticsConfig().getCorrelations());
-    trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
-    trainingDataset.getStatisticsConfig().setExactUniqueness(apiTD.getStatisticsConfig().getExactUniqueness());
-  }
-
-  public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    trainingDatasetApi.delete(trainingDataset);
   }
 }

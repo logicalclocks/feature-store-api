@@ -20,6 +20,8 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.constructor.Filter;
+import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.engine.VectorServer;
 
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +88,557 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   protected Integer extraFilterVersion = null;
 
   /**
+   * Create the metadata for a training dataset and save the corresponding training data into `location`. The training
+   * data can be retrieved by calling `feature_view.getTrainingData()`.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // create training dataset
+   *        String startTime = "20220101000000";
+   *        String endTime = "20220606235959";
+   *        String description = "demo training dataset":
+   *        fv.createTrainingData(startTime, endTime, description, DataFormat.CSV);
+   * }
+   * </pre>
+   *
+   * @param startTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param description A string describing the contents of the training dataset to  improve discoverability for
+   *                    Data Scientists.
+   * @param dataFormat  The data format used to save the training dataset.
+   * @return Integer Training dataset version.
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided `startTime`/`endTime` date formats.
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
+   */
+  public Integer createTrainingData(
+      String startTime, String endTime, String description, DataFormat dataFormat
+  ) throws IOException, FeatureStoreException, ParseException {
+    TrainingDatasetBase trainingDataset =
+        TrainingDatasetBase.builder()
+            .featureStore(featureStore)
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .description(description)
+            .dataFormat(dataFormat)
+            .build();
+    trainingDataset = featureViewApi.createTrainingData(name, version, trainingDataset, TrainingDatasetBase.class);
+    featureViewApi.computeTrainingData(featureStore, this, trainingDataset);
+    return trainingDataset.getVersion();
+  }
+
+  /**
+   * Create the metadata for a training dataset and save the corresponding training data into `location`. The training
+   * data can be retrieved by calling `featureView.getTrainingData()`.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // create training dataset
+   *        String startTime = "20220101000000";
+   *        String endTime = "20220606235959";
+   *        String description = "demo training dataset":
+   *        String location = "";
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
+   *        fv.createTrainingData(startTime, endTime, description, DataFormat.CSV, true, location, statisticsConfig);
+   * }
+   * </pre>
+   *
+   * @param startTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param description A string describing the contents of the training dataset to  improve discoverability for
+   *                    Data Scientists.
+   * @param dataFormat  The data format used to save the training dataset.
+   * @param coalesce If true the training dataset data will be coalesced into a single partition before writing.
+   *                 The resulting training dataset will be a single file per split.
+   * @param storageConnector Storage connector defining the sink location for the  training dataset. If  `null` is
+   *                         provided  and materializes training dataset on HopsFS.
+   * @param location Path to complement the sink storage connector with, e.g if the storage connector points to an
+   *                 S3 bucket, this path can be used to define a sub-directory inside the bucket to place the training
+   *                 dataset.  If empty string is provided `""`, saving the training dataset at the root defined by the
+   *                 storage connector.
+   * @param seed Define a seed to create the random splits with, in order to guarantee reproducability,
+   * @param statisticsConfig  A configuration object, to generally enable descriptive statistics computation for
+   *                          this feature group, `"correlations`" to turn on feature correlation  computation,
+   *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute
+   *                          uniqueness, distinctness and entropy. The values should be booleans indicating the
+   *                          setting. To fully turn off statistics computation pass `statisticsConfig=null`.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @param extraFilterLogic Additional filters (set of Filter objects) to be attached to the training dataset.
+   *                         The filters will be also applied in `getBatchData`.
+   * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
+   *                     in `getBatchData`.
+   * @return Integer Training dataset version.
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided `startTime`/`endTime` date formats.
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
+   */
+  public Integer createTrainingData(String startTime, String endTime, String description, DataFormat dataFormat,
+                                    Boolean coalesce, StorageConnector storageConnector,
+                                    String location, Long seed, StatisticsConfig statisticsConfig,
+                                    Map<String, String> writeOptions, FilterLogic extraFilterLogic, Filter extraFilter)
+      throws IOException, FeatureStoreException, ParseException {
+    TrainingDatasetBase trainingDataset =
+        TrainingDatasetBase.builder()
+            .featureStore(featureStore)
+            .eventStartTime(startTime)
+            .eventEndTime(endTime)
+            .description(description)
+            .dataFormat(dataFormat)
+            .coalesce(coalesce)
+            .storageConnector(storageConnector)
+            .location(location)
+            .seed(seed)
+            .statisticsConfig(statisticsConfig)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
+            .build();
+    trainingDataset = featureViewApi.createTrainingData(name, version, trainingDataset, TrainingDatasetBase.class);
+    featureViewApi.computeTrainingData(featureStore, this, trainingDataset);
+    return trainingDataset.getVersion();
+  }
+
+  /**
+   * Create the metadata for a training dataset and save the corresponding training data into `location`. The training
+   * data is split into train and test set at random or according to time ranges. The training data can be retrieved by
+   * calling `featureView.getTrainTestSplit` method.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // create training dataset based on time split
+   *        String trainStart = "20220101000000";
+   *        String trainEnd = "20220630235959";
+   *        String testStart = "20220701000000";
+   *        String testEnd = "20220830235959";
+   *        String description = "demo training dataset":
+   *        fv.createTrainTestSplit(null, trainStart, trainEnd, testStart, testEnd, description, DataFormat.CSV);
+   *
+   *        // or based on random split
+   *        fv.createTrainTestSplit(30, null, null, null, null, description, DataFormat.CSV);
+   * }
+   * </pre>
+   *
+   * @param testSize Size of test set.
+   * @param trainStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                   `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param trainEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param testStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                  `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param testEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param description A string describing the contents of the training dataset to  improve discoverability for
+   *                    Data Scientists.
+   * @param dataFormat  The data format used to save the training dataset.
+   * @return Integer Training dataset version
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats.
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
+   */
+  public Integer createTrainTestSplit(
+      Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
+      String description, DataFormat dataFormat
+  ) throws IOException, FeatureStoreException, ParseException {
+    validateTrainTestSplit(testSize, trainEnd, testStart);
+    TrainingDatasetBase trainingDataset =
+        TrainingDatasetBase.builder()
+            .featureStore(featureStore)
+            .testSize(testSize)
+            .trainStart(trainStart)
+            .trainEnd(trainEnd)
+            .testStart(testStart)
+            .testEnd(testEnd)
+            .description(description)
+            .dataFormat(dataFormat)
+            .trainSplit(Split.TRAIN)
+            .timeSplitSize(2)
+            .build();
+
+    trainingDataset = featureViewApi.createTrainingData(name, version, trainingDataset, TrainingDatasetBase.class);
+    featureViewApi.computeTrainingData(featureStore, this, trainingDataset);
+    return trainingDataset.getVersion();
+  }
+
+  /**
+   * Create the metadata for a training dataset and save the corresponding training data into `location`. The training
+   * data is split into train and test set at random or according to time ranges. The training data can be retrieved by
+   * calling `featureView.getTrainTestSplit` method.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // create training dataset based on time split
+   *        String trainStart = "20220101000000";
+   *        String trainEnd = "20220630235959";
+   *        String testStart = "20220701000000";
+   *        String testEnd = "20220830235959";
+   *        String description = "demo training dataset":
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
+   *        Map<String, String> writeOptions = new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
+   *        // define extra filters
+   *        Filter leftFtFilter = new Filter();
+   *        leftFtFilter.setFeature(new Feature("left_ft_name"));
+   *        leftFtFilter.setValue("400");
+   *        leftFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        Filter rightFtFilter = new Filter();
+   *        rightFtFilter.setFeature(new Feature("right_ft_name"));
+   *        rightFtFilter.setValue("50");
+   *        rightFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        FilterLogic extraFilterLogic = new FilterLogic(SqlFilterLogic.AND, leftFtFilter, rightFtFilter);
+   *        Filter extraFilter = new Filter();
+   *        extraFilter.setFeature(new Feature("ft_name"));
+   *        extraFilter.setValue("100");
+   *        extraFilter.setCondition(SqlFilterCondition.GREATER_THAN);
+   *
+   *        // create training data
+   *        fv.createTrainTestSplit(null, null, trainStart, trainEnd, testStart,
+   *        testEnd,  description, DataFormat.CSV, coalesce, storageConnector, location, seed, statisticsConfig,
+   *        writeOptions, extraFilterLogic, extraFilter);
+   *
+   *        // or based on random split
+   *        fv.createTrainTestSplit(20, 10, null, null,  null, null, description, DataFormat.CSV, coalesce,
+   *        storageConnector, location, seed, statisticsConfig, writeOptions, extraFilterLogic, extraFilter);
+
+   * }
+   * </pre>
+   *
+   * @param testSize Size of test set.
+   * @param trainStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                   `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param trainEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param testStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                  `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param testEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param description A string describing the contents of the training dataset to  improve discoverability for
+   *                    Data Scientists.
+   * @param dataFormat  The data format used to save the training dataset.
+   * @param coalesce If true the training dataset data will be coalesced into a single partition before writing.
+   *                 The resulting training dataset will be a single file per split.
+   * @param storageConnector Storage connector defining the sink location for the  training dataset. If  `null` is
+   *                         provided  and materializes training dataset on HopsFS.
+   * @param location Path to complement the sink storage connector with, e.g if the storage connector points to an
+   *                 S3 bucket, this path can be used to define a sub-directory inside the bucket to place the training
+   *                 dataset.  If empty string is provided `""`, saving the training dataset at the root defined by the
+   *                 storage connector.
+   * @param seed Define a seed to create the random splits with, in order to guarantee reproducability,
+   * @param statisticsConfig  A configuration object, to generally enable descriptive statistics computation for
+   *                          this feature group, `"correlations`" to turn on feature correlation  computation,
+   *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute
+   *                          uniqueness, distinctness and entropy. The values should be booleans indicating the
+   *                          setting. To fully turn off statistics computation pass `statisticsConfig=null`.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @param extraFilterLogic Additional filters (set of Filter objects) to be attached to the training dataset.
+   *                         The filters will be also applied in `getBatchData`.
+   * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
+   *                     in `getBatchData`.
+   * @return Integer Training dataset version.
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats.
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
+   */
+  public Integer createTrainTestSplit(
+      Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
+      String description, DataFormat dataFormat, Boolean coalesce,
+      StorageConnector storageConnector, String location,
+      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
+      FilterLogic extraFilterLogic, Filter extraFilter
+  ) throws IOException, FeatureStoreException, ParseException {
+    validateTrainTestSplit(testSize, trainEnd, testStart);
+    TrainingDatasetBase trainingDataset =
+        TrainingDatasetBase.builder()
+            .featureStore(featureStore)
+            .testSize(testSize)
+            .trainStart(trainStart)
+            .trainEnd(trainEnd)
+            .testStart(testStart)
+            .testEnd(testEnd)
+            .description(description)
+            .dataFormat(dataFormat)
+            .coalesce(coalesce)
+            .storageConnector(storageConnector)
+            .location(location)
+            .trainSplit(Split.TRAIN)
+            .seed(seed)
+            .timeSplitSize(2)
+            .statisticsConfig(statisticsConfig)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
+            .build();
+
+    trainingDataset = featureViewApi.createTrainingData(name, version, trainingDataset, TrainingDatasetBase.class);
+    featureViewApi.computeTrainingData(featureStore, this, trainingDataset);
+    return trainingDataset.getVersion();
+  }
+
+  /**
+   * Create the metadata for a training dataset and save the corresponding training data into `location`. The training
+   * data is split into train, validation, and test set at random or according to time range. The training data can be
+   * retrieved by calling `featureView.getTrainValidationTestSplit`.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // create training dataset based on time split
+   *        String trainStart = "20220101000000";
+   *        String trainEnd = "20220630235959";
+   *        String validationStart = "20220701000000";
+   *        String validationEnd = "20220830235959";
+   *        String testStart = "20220901000000";
+   *        String testEnd = "20220931235959";
+   *        String description = "demo training dataset":
+   *        fv.createTrainTestSplit(null, null, trainStart, trainEnd, validationStart, validationEnd, testStart,
+   *        testEnd, description, DataFormat.CSV);
+   *
+   *        // or based on random split
+   *        fv.createTrainTestSplit(20, 10, null, null, null, null, null, null, description, DataFormat.CSV);
+   * }
+   * </pre>
+   *
+   * @param validationSize Size of validation set.
+   * @param testSize Size of test set.
+   * @param trainStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                   `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param trainEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param validationStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                        `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param validationEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                      `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param testStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                  `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param testEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param description A string describing the contents of the training dataset to  improve discoverability for
+   *                    Data Scientists.
+   * @param dataFormat  The data format used to save the training dataset.
+   * @return Integer Training dataset version.
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats.
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
+   */
+  public Integer createTrainValidationTestSplit(
+      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
+      String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat
+  ) throws IOException, FeatureStoreException, ParseException {
+    validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
+    TrainingDatasetBase trainingDataset =
+        TrainingDatasetBase.builder()
+            .featureStore(featureStore)
+            .validationSize(validationSize)
+            .testSize(testSize)
+            .trainStart(trainStart)
+            .trainEnd(trainEnd)
+            .validationStart(validationStart)
+            .validationEnd(validationEnd)
+            .testStart(testStart)
+            .testEnd(testEnd)
+            .description(description)
+            .dataFormat(dataFormat)
+            .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
+            .build();
+
+    trainingDataset = featureViewApi.createTrainingData(name, version, trainingDataset, TrainingDatasetBase.class);
+    featureViewApi.computeTrainingData(featureStore, this, trainingDataset);
+    return trainingDataset.getVersion();
+  }
+
+  /**
+   * Create the metadata for a training dataset and save the corresponding training data into `location`. The training
+   * data is split into train, validation, and test set at random or according to time range. The training data can be
+   * retrieved by calling `feature_view.getTrainValidationTestSplit`.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // create training dataset based on time split
+   *        String trainStart = "20220101000000";
+   *        String trainEnd = "20220630235959";
+   *        String validationStart = "20220701000000";
+   *        String validationEnd = "20220830235959";
+   *        String testStart = "20220901000000";
+   *        String testEnd = "20220931235959";
+   *        String description = "demo training dataset":
+   *        StorageConnector.S3Connector storageConnector = fs.getS3Connector("s3Connector");
+   *        String location = "";
+   *        Long seed = 1234L;
+   *        Boolean coalesce = true;
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
+   *        Map<String, String> writeOptions = new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
+   *        // define extra filters
+   *        Filter leftFtFilter = new Filter();
+   *        leftFtFilter.setFeature(new Feature("left_ft_name"));
+   *        leftFtFilter.setValue("400");
+   *        leftFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        Filter rightFtFilter = new Filter();
+   *        rightFtFilter.setFeature(new Feature("right_ft_name"));
+   *        rightFtFilter.setValue("50");
+   *        rightFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        FilterLogic extraFilterLogic = new FilterLogic(SqlFilterLogic.AND, leftFtFilter, rightFtFilter);
+   *        Filter extraFilter = new Filter();
+   *        extraFilter.setFeature(new Feature("ft_name"));
+   *        extraFilter.setValue("100");
+   *        extraFilter.setCondition(SqlFilterCondition.GREATER_THAN);
+   *        // create training data
+   *        fv.createTrainTestSplit(null, null, trainStart, trainEnd, validationStart, validationEnd, testStart,
+   *        testEnd,  description, DataFormat.CSV, coalesce, storageConnector, location, seed, statisticsConfig,
+   *        writeOptions, extraFilterLogic, extraFilter);
+   *
+   *        // or based on random split
+   *        fv.createTrainTestSplit(20, 10, null, null, null, null, null, null, description, DataFormat.CSV, coalesce,
+   *        storageConnector, location, seed, statisticsConfig, writeOptions, extraFilterLogic, extraFilter);
+   * }
+   * </pre>
+   *
+   * @param validationSize Size of validation set.
+   * @param testSize Size of test set.
+   * @param trainStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                   `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param trainEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param validationStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                        `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param validationEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                      `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param testStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                  `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param testEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
+   *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param description A string describing the contents of the training dataset to  improve discoverability for
+   *                    Data Scientists.
+   * @param dataFormat  The data format used to save the training dataset.
+   * @param coalesce If true the training dataset data will be coalesced into a single partition before writing.
+   *                 The resulting training dataset will be a single file per split.
+   * @param storageConnector Storage connector defining the sink location for the  training dataset. If  `null` is
+   *                         provided  and materializes training dataset on HopsFS.
+   * @param location Path to complement the sink storage connector with, e.g if the storage connector points to an
+   *                 S3 bucket, this path can be used to define a sub-directory inside the bucket to place the training
+   *                 dataset.  If empty string is provided `""`, saving the training dataset at the root defined by the
+   *                 storage connector.
+   * @param seed Define a seed to create the random splits with, in order to guarantee reproducability,
+   * @param statisticsConfig  A configuration object, to generally enable descriptive statistics computation for
+   *                          this feature group, `"correlations`" to turn on feature correlation  computation,
+   *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute
+   *                          uniqueness, distinctness and entropy. The values should be booleans indicating the
+   *                          setting. To fully turn off statistics computation pass `statisticsConfig=null`.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @param extraFilterLogic Additional filters (set of Filter objects) to be attached to the training dataset.
+   *                         The filters will be also applied in `getBatchData`.
+   * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
+   *                     in `getBatchData`.
+   * @return Integer Training dataset version.
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats.
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
+   */
+  public Integer createTrainValidationTestSplit(
+      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
+      String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat,
+      Boolean coalesce, StorageConnector storageConnector, String location,
+      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
+      FilterLogic extraFilterLogic, Filter extraFilter
+  ) throws IOException, FeatureStoreException, ParseException {
+    validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
+    TrainingDatasetBase trainingDataset =
+        TrainingDatasetBase.builder()
+            .featureStore(featureStore)
+            .validationSize(validationSize)
+            .testSize(testSize)
+            .trainStart(trainStart)
+            .trainEnd(trainEnd)
+            .validationStart(validationStart)
+            .validationEnd(validationEnd)
+            .testStart(testStart)
+            .testEnd(testEnd)
+            .description(description)
+            .dataFormat(dataFormat)
+            .coalesce(coalesce)
+            .storageConnector(storageConnector)
+            .location(location)
+            .trainSplit(Split.TRAIN)
+            .timeSplitSize(3)
+            .seed(seed)
+            .statisticsConfig(statisticsConfig)
+            .extraFilterLogic(extraFilterLogic)
+            .extraFilter(extraFilter)
+            .build();
+
+    trainingDataset = featureViewApi.createTrainingData(name, version, trainingDataset, TrainingDatasetBase.class);
+    featureViewApi.computeTrainingData(featureStore, this, trainingDataset);
+    return trainingDataset.getVersion();
+  }
+
+  protected void validateTrainTestSplit(Float testSize, String trainEnd, String testStart)
+      throws FeatureStoreException {
+    if (!((testSize != null && testSize > 0 && testSize < 1)
+        || (!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(testStart)))) {
+      throw new FeatureStoreException(
+          "Invalid split input."
+              + "You should specify either `testSize` or (`trainEnd` or `testStart`)."
+              + " `testSize` should be between 0 and 1 if specified."
+      );
+    }
+  }
+
+  protected void validateTrainValidationTestSplit(
+      Float validationSize, Float testSize, String trainEnd, String validationStart, String validationEnd,
+      String testStart)
+      throws FeatureStoreException {
+    if (!((validationSize != null && validationSize > 0 && validationSize < 1
+        && testSize != null && testSize > 0 && testSize < 1
+        && validationSize + testSize < 1)
+        || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(validationStart))
+        && (!Strings.isNullOrEmpty(validationEnd) || !Strings.isNullOrEmpty(testStart))))) {
+      throw new FeatureStoreException(
+          "Invalid split input."
+              + " You should specify either (`validationSize` and `testSize`) or "
+              + "((`trainEnd` or `validationStart`) and (`validationEnd` "
+              + "or `testStart`))."
+              + "`validationSize`, `testSize` and sum of `validationSize` and `testSize` should be between 0 and 1 "
+              + "if specified."
+      );
+    }
+  }
+
+  /**
    * Initialise feature view to retrieve feature vector from online feature store.
    *
    * <pre>
@@ -133,38 +687,6 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   public void initServing(Boolean batch, Boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     vectorServer.initServing(this, batch, external);
-  }
-
-  protected void validateTrainTestSplit(Float testSize, String trainEnd, String testStart)
-      throws FeatureStoreException {
-    if (!((testSize != null && testSize > 0 && testSize < 1)
-        || (!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(testStart)))) {
-      throw new FeatureStoreException(
-          "Invalid split input."
-              + "You should specify either `testSize` or (`trainEnd` or `testStart`)."
-              + " `testSize` should be between 0 and 1 if specified."
-      );
-    }
-  }
-
-  protected void validateTrainValidationTestSplit(
-      Float validationSize, Float testSize, String trainEnd, String validationStart, String validationEnd,
-      String testStart)
-      throws FeatureStoreException {
-    if (!((validationSize != null && validationSize > 0 && validationSize < 1
-        && testSize != null && testSize > 0 && testSize < 1
-        && validationSize + testSize < 1)
-        || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(validationStart))
-        && (!Strings.isNullOrEmpty(validationEnd) || !Strings.isNullOrEmpty(testStart))))) {
-      throw new FeatureStoreException(
-          "Invalid split input."
-              + " You should specify either (`validationSize` and `testSize`) or "
-              + "((`trainEnd` or `validationStart`) and (`validationEnd` "
-              + "or `testStart`))."
-              + "`validationSize`, `testSize` and sum of `validationSize` and `testSize` should be between 0 and 1 "
-              + "if specified."
-      );
-    }
   }
 
   /**

@@ -358,7 +358,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .description(description)
@@ -427,7 +426,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .description(description)
@@ -493,7 +491,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .testSize(testSize)
             .trainStart(trainStart)
             .trainEnd(trainEnd)
@@ -604,7 +601,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .testSize(testSize)
             .trainStart(trainStart)
             .trainEnd(trainEnd)
@@ -683,7 +679,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .validationSize(validationSize)
             .testSize(testSize)
             .trainStart(trainStart)
@@ -806,7 +801,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .validationSize(validationSize)
             .testSize(testSize)
             .trainStart(trainStart)
@@ -1096,7 +1090,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .description(description)
@@ -1177,7 +1170,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .eventStartTime(startTime)
             .eventEndTime(endTime)
             .description(description)
@@ -1240,7 +1232,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .testSize(testSize)
             .trainStart(trainStart)
             .trainEnd(trainEnd)
@@ -1341,7 +1332,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .testSize(testSize)
             .trainStart(trainStart)
             .trainEnd(trainEnd)
@@ -1419,7 +1409,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .validationSize(validationSize)
             .testSize(testSize)
             .trainStart(trainStart)
@@ -1532,7 +1521,6 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     TrainingDataset trainingDataset =
         this.featureStore
             .createTrainingDataset()
-            .name("") // name is set in the backend
             .validationSize(validationSize)
             .testSize(testSize)
             .trainStart(trainStart)
