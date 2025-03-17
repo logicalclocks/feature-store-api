@@ -270,7 +270,7 @@ class FeatureViewApi:
                 self._VERSION,
                 version,
                 self._TRAINING_DATASET,
-                self._VERSkION,
+                self._VERSION,
                 training_data_version,
             ]
         else:
