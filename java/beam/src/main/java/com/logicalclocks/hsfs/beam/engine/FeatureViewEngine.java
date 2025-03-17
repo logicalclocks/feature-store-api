@@ -25,6 +25,7 @@ import com.logicalclocks.hsfs.beam.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngineBase;
 import org.apache.beam.sdk.values.PCollection;
 import java.io.IOException;
+import java.util.List;
 
 public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, StreamFeatureGroup,
     PCollection<Object>> {
@@ -40,6 +41,28 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
       throws FeatureStoreException, IOException {
     FeatureView featureView = get(featureStore, name, version, FeatureView.class);
     featureView.setFeatureStore(featureStore);
+    return featureView;
+  }
+
+  public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version, Query query,
+                                            String description, List<String> labels)
+      throws FeatureStoreException, IOException {
+    FeatureView featureView;
+    try {
+      featureView = get(featureStore, name, version, FeatureView.class);
+    } catch (IOException | FeatureStoreException e) {
+      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270181")) {
+        featureView = new FeatureView.FeatureViewBuilder(featureStore)
+            .name(name)
+            .version(version)
+            .query(query)
+            .description(description)
+            .labels(labels)
+            .build();
+      } else {
+        throw e;
+      }
+    }
     return featureView;
   }
 }

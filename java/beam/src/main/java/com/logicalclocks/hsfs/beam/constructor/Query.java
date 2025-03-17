@@ -17,10 +17,21 @@
 
 package com.logicalclocks.hsfs.beam.constructor;
 
+import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 
+import lombok.NoArgsConstructor;
 import org.apache.beam.sdk.values.PCollection;
 
+import java.util.List;
+
+@NoArgsConstructor
 public class Query extends QueryBase<Query, StreamFeatureGroup, PCollection<Object>> {
+
+  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+    super(leftFeatureGroup, leftFeatures);
+  }
+
 }

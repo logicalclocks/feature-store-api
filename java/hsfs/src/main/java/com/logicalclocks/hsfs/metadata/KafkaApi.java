@@ -35,10 +35,15 @@ public class KafkaApi {
 
   public Subject getSubject(FeatureStoreBase featureStoreBase, String subjectName)
           throws FeatureStoreException, IOException {
-    return getSubject(featureStoreBase, subjectName, "latest");
+    return getSubject(featureStoreBase.getId(), subjectName, "latest");
   }
 
-  public Subject getSubject(FeatureStoreBase featureStoreBase, String subjectName, String subjectVersion)
+  public Subject getSubject(Integer featureStoreId, String subjectName)
+      throws FeatureStoreException, IOException {
+    return getSubject(featureStoreId, subjectName, "latest");
+  }
+
+  public Subject getSubject(Integer featureStoreId, String subjectName, String subjectVersion)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -47,7 +52,7 @@ public class KafkaApi {
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", hopsworksClient.getProject().getProjectId())
-        .set("fsId", featureStoreBase.getId())
+        .set("fsId", featureStoreId)
         .set("subject", subjectName)
         .set("version", subjectVersion)
         .expand();

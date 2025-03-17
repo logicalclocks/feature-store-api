@@ -17,7 +17,6 @@
 
 package com.logicalclocks.hsfs.spark.engine;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import com.logicalclocks.hsfs.spark.constructor.Query;
@@ -70,7 +69,6 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
   public TrainingDatasetBundle createTrainingDataset(
       FeatureView featureView, TrainingDataset trainingDataset, Map<String, String> userWriteOptions
   ) throws IOException, FeatureStoreException {
-    setTrainSplit(trainingDataset);
     trainingDataset = createTrainingDataMetadata(featureView, trainingDataset);
     writeTrainingDataset(featureView, trainingDataset, userWriteOptions);
     return new TrainingDatasetBundle(trainingDataset.getVersion());
@@ -94,9 +92,9 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
       Map<String, String> userReadOptions
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset = featureView.getFeatureStore().createTrainingDataset()
-        .name(featureView.getName())
         .version(trainingDatasetVersion)
         .build();
+
     return getTrainingDataset(featureView, trainingDataset, requestedSplits, userReadOptions);
   }
 
@@ -188,16 +186,6 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
       return SparkEngine.getInstance().castColumnType(dataset, features);
     } else {
       return dataset;
-    }
-  }
-
-  private void setTrainSplit(TrainingDataset trainingDataset) {
-    if (trainingDataset.getSplits() != null
-        && trainingDataset.getSplits().size() > 0
-        && Strings.isNullOrEmpty(trainingDataset.getTrainSplit())) {
-      LOGGER.info("Training dataset splits were defined but no `trainSplit` (the name of the split that is going to"
-          + " be used for training) was provided. Setting this property to `train`.");
-      trainingDataset.setTrainSplit("train");
     }
   }
 

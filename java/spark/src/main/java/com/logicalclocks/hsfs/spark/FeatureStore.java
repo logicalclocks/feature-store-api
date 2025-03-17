@@ -775,7 +775,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
 
   @Deprecated
   public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {
-    return TrainingDataset.builder()
+    return TrainingDataset.buildTrainingDataset()
         .featureStore(this);
   }
 

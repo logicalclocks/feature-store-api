@@ -17,12 +17,20 @@
 
 package com.logicalclocks.hsfs.flink.constructor;
 
+import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
 import lombok.NoArgsConstructor;
 import org.apache.flink.streaming.api.datastream.DataStream;
 
+import java.util.List;
+
 @NoArgsConstructor
 public class Query extends QueryBase<Query, StreamFeatureGroup, DataStream<?>> {
+
+  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+    super(leftFeatureGroup, leftFeatures);
+  }
 }

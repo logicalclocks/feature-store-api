@@ -216,4 +216,49 @@ public class FeatureStore extends FeatureStoreBase<Query> {
         + DEFAULT_VERSION + "`.");
     return getFeatureView(name, DEFAULT_VERSION);
   }
+
+  /**
+   * Create a new feature view metadata object.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        FeatureView fv = fs.createFeatureView
+   *          .name("fv_name")
+   *          .version(1)
+   *          .query(query)
+   *          .build() // The build method also save the feature view metadata to Hopsworks
+   * }
+   * </pre>
+   *
+   * @return FeatureView.FeatureViewBuilder Feature View Builder object to build the feature view metadata object
+   */
+  public FeatureView.FeatureViewBuilder createFeatureView() {
+    return new FeatureView.FeatureViewBuilder(this);
+  }
+
+  /**
+   * Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
+   * existing feature view metadata.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        FeatureView fv = fs.getOrCreateFeatureView("fv_name", query, 1);
+   * }
+   * </pre>
+   *
+   * @param name Name of the feature view.
+   * @param query Query object.
+   * @param version Version of the feature view.
+   * @return FeatureView The feature view metadata object.
+   * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
+   * @throws IOException Generic IO exception.
+   */
+  public FeatureView getOrCreateFeatureView(String name, Query query, Integer version)
+      throws FeatureStoreException, IOException {
+    return featureViewEngine.getOrCreateFeatureView(this, name, version, query, null, null);
+  }
 }

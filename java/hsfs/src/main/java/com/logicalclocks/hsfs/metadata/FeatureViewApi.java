@@ -22,6 +22,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import com.logicalclocks.hsfs.TrainingDatasetJobConf;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.FeatureStoreBase;
@@ -55,6 +56,7 @@ public class FeatureViewApi {
       + "{?with_label,start_time,end_time,td_version}";
   private static final String ALL_TRAINING_DATA_PATH = FEATURE_VIEW_PATH + "/trainingdatasets";
   private static final String TRAINING_DATA_PATH = ALL_TRAINING_DATA_PATH + "/version{/tdVersion}";
+  private static final String TRAINING_DATA_COMPUTE = TRAINING_DATA_PATH + "/compute";
   private static final String ALL_TRAINING_DATASET_PATH = FEATURE_VIEW_PATH + "/trainingdatasets/data";
   private static final String TRAINING_DATASET_PATH = ALL_TRAINING_DATA_PATH + "/version{/tdVersion}/data";
   private static final String TRANSFORMATION_PATH = FEATURE_VIEW_PATH + "/transformation";
@@ -242,6 +244,26 @@ public class FeatureViewApi {
     HttpPost request = new HttpPost(uri);
     request.setEntity(hopsworksClient.buildStringEntity(trainingData));
     return hopsworksClient.handleRequest(request, tdType);
+  }
+
+  public void computeTrainingData(FeatureStoreBase featureStore,
+                                  FeatureViewBase featureViewBase,
+                                  TrainingDatasetBase trainingData)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String uri = UriTemplate.fromTemplate(TRAINING_DATA_COMPUTE)
+        .set("projectId", hopsworksClient.getProject().getProjectId())
+        .set("fsId", featureStore.getId())
+        .set("fvName", featureViewBase.getName())
+        .set("fvVersion", featureViewBase.getVersion())
+        .set("tdVersion", trainingData.getVersion())
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    TrainingDatasetJobConf trainingDatasetJobConf = new TrainingDatasetJobConf(featureViewBase.getQuery());
+    HttpPost request = new HttpPost(uri);
+    request.setEntity(hopsworksClient.buildStringEntity(trainingDatasetJobConf));
+    hopsworksClient.handleRequest(request);
   }
 
   public <T extends TrainingDatasetBase> TrainingDatasetBase getTrainingData(FeatureStoreBase featureStoreBase,

@@ -52,6 +52,10 @@ public abstract class FeatureGroupBase<T> {
 
   @Getter
   @Setter
+  protected Integer featurestoreId;
+
+  @Getter
+  @Setter
   protected String type = "featuregroupDTO";
 
   @Getter

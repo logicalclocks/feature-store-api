@@ -74,7 +74,7 @@ public class VectorServer {
   @Getter
   private Map<Integer, TreeMap<String, Integer>> preparedStatementParameters;
   @Getter
-  private TreeMap<Integer, String> preparedQueryString;
+  private TreeMap<Integer, ServingPreparedStatement> orderedServingPreparedStatements;
   @Getter
   @Setter
   private HashSet<String> servingKeys;
@@ -83,7 +83,7 @@ public class VectorServer {
   private Schema.Parser parser = new Schema.Parser();
   private FeatureViewApi featureViewApi = new FeatureViewApi();
 
-  private Map<String, DatumReader<Object>> datumReadersComplexFeatures;
+  private Map<Integer, Map<String, DatumReader<Object>>> featureGroupDatumReaders;
   private ExecutorService executorService = Executors.newCachedThreadPool();
   private boolean isBatch = false;
   private VariablesApi variablesApi = new VariablesApi();
@@ -110,7 +110,7 @@ public class VectorServer {
     List<Object> servingVector = new ArrayList<>();
     List<Future<List<Object>>> queryFutures = new ArrayList<>();
 
-    for (Integer preparedStatementIndex : preparedQueryString.keySet()) {
+    for (Integer preparedStatementIndex : orderedServingPreparedStatements.keySet()) {
       queryFutures.add(executorService.submit(() -> {
         try {
           return processQuery(entry, preparedStatementIndex);
@@ -122,7 +122,7 @@ public class VectorServer {
 
     for (Future<List<Object>> queryFuture : queryFutures) {
       try {
-        servingVector.add(queryFuture.get());
+        servingVector.addAll(queryFuture.get());
       } catch (InterruptedException | ExecutionException e) {
         throw new FeatureStoreException("Error retrieving query statement result", e);
       }
@@ -136,8 +136,10 @@ public class VectorServer {
     List<Object> servingVector = new ArrayList<>();
     try (Connection connection = hikariDataSource.getConnection()) {
       // Create the prepared statement
-      PreparedStatement preparedStatement =
-          connection.prepareStatement(preparedQueryString.get(preparedStatementIndex));
+      ServingPreparedStatement servingPreparedStatement = orderedServingPreparedStatements.get(preparedStatementIndex);
+
+      System.out.println(servingPreparedStatement.getQueryOnline());
+      PreparedStatement preparedStatement = connection.prepareStatement(servingPreparedStatement.getQueryOnline());
 
       // Set the parameters base do the entry object
       Map<String, Integer> parameterIndexInStatement = preparedStatementParameters.get(preparedStatementIndex);
@@ -154,12 +156,20 @@ public class VectorServer {
       }
       //Get column count
       int columnCount = results.getMetaData().getColumnCount();
+
+      // get the complex schema datum readers for this feature group
+      Map<String, DatumReader<Object>> featuresDatumReaders =
+          featureGroupDatumReaders.get(servingPreparedStatement.getFeatureGroupId());
+
       //append results to servingVector
       while (results.next()) {
         int index = 1;
         while (index <= columnCount) {
-          if (datumReadersComplexFeatures.containsKey(results.getMetaData().getColumnName(index))) {
-            servingVector.add(deserializeComplexFeature(datumReadersComplexFeatures, results, index));
+          if (featuresDatumReaders != null
+              && featuresDatumReaders.containsKey(results.getMetaData().getColumnName(index))) {
+            servingVector.add(
+                deserializeComplexFeature(
+                    featuresDatumReaders.get(results.getMetaData().getColumnName(index)), results, index));
           } else {
             servingVector.add(results.getObject(index));
           }
@@ -185,8 +195,8 @@ public class VectorServer {
       throws SQLException, FeatureStoreException, IOException {
     checkPrimaryKeys(entry.keySet());
     List<String> queries = Lists.newArrayList();
-    for (Integer fgId : preparedQueryString.keySet()) {
-      String query = preparedQueryString.get(fgId);
+    for (Integer fgId : orderedServingPreparedStatements.keySet()) {
+      String query = orderedServingPreparedStatements.get(fgId).getQueryOnline();
       String zippedTupleString =
           zipArraysToTupleString(preparedStatementParameters.get(fgId)
             .entrySet()
@@ -211,6 +221,8 @@ public class VectorServer {
 
     try (Connection connection = hikariDataSource.getConnection()) {
       try (Statement stmt = connection.createStatement()) {
+        // Used to reference the ServingPreparedStatement for deserialization
+        int statementOrder = 0;
         for (String query : queries) {
           int orderInBatch = 0;
 
@@ -224,12 +236,21 @@ public class VectorServer {
             }
             //Get column count
             int columnCount = results.getMetaData().getColumnCount();
+
+            // get the complex schema datum readers for this feature group
+            ServingPreparedStatement servingPreparedStatement = orderedServingPreparedStatements.get(statementOrder);
+            Map<String, DatumReader<Object>> featuresDatumReaders =
+                featureGroupDatumReaders.get(servingPreparedStatement.getFeatureGroupId());
+
             //append results to servingVector
             while (results.next()) {
               int index = 1;
               while (index <= columnCount) {
-                if (datumReadersComplexFeatures.containsKey(results.getMetaData().getColumnName(index))) {
-                  servingVector.add(deserializeComplexFeature(datumReadersComplexFeatures, results, index));
+                if (featuresDatumReaders != null
+                    && featuresDatumReaders.containsKey(results.getMetaData().getColumnName(index))) {
+                  servingVector.add(
+                      deserializeComplexFeature(
+                          featuresDatumReaders.get(results.getMetaData().getColumnName(index)), results, index));
                 } else {
                   servingVector.add(results.getObject(index));
                 }
@@ -246,6 +267,7 @@ public class VectorServer {
               orderInBatch++;
             }
           }
+          statementOrder++;
         }
       }
     }
@@ -295,13 +317,13 @@ public class VectorServer {
     Map<Integer, TreeMap<String, Integer>> preparedStatementParameters = new HashMap<>();
 
     // in case its batch serving then we need to save sql string only
-    TreeMap<Integer, String> preparedQueryString = new TreeMap<>();
+    TreeMap<Integer, ServingPreparedStatement> orderedServingPreparedStatements = new TreeMap<>();
 
     // save unique primary key names that will be used by user to retrieve serving vector
     HashSet<String> servingVectorKeys = new HashSet<>();
     for (ServingPreparedStatement servingPreparedStatement : servingPreparedStatements) {
-      preparedQueryString.put(servingPreparedStatement.getPreparedStatementIndex(),
-          servingPreparedStatement.getQueryOnline());
+      orderedServingPreparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
+          servingPreparedStatement);
       TreeMap<String, Integer> parameterIndices = new TreeMap<>();
       servingPreparedStatement.getPreparedStatementParameters().forEach(preparedStatementParameter -> {
         servingVectorKeys.add(preparedStatementParameter.getName());
@@ -312,8 +334,8 @@ public class VectorServer {
     this.servingKeys = servingVectorKeys;
 
     this.preparedStatementParameters = preparedStatementParameters;
-    this.preparedQueryString = preparedQueryString;
-    this.datumReadersComplexFeatures = getComplexFeatureSchemas(features);
+    this.orderedServingPreparedStatements = orderedServingPreparedStatements;
+    this.featureGroupDatumReaders = getComplexFeatureSchemas(features);
   }
 
   @VisibleForTesting
@@ -359,25 +381,32 @@ public class VectorServer {
     return "(" + String.join(",", zippedTuples) + ")";
   }
 
-  private Object deserializeComplexFeature(Map<String, DatumReader<Object>> complexFeatureSchemas, ResultSet results,
+  private Object deserializeComplexFeature(DatumReader<Object> featureDatumReader, ResultSet results,
                                            int index) throws SQLException, IOException {
     if (results.getBytes(index) != null) {
       Decoder decoder = DecoderFactory.get().binaryDecoder(results.getBytes(index), null);
-      return complexFeatureSchemas.get(results.getMetaData().getColumnName(index)).read(null, decoder);
+      return featureDatumReader.read(null, decoder);
     } else {
       return null;
     }
   }
 
   @VisibleForTesting
-  public Map<String, DatumReader<Object>> getComplexFeatureSchemas(List<TrainingDatasetFeature> features)
+  public Map<Integer, Map<String, DatumReader<Object>>> getComplexFeatureSchemas(List<TrainingDatasetFeature> features)
       throws FeatureStoreException, IOException {
-    Map<String, DatumReader<Object>> featureSchemaMap = new HashMap<>();
+    Map<Integer, Map<String, DatumReader<Object>>> featureSchemaMap = new HashMap<>();
     for (TrainingDatasetFeature f : features) {
       if (f.isComplex()) {
+        Map<String, DatumReader<Object>> featureGroupMap = featureSchemaMap.get(f.getFeaturegroup().getId());
+        if (featureGroupMap == null) {
+          featureGroupMap = new HashMap<>();
+        }
+
         DatumReader<Object> datumReader =
             new GenericDatumReader<>(parser.parse(f.getFeaturegroup().getFeatureAvroSchema(f.getName())));
-        featureSchemaMap.put(f.getName(), datumReader);
+        featureGroupMap.put(f.getName(), datumReader);
+
+        featureSchemaMap.put(f.getFeaturegroup().getId(), featureGroupMap);
       }
     }
     return featureSchemaMap;

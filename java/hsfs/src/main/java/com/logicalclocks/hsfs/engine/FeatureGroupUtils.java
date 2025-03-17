@@ -238,7 +238,12 @@ public class FeatureGroupUtils {
   }
 
   public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getSubject(featureGroup.getFeatureStore(), getFgName(featureGroup));
+    // This is a workaround because the backend is not consistent when returning feature store data
+    if (featureGroup.getFeatureStore() != null) {
+      return kafkaApi.getSubject(featureGroup.getFeatureStore(), getFgName(featureGroup));
+    } else {
+      return kafkaApi.getSubject(featureGroup.getFeaturestoreId(), getFgName(featureGroup));
+    }
   }
 
   public String getDatasetType(String path) {

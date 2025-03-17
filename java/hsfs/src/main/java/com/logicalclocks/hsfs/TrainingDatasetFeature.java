@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -79,6 +80,7 @@ public class TrainingDatasetFeature {
     this.name = name.toLowerCase();
   }
 
+  @JsonIgnore
   public boolean isComplex() {
     return !label && Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.toUpperCase().startsWith(c));
   }
