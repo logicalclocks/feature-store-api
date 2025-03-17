@@ -7,15 +7,14 @@
   {
     "version": "3.9.0-RC15-SNAPSHOT",
     "title": "3.9.0-RC15-SNAPSHOT",
-    "aliases": [
-      "latest"
-    ]
+    "aliases": []
   },
   {
     "version": "3.9.0-RC15",
     "title": "3.9.0-RC15",
     "aliases": [
-      "3.9"
+      "3.9",
+      "latest"
     ]
   },
   {
