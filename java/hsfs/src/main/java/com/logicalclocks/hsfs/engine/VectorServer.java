@@ -138,7 +138,6 @@ public class VectorServer {
       // Create the prepared statement
       ServingPreparedStatement servingPreparedStatement = orderedServingPreparedStatements.get(preparedStatementIndex);
 
-      System.out.println(servingPreparedStatement.getQueryOnline());
       PreparedStatement preparedStatement = connection.prepareStatement(servingPreparedStatement.getQueryOnline());
 
       // Set the parameters base do the entry object
