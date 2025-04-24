@@ -25,6 +25,9 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
+import com.logicalclocks.hsfs.metadata.DatasetApi;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksExternalClient;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.twitter.chill.Base64;
@@ -42,6 +45,7 @@ import org.apache.flink.util.FileUtils;
 import org.apache.kafka.common.config.SslConfigs;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -103,20 +107,31 @@ public class FlinkEngine extends EngineBase {
   }
 
   @Override
-  public String addFile(String filePath) throws IOException {
-    if (Strings.isNullOrEmpty(filePath)) {
+  public String addFile(String filePath) throws IOException, FeatureStoreException {
+    if (Strings.isNullOrEmpty(filePath) || filePath.startsWith("file://")) {
+      // local path no need to do anything
       return filePath;
     }
 
-    if (filePath.startsWith("hdfs://")) {
-      String targetPath = FileUtils.getCurrentWorkingDirectory().toString()
-              + filePath.substring(filePath.lastIndexOf("/"));
-      FileUtils.copy(new Path(filePath), new Path(targetPath), false);
+    String targetPath = FileUtils.getCurrentWorkingDirectory().toString()
+        + filePath.substring(filePath.lastIndexOf("/"));
+
+    if (HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient) {
+      // Hopsworks external client, download the file using the rest API
+      try (FileOutputStream outputStream = new FileOutputStream(targetPath)) {
+        outputStream.write(DatasetApi.readContent(filePath));
+      }
 
       return targetPath;
+    } else {
+      if (!filePath.startsWith("hdfs://")) {
+        // make sure the path starts with hdfs:// to avoid issues in the cloning.
+        filePath = "hdfs://" + filePath;
+      }
+      // Hopsworks internal client
+      FileUtils.copy(new Path(filePath), new Path(targetPath), false);
+      return targetPath;
     }
-
-    return filePath;
   }
 
   @Override
