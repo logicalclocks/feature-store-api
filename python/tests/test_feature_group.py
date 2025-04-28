@@ -941,3 +941,44 @@ class TestExternalFeatureGroup:
 
         # Assert
         engine_instance.assert_called_once()
+
+    def test_upper_case_primary_key_event_time(self, mocker, backend_fixtures, caplog):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        json = backend_fixtures["feature_store"]["get"]["response"]
+
+        features = [
+            feature.Feature(name="PrimaryKey", type="int"),
+            feature.Feature(name="Event_Time", type="timestamp"),
+            feature.Feature(name="feat", type="int"),
+        ]
+
+        # Act
+        fs = feature_store.FeatureStore.from_response_json(json)
+        with warnings.catch_warnings(record=True) as warning_record:
+            new_fg = fs.create_feature_group(
+                name="fg_name",
+                version=1,
+                description="fg_description",
+                event_time="Event_Time",
+                primary_key=["PrimaryKey"],
+                features=features,
+            )
+
+        assert len(warning_record) == 2
+        assert (
+            "The feature name `Event_Time` contains upper case letters. Feature names are sanitized to lower case in the feature store."
+            == str(warning_record[0].message)
+        )
+        assert (
+            "The feature name `PrimaryKey` contains upper case letters. Feature names are sanitized to lower case in the feature store."
+            == str(warning_record[1].message)
+        )
+
+        # Assert
+        assert new_fg.event_time == "event_time"
+        assert new_fg.primary_key == ["primarykey"]
+        assert new_fg.features[0].name == "primarykey"
+        assert new_fg.features[1].name == "event_time"
+        assert new_fg.features[2].name == "feat"
