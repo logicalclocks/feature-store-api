@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.engine;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.logicalclocks.hsfs.constructor.PreparedStatementParameter;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
@@ -84,6 +85,7 @@ public class VectorServer {
   private FeatureViewApi featureViewApi = new FeatureViewApi();
 
   private Map<Integer, Map<String, DatumReader<Object>>> featureGroupDatumReaders;
+  private Map<Integer, Set<String>> featureGroupFeatures;
   private ExecutorService executorService = Executors.newCachedThreadPool();
   private boolean isBatch = false;
   private VariablesApi variablesApi = new VariablesApi();
@@ -165,10 +167,10 @@ public class VectorServer {
         int index = 1;
         while (index <= columnCount) {
           if (featuresDatumReaders != null
-              && featuresDatumReaders.containsKey(results.getMetaData().getColumnName(index))) {
+              && featuresDatumReaders.containsKey(results.getMetaData().getColumnLabel(index))) {
             servingVector.add(
                 deserializeComplexFeature(
-                    featuresDatumReaders.get(results.getMetaData().getColumnName(index)), results, index));
+                    featuresDatumReaders.get(results.getMetaData().getColumnLabel(index)), results, index));
           } else {
             servingVector.add(results.getObject(index));
           }
@@ -205,10 +207,11 @@ public class VectorServer {
             .collect(Collectors.toList()));
       queries.add(query.replaceFirst("\\?", zippedTupleString));
     }
-    return getFeatureVectors(queries);
+
+    return getFeatureVectors(queries, entry);
   }
 
-  private List<List<Object>> getFeatureVectors(List<String> queries)
+  private List<List<Object>> getFeatureVectors(List<String> queries, Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException {
     ArrayList<Object> servingVector = new ArrayList<>();
 
@@ -216,14 +219,17 @@ public class VectorServer {
     // Create map object that will have of order of the vector as key and values as
     // vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
     // expect that backend will return correctly ordered vectors.
-    Map<Integer, List<Object>> servingVectorsMap = new HashMap<>();
+    int batchSize = entry.values().stream().findAny().get().size();
+    List<List<Object>> servingVectorArray = new ArrayList<>(batchSize);
+    for (int i = 0; i < batchSize; i++) {
+      servingVectorArray.add(new ArrayList<>());
+    }
 
     try (Connection connection = hikariDataSource.getConnection()) {
       try (Statement stmt = connection.createStatement()) {
         // Used to reference the ServingPreparedStatement for deserialization
         int statementOrder = 0;
         for (String query : queries) {
-          int orderInBatch = 0;
 
           // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
           // the ? with array joined as comma separated array.
@@ -240,37 +246,46 @@ public class VectorServer {
             ServingPreparedStatement servingPreparedStatement = orderedServingPreparedStatements.get(statementOrder);
             Map<String, DatumReader<Object>> featuresDatumReaders =
                 featureGroupDatumReaders.get(servingPreparedStatement.getFeatureGroupId());
+            Set<String> selectedFeatureNames = featureGroupFeatures.get(servingPreparedStatement.getFeatureGroupId());
 
             //append results to servingVector
             while (results.next()) {
               int index = 1;
               while (index <= columnCount) {
+                // for get batch data, the query is also returning the primary key to be able to sort the results
+                // if the primary keys have not being selected, we should filter them out here.
+                if (!selectedFeatureNames.contains(results.getMetaData().getColumnLabel(index))) {
+                  index++;
+                  continue;
+                }
+
                 if (featuresDatumReaders != null
-                    && featuresDatumReaders.containsKey(results.getMetaData().getColumnName(index))) {
+                    && featuresDatumReaders.containsKey(results.getMetaData().getColumnLabel(index))) {
                   servingVector.add(
                       deserializeComplexFeature(
-                          featuresDatumReaders.get(results.getMetaData().getColumnName(index)), results, index));
+                          featuresDatumReaders.get(results.getMetaData().getColumnLabel(index)), results, index));
                 } else {
                   servingVector.add(results.getObject(index));
                 }
                 index++;
               }
+
+              List<Integer> orderInBatch = getOrderInBatch(results, entry, statementOrder, batchSize);
+
               // get vector by order and update with vector from other feature group(s)
-              if (servingVectorsMap.containsKey(orderInBatch)) {
-                servingVectorsMap.get(orderInBatch).addAll(servingVector);
-              } else {
-                servingVectorsMap.put(orderInBatch, servingVector);
+              for (Integer order : orderInBatch) {
+                servingVectorArray.get(order).addAll(servingVector);
               }
+
               // empty servingVector for new primary key
               servingVector = new ArrayList<>();
-              orderInBatch++;
             }
           }
           statementOrder++;
         }
       }
     }
-    return new ArrayList<List<Object>>(servingVectorsMap.values());
+    return servingVectorArray;
   }
 
   public void initServing(FeatureViewBase featureViewBase, boolean batch)
@@ -320,7 +335,12 @@ public class VectorServer {
 
     // save unique primary key names that will be used by user to retrieve serving vector
     HashSet<String> servingVectorKeys = new HashSet<>();
+
+    // Prefix map (featureGroupId -> prefix) to compute feature names
+    Map<Integer, String> prefixMap = new HashMap<>();
+
     for (ServingPreparedStatement servingPreparedStatement : servingPreparedStatements) {
+      prefixMap.put(servingPreparedStatement.getFeatureGroupId(), servingPreparedStatement.getPrefix());
       orderedServingPreparedStatements.put(servingPreparedStatement.getPreparedStatementIndex(),
           servingPreparedStatement);
       TreeMap<String, Integer> parameterIndices = new TreeMap<>();
@@ -334,7 +354,15 @@ public class VectorServer {
 
     this.preparedStatementParameters = preparedStatementParameters;
     this.orderedServingPreparedStatements = orderedServingPreparedStatements;
-    this.featureGroupDatumReaders = getComplexFeatureSchemas(features);
+    this.featureGroupDatumReaders = getComplexFeatureSchemas(features, prefixMap);
+    this.featureGroupFeatures = features.stream()
+        .collect(Collectors.groupingBy(
+            feature -> feature.getFeaturegroup().getId(),
+            Collectors.mapping(
+                TrainingDatasetFeature::getName,
+                Collectors.toSet()
+            )
+        ));
   }
 
   @VisibleForTesting
@@ -375,7 +403,7 @@ public class VectorServer {
       for (List<Object> in : lists) {
         zippedArray.add(in.get(i).toString());
       }
-      zippedTuples.add("(" + String.join(",", zippedArray) + ")");
+      zippedTuples.add("('" + String.join("','", zippedArray) + "')");
     }
     return "(" + String.join(",", zippedTuples) + ")";
   }
@@ -390,8 +418,53 @@ public class VectorServer {
     }
   }
 
+  /**
+   * DB returns the rows in a random order. We need to re-sort the rows based on the position of the entries
+   * @param results
+   * @param entry
+   * @param statementOrder
+   * @return
+   * @throws SQLException
+   */
+  private List<Integer> getOrderInBatch(ResultSet results, Map<String, List<Object>> entry, int statementOrder,
+  int batchSize)
+      throws SQLException {
+    // This accounts for partial keys with duplicates
+    List<Integer> orderInBatch = new ArrayList<>();
+
+    // get the first prepared statement parameter for this statement
+    ServingPreparedStatement preparedStatement = orderedServingPreparedStatements.get(statementOrder);
+
+    for (int i = 0; i < batchSize; i++) {
+      boolean correctIndex = false;
+
+      for (PreparedStatementParameter preparedStatementParameter : preparedStatement.getPreparedStatementParameters()) {
+        List<Object> entryForParameter = entry.get(preparedStatementParameter.getName());
+        Class expectedResultClass = entryForParameter.get(i).getClass();
+
+        String columnName = Strings.isNullOrEmpty(preparedStatement.getPrefix()) ?
+            preparedStatementParameter.getName() :
+            preparedStatement.getPrefix() + preparedStatementParameter.getName();
+
+        if (results.getObject(columnName, expectedResultClass).equals(entryForParameter.get(i))) {
+          correctIndex = true;
+        } else {
+          correctIndex = false;
+          break;
+        }
+      }
+
+      if (correctIndex) {
+        orderInBatch.add(i);
+      }
+    }
+
+    return orderInBatch;
+  }
+
   @VisibleForTesting
-  public Map<Integer, Map<String, DatumReader<Object>>> getComplexFeatureSchemas(List<TrainingDatasetFeature> features)
+  public Map<Integer, Map<String, DatumReader<Object>>> getComplexFeatureSchemas(List<TrainingDatasetFeature> features,
+                                                                                 Map<Integer, String> prefixMap)
       throws FeatureStoreException, IOException {
     Map<Integer, Map<String, DatumReader<Object>>> featureSchemaMap = new HashMap<>();
     for (TrainingDatasetFeature f : features) {
@@ -401,8 +474,16 @@ public class VectorServer {
           featureGroupMap = new HashMap<>();
         }
 
+        // Need to remove the prefix here as we are looking up the feature group metadata
+        // which doesn't have knowledge of prefixes.
+        String featureName = f.getName();
+        String prefix = prefixMap.get(f.getFeaturegroup().getId());
+        if (!Strings.isNullOrEmpty(prefix) && featureName.startsWith(prefix)) {
+          featureName = featureName.substring(prefix.length());
+        }
+
         DatumReader<Object> datumReader =
-            new GenericDatumReader<>(parser.parse(f.getFeaturegroup().getFeatureAvroSchema(f.getName())));
+            new GenericDatumReader<>(parser.parse(f.getFeaturegroup().getFeatureAvroSchema(featureName)));
         featureGroupMap.put(f.getName(), datumReader);
 
         featureSchemaMap.put(f.getFeaturegroup().getId(), featureGroupMap);
