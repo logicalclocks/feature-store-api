@@ -671,11 +671,38 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
    *        // get feature view handle
    *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // Initialise feature view batch serving
+   *        fv.initServing(true);
+   * }
+   * </pre>
+   *
+   * @param batch Whether to initialise feature view to retrieve feature vectors from the online feature store in
+   *              batches.
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   */
+  public void initServing(Boolean batch)
+      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
+    vectorServer.initServing(this, batch, false);
+  }
+
+  /**
+   * Initialise feature view to retrieve feature vector from online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // Initialise feature view batch serving
    *        fv.initServing(true, false);
    * }
    * </pre>
    *
-   * @param batch Whether to initialise feature view to retrieve feature vector from offline feature store.
+   * @param batch Whether to initialise feature view to retrieve feature vectors from the online feature store in
+   *              batches.
    * @param external If set to `true`, the connection to the online feature store is established using the same host as
    *                 for the `host` parameter in the connection object.
    *                 If set to False, the online feature store storage connector is used which relies on the private IP.
