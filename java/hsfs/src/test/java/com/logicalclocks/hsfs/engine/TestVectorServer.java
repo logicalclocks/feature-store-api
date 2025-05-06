@@ -97,4 +97,26 @@ public class TestVectorServer {
     assertThrows(IllegalArgumentException.class, () -> vectorServer.getFeatureVector(null, entries, false));
   }
 
+  @Test
+  public void testZipArraysToTupleString_String() {
+    VectorServer vectorServer = new VectorServer();
+    List<List<Object>> entries = new ArrayList<>();
+    entries.add(Arrays.asList("test-1", "test-2", "test-3"));
+
+    String zipped = vectorServer.zipArraysToTupleString(entries);
+
+    Assert.assertEquals("(('test-1'),('test-2'),('test-3'))", zipped);
+  }
+
+  @Test
+  public void testZipArraysToTupleString_Int() {
+    VectorServer vectorServer = new VectorServer();
+    List<List<Object>> entries = new ArrayList<>();
+    entries.add(Arrays.asList(1,2,3));
+
+    String zipped = vectorServer.zipArraysToTupleString(entries);
+
+    Assert.assertEquals("((1),(2),(3))", zipped);
+  }
+
 }

@@ -396,14 +396,19 @@ public class VectorServer {
     hikariDataSource = new HikariDataSource(config);
   }
 
-  private String zipArraysToTupleString(List<List<Object>> lists) {
+  @VisibleForTesting
+  public String zipArraysToTupleString(List<List<Object>> lists) {
     List<String> zippedTuples = new ArrayList<>();
     for (int i = 0; i < lists.get(0).size(); i++) {
       List<String> zippedArray = new ArrayList<String>();
       for (List<Object> in : lists) {
-        zippedArray.add(in.get(i).toString());
+        if (in.get(i) instanceof String) {
+          zippedArray.add("'" + in.get(i).toString() + "'");
+        } else {
+          zippedArray.add(in.get(i).toString());
+        }
       }
-      zippedTuples.add("('" + String.join("','", zippedArray) + "')");
+      zippedTuples.add("(" + String.join(",", zippedArray) + ")");
     }
     return "(" + String.join(",", zippedTuples) + ")";
   }
