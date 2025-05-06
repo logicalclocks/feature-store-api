@@ -418,16 +418,8 @@ public class VectorServer {
     }
   }
 
-  /**
-   * DB returns the rows in a random order. We need to re-sort the rows based on the position of the entries
-   * @param results
-   * @param entry
-   * @param statementOrder
-   * @return
-   * @throws SQLException
-   */
   private List<Integer> getOrderInBatch(ResultSet results, Map<String, List<Object>> entry, int statementOrder,
-  int batchSize)
+                                        int batchSize)
       throws SQLException {
     // This accounts for partial keys with duplicates
     List<Integer> orderInBatch = new ArrayList<>();
@@ -442,9 +434,9 @@ public class VectorServer {
         List<Object> entryForParameter = entry.get(preparedStatementParameter.getName());
         Class expectedResultClass = entryForParameter.get(i).getClass();
 
-        String columnName = Strings.isNullOrEmpty(preparedStatement.getPrefix()) ?
-            preparedStatementParameter.getName() :
-            preparedStatement.getPrefix() + preparedStatementParameter.getName();
+        String columnName = Strings.isNullOrEmpty(preparedStatement.getPrefix())
+            ? preparedStatementParameter.getName()
+            : preparedStatement.getPrefix() + preparedStatementParameter.getName();
 
         if (results.getObject(columnName, expectedResultClass).equals(entryForParameter.get(i))) {
           correctIndex = true;
