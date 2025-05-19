@@ -17,7 +17,8 @@ from hsfs.statistics_config import StatisticsConfig
 from pydoop import hdfs
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructField, StructType, _parse_datatype_string
-from pyspark.sql.functions import max, expr
+from pyspark.sql.functions import col, max, expr, row_number
+from pyspark.sql.window import Window
 
 
 def read_job_conf(path: str) -> Dict[Any, Any]:
@@ -324,23 +325,42 @@ def offline_fg_materialization(
     )
 
     # limit the number of records ingested
-    limit = job_conf.get("write_options", {}).get("job_limit", 5000000)
+    # default limit is 5M
+    limit = 5000000
+    write_options = job_conf.get("write_options", {})
+    if write_options:
+        limit = int(write_options.get("job_limit", limit))
     filtered_df = filtered_df.limit(limit)
 
     # deserialize dataframe so that it can be properly saved
     deserialized_df = engine.get_instance()._deserialize_from_avro(entity, filtered_df)
 
-    # insert data
-    entity.stream = False  # to make sure we dont write to kafka
-    entity.insert(deserialized_df, storage="offline")
+    # de-duplicate records
+    # timestamp cannot be relied on to order the records in case of duplicates, if they are produced together they would have the same timestamp.
+    # Instead use offset to order the records, they are strictly increasing within a partition and since we use primary keys for generating Kafka message keys duplicates are guaranteed to be in the same partition.
+    partition_columns = [f"value.{key}" for key in entity.primary_key]
+    if entity.event_time:
+        partition_columns.append(f"value.{entity.event_time}")
+    window = Window.partitionBy(partition_columns) \
+                .orderBy(col("offset").desc())
+    deduped_df = deserialized_df.withColumn("row_num", row_number().over(window)) \
+                .filter("row_num = 1") \
+                .drop("row_num")
 
-    # update offsets
+    # get only the feature values (remove kafka metadata)
+    deduped_df = deduped_df.select("value.*")
+
+    # get offsets (do it before inserting to avoid skipping records if data was deleted during the job execution)
     df_offsets = (df if limit > filtered_df.count() else filtered_df).groupBy('partition').agg(max('offset').alias('offset')).collect()
     offset_dict = json.loads(starting_offset_string)
     for offset_row in df_offsets:
         offset_dict[entity._online_topic_name][f"{offset_row.partition}"] = (
             offset_row.offset + 1
         )
+
+    # insert data
+    entity.stream = False # to make sure we dont write to kafka
+    entity.insert(deduped_df, storage="offline")
 
     # save offsets
     offset_df = spark.createDataFrame([offset_dict])
