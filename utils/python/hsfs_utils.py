@@ -274,7 +274,9 @@ def offline_fg_materialization(
     offset_location = entity.prepare_spark_location() + "/kafka_offsets"
     try:
         if initial_check_point_string:
-            starting_offset_string = json.dumps(_build_offsets(initial_check_point_string))
+            starting_offset_string = json.dumps(
+                _build_offsets(initial_check_point_string)
+            )
         else:
             starting_offset_string = spark.read.json(offset_location).toJSON().first()
     except Exception as e:
@@ -289,12 +291,12 @@ def offline_fg_materialization(
     print(f"startingOffsets: {starting_offset_string}")
 
     # get ending offsets
-    ending_offset_string = kafka_engine.kafka_get_offsets(
-        topic_name=entity._online_topic_name,
-        feature_store_id=entity.feature_store_id,
+    ending_offset_string = python.Engine()._kafka_get_offsets(
+        feature_group=entity,
         offline_write_options={},
         high=True,
     )
+
     ending_offset_string = json.dumps(_build_offsets(ending_offset_string))
     print(f"endingOffsets: {ending_offset_string}")
 
@@ -341,17 +343,23 @@ def offline_fg_materialization(
     partition_columns = [f"value.{key}" for key in entity.primary_key]
     if entity.event_time:
         partition_columns.append(f"value.{entity.event_time}")
-    window = Window.partitionBy(partition_columns) \
-                .orderBy(col("offset").desc())
-    deduped_df = deserialized_df.withColumn("row_num", row_number().over(window)) \
-                .filter("row_num = 1") \
-                .drop("row_num")
+    window = Window.partitionBy(partition_columns).orderBy(col("offset").desc())
+    deduped_df = (
+        deserialized_df.withColumn("row_num", row_number().over(window))
+        .filter("row_num = 1")
+        .drop("row_num")
+    )
 
     # get only the feature values (remove kafka metadata)
     deduped_df = deduped_df.select("value.*")
 
     # get offsets (do it before inserting to avoid skipping records if data was deleted during the job execution)
-    df_offsets = (df if limit > filtered_df.count() else filtered_df).groupBy('partition').agg(max('offset').alias('offset')).collect()
+    df_offsets = (
+        (df if limit > filtered_df.count() else filtered_df)
+        .groupBy("partition")
+        .agg(max("offset").alias("offset"))
+        .collect()
+    )
     offset_dict = json.loads(starting_offset_string)
     for offset_row in df_offsets:
         offset_dict[entity._online_topic_name][f"{offset_row.partition}"] = (
@@ -359,7 +367,7 @@ def offline_fg_materialization(
         )
 
     # insert data
-    entity.stream = False # to make sure we dont write to kafka
+    entity.stream = False  # to make sure we dont write to kafka
     entity.insert(deduped_df, storage="offline")
 
     # save offsets
@@ -378,6 +386,7 @@ def update_table_schema_fg(spark: SparkSession, job_conf: Dict[Any, Any]) -> Non
 
     entity.stream = False
     engine.get_instance().update_table_schema(entity)
+
 
 def _build_offsets(initial_check_point_string: str):
     if not initial_check_point_string:
