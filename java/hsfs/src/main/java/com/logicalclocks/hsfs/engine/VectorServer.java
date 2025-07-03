@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.engine;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.logicalclocks.hsfs.TrainingDatasetBase;
 import com.logicalclocks.hsfs.constructor.PreparedStatementParameter;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
@@ -45,8 +46,11 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.commons.text.WordUtils;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -105,6 +109,45 @@ public class VectorServer {
     return getFeatureVector(entry);
   }
 
+  public <T> T getFeatureVectorObject(FeatureViewBase featureViewBase, Map<String, Object> entry, boolean external,
+                                       Class<T> returnType)
+      throws FeatureStoreException, IOException, ClassNotFoundException,
+      IllegalAccessException, InstantiationException {
+    if (hikariDataSource == null || isBatch) {
+      initPreparedStatement(featureViewBase, false, external);
+    }
+    checkPrimaryKeys(entry.keySet());
+    return getFeatureVectorObject(entry, returnType);
+  }
+
+  public <T> T getFeatureVectorObject(Map<String, Object> entry, Class<T> returnType)
+      throws FeatureStoreException, InstantiationException, IllegalAccessException {
+    List<Future<?>> queryFutures = new ArrayList<>();
+
+    T returnObject = returnType.newInstance();
+
+    for (Integer preparedStatementIndex : orderedServingPreparedStatements.keySet()) {
+      queryFutures.add(executorService.submit(() -> {
+        try {
+          processQuery(entry, preparedStatementIndex, returnObject);
+        } catch (SQLException | FeatureStoreException | IOException | NoSuchMethodException
+                 | InvocationTargetException | IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+      }));
+    }
+
+    for (Future<?> queryFuture : queryFutures) {
+      try {
+        queryFuture.get();
+      } catch (InterruptedException | ExecutionException e) {
+        throw new FeatureStoreException("Error retrieving query statement result", e);
+      }
+    }
+
+    return returnObject;
+  }
+
   @VisibleForTesting
   public List<Object> getFeatureVector(Map<String, Object> entry)
       throws FeatureStoreException {
@@ -132,6 +175,59 @@ public class VectorServer {
 
     return servingVector;
   }
+
+  public <T> void processQuery(Map<String, Object> entry, int preparedStatementIndex, T returnObject)
+      throws SQLException, FeatureStoreException, IOException,
+      NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    try (Connection connection = hikariDataSource.getConnection()) {
+      // Create the prepared statement
+      ServingPreparedStatement servingPreparedStatement = orderedServingPreparedStatements.get(preparedStatementIndex);
+
+      PreparedStatement preparedStatement = connection.prepareStatement(servingPreparedStatement.getQueryOnline());
+
+      // Set the parameters base do the entry object
+      Map<String, Integer> parameterIndexInStatement = preparedStatementParameters.get(preparedStatementIndex);
+      for (String name : entry.keySet()) {
+        if (parameterIndexInStatement.containsKey(name)) {
+          preparedStatement.setObject(parameterIndexInStatement.get(name), entry.get(name));
+        }
+      }
+
+      ResultSet results = preparedStatement.executeQuery();
+      // check if results contain any data at all and throw exception if not
+      if (!results.isBeforeFirst()) {
+        throw new FeatureStoreException("No data was retrieved from online feature store.");
+      }
+      //Get column count
+      int columnCount = results.getMetaData().getColumnCount();
+
+      // get the complex schema datum readers for this feature group
+      Map<String, DatumReader<Object>> featuresDatumReaders =
+          featureGroupDatumReaders.get(servingPreparedStatement.getFeatureGroupId());
+
+      //append results to servingVector
+      while (results.next()) {
+        int index = 1;
+        while (index <= columnCount) {
+          String methodName = "set" + WordUtils.capitalize(results.getMetaData().getColumnLabel(index));
+          Object columnValue;
+          if (featuresDatumReaders != null
+              && featuresDatumReaders.containsKey(results.getMetaData().getColumnLabel(index))) {
+            columnValue =
+                deserializeComplexFeature(featuresDatumReaders.get(results.getMetaData().getColumnLabel(index)),
+                    results, index);
+          } else {
+            columnValue = results.getObject(index);
+          }
+          Method setter = returnObject.getClass().getDeclaredMethod(methodName, columnValue.getClass());
+          setter.invoke(returnObject, columnValue);
+          index++;
+        }
+      }
+      results.close();
+    }
+  }
+
 
   private List<Object> processQuery(Map<String, Object> entry, int preparedStatementIndex)
       throws SQLException, FeatureStoreException, IOException {

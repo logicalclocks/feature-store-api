@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.HashSet;
@@ -805,6 +806,12 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   public List<Object> getFeatureVector(Map<String, Object> entry, boolean external)
       throws FeatureStoreException, IOException, ClassNotFoundException {
     return vectorServer.getFeatureVector(this, entry, external);
+  }
+
+  public <T> T getFeatureVectorObject(Map<String, Object> entry, Class<T> returnType)
+      throws FeatureStoreException, IOException, ClassNotFoundException, InvocationTargetException,
+      InstantiationException, IllegalAccessException, NoSuchMethodException {
+    return vectorServer.getFeatureVectorObject(entry, returnType);
   }
 
   /**
