@@ -20,7 +20,6 @@ package com.logicalclocks.hsfs.engine;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.logicalclocks.hsfs.TrainingDatasetBase;
 import com.logicalclocks.hsfs.constructor.PreparedStatementParameter;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
