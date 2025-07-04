@@ -937,8 +937,6 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
    *                   vector.
    * @return an instance of type `returnType` containing the values of the requested feature vector
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
-   * @throws IOException Generic IO exception.
-   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    * @throws IllegalAccessException If the object of type `returnType` cannot be instantiated
    * @throws InstantiationException If the object of type `returnType` cannot be instantiated
    */
