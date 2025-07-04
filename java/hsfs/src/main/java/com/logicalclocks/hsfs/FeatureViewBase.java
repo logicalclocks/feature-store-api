@@ -808,13 +808,6 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
     return vectorServer.getFeatureVector(this, entry, external);
   }
 
-  @JsonIgnore
-  public <T> T getFeatureVectorObject(Map<String, Object> entry, boolean external, Class<T> returnType)
-      throws FeatureStoreException, IOException, ClassNotFoundException, IllegalAccessException,
-      InstantiationException {
-    return vectorServer.getFeatureVectorObject(this, entry, external, returnType);
-  }
-
   /**
    * Returns assembled feature vectors in batches from online feature store.
    *
@@ -842,13 +835,6 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException {
     return vectorServer.getFeatureVectors(entry);
-  }
-
-  @JsonIgnore
-  public <T> T getFeatureVectorObject(Map<String, Object> entry, Class<T> returnType)
-      throws FeatureStoreException, IOException, ClassNotFoundException, InvocationTargetException,
-      InstantiationException, IllegalAccessException, NoSuchMethodException {
-    return vectorServer.getFeatureVectorObject(entry, returnType);
   }
 
   /**
@@ -882,6 +868,20 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return vectorServer.getFeatureVectors(this, entry, external);
+  }
+
+  @JsonIgnore
+  public <T> T getFeatureVectorObject(Map<String, Object> entry, boolean external, Class<T> returnType)
+      throws FeatureStoreException, IOException, ClassNotFoundException, IllegalAccessException,
+      InstantiationException {
+    return vectorServer.getFeatureVectorObject(this, entry, external, returnType);
+  }
+
+  @JsonIgnore
+  public <T> T getFeatureVectorObject(Map<String, Object> entry, Class<T> returnType)
+      throws FeatureStoreException, IOException, ClassNotFoundException, InvocationTargetException,
+      InstantiationException, IllegalAccessException, NoSuchMethodException {
+    return vectorServer.getFeatureVectorObject(entry, returnType);
   }
 
   /**

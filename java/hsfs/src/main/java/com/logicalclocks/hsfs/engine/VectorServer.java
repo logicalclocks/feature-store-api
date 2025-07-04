@@ -108,6 +108,34 @@ public class VectorServer {
     return getFeatureVector(entry);
   }
 
+  @VisibleForTesting
+  public List<Object> getFeatureVector(Map<String, Object> entry)
+      throws FeatureStoreException {
+    // construct serving vector
+    List<Object> servingVector = new ArrayList<>();
+    List<Future<List<Object>>> queryFutures = new ArrayList<>();
+
+    for (Integer preparedStatementIndex : orderedServingPreparedStatements.keySet()) {
+      queryFutures.add(executorService.submit(() -> {
+        try {
+          return processQuery(entry, preparedStatementIndex);
+        } catch (SQLException | FeatureStoreException | IOException e) {
+          throw new RuntimeException(e);
+        }
+      }));
+    }
+
+    for (Future<List<Object>> queryFuture : queryFutures) {
+      try {
+        servingVector.addAll(queryFuture.get());
+      } catch (InterruptedException | ExecutionException e) {
+        throw new FeatureStoreException("Error retrieving query statement result", e);
+      }
+    }
+
+    return servingVector;
+  }
+
   public <T> T getFeatureVectorObject(FeatureViewBase featureViewBase, Map<String, Object> entry, boolean external,
                                        Class<T> returnType)
       throws FeatureStoreException, IOException, ClassNotFoundException,
@@ -145,34 +173,6 @@ public class VectorServer {
     }
 
     return returnObject;
-  }
-
-  @VisibleForTesting
-  public List<Object> getFeatureVector(Map<String, Object> entry)
-      throws FeatureStoreException {
-    // construct serving vector
-    List<Object> servingVector = new ArrayList<>();
-    List<Future<List<Object>>> queryFutures = new ArrayList<>();
-
-    for (Integer preparedStatementIndex : orderedServingPreparedStatements.keySet()) {
-      queryFutures.add(executorService.submit(() -> {
-        try {
-          return processQuery(entry, preparedStatementIndex);
-        } catch (SQLException | FeatureStoreException | IOException e) {
-          throw new RuntimeException(e);
-        }
-      }));
-    }
-
-    for (Future<List<Object>> queryFuture : queryFutures) {
-      try {
-        servingVector.addAll(queryFuture.get());
-      } catch (InterruptedException | ExecutionException e) {
-        throw new FeatureStoreException("Error retrieving query statement result", e);
-      }
-    }
-
-    return servingVector;
   }
 
   public <T> void processQuery(Map<String, Object> entry, int preparedStatementIndex, T returnObject)
