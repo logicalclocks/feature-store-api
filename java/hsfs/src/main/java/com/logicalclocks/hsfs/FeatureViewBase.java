@@ -870,6 +870,85 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   }
 
   /**
+   * Returns assembled feature vector from online feature store (as Object).
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // define primary key values to fetch data from online feature store
+   *        Map<String, Object> pkMap = new HashMap<String, Object>() {
+   *               {put("customer_id", 1);
+   *                put("contract_id" , 100);
+   *                }
+   *        };
+   *        // get feature vector
+   *        fv.getFeatureVectorObject(entry, false, ReturnType.class);
+   * }
+   * </pre>
+   *
+   * @param entry Dictionary of feature group primary key and values provided by serving application.
+   * @param external If set to true, the connection to the online feature store is established using the same host as
+   *                 for the `host` parameter in the connection object.
+   *                 If set to false, the online feature store storage connector is used which relies on the private IP.
+   *                 Defaults to True if connection to Hopsworks is established from external environment
+   * @param returnType The type of the returned object. Should match the expected structure of the feature vector.
+   *                   The class should also provide the necessary setter methods to set the values of the feature
+   *                   vector.
+   * @return an instance of type `returnType` containing the values of the requested feature vector
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   * @throws IllegalAccessException If the object of type `returnType` cannot be instantiated
+   * @throws InstantiationException If the object of type `returnType` cannot be instantiated
+   */
+  @JsonIgnore
+  public <T> T getFeatureVectorObject(Map<String, Object> entry, boolean external, Class<T> returnType)
+      throws FeatureStoreException, IOException, ClassNotFoundException, IllegalAccessException,
+      InstantiationException {
+    return vectorServer.getFeatureVectorObject(this, entry, external, returnType);
+  }
+
+  /**
+   * Returns assembled feature vector from online feature store (as Object).
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // define primary key values to fetch data from online feature store
+   *        Map<String, Object> pkMap = new HashMap<String, Object>() {
+   *               {put("customer_id", 1);
+   *                put("contract_id" , 100);
+   *                }
+   *        };
+   *        // get feature vector
+   *        fv.getFeatureVectorObject(entry, ReturnType.class);
+   * }
+   * </pre>
+   *
+   * @param entry Dictionary of feature group primary key and values provided by serving application.
+   * @param returnType The type of the returned object. Should match the expected structure of the feature vector.
+   *                   The class should also provide the necessary setter methods to set the values of the feature
+   *                   vector.
+   * @return an instance of type `returnType` containing the values of the requested feature vector
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   * @throws IllegalAccessException If the object of type `returnType` cannot be instantiated
+   * @throws InstantiationException If the object of type `returnType` cannot be instantiated
+   */
+  @JsonIgnore
+  public <T> T getFeatureVectorObject(Map<String, Object> entry, Class<T> returnType)
+      throws FeatureStoreException, InstantiationException, IllegalAccessException {
+    return vectorServer.getFeatureVectorObject(entry, returnType);
+  }
+
+  /**
    * Add name/value tag to the feature view.
    * A tag consists of a name and value pair. Tag names are unique identifiers across the whole cluster. The value of a
    * tag can be any valid json - primitives, arrays or json objects.
