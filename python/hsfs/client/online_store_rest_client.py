@@ -274,7 +274,7 @@ class OnlineStoreRestClientSingleton:
         if client.get_instance()._is_external():
             if _logger.isEnabledFor(logging.DEBUG):
                 _logger.debug(
-                    "External Online Store REST Client : Retrieving RonDB Rest Server endpoint via loadbalancer."
+                    "External Online Store REST Client : Loadbalancer external domain is not set. Using client host as endpoint."
                 )
             external_domain = self.variable_api.get_loadbalancer_external_domain()
             if external_domain == "":
@@ -383,7 +383,7 @@ class OnlineStoreRestClientSingleton:
         if self._session is None:
             if _logger.isEnabledFor(logging.DEBUG):
                 _logger.debug(
-                    "Checking Online Store REST Client is connected. Session is not initialised."
+                    "Checking Online Store REST Client is connected. Pinging RonDB Rest Server."
                 )
             raise FeatureStoreException("Online Store REST Client is not initialised.")
         if _logger.isEnabledFor(logging.DEBUG):
