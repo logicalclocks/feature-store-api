@@ -388,7 +388,7 @@ class OnlineStoreRestClientSingleton:
             raise FeatureStoreException("Online Store REST Client is not initialised.")
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug(
-                "Checking Online Store REST Client is connected. Pinging RonDB Rest Server."
+                "Checking Online Store REST Client is connected. Session is not initialised."
             )
         if not self.send_request("GET", ["ping"]):
             warn("Ping failed, RonDB Rest Server is not reachable.", stacklevel=2)
