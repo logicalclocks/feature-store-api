@@ -219,7 +219,8 @@ class VectorServer:
         inference_helper_columns: bool,
         options: Optional[Dict[str, Any]] = None,
     ) -> None:
-        _logger.debug("Initialising Online Store SQL client")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Initialising Online Store SQL client")
         self._sql_client = online_store_sql_engine.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
@@ -239,7 +240,8 @@ class VectorServer:
         reset_rest_client: bool = False,
     ):
         # naming is off here, but it avoids confusion with the argument init_rest_client
-        _logger.debug("Initialising Online Store REST client")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Initialising Online Store REST client")
         self._rest_client_engine = (
             online_store_rest_client_engine.OnlineStoreRestClientEngine(
                 feature_store_name=self._feature_store_name,
@@ -275,17 +277,20 @@ class VectorServer:
             vector_db_features=vector_db_features,
         )
         if len(rondb_entry) == 0:
-            _logger.debug("Empty entry for rondb, skipping fetching.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Empty entry for rondb, skipping fetching.")
             serving_vector = {}  # updated below with vector_db_features and passed_features
         elif online_client_choice == self.DEFAULT_REST_CLIENT:
-            _logger.debug("get_feature_vector Online REST client")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("get_feature_vector Online REST client")
             serving_vector = self.rest_client_engine.get_single_feature_vector(
                 rondb_entry,
                 drop_missing=not allow_missing,
                 return_type=self.rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
-            _logger.debug("get_feature_vector Online SQL client")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("get_feature_vector Online SQL client")
             serving_vector = self.sql_client.get_single_feature_vector(rondb_entry)
 
         vector = self.assemble_feature_vector(
@@ -350,7 +355,8 @@ class VectorServer:
                 skipped_empty_entries.append(idx)
 
         if online_client_choice == self.DEFAULT_REST_CLIENT and len(rondb_entries) > 0:
-            _logger.debug("get_batch_feature_vector Online REST client")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("get_batch_feature_vector Online REST client")
             batch_results = self.rest_client_engine.get_batch_feature_vectors(
                 entries=rondb_entries,
                 drop_missing=not allow_missing,
@@ -358,13 +364,16 @@ class VectorServer:
             )
         elif len(rondb_entries) > 0:
             # get result row
-            _logger.debug("get_batch_feature_vectors through SQL client")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("get_batch_feature_vectors through SQL client")
             batch_results, _ = self.sql_client.get_batch_feature_vectors(rondb_entries)
         else:
-            _logger.debug("Empty entries for rondb, skipping fetching.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Empty entries for rondb, skipping fetching.")
             batch_results = []
 
-        _logger.debug("Assembling feature vectors from batch results")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Assembling feature vectors from batch results")
         next_skipped = (
             skipped_empty_entries.pop(0) if len(skipped_empty_entries) > 0 else None
         )
@@ -380,7 +389,8 @@ class VectorServer:
             fillvalue=None,
         ):
             if next_skipped == idx:
-                _logger.debug("Entry %d was skipped, setting to empty dict.", idx)
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug("Entry %d was skipped, setting to empty dict.", idx)
                 next_skipped = (
                     skipped_empty_entries.pop(0)
                     if len(skipped_empty_entries) > 0
@@ -415,15 +425,19 @@ class VectorServer:
     ) -> Optional[List[Any]]:
         """Assembles serving vector from online feature store."""
         # Errors in batch requests are returned as None values
-        _logger.debug("Assembling serving vector: %s", result_dict)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Assembling serving vector: %s", result_dict)
         if result_dict is None:
-            _logger.debug("Found null result, setting to empty dict.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Found null result, setting to empty dict.")
             result_dict = {}
         if vector_db_result is not None and len(vector_db_result) > 0:
-            _logger.debug("Updating with vector_db features: %s", vector_db_result)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Updating with vector_db features: %s", vector_db_result)
             result_dict.update(vector_db_result)
         if passed_values is not None and len(passed_values) > 0:
-            _logger.debug("Updating with passed features: %s", passed_values)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Updating with passed features: %s", passed_values)
             result_dict.update(passed_values)
 
         missing_features = set(self.feature_vector_col_name).difference(
@@ -451,7 +465,10 @@ class VectorServer:
         if len(self.transformation_functions) > 0:
             self.apply_transformation(result_dict)
 
-        _logger.debug("Assembled and transformed dict feature vector: %s", result_dict)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "Assembled and transformed dict feature vector: %s", result_dict
+            )
 
         return [result_dict.get(fname, None) for fname in self.feature_vector_col_name]
 
@@ -474,18 +491,22 @@ class VectorServer:
     ]:
         # Only get-feature-vector and get-feature-vectors can return list or numpy
         if return_type.lower() == "list" and not inference_helper:
-            _logger.debug("Returning feature vector as value list")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Returning feature vector as value list")
             return feature_vectorz
         elif return_type.lower() == "numpy" and not inference_helper:
-            _logger.debug("Returning feature vector as numpy array")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Returning feature vector as numpy array")
             return np.array(feature_vectorz)
         # Only inference helper can return dict
         elif return_type.lower() == "dict" and inference_helper:
-            _logger.debug("Returning feature vector as dictionary")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Returning feature vector as dictionary")
             return feature_vectorz
         # Both can return pandas and polars
         elif return_type.lower() == "pandas":
-            _logger.debug("Returning feature vector as pandas dataframe")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Returning feature vector as pandas dataframe")
             if batch and inference_helper:
                 return pd.DataFrame(feature_vectorz)
             elif inference_helper:
@@ -499,7 +520,8 @@ class VectorServer:
                 pandas_df.columns = self._feature_vector_col_name
                 return pandas_df
         elif return_type.lower() == "polars":
-            _logger.debug("Returning feature vector as polars dataframe")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Returning feature vector as polars dataframe")
             if not HAS_POLARS:
                 raise ModuleNotFoundError(polars_not_installed_message)
 
@@ -524,10 +546,11 @@ class VectorServer:
         default_client = self.which_client_and_ensure_initialised(
             force_rest_client, force_sql_client
         )
-        _logger.debug(
-            f"Retrieve inference helper values for single entry via {default_client.upper()} client."
-        )
-        _logger.debug(f"entry: {entry} as return type: {return_type}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Retrieve inference helper values for single entry via {default_client.upper()} client."
+            )
+            _logger.debug(f"entry: {entry} as return type: {return_type}")
         if default_client == self.DEFAULT_REST_CLIENT:
             return self.handle_feature_vector_return_type(
                 self.rest_client_engine.get_single_feature_vector(
@@ -558,10 +581,11 @@ class VectorServer:
         default_client = self.which_client_and_ensure_initialised(
             force_rest_client, force_sql_client
         )
-        _logger.debug(
-            f"Retrieve inference helper values for batch entries via {default_client.upper()} client."
-        )
-        _logger.debug(f"entries: {entries} as return type: {return_type}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Retrieve inference helper values for batch entries via {default_client.upper()} client."
+            )
+            _logger.debug(f"entries: {entries} as return type: {return_type}")
 
         if default_client == self.DEFAULT_REST_CLIENT:
             batch_results = self.rest_client_engine.get_batch_feature_vectors(
@@ -656,7 +680,8 @@ class VectorServer:
         matching_keys = set(self.transformation_functions.keys()).intersection(
             row_dict.keys()
         )
-        _logger.debug("Applying transformation functions to : %s", matching_keys)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Applying transformation functions to : %s", matching_keys)
         for feature_name in matching_keys:
             row_dict[feature_name] = self.transformation_functions[
                 feature_name
@@ -672,9 +697,11 @@ class VectorServer:
             matching_keys = set(self.feature_to_handle_if_sql).intersection(
                 row_dict.keys()
             )
-        _logger.debug("Applying return value handlers to : %s", matching_keys)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Applying return value handlers to : %s", matching_keys)
         for fname in matching_keys:
-            _logger.debug("Applying return value handler to feature: %s", fname)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Applying return value handler to feature: %s", fname)
             row_dict[fname] = self.return_feature_value_handlers[fname](row_dict[fname])
         return row_dict
 
@@ -699,11 +726,13 @@ class VectorServer:
         if len(complex_feature_schemas) == 0:
             return {}
         else:
-            _logger.debug(
-                f"Building complex feature decoders corresponding to {complex_feature_schemas}."
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Building complex feature decoders corresponding to {complex_feature_schemas}."
+                )
         if HAS_FASTAVRO:
-            _logger.debug("Using fastavro for deserialization.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Using fastavro for deserialization.")
             return {
                 f_name: (
                     lambda feature_value, avro_schema=schema: (
@@ -726,7 +755,8 @@ class VectorServer:
                 for (f_name, schema) in complex_feature_schemas.items()
             }
         else:
-            _logger.debug("Fast Avro not found, using avro for deserialization.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Fast Avro not found, using avro for deserialization.")
             return {
                 f_name: (
                     lambda feature_value, avro_schema=schema: avro_schema.read(
@@ -763,10 +793,11 @@ class VectorServer:
             return
         if len(features) == 0:
             return
-        _logger.debug(
-            f"Setting return feature value handlers for Feature View {self._feature_view_name},"
-            f" version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Setting return feature value handlers for Feature View {self._feature_view_name},"
+                f" version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
+            )
         self._return_feature_value_handlers.update(
             self.build_complex_feature_decoders()
         )
@@ -824,14 +855,17 @@ class VectorServer:
 
         Keys relevant to vector_db are filtered out.
         """
-        _logger.debug("Checking keys in entry are valid serving keys.")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Checking keys in entry are valid serving keys.")
         for key in entry.keys():
             if key not in self.valid_serving_keys:
                 raise exceptions.FeatureStoreException(
                     f"Provided key {key} is not a serving key. Required serving keys: {self.required_serving_keys}."
                 )
-
-        _logger.debug("Checking entry has either all or none of composite serving keys")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "Checking entry has either all or none of composite serving keys"
+            )
         for composite_group in self.groups_of_composite_serving_keys.values():
             present_keys = [
                 True
@@ -873,9 +907,10 @@ class VectorServer:
         - The method does not check whether serving keys correspond to existing rows in the online feature store.
         - The method does not check whether the passed features names and data types correspond to the query schema.
         """
-        _logger.debug(
-            "Checking missing serving keys in entry correspond to passed features."
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "Checking missing serving keys in entry correspond to passed features."
+            )
         missing_features_per_serving_keys = {}
         has_missing = False
         for sk_name, (
@@ -886,9 +921,11 @@ class VectorServer:
                 set(passed_features.keys()) if passed_features else set()
             )
             if vector_db_features and len(vector_db_features) > 0:
-                _logger.debug(
-                    "vector_db_features for pre-fetch missing : %s", vector_db_features
-                )
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(
+                        "vector_db_features for pre-fetch missing : %s",
+                        vector_db_features,
+                    )
                 passed_feature_names = passed_feature_names.union(
                     vector_db_features.keys()
                 )
@@ -901,9 +938,10 @@ class VectorServer:
             if (
                 sk_name not in entry.keys() and sk_no_prefix not in entry.keys()
             ) and not fetched_features.issubset(passed_feature_names):
-                _logger.debug(
-                    f"Missing serving key {sk_name} and corresponding features {neither_fetched_nor_passed}."
-                )
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(
+                        f"Missing serving key {sk_name} and corresponding features {neither_fetched_nor_passed}."
+                    )
                 has_missing = True
                 missing_features_per_serving_keys[sk_name] = neither_fetched_nor_passed
 
@@ -980,9 +1018,10 @@ class VectorServer:
                 )
                 for sk in self.serving_keys
             }
-            _logger.debug(
-                f"Groups of composite serving keys: {self._groups_of_composite_serving_keys}."
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Groups of composite serving keys: {self._groups_of_composite_serving_keys}."
+                )
         return self._groups_of_composite_serving_keys
 
     @property
@@ -993,7 +1032,8 @@ class VectorServer:
                 for sk in self.serving_keys
                 if sk.feature_group.id not in self._skip_fg_ids
             ]
-            _logger.debug(f"RonDB serving keys: {self._rondb_serving_keys}.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(f"RonDB serving keys: {self._rondb_serving_keys}.")
         return self._rondb_serving_keys
 
     @property
@@ -1115,6 +1155,6 @@ class VectorServer:
                 f"Default Online Store client is set to {self.DEFAULT_SQL_CLIENT} but Online Store SQL client"
                 + " is not initialised. Call `init_serving` with init_sql_client set to True before using it."
             )
-
-        _logger.debug(f"Default Online Store Client is set to {default_client}.")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(f"Default Online Store Client is set to {default_client}.")
         self._default_client = default_client

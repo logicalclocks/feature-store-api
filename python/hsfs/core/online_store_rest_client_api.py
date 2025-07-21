@@ -66,9 +66,10 @@ class OnlineStoreRestClientApi:
                     or authorization header (x-api-key) is not properly set.
                 - 500: Internal server error.
         """
-        _logger.debug(
-            f"Sending request to RonDB Rest Server with payload: {json.dumps(payload, indent=2, cls=util.NpDatetimeEncoder)}"
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Sending request to RonDB Rest Server with payload: {json.dumps(payload, indent=2, cls=util.NpDatetimeEncoder)}"
+            )
         return self.handle_rdrs_feature_store_response(
             online_store_rest_client.get_instance().send_request(
                 method="POST",
@@ -110,9 +111,10 @@ class OnlineStoreRestClientApi:
                     or authorization header (x-api-key) is not properly set.
                 - 500: Internal server error.
         """
-        _logger.debug(
-            f"Sending request to RonDB Rest Server with payload: {json.dumps(payload, indent=2, cls=util.NpDatetimeEncoder)}"
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Sending request to RonDB Rest Server with payload: {json.dumps(payload, indent=2, cls=util.NpDatetimeEncoder)}"
+            )
         return self.handle_rdrs_feature_store_response(
             online_store_rest_client.get_instance().send_request(
                 method="POST",
@@ -124,11 +126,13 @@ class OnlineStoreRestClientApi:
 
     def ping_rondb_rest_server(self) -> int:
         """Ping the RonDB Rest Server to check if it is alive."""
-        _logger.debug("Pinging RonDB Rest Server")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Pinging RonDB Rest Server")
         ping_response = online_store_rest_client.get_instance().send_request(
             method="GET", path_params=[self.PING_ENDPOINT]
         )
-        _logger.debug(f"Received response from RonDB Rest Server: {ping_response}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(f"Received response from RonDB Rest Server: {ping_response}")
         return ping_response
 
     def handle_rdrs_feature_store_response(self, response: Response) -> Dict[str, Any]:
@@ -148,14 +152,16 @@ class OnlineStoreRestClientApi:
                 - 500: Internal server error.
         """
         if response.status_code == 200:
-            _logger.debug(
-                "Received response from RonDB Rest Server with status code 200"
-            )
-            _logger.debug(f"Response: {json.dumps(response.json(), indent=2)}")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    "Received response from RonDB Rest Server with status code 200"
+                )
+                _logger.debug(f"Response: {json.dumps(response.json(), indent=2)}")
             return response.json()
         else:
-            _logger.error(
-                f"Received response from RonDB Rest Server with status code {response.status_code}"
-            )
-            _logger.error(f"Response: {response.text}")
+            if _logger.isEnabledFor(logging.ERROR):
+                _logger.error(
+                    f"Received response from RonDB Rest Server with status code {response.status_code}"
+                )
+                _logger.error(f"Response: {response.text}")
             raise exceptions.RestAPIError(response.url, response)

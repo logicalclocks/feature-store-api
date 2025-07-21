@@ -47,7 +47,8 @@ class OnlineStoreSqlClient:
         serving_keys: Optional[Set[ServingKey]] = None,
         connection_options: Optional[Dict[str, Any]] = None,
     ):
-        _logger.debug("Initialising Online Store Sql Client")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Initialising Online Store Sql Client")
         self._feature_store_id = feature_store_id
         self._skip_fg_ids: Set[int] = skip_fg_ids or set()
         self._external = external
@@ -77,11 +78,13 @@ class OnlineStoreSqlClient:
         inference_helper_columns: bool,
     ) -> None:
         if isinstance(entity, feature_view.FeatureView):
-            _logger.debug(
-                f"Initialising prepared statements for feature view {entity.name} version {entity.version}."
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Initialising prepared statements for feature view {entity.name} version {entity.version}."
+                )
             for key in self.get_prepared_statement_labels(inference_helper_columns):
-                _logger.debug(f"Fetching prepared statement for key {key}")
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(f"Fetching prepared statement for key {key}")
                 self.prepared_statements[key] = (
                     self.feature_view_api.get_serving_prepared_statement(
                         entity.name,
@@ -90,15 +93,18 @@ class OnlineStoreSqlClient:
                         inference_helper_columns=key.endswith("helper_column"),
                     )
                 )
-                _logger.debug(f"{self.prepared_statements[key]}")
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(f"{self.prepared_statements[key]}")
         elif isinstance(entity, training_dataset.TrainingDataset):
-            _logger.debug(
-                f"Initialising prepared statements for training dataset {entity.name} version {entity.version}."
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Initialising prepared statements for training dataset {entity.name} version {entity.version}."
+                )
             for key in self.get_prepared_statement_labels(
                 with_inference_helper_column=False
             ):
-                _logger.debug(f"Fetching prepared statement for key {key}")
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(f"Fetching prepared statement for key {key}")
                 self.prepared_statements[key] = (
                     self.training_dataset_api.get_serving_prepared_statement(
                         entity, batch=key.startswith("batch")
@@ -110,9 +116,10 @@ class OnlineStoreSqlClient:
             )
 
         if len(self.skip_fg_ids) > 0:
-            _logger.debug(
-                f"Skip feature groups {self.skip_fg_ids} when initialising prepared statements."
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Skip feature groups {self.skip_fg_ids} when initialising prepared statements."
+                )
             self.prepared_statements[key] = {
                 ps
                 for ps in self.prepared_statements[key]
@@ -124,9 +131,10 @@ class OnlineStoreSqlClient:
         entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
         inference_helper_columns: bool,
     ) -> None:
-        _logger.debug(
-            "Fetch and reset prepared statements and external as user may be re-initialising with different parameters"
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "Fetch and reset prepared statements and external as user may be re-initialising with different parameters"
+            )
         self.fetch_prepared_statements(entity, inference_helper_columns)
 
         self.init_parametrize_and_serving_utils(
@@ -134,7 +142,8 @@ class OnlineStoreSqlClient:
         )
 
         for key in self.get_prepared_statement_labels(inference_helper_columns):
-            _logger.debug(f"Parametrize prepared statements for key {key}")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(f"Parametrize prepared statements for key {key}")
             self._parametrised_prepared_statements[key] = (
                 self._parametrize_prepared_statements(
                     self.prepared_statements[key], batch=key.startswith("batch")
@@ -145,10 +154,11 @@ class OnlineStoreSqlClient:
         self,
         prepared_statements: List[ServingPreparedStatement],
     ) -> None:
-        _logger.debug(
-            "Initializing parametrize and serving utils property using %s",
-            json.dumps(prepared_statements, default=lambda x: x.__dict__, indent=2),
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "Initializing parametrize and serving utils property using %s",
+                json.dumps(prepared_statements, default=lambda x: x.__dict__, indent=2),
+            )
         self.prefix_by_serving_index = {
             statement.prepared_statement_index: statement.prefix
             for statement in prepared_statements
@@ -162,13 +172,14 @@ class OnlineStoreSqlClient:
             )
             for statement in prepared_statements
         }
-
-        _logger.debug("Build serving keys by PreparedStatementParameter.index")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Build serving keys by PreparedStatementParameter.index")
         for sk in self._serving_keys:
             self.serving_key_by_serving_index[sk.join_index] = (
                 self.serving_key_by_serving_index.get(sk.join_index, []) + [sk]
             )
-        _logger.debug("Sort serving keys by PreparedStatementParameter.index")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Sort serving keys by PreparedStatementParameter.index")
         for join_index in self.serving_key_by_serving_index:
             # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
             # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
@@ -214,9 +225,10 @@ class OnlineStoreSqlClient:
             "Prepared statements are not initialized. "
             "Please call `init_prepared_statement` method first."
         )
-        _logger.debug(
-            "Fetching storage connector for sql connection to Online Feature Store."
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "Fetching storage connector for sql connection to Online Feature Store."
+            )
         self._online_connector = self._storage_connector_api.get_online_connector(
             self._feature_store_id
         )
@@ -224,12 +236,14 @@ class OnlineStoreSqlClient:
         self._hostname = util.get_host_name() if self._external else None
 
         if util.is_runtime_notebook():
-            _logger.debug("Running in Jupyter notebook, applying nest_asyncio")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Running in Jupyter notebook, applying nest_asyncio")
             import nest_asyncio
 
             nest_asyncio.apply()
         else:
-            _logger.debug("Running in python script. Not applying nest_asyncio")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Running in python script. Not applying nest_asyncio")
 
     def get_single_feature_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
@@ -300,18 +314,21 @@ class OnlineStoreSqlClient:
             )
 
         # run all the prepared statements in parallel using aiomysql engine
-        _logger.debug(
-            f"Executing prepared statements for serving vector with entries: {bind_entries}"
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Executing prepared statements for serving vector with entries: {bind_entries}"
+            )
         loop = self._get_or_create_event_loop()
         results_dict = loop.run_until_complete(
             self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
-        _logger.debug(f"Retrieved feature vectors: {results_dict}")
-        _logger.debug("Constructing serving vector from results")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(f"Retrieved feature vectors: {results_dict}")
+            _logger.debug("Constructing serving vector from results")
         for key in results_dict:
             for row in results_dict[key]:
-                _logger.debug(f"Processing row: {row} for prepared statement {key}")
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(f"Processing row: {row} for prepared statement {key}")
                 result_dict = dict(row)
                 serving_vector.update(result_dict)
 
@@ -323,9 +340,10 @@ class OnlineStoreSqlClient:
         prepared_statement_objects: Dict[int, sql.text],
     ):
         """Execute prepared statements in parallel using aiomysql engine."""
-        _logger.debug(
-            f"Starting batch vector retrieval for {len(entries)} entries via aiomysql engine."
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Starting batch vector retrieval for {len(entries)} entries via aiomysql engine."
+            )
         # create dict object that will have of order of the vector as key and values as
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
@@ -334,7 +352,10 @@ class OnlineStoreSqlClient:
         serving_keys_all_fg = []
         prepared_stmts_to_execute = {}
         # construct the list of entry values for binding to query
-        _logger.debug(f"Parametrize prepared statements with entry values: {entries}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Parametrize prepared statements with entry values: {entries}"
+            )
         for prepared_statement_index in prepared_statement_objects:
             # prepared_statement_index include fg with label only
             # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
@@ -362,21 +383,26 @@ class OnlineStoreSqlClient:
                     entries,
                 )
             )
-            _logger.debug(
-                f"Prepared statement {prepared_statement_index} with entries: {entry_values_tuples}"
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Prepared statement {prepared_statement_index} with entries: {entry_values_tuples}"
+                )
             entry_values[prepared_statement_index] = {"batch_ids": entry_values_tuples}
 
-        _logger.debug(
-            f"Executing prepared statements for batch vector with entries: {entry_values}"
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Executing prepared statements for batch vector with entries: {entry_values}"
+            )
         # run all the prepared statements in parallel using aiomysql engine
         loop = self._get_or_create_event_loop()
         parallel_results = loop.run_until_complete(
             self._execute_prep_statements(prepared_stmts_to_execute, entry_values)
         )
 
-        _logger.debug(f"Retrieved feature vectors: {parallel_results}, stitching them.")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Retrieved feature vectors: {parallel_results}, stitching them."
+            )
         # construct the results
         for prepared_statement_index in prepared_stmts_to_execute:
             statement_results = {}
@@ -387,31 +413,37 @@ class OnlineStoreSqlClient:
                 + sk.feature_name
                 for sk in self.serving_key_by_serving_index[prepared_statement_index]
             ]
-            _logger.debug(
-                f"Use prefix from prepare statement because prefix from serving key is collision adjusted {prefix_features}."
-            )
-            _logger.debug("iterate over results by index of the prepared statement")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Use prefix from prepare statement because prefix from serving key is collision adjusted {prefix_features}."
+                )
+                _logger.debug("iterate over results by index of the prepared statement")
             for row in parallel_results[prepared_statement_index]:
-                _logger.debug(f"Processing row: {row}")
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(f"Processing row: {row}")
                 row_dict = dict(row)
                 # can primary key be complex feature? No, not supported.
                 result_dict = row_dict
-                _logger.debug(
-                    f"Add result to statement results: {self._get_result_key(prefix_features, row_dict)} : {result_dict}"
-                )
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(
+                        f"Add result to statement results: {self._get_result_key(prefix_features, row_dict)} : {result_dict}"
+                    )
                 statement_results[self._get_result_key(prefix_features, row_dict)] = (
                     result_dict
                 )
-
-            _logger.debug(f"Add partial results to batch results: {statement_results}")
-            for i, entry in enumerate(entries):
+            if _logger.isEnabledFor(logging.DEBUG):
                 _logger.debug(
-                    "Processing entry %s : %s",
-                    entry,
-                    statement_results.get(
-                        self._get_result_key_serving_key(serving_keys, entry), {}
-                    ),
+                    f"Add partial results to batch results: {statement_results}"
                 )
+            for i, entry in enumerate(entries):
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(
+                        "Processing entry %s : %s",
+                        entry,
+                        statement_results.get(
+                            self._get_result_key_serving_key(serving_keys, entry), {}
+                        ),
+                    )
                 batch_results[i].update(
                     statement_results.get(
                         self._get_result_key_serving_key(serving_keys, entry), {}
@@ -421,42 +453,49 @@ class OnlineStoreSqlClient:
 
     def _get_or_create_event_loop(self):
         try:
-            _logger.debug("Acquiring or starting event loop for async engine.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Acquiring or starting event loop for async engine.")
             loop = asyncio.get_event_loop()
             asyncio.set_event_loop(loop)
         except RuntimeError as ex:
             if "There is no current event loop in thread" in str(ex):
-                _logger.debug(
-                    "No existing running event loop. Creating new event loop."
-                )
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug(
+                        "No existing running event loop. Creating new event loop."
+                    )
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
         return loop
 
     def refresh_mysql_connection(self):
-        _logger.debug("Refreshing MySQL connection.")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("Refreshing MySQL connection.")
         try:
-            _logger.debug("Checking if the connection is still alive.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Checking if the connection is still alive.")
             with self._prepared_statement_engine.connect():
                 # This will raise an exception if the connection is closed
                 pass
         except exc.OperationalError:
-            _logger.debug("Connection is closed, re-establishing connection.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Connection is closed, re-establishing connection.")
             self._set_mysql_connection()
 
     def _make_preview_statement(self, statement, n):
         return text(statement.text[: statement.text.find(" WHERE ")] + f" LIMIT {n}")
 
     def _set_mysql_connection(self, options=None):
-        _logger.debug(
-            "Retrieve MySQL connection details from the online storage connector."
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "Retrieve MySQL connection details from the online storage connector."
+            )
         online_conn = self._storage_connector_api.get_online_connector(
             self._feature_store_id
         )
-        _logger.debug(
-            f"Creating MySQL {'external' if self.external is True else ''}engine with options: {options}."
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Creating MySQL {'external' if self.external is True else ''}engine with options: {options}."
+            )
         self._prepared_statement_engine = util.create_mysql_engine(
             online_conn, self._external, options=options
         )
@@ -472,7 +511,8 @@ class OnlineStoreSqlClient:
         # `.*?` - matches any character (except for line terminators). `*?` Quantifier —
         # Matches between zero and unlimited times, expanding until needed, i.e 1st occurrence of `\?`
         # character.
-        _logger.debug(f"Parametrizing name {name} in query {query_online}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(f"Parametrizing name {name} in query {query_online}")
         return re.sub(
             r"^(.*?)\?",
             r"\1:" + name,
@@ -483,7 +523,10 @@ class OnlineStoreSqlClient:
     def _get_result_key(
         primary_keys: List[str], result_dict: Dict[str, str]
     ) -> Tuple[str]:
-        _logger.debug(f"Get result key {primary_keys} from result dict {result_dict}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Get result key {primary_keys} from result dict {result_dict}"
+            )
         result_key = []
         for pk in primary_keys:
             result_key.append(result_dict.get(pk))
@@ -493,19 +536,22 @@ class OnlineStoreSqlClient:
     def _get_result_key_serving_key(
         serving_keys: List["ServingKey"], result_dict: Dict[str, Dict[str, Any]]
     ) -> Tuple[str]:
-        _logger.debug(
-            f"Get result key serving key {serving_keys} from result dict {result_dict}"
-        )
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                f"Get result key serving key {serving_keys} from result dict {result_dict}"
+            )
         result_key = []
         for sk in serving_keys:
-            _logger.debug(
-                f"Get result key for serving key {sk.required_serving_key} or {sk.feature_name}"
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Get result key for serving key {sk.required_serving_key} or {sk.feature_name}"
+                )
             result_key.append(
                 result_dict.get(sk.required_serving_key)
                 or result_dict.get(sk.feature_name)
             )
-        _logger.debug(f"Result key: {result_key}")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(f"Result key: {result_key}")
         return tuple(result_key)
 
     @staticmethod
@@ -541,14 +587,17 @@ class OnlineStoreSqlClient:
             )
         async with self._connection_pool.acquire() as conn:
             # Execute the prepared statement
-            _logger.debug(
-                f"Executing prepared statement: {stmt} with bind params: {bind_params}"
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    f"Executing prepared statement: {stmt} with bind params: {bind_params}"
+                )
             cursor = await conn.execute(stmt, bind_params)
             # Fetch the result
-            _logger.debug("Waiting for resultset.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Waiting for resultset.")
             resultset = await cursor.fetchall()
-            _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
             await cursor.close()
 
         return resultset
@@ -580,7 +629,8 @@ class OnlineStoreSqlClient:
             # Run the queries in parallel using asyncio.gather
             results = await asyncio.gather(*tasks)
         except asyncio.CancelledError as e:
-            _logger.error(f"Failed executing prepared statements: {e}")
+            if _logger.isEnabledFor(logging.ERROR):
+                _logger.error(f"Failed executing prepared statements: {e}")
             raise e
 
         # Create a dict of results with the prepared statement index as key
@@ -646,7 +696,8 @@ class OnlineStoreSqlClient:
 
     @prefix_by_serving_index.setter
     def prefix_by_serving_index(self, prefix_by_serving_index: Dict[int, str]) -> None:
-        _logger.debug(f"Setting prefix by serving index {prefix_by_serving_index}.")
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(f"Setting prefix by serving index {prefix_by_serving_index}.")
         self._prefix_by_serving_index = prefix_by_serving_index
 
     @property
@@ -684,9 +735,10 @@ class OnlineStoreSqlClient:
                 "Prepared statements are not initialized. Please call `init_prepared_statement` method first."
             )
         else:
-            _logger.debug(
-                "Build serving keys from prepared statements ignoring prefix to ensure compatibility with older version."
-            )
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug(
+                    "Build serving keys from prepared statements ignoring prefix to ensure compatibility with older version."
+                )
             self._serving_keys = util.build_serving_keys_from_prepared_statements(
                 self.prepared_statements[
                     self.BATCH_VECTOR_KEY
