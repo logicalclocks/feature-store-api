@@ -96,8 +96,8 @@ public class FlinkEngine extends EngineBase {
 
     DataStream<GenericRecord> avroRecordDataStream =
             genericDataStream.map(new PojoToAvroRecord(
-                            streamFeatureGroup.getDeserializedAvroSchema(),
-                            streamFeatureGroup.getDeserializedEncodedAvroSchema(),
+                            streamFeatureGroup.getAvroSchema(),
+                            streamFeatureGroup.getEncodedAvroSchema(),
                             complexFeatureSchemas))
                     .returns(
                             new GenericRecordAvroTypeInfo(streamFeatureGroup.getDeserializedEncodedAvroSchema())
