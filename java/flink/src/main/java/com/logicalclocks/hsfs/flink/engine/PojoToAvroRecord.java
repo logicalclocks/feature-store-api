@@ -51,7 +51,6 @@ public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> imple
     this.complexFeatureSchemasStr = complexFeatureSchemas;
   }
 
-  // TODO(Fabio): Refactor this code to avoid duplication
   @Override
   public GenericRecord map(T input) throws Exception {
     return PojoToAvroUtils.convertPojoToGenericRecord(
