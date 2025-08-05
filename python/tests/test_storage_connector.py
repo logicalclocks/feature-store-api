@@ -680,6 +680,13 @@ class TestKafkaConnector:
             "kafka.ssl.keystore.key": "test_ssl_key",
         }
 
+        mock_engine_get_instance.return_value.add_file.assert_any_call(
+            "test_ssl_truststore_location", distribute=False
+        )
+        mock_engine_get_instance.return_value.add_file.assert_any_call(
+            "test_ssl_keystore_location", distribute=False
+        )
+
     def test_confluent_options(self, mocker, backend_fixtures):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
