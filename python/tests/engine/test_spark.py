@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import sys
 from unittest.mock import call
 
 import numpy
@@ -58,6 +59,7 @@ from pyspark.sql.types import (
     StructType,
     TimestampType,
 )
+from requests.models import Response
 
 
 engine._engine_type = "spark"
@@ -1607,7 +1609,7 @@ class TestSpark:
         data = []
         data.append((b"2121", b"21212121"))
         data.append((b"1212", b"12121212"))
-        pandas_df = pd.DataFrame(data, columns =["key", "value"])
+        pandas_df = pd.DataFrame(data, columns=["key", "value"])
 
         df = spark_engine._spark_session.createDataFrame(pandas_df)
 
@@ -1627,10 +1629,10 @@ class TestSpark:
             features=features,
         )
         fg._subject = {
-            'id': 1025,
-            'subject': 'fg_1',
-            'version': 1,
-            'schema': '{"type":"record","name":"fg_1","namespace":"test_featurestore.db","fields":[{"name":"account_id","type":["null","string"]},{"name":"last_played_games","type":["null",{"type":"array","items":["null","string"]}]},{"name":"event_time","type":["null",{"type":"long","logicalType":"timestamp-micros"}]}]}'
+            "id": 1025,
+            "subject": "fg_1",
+            "version": 1,
+            "schema": '{"type":"record","name":"fg_1","namespace":"test_featurestore.db","fields":[{"name":"account_id","type":["null","string"]},{"name":"last_played_games","type":["null",{"type":"array","items":["null","string"]}]},{"name":"event_time","type":["null",{"type":"long","logicalType":"timestamp-micros"}]}]}',
         }
 
         # Act
@@ -1640,7 +1642,7 @@ class TestSpark:
         )
 
         # Assert
-        expected_schema = json.loads('''{
+        expected_schema = json.loads("""{
             "fields": [
                 {"metadata": {}, "name": "key", "nullable": true, "type": "binary"},
                 {"metadata": {}, "name": "value", "nullable": false, "type": {
@@ -1654,7 +1656,7 @@ class TestSpark:
                 }}
             ],
             "type": "struct"
-        }''')
+        }""")
 
         actual_schema = json.loads(deserialized_df.schema.json())
         assert actual_schema == expected_schema
@@ -1666,9 +1668,15 @@ class TestSpark:
         now = datetime.datetime.now()
 
         fg_data = []
-        fg_data.append(("ekarson", ["GRAVITY RUSH 2", "KING'S QUEST"], pd.Timestamp(now)))
-        fg_data.append(("ratmilkdrinker", ["NBA 2K", "CALL OF DUTY"], pd.Timestamp(now)))
-        pandas_df = pd.DataFrame(fg_data, columns =["account_id", "last_played_games", "event_time"])
+        fg_data.append(
+            ("ekarson", ["GRAVITY RUSH 2", "KING'S QUEST"], pd.Timestamp(now))
+        )
+        fg_data.append(
+            ("ratmilkdrinker", ["NBA 2K", "CALL OF DUTY"], pd.Timestamp(now))
+        )
+        pandas_df = pd.DataFrame(
+            fg_data, columns=["account_id", "last_played_games", "event_time"]
+        )
 
         df = spark_engine._spark_session.createDataFrame(pandas_df)
 
@@ -1688,10 +1696,10 @@ class TestSpark:
             features=features,
         )
         fg._subject = {
-            'id': 1025,
-            'subject': 'fg_1',
-            'version': 1,
-            'schema': '{"type":"record","name":"fg_1","namespace":"test_featurestore.db","fields":[{"name":"account_id","type":["null","string"]},{"name":"last_played_games","type":["null",{"type":"array","items":["null","string"]}]},{"name":"event_time","type":["null",{"type":"long","logicalType":"timestamp-micros"}]}]}'
+            "id": 1025,
+            "subject": "fg_1",
+            "version": 1,
+            "schema": '{"type":"record","name":"fg_1","namespace":"test_featurestore.db","fields":[{"name":"account_id","type":["null","string"]},{"name":"last_played_games","type":["null",{"type":"array","items":["null","string"]}]},{"name":"event_time","type":["null",{"type":"long","logicalType":"timestamp-micros"}]}]}',
         }
 
         # Act
@@ -1706,7 +1714,10 @@ class TestSpark:
         )
 
         # Assert
-        assert serialized_df.schema.json() == '{"fields":[{"metadata":{},"name":"key","nullable":false,"type":"binary"},{"metadata":{},"name":"value","nullable":false,"type":"binary"}],"type":"struct"}'
+        assert (
+            serialized_df.schema.json()
+            == '{"fields":[{"metadata":{},"name":"key","nullable":false,"type":"binary"},{"metadata":{},"name":"value","nullable":false,"type":"binary"}],"type":"struct"}'
+        )
         assert df.schema == deserialized_df.schema["value"].dataType
         assert df.collect() == deserialized_df.select("value.*").collect()
 
@@ -3404,6 +3415,30 @@ class TestSpark:
             == "hdfs://test_file"
         )
         assert mock_pyspark_files_get.call_args[0][0] == "test_file"
+
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"), reason="Skipping test on Windows"
+    )
+    def test_add_file_do_not_distribute(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
+        response = Response()
+        response._content = b"test_content"
+        mocker.patch(
+            "hsfs.core.dataset_api.DatasetApi.read_content", return_value=response
+        )
+
+        spark_engine = spark.Engine()
+
+        # Act
+        file_path = spark_engine.add_file(
+            file="test_file",
+            distribute=False,
+        )
+
+        # Assert
+        assert file_path == "/tmp/test_file"
 
     def test_profile(self, mocker):
         # Arrange

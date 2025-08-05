@@ -445,12 +445,7 @@ class TestJdbcConnector:
 class TestKafkaConnector:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         json = backend_fixtures["storage_connector"]["get_kafka_internal"]["response"]
-
-        mock_engine_get_instance.return_value.add_file.return_value = (
-            "result_from_add_file"
-        )
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -462,9 +457,9 @@ class TestKafkaConnector:
         assert sc.description == "Kafka connector description"
         assert sc._bootstrap_servers == "test_bootstrap_servers"
         assert sc.security_protocol == "test_security_protocol"
-        assert sc.ssl_truststore_location == "result_from_add_file"
+        assert sc.ssl_truststore_location == "test_ssl_truststore_location"
         assert sc._ssl_truststore_password == "test_ssl_truststore_password"
-        assert sc.ssl_keystore_location == "result_from_add_file"
+        assert sc.ssl_keystore_location == "test_ssl_keystore_location"
         assert sc._ssl_keystore_password == "test_ssl_keystore_password"
         assert sc._ssl_key_password == "test_ssl_key_password"
         assert (
@@ -475,12 +470,7 @@ class TestKafkaConnector:
 
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         json = backend_fixtures["storage_connector"]["get_kafka_basic_info"]["response"]
-
-        mock_engine_get_instance.return_value.add_file.return_value = (
-            "result_from_add_file"
-        )
 
         # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
@@ -492,9 +482,9 @@ class TestKafkaConnector:
         assert sc.description is None
         assert sc._bootstrap_servers is None
         assert sc.security_protocol is None
-        assert sc.ssl_truststore_location == "result_from_add_file"
+        assert sc.ssl_truststore_location is None
         assert sc._ssl_truststore_password is None
-        assert sc.ssl_keystore_location == "result_from_add_file"
+        assert sc.ssl_keystore_location is None
         assert sc._ssl_keystore_password is None
         assert sc._ssl_key_password is None
         assert sc.ssl_endpoint_identification_algorithm is None
@@ -504,12 +494,7 @@ class TestKafkaConnector:
     def test_kafka_options_user_sc(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
-
-        mock_engine_get_instance.return_value.add_file.return_value = (
-            "result_from_add_file"
-        )
 
         sc = storage_connector.StorageConnector.from_response_json(json)
 
@@ -522,14 +507,14 @@ class TestKafkaConnector:
             "bootstrap.servers": "test_bootstrap_servers",
             "security.protocol": "test_security_protocol",
             "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
-            "ssl.truststore.location": "result_from_add_file",
+            "ssl.truststore.location": "test_ssl_truststore_location",
             "ssl.truststore.password": "test_ssl_truststore_password",
-            "ssl.keystore.location": "result_from_add_file",
+            "ssl.keystore.location": "test_ssl_keystore_location",
             "ssl.keystore.password": "test_ssl_keystore_password",
             "ssl.key.password": "test_ssl_key_password",
         }
 
-    def test_kafka_options_intenral(self, mocker, backend_fixtures):
+    def test_kafka_options_internal(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_instance")
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
@@ -563,12 +548,7 @@ class TestKafkaConnector:
 
     def test_kafka_options_external(self, mocker, backend_fixtures):
         # Arrange
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
-
-        mock_engine_get_instance.return_value.add_file.return_value = (
-            "result_from_add_file"
-        )
 
         sc = storage_connector.StorageConnector.from_response_json(json)
 
@@ -581,9 +561,9 @@ class TestKafkaConnector:
             "bootstrap.servers": "test_bootstrap_servers",
             "security.protocol": "test_security_protocol",
             "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
-            "ssl.truststore.location": "result_from_add_file",
+            "ssl.truststore.location": "test_ssl_truststore_location",
             "ssl.truststore.password": "test_ssl_truststore_password",
-            "ssl.keystore.location": "result_from_add_file",
+            "ssl.keystore.location": "test_ssl_keystore_location",
             "ssl.keystore.password": "test_ssl_keystore_password",
             "ssl.key.password": "test_ssl_key_password",
         }
@@ -657,6 +637,9 @@ class TestKafkaConnector:
         json = backend_fixtures["storage_connector"]["get_kafka_internal"]["response"]
 
         mock_engine_get_instance.return_value.get_spark_version.return_value = "3.5.0"
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
 
         mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
             "result_from_get_jks_trust_store_path"
@@ -696,6 +679,13 @@ class TestKafkaConnector:
             "kafka.ssl.keystore.certificate.chain": "test_ssl_certificate",
             "kafka.ssl.keystore.key": "test_ssl_key",
         }
+
+        mock_engine_get_instance.return_value.add_file.assert_any_call(
+            "test_ssl_truststore_location", distribute=False
+        )
+        mock_engine_get_instance.return_value.add_file.assert_any_call(
+            "test_ssl_keystore_location", distribute=False
+        )
 
     def test_confluent_options(self, mocker, backend_fixtures):
         # Arrange

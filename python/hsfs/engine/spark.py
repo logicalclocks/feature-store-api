@@ -592,7 +592,8 @@ class Engine:
         Step 1: Deserializes 'value' column from binary using avro schema.
         """
         decoded_dataframe = dataframe.withColumn(
-            serialized_column, from_avro(serialized_column, feature_group._get_encoded_avro_schema())
+            serialized_column,
+            from_avro(serialized_column, feature_group._get_encoded_avro_schema()),
         )
 
         """
@@ -605,10 +606,12 @@ class Engine:
                 # re-apply from_avro on the nested field
                 decoded_field = from_avro(
                     col(f"{serialized_column}.{field_name}"),
-                    feature_group._get_feature_avro_schema(field_name)
+                    feature_group._get_feature_avro_schema(field_name),
                 ).alias(field_name)
             else:
-                decoded_field = col(f"{serialized_column}.{field_name}").alias(field_name)
+                decoded_field = col(f"{serialized_column}.{field_name}").alias(
+                    field_name
+                )
             new_value_fields.append(decoded_field)
 
         """
@@ -616,7 +619,10 @@ class Engine:
         """
         updated_value_col = struct(*new_value_fields).alias(serialized_column)
 
-        return decoded_dataframe.select(*[col(c) for c in decoded_dataframe.columns if c != serialized_column], updated_value_col)
+        return decoded_dataframe.select(
+            *[col(c) for c in decoded_dataframe.columns if c != serialized_column],
+            updated_value_col,
+        )
 
     def get_training_data(
         self,
@@ -994,7 +1000,7 @@ class Engine:
             return stream.load()
         return stream.load().select("key", "value")
 
-    def add_file(self, file):
+    def add_file(self, file, distribute=True):
         if not file:
             return file
 
@@ -1004,8 +1010,9 @@ class Engine:
 
         file_name = os.path.basename(file)
 
-        # for external clients, download the file
-        if isinstance(client.get_instance(), client.external.Client):
+        # for external clients, download the file using the dataset API
+        # also if the client is internal, but we only need the files on the driver
+        if isinstance(client.get_instance(), client.external.Client) or not distribute:
             tmp_file = f"/tmp/{file_name}"
             print("Reading key file from storage connector.")
             response = self._dataset_api.read_content(file, util.get_dataset_type(file))
@@ -1015,9 +1022,13 @@ class Engine:
 
             file = f"file://{tmp_file}"
 
-        self._spark_context.addFile(file)
-
-        return SparkFiles.get(file_name)
+        # If we need the files on the executors, then we should call addFile
+        if distribute:
+            self._spark_context.addFile(file)
+            return SparkFiles.get(file_name)
+        else:
+            # Remove the 'file://' prefix for local file paths
+            return file[7:]
 
     def profile(
         self,
