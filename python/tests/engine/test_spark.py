@@ -3389,9 +3389,6 @@ class TestSpark:
         assert "name" in result.columns
         assert result.schema["name"].dataType == StringType()
 
-    @pytest.mark.skipif(
-        sys.platform.startswith("win"), reason="Skipping test on Windows"
-    )
     def test_add_file(self, mocker):
         # Arrange
         mock_pyspark_getOrCreate = mocker.patch(
@@ -3419,6 +3416,9 @@ class TestSpark:
         )
         assert mock_pyspark_files_get.call_args[0][0] == "test_file"
 
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"), reason="Skipping test on Windows"
+    )
     def test_add_file_do_not_distribute(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
