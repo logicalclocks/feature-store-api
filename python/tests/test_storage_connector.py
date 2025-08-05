@@ -548,12 +548,7 @@ class TestKafkaConnector:
 
     def test_kafka_options_external(self, mocker, backend_fixtures):
         # Arrange
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
-
-        mock_engine_get_instance.return_value.add_file.return_value = (
-            "result_from_add_file"
-        )
 
         sc = storage_connector.StorageConnector.from_response_json(json)
 
@@ -566,9 +561,9 @@ class TestKafkaConnector:
             "bootstrap.servers": "test_bootstrap_servers",
             "security.protocol": "test_security_protocol",
             "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
-            "ssl.truststore.location": "result_from_add_file",
+            "ssl.truststore.location": "test_ssl_truststore_location",
             "ssl.truststore.password": "test_ssl_truststore_password",
-            "ssl.keystore.location": "result_from_add_file",
+            "ssl.keystore.location": "test_ssl_keystore_location",
             "ssl.keystore.password": "test_ssl_keystore_password",
             "ssl.key.password": "test_ssl_key_password",
         }
