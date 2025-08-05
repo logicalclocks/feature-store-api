@@ -1092,13 +1092,9 @@ class KafkaConnector(StorageConnector):
         # KAFKA
         self._bootstrap_servers = bootstrap_servers
         self._security_protocol = security_protocol
-        self._ssl_truststore_location = engine.get_instance().add_file(
-            ssl_truststore_location
-        )
+        self._ssl_truststore_location = ssl_truststore_location
         self._ssl_truststore_password = ssl_truststore_password
-        self._ssl_keystore_location = engine.get_instance().add_file(
-            ssl_keystore_location
-        )
+        self._ssl_keystore_location = ssl_keystore_location
         self._ssl_keystore_password = ssl_keystore_password
         self._ssl_key_password = ssl_key_password
         self._ssl_endpoint_identification_algorithm = (
@@ -1203,6 +1199,15 @@ class KafkaConnector(StorageConnector):
         Right now only producer values with Importance >= medium are implemented.
         https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
         """
+
+        # Materialize the certificates to be converted to PEM files
+        self._ssl_truststore_location = engine.get_instance().add_file(
+            self._ssl_truststore_location
+        )
+        self._ssl_keystore_location = engine.get_instance().add_file(
+            self._ssl_keystore_location
+        )
+
         config = {}
         kafka_options = self.kafka_options()
         for key, value in kafka_options.items():
@@ -1303,20 +1308,32 @@ class KafkaConnector(StorageConnector):
         """
         from packaging import version
 
+        kafka_client_supports_pem = version.parse(
+            engine.get_instance().get_spark_version()
+        ) >= version.parse("3.2.0")
+
+        # Only distribute the files if the Kafka client does not support being configured with PEM content
+        self._ssl_truststore_location = engine.get_instance().add_file(
+            self._ssl_truststore_location, distribute=not kafka_client_supports_pem
+        )
+        self._ssl_keystore_location = engine.get_instance().add_file(
+            self._ssl_keystore_location, distribute=not kafka_client_supports_pem
+        )
+
         spark_config = {}
-
         kafka_options = self.kafka_options()
-
         for key, value in kafka_options.items():
-            if key in [
-                "ssl.truststore.location",
-                "ssl.truststore.password",
-                "ssl.keystore.location",
-                "ssl.keystore.password",
-                "ssl.key.password",
-            ] and version.parse(
-                engine.get_instance().get_spark_version()
-            ) >= version.parse("3.2.0"):
+            if (
+                key
+                in [
+                    "ssl.truststore.location",
+                    "ssl.truststore.password",
+                    "ssl.keystore.location",
+                    "ssl.keystore.password",
+                    "ssl.key.password",
+                ]
+                and kafka_client_supports_pem
+            ):
                 # We can only use this in the newer version of Spark which depend on Kafka > 2.7.0
                 # Kafka 2.7.0 adds support for providing the SSL credentials as PEM objects.
                 if not self._pem_files_created:
