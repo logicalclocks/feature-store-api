@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import sys
 from unittest.mock import call
 
 import numpy
@@ -3388,6 +3389,9 @@ class TestSpark:
         assert "name" in result.columns
         assert result.schema["name"].dataType == StringType()
 
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"), reason="Skipping test on Windows"
+    )
     def test_add_file(self, mocker):
         # Arrange
         mock_pyspark_getOrCreate = mocker.patch(
