@@ -1027,7 +1027,8 @@ class Engine:
             self._spark_context.addFile(file)
             return SparkFiles.get(file_name)
         else:
-            return file
+            # Remove the 'file://' prefix for local file paths
+            return file[7:]
 
     def profile(
         self,
