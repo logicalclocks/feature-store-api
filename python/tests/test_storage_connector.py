@@ -637,6 +637,9 @@ class TestKafkaConnector:
         json = backend_fixtures["storage_connector"]["get_kafka_internal"]["response"]
 
         mock_engine_get_instance.return_value.get_spark_version.return_value = "3.5.0"
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
 
         mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
             "result_from_get_jks_trust_store_path"
