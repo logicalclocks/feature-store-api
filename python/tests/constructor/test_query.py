@@ -19,6 +19,8 @@ import pytest
 from hsfs import feature, feature_group
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import filter, join, query
+from hsfs.constructor.fs_query import FsQuery
+from hsfs.engine import spark
 
 
 class TestQuery:
@@ -65,6 +67,19 @@ class TestQuery:
         ],
         id=13,
         stream=False,
+    )
+
+    fg_spine = feature_group.SpineGroup(
+        name="spine",
+        version=1,
+        featurestore_id=99,
+        primary_key=[],
+        partition_key=[],
+        features=[
+            feature.Feature("id", feature_group_id=14),
+            feature.Feature("label", feature_group_id=14),
+        ],
+        id=14,
     )
 
     def test_from_response_json_python(self, mocker, backend_fixtures):
@@ -396,3 +411,55 @@ class TestQuery:
 
         # Assert
         assert q._get_featuregroup_by_feature(TestQuery.fg3["id"]) == TestQuery.fg3
+
+    def test_prep_read_spine(self, mocker):
+        engine = spark.Engine()
+        mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="spark")
+
+        mock_fs_query = mocker.MagicMock(spec=FsQuery)
+        mock_fs_query.query = "SELECT * FROM test"
+        mock_fs_query.on_demand_feature_groups = []
+        mock_fs_query.hudi_cached_feature_groups = []
+
+        mocker.patch(
+            "hsfs.core.query_constructor_api.QueryConstructorApi.construct_query",
+            return_value=mock_fs_query,
+        )
+
+        q = query.Query(
+            left_feature_group=TestQuery.fg_spine,
+            left_features=TestQuery.fg_spine.features,
+        )
+
+        q._prep_read(online=False, read_options={})
+
+        mock_fs_query.register_external.assert_called()
+        mock_fs_query.register_delta_tables.assert_called()
+        mock_fs_query.register_hudi_tables.assert_called()
+
+    def test_prep_hudi_delta_fg_join(self, mocker):
+        engine = spark.Engine()
+        mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="spark")
+
+        mock_fs_query = mocker.MagicMock(spec=FsQuery)
+        mock_fs_query.query = "SELECT * FROM test"
+        mock_fs_query.on_demand_feature_groups = []
+        mock_fs_query.hudi_cached_feature_groups = []
+
+        mocker.patch(
+            "hsfs.core.query_constructor_api.QueryConstructorApi.construct_query",
+            return_value=mock_fs_query,
+        )
+
+        q = query.Query(
+            left_feature_group=TestQuery.fg1,
+            left_features=TestQuery.fg1.features,
+        )
+
+        q._prep_read(online=False, read_options={})
+
+        mock_fs_query.register_external.assert_called()
+        mock_fs_query.register_delta_tables.assert_called()
+        mock_fs_query.register_hudi_tables.assert_called()
