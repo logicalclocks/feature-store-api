@@ -5,7 +5,7 @@
   <parent>
     <artifactId>hsfs-parent</artifactId>
     <groupId>com.logicalclocks</groupId>
-    <version>3.9.0-RC23</version>
+    <version>3.9.0-RC24</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
